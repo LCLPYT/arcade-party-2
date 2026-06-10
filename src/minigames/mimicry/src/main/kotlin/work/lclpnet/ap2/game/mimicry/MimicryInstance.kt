@@ -10,32 +10,27 @@ import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.Level
 import net.minecraft.world.phys.BlockHitResult
-import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.api.game.data.DataContainer
-import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.stats.StatUnits
 import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.ext.ticks
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.mimicry.data.MimicryManager
+import work.lclpnet.ap2.game.mimicry.data.MimicryRoom
 import work.lclpnet.ap2.game.mimicry.data.SequencePlayer
-import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.PseudoElimination
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.Ordering
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
-import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.world.StackedRoomGenerator
 import work.lclpnet.gaco.ds.BlockBox
-import work.lclpnet.gaco.math.AffineIntMatrix
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.util.BossBarTimer
 import work.lclpnet.kibu.hook.ServerMessageHooks
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
-import work.lclpnet.kibu.mc.KibuBlockPos
 import java.util.*
-import java.util.concurrent.CompletableFuture
 import kotlin.time.Duration.Companion.seconds
 
 private const val PREPARE_TICKS = 50
@@ -50,49 +45,26 @@ val ButtonClicks = Stat("block_clicks", 0)
 val AvgTimeUsage = Stat("avg_time_usage", 0f, unit = StatUnits.Percent)
 val AvgClickTime = Stat("avg_click_time", 0f, unit = StatUnits.Seconds)
 
-class MimicryInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
+class MimicryInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    result: StackedRoomGenerator.Result<MimicryRoom>,
+    buttons: BlockBox
+) : FFAGameInstance(gameHandle, level, map) {
 
-    private val data = IntScoreDataContainer(
+    override val data = IntScoreDataContainer(
         PlayerRef::create,
         Ordering.DESCENDING,
         "game.ap2.mimicry.completed"
     )
     private val stats = createStats(data, DirectButtonClicks, ButtonClicks, AvgTimeUsage, AvgClickTime)
     private lateinit var pseudoElimination: PseudoElimination
-    private lateinit var manager: MimicryManager
     private lateinit var sequencePlayer: SequencePlayer
+    private val manager = MimicryManager(gameHandle, result.rooms, buttons, Random(), level, stats, ::onCompleted)
     private var timer: BossBarTimer? = null
     private var timerTransaction = 0
     private var phase = Phase.IDLE
-
-    override fun getData(): DataContainer<ServerPlayer, PlayerRef> = data
-
-    override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
-        val buttons: BlockBox = MapUtil.readBox(map.requireProperty("button-box"))
-
-        val generator = StackedRoomGenerator(world, map, StackedRoomGenerator.Coordinates.ABSOLUTE) { pos, spawn, yaw, structure ->
-            val origin: KibuBlockPos = structure.origin
-
-            val roomButtons = buttons.transform(AffineIntMatrix.makeTranslation(
-                pos.x - origin.x,
-                pos.y - origin.y,
-                pos.z - origin.z))
-
-            work.lclpnet.ap2.game.mimicry.data.MimicryRoom(pos, spawn, yaw, roomButtons)
-        }
-
-        return generator.generate(gameHandle.participants)
-            .thenAccept { result ->
-                val rooms = result.rooms()
-                val random = Random()
-
-                manager = MimicryManager(gameHandle, rooms, buttons, random, world, stats, ::onCompleted)
-            }
-            .exceptionally { throwable ->
-                gameHandle.logger.error("Failed to create rooms", throwable)
-                null
-            }
-    }
 
     override fun prepare() {
         val world: ServerLevel = level

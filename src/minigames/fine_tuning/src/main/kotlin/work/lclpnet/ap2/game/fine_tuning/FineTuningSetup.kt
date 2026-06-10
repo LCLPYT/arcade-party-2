@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.game.fine_tuning
 
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.withContext
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Vec3i
 import net.minecraft.network.chat.Component
@@ -10,13 +12,13 @@ import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.level.block.entity.SignText
 import org.json.JSONArray
 import org.slf4j.Logger
-import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.world.StackedRoomGenerator
+import work.lclpnet.ap2.util.MinecraftDispatcher
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.structure.BlockStructure
 import java.util.*
-import java.util.concurrent.CompletableFuture
 
 class FineTuningSetup(
     private val gameHandle: MiniGameHandle,
@@ -25,17 +27,21 @@ class FineTuningSetup(
 ) {
     val rooms = HashMap<UUID, FineTuningRoom>()
 
-    fun createRooms(): CompletableFuture<Void> {
+    suspend fun createRooms() {
         val generator = StackedRoomGenerator(world, map, StackedRoomGenerator.Coordinates.RELATIVE, ::createRoom)
 
-        return generator.generate(gameHandle.participants)
-            .thenApply { it.rooms() }
-            .thenAccept { rooms.putAll(it) }
-            .thenCompose { world.server.submit(::setupRooms) }
-            .exceptionally { throwable ->
-                gameHandle.logger.error("Failed to create rooms", throwable)
-                null
+        try {
+            val result = generator.generate(gameHandle.participants)
+            rooms.putAll(result.rooms)
+
+            withContext(MinecraftDispatcher(world.server)) {
+                setupRooms()
             }
+        } catch (err: Throwable) {
+            if (err is CancellationException) throw err
+
+            gameHandle.logger.error("Failed to create rooms", err)
+        }
     }
 
     private fun setupRooms() {

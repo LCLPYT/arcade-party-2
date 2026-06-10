@@ -6,7 +6,6 @@ import net.minecraft.core.Holder
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.core.registries.Registries
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.Identifier
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
@@ -17,18 +16,16 @@ import net.minecraft.world.entity.animal.frog.FrogVariant
 import net.minecraft.world.entity.vehicle.minecart.Minecart
 import net.minecraft.world.phys.Vec3
 import org.json.JSONArray
-import work.lclpnet.ap2.ApConstants
-import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.music.ConfiguredSong
 import work.lclpnet.ap2.core.type.ApVariantHolder
 import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.ext.runEvery
 import work.lclpnet.ap2.ext.ticks
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.musical_minecart.cmd.SetSongCommand
 import work.lclpnet.ap2.game.musical_minecart.cmd.SkipSongCommand
 import work.lclpnet.ap2.game.player.Participants
-import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.music.SongHandler
 import work.lclpnet.ap2.impl.util.Hints
@@ -53,6 +50,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.floor
 import kotlin.math.ln
 import kotlin.math.max
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 private const val DEBUG_INFINITE_SONGS = false
@@ -66,12 +64,14 @@ private const val PARTICLE_AMOUNT = 2
 private const val MAX_DECOYS = 4
 private const val DECOY_CHANCE = 0.15f
 
-private val MUSICAL_MINECART_TAG: Identifier = ApConstants.identifier("musical_minecart")
+class MusicalMinecartInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    private val random: Random,
+    private val songs: SongHandler,
+) : EliminationGameInstance(gameHandle, level, map) {
 
-class MusicalMinecartInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrap {
-
-    private val random = Random()
-    private val songs = SongHandler(gameHandle, random)
     private val minecartEntities = HashSet<Minecart>()
     private val ready = AtomicBoolean(false)
     private var intermission = false
@@ -83,10 +83,6 @@ class MusicalMinecartInstance(gameHandle: MiniGameHandle) : EliminationGameInsta
     private var pendingSong: CompletableFuture<ConfiguredSong>? = null
     private var eliminationDelayTicks = Ticks.seconds(9L)
     private var minecartsGlowing = false
-
-    override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
-        return songs.loadSongs(MUSICAL_MINECART_TAG)
-    }
 
     override fun prepare() {
         bounds = MapUtil.readBox(map.requireProperty("bounds"))
@@ -370,9 +366,8 @@ class MusicalMinecartInstance(gameHandle: MiniGameHandle) : EliminationGameInsta
         }
     }
 
-    override fun getMaxDurationTicks(): Int {
-        return if (DEBUG_INFINITE_SONGS) -1 else super.getMaxDurationTicks()
-    }
+    override val maxDuration: Duration
+        get() = if (DEBUG_INFINITE_SONGS) 0.seconds else super.maxDuration
 
     @Synchronized
     private fun skipSong() {

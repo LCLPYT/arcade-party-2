@@ -6,8 +6,8 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.resources.Identifier;
-import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.map.MapFacade;
+import work.lclpnet.ap2.game.MiniGame;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;

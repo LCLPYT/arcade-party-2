@@ -17,8 +17,6 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.border.WorldBorder
 import net.minecraft.world.level.dimension.end.EnderDragonFight
 import net.minecraft.world.level.gamerules.GameRules
-import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.stats.CommonStats.BlocksPlaced
 import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
 import work.lclpnet.ap2.api.stats.CommonStats.Kills
@@ -29,7 +27,8 @@ import work.lclpnet.ap2.core.type.ApDragonFight
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.rangeTo
 import work.lclpnet.ap2.ext.mc.setBlocks
-import work.lclpnet.ap2.impl.game.EliminationGameInstance
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
 import work.lclpnet.ap2.impl.util.world.KnockbackKillTracker
@@ -42,7 +41,6 @@ import work.lclpnet.kibu.hook.entity.ServerEntityHooks
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.hook.level.BlockModificationHooks
 import java.util.*
-import java.util.concurrent.CompletableFuture
 import kotlin.math.abs
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -57,13 +55,17 @@ private val BORDER_SHRINK_DURATION = 2.minutes
 private val REMOVE_BLOCKS_AFTER_BORDER_DONE_DELAY = 45.seconds
 private const val BORDER_MIN_SIZE = 3
 
-class PillarBattleInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrap {
+class PillarBattleInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    private val random: Random,
+    private val pillars: PbSetup.PlacementResult?,
+) : EliminationGameInstance(gameHandle, level, map) {
 
-    private val random = Random()
     private val movementBlocker = SimpleMovementBlocker(gameHandle.scheduler).also {
         it.setModifySpeedAttribute(false)
     }
-    private var pillars: PbSetup.PlacementResult? = null
     private val warnings = HashMap<UUID, Warning>()
     private var borderShrinking = false
     private lateinit var border: WorldBorder
@@ -78,10 +80,6 @@ class PillarBattleInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         useOldCombat()
     }
 
-    override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
-        val setup = PbSetup(world, map, gameHandle.logger)
-        return setup.load().thenRun { pillars = setup.placePillars(gameHandle.participants, random) }
-    }
 
     override fun prepare() {
         useRemainingPlayersDisplay()

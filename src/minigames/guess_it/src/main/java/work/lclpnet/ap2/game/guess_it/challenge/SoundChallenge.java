@@ -8,7 +8,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
-import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.OptionMaker;
 import work.lclpnet.ap2.impl.util.TextUtil;

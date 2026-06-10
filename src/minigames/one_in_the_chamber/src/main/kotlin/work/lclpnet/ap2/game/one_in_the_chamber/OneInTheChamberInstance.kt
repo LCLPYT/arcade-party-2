@@ -4,6 +4,7 @@ import net.fabricmc.fabric.api.networking.v1.PlayerLookup
 import net.minecraft.ChatFormatting
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.chat.Component
+import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
@@ -20,15 +21,14 @@ import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.criteria.ObjectiveCriteria
 import org.json.JSONArray
-import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.stats.CommonStats.DamageDealt
 import work.lclpnet.ap2.api.stats.CommonStats.Deaths
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.core.hook.ProjectileShootCallback
 import work.lclpnet.ap2.core.hook.SpectatePlayerCallback
 import work.lclpnet.ap2.ext.mc.isOf
-import work.lclpnet.ap2.impl.game.FFAGameInstance
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
@@ -36,6 +36,7 @@ import work.lclpnet.ap2.impl.util.TextUtil
 import work.lclpnet.ap2.impl.util.handler.VisualCooldown
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
 import work.lclpnet.game.impl.prot.ProtectionTypes
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.hook.entity.ProjectileHooks
@@ -53,9 +54,9 @@ private val Killstreak = Stat("killstreak", 0)
 
 enum class BowType { Bow, CrossBow }
 
-class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle) {
+class OneInTheChamberInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
 
-    private val data = IntScoreDataContainer(PlayerRef::create)
+    override val data = IntScoreDataContainer(PlayerRef::create)
     private val random = Random()
     private val respawn = OneInTheChamberSpawns(gameHandle, random)
     private val movementBlocker = SimpleMovementBlocker(gameHandle.rootScheduler).also {
@@ -69,8 +70,6 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(game
     init {
         useOldCombat()
     }
-
-    override fun getData(): DataContainer<ServerPlayer, PlayerRef> = data
 
     override fun prepare() {
         commons().gameRuleBuilder()

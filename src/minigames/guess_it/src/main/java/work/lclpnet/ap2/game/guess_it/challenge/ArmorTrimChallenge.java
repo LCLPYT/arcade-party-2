@@ -17,7 +17,7 @@ import net.minecraft.world.item.equipment.trim.ArmorTrim;
 import net.minecraft.world.item.equipment.trim.TrimMaterial;
 import net.minecraft.world.item.equipment.trim.TrimPattern;
 import net.minecraft.world.phys.Vec3;
-import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.OptionMaker;
 import work.lclpnet.ap2.impl.util.ItemHelper;

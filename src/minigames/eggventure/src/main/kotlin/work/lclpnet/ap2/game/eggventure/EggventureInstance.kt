@@ -30,15 +30,12 @@ import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.criteria.ObjectiveCriteria
 import org.joml.Matrix4f
-import work.lclpnet.ap2.ApConstants
-import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.api.game.data.DataContainer
-import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.util.heads.PlayerHead
 import work.lclpnet.ap2.ext.mc.isOf
-import work.lclpnet.ap2.impl.game.FFAGameInstance
-import work.lclpnet.ap2.impl.game.data.DataContainers
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.FFAGameInstance
+import work.lclpnet.ap2.game.util.finaleCompatibleScoreContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.tags.PlayerHeadTags
@@ -57,12 +54,11 @@ import work.lclpnet.kibu.hook.player.PlayerSwingHandHook
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.translate.text.FormatWrapper.styled
 import java.util.*
-import java.util.concurrent.CompletableFuture
 import kotlin.math.PI
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
-private const val DEBUG_EGG_POSITIONS = false
+const val DEBUG_EGG_POSITIONS = false
 private const val STEAL_RANGE = 10.0
 private val NBT_CODEC: MapCodec<Boolean> = Codec.BOOL.fieldOf("easter_egg")
 
@@ -79,79 +75,26 @@ fun eggVariants(registryManager: RegistryAccess): List<PlayerHead> {
     return headEntries.map { it.value() }
 }
 
-class EggventureInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
+fun isEasterEgg(world: ServerLevel, pos: BlockPos): Boolean {
+    val state = world.getBlockState(pos)
 
-    private val data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
+    if (!state.isOf(Blocks.PLAYER_HEAD) && !state.isOf(Blocks.PLAYER_WALL_HEAD)) return false
+
+    val skull = world.getBlockEntity(pos, BlockEntityType.SKULL).orElse(null) ?: return false
+
+    return CustomNbt.get(skull.components(), NBT_CODEC).orElse(false) ?: false
+}
+
+class EggventureInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    private val remainingPositions: MutableSet<BlockPos>,
+) : FFAGameInstance(gameHandle, level, map) {
+
+    override val data = finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
     private val stats = createStats(data, EggsStolen, EggsLost)
     private val random = Random()
-    private val remainingPositions = HashSet<BlockPos>()
-
-    override fun getData(): DataContainer<ServerPlayer, PlayerRef> = data
-
-    override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
-        val shape = MapUtil.readShape(map, "egg-area")
-        val positions = mutableListOf<BlockPos>()
-
-        for (pos in shape) {
-            if (isEasterEgg(world, pos)) {
-                positions.add(pos.immutable())
-            }
-        }
-
-        val minEggs: Int = map.requireProperty("min-eggs")
-        val maxEggs: Int = map.requireProperty("max-eggs")
-        val eggs = minEggs + random.nextInt(maxEggs - minEggs + 1)
-
-        val variants = eggVariants(world.registryAccess())
-
-        if (variants.isEmpty()) {
-            throw IllegalStateException("There are no egg variants defined")
-        }
-
-        if (ApConstants.DEBUG) {
-            gameHandle.logger.info("There are {} possible egg positions and {} should be placed", positions.size, eggs)
-        }
-
-        val debugController = commons(map, world).debugController()
-
-        repeat(eggs) {
-            if (positions.isEmpty()) return@repeat
-
-            val pos = positions.removeAt(random.nextInt(positions.size))
-
-            if (DEBUG_EGG_POSITIONS) {
-                debugController.renderer().ifPresent { renderer ->
-                    renderer.marker(pos.center, Blocks.GREEN_TERRACOTTA.defaultBlockState(), 0x00ff00)
-                }
-            }
-
-            val variant = variants[random.nextInt(variants.size)]
-            world.getBlockEntity(pos, BlockEntityType.SKULL).ifPresent { variant.apply(it) }
-            remainingPositions.add(pos)
-        }
-
-        for (pos in positions) {
-            world.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_SUPPRESS_DROPS or Block.UPDATE_KNOWN_SHAPE)
-
-            if (DEBUG_EGG_POSITIONS) {
-                debugController.renderer().ifPresent { renderer ->
-                    renderer.marker(pos.center, Blocks.BLUE_TERRACOTTA.defaultBlockState(), 0x0000ff)
-                }
-            }
-        }
-
-        return CompletableFuture.completedFuture(null)
-    }
-
-    private fun isEasterEgg(world: ServerLevel, pos: BlockPos): Boolean {
-        val state = world.getBlockState(pos)
-
-        if (!state.isOf(Blocks.PLAYER_HEAD) && !state.isOf(Blocks.PLAYER_WALL_HEAD)) return false
-
-        val skull = world.getBlockEntity(pos, BlockEntityType.SKULL).orElse(null) ?: return false
-
-        return CustomNbt.get(skull.components(), NBT_CODEC).orElse(false) ?: false
-    }
 
     override fun prepare() {
         DebugEggsCommand(gameHandle.logger).register(gameHandle.commands)

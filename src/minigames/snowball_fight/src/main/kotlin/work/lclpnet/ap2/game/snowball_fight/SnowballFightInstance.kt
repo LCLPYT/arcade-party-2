@@ -18,14 +18,15 @@ import net.minecraft.world.entity.projectile.throwableitemprojectile.Snowball
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.setAttribute
 import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.translate
-import work.lclpnet.ap2.impl.game.EliminationGameInstance
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.impl.util.world.SpawnFinder
 import work.lclpnet.game.impl.prot.ProtectionTypes
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.scheduler.Ticks
@@ -39,7 +40,7 @@ private val FREEZING_DURATION_TICKS = Ticks.seconds(5)
 private const val MAX_SNOWBALL_STACKS = 9
 private const val SNOWBALL_DAMAGE = 0.75f
 
-class SnowballFightInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle) {
+class SnowballFightInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
 
     init {
         useSurvivalMode()
@@ -51,7 +52,6 @@ class SnowballFightInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
         useNoHealing()
         useSmoothDeath()
         commons().displayHealth()
-        teleportPlayers()
     }
 
     override fun go() {
@@ -142,7 +142,7 @@ class SnowballFightInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
         }
     }
 
-    private fun teleportPlayers() {
+    override fun teleportPlayers() {
         val random = Random()
 
         val spacingValue = map.getProperty<Number?>("spawn-spacing")

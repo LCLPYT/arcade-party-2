@@ -7,7 +7,7 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.resources.Identifier;
 import work.lclpnet.ap2.api.base.MiniGameManager;
-import work.lclpnet.ap2.api.game.GameInfo;
+import work.lclpnet.ap2.game.GameInfo;
 
 import java.util.concurrent.CompletableFuture;
 

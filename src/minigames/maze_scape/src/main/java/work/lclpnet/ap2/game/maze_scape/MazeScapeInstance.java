@@ -17,16 +17,12 @@ import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
-import org.slf4j.Logger;
 import work.lclpnet.ap2.ApConstants;
-import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameResults;
-import work.lclpnet.ap2.api.map.MapBootstrap;
-import work.lclpnet.ap2.api.util.model.ModelManager;
-import work.lclpnet.ap2.ext.mc.LevelExtensionsKt;
+import work.lclpnet.ap2.game.MiniGameHandle;
+import work.lclpnet.ap2.game.base.EliminationGameInstance;
 import work.lclpnet.ap2.game.maze_scape.debug.DebugFrustumCommand;
 import work.lclpnet.ap2.game.maze_scape.debug.DebugPathCommand;
 import work.lclpnet.ap2.game.maze_scape.setup.MSDebugController;
@@ -37,7 +33,6 @@ import work.lclpnet.ap2.game.maze_scape.util.MSManager;
 import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
 import work.lclpnet.ap2.game.maze_scape.util.MonsterReveal;
 import work.lclpnet.ap2.game.player.Participants;
-import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.resource.ApResources;
 import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
@@ -52,9 +47,8 @@ import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 
-public class MazeScapeInstance extends EliminationGameInstance implements MapBootstrap {
+public class MazeScapeInstance extends EliminationGameInstance {
 
     private static final int
             MOB_SPAWN_DELAY_TICKS = Ticks.seconds(0),
@@ -64,48 +58,20 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
     private static final String FELL_INTO_PIT = "game.ap2.maze_scape.fell_into_pit";
 
     private final Random random = new Random();
-    private MSDebugController debugController;
-    private @Nullable MSStruct struct = null;
+    private final @Nullable MSStruct struct;
+    private final MSDebugController debugController;
     private @Nullable MSManager manager = null;
 
-    public MazeScapeInstance(MiniGameHandle gameHandle) {
-        super(gameHandle);
-    }
-
-    @Override
-    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerLevel world, @NotNull GameMap map) {
-        LevelExtensionsKt.setDayTime(world, 18_000);
-
-        ModelManager modelManager = ApResources.getInstance();
-
-        debugController = new MSDebugController(commons(map, world).debugController());
-
-        if (ApConstants.DEBUG) {
-            debugController.init(modelManager);
-        }
-
-        Logger logger = gameHandle.getLogger();
-        var setup = new MSLoader(world, map, logger);
-
-        return setup.load().thenCompose(res -> {
-            if (MSLoader.DEBUG_PIECES) {
-                struct = null;
-                return CompletableFuture.completedFuture(null);
-            }
-
-            long seed = new Random().nextLong();
-            var random = new Random(seed);
-
-            var generator = new MSGenerator(world, map, res, random, seed, logger, debugController);
-
-            return generator.startGenerator().thenAccept(optGraph -> struct = optGraph.orElse(null));
-        });
+    public MazeScapeInstance(MiniGameHandle gameHandle, ServerLevel world, GameMap map, @Nullable MSStruct struct, MSDebugController debugController) {
+        super(gameHandle, world, map);
+        this.struct = struct;
+        this.debugController = debugController;
     }
 
     @Override
     protected void prepare() {
         if (MSLoader.DEBUG_PIECES) {
-            for (ServerPlayer player : gameHandle.getParticipants()) {
+            for (ServerPlayer player : getGameHandle().getParticipants()) {
                 Abilities abilities = player.getAbilities();
                 abilities.mayfly = true;
                 abilities.flying = true;
@@ -116,12 +82,12 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
         }
 
         if (struct == null) {
-            gameHandle.getLogger().error("Failed to generate structure graph. Aborting the mini-game...");
-            gameHandle.complete(MiniGameResults.EMPTY);
+            getGameHandle().getLogger().error("Failed to generate structure graph. Aborting the mini-game...");
+            getGameHandle().complete(MiniGameResults.EMPTY);
             return;
         }
 
-        CommandRegistrar commandRegistrar = gameHandle.getCommands();
+        CommandRegistrar commandRegistrar = getGameHandle().getCommands();
 
         if (ApConstants.DEBUG) {
             new DebugPathCommand(struct, debugController).register(commandRegistrar);
@@ -132,13 +98,12 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
         useNoHealing();
         useRemainingPlayersDisplay();
 
-        var persistence = new ChunkPersistence(getLevel(), gameHandle);
+        var persistence = new ChunkPersistence(getLevel(), getGameHandle());
         int mapChunkRadius = MSGenerator.getMaxChunkSize(getMap());
 
         persistence.markQuadPersistent(-mapChunkRadius, -mapChunkRadius, mapChunkRadius, mapChunkRadius);
 
         commons().displayHealth();
-        teleportPlayers();
     }
 
     @Override
@@ -146,14 +111,14 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
         if (MSLoader.DEBUG_PIECES) return;
 
         ServerLevel world = getLevel();
-        Participants participants = gameHandle.getParticipants();
+        Participants participants = getGameHandle().getParticipants();
 
         manager = new MSManager(world, getMap(), struct, participants, random,
-                gameHandle.getLogger(), debugController);
+                getGameHandle().getLogger(), debugController);
 
-        manager.init(gameHandle);
+        manager.init(getGameHandle());
 
-        TaskScheduler scheduler = gameHandle.getScheduler();
+        TaskScheduler scheduler = getGameHandle().getScheduler();
         scheduler.interval(manager::updateMobs, MOB_UPDATE_DELAY_TICKS, MOB_SPAWN_DELAY_TICKS);
         scheduler.interval(manager::tick, 1);
         scheduler.interval(this::checkPits, 1);
@@ -162,12 +127,12 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
             manager.spawnMobs();
 
             var reveal = new MonsterReveal(ApResources.getInstance(), manager.participants(), world, manager.monsters());
-            reveal.start(scheduler, gameHandle.getHooks());
+            reveal.start(scheduler, getGameHandle().getHooks());
 
             scheduler.timeout(reveal::stop, MOB_REVEAL_TICKS);
         }, MOB_SPAWN_DELAY_TICKS);
 
-        gameHandle.protect(config -> ProtectionTypes.ALLOW_DAMAGE.allow(config, this::allowDamage));
+        getGameHandle().protect(config -> ProtectionTypes.ALLOW_DAMAGE.allow(config, this::allowDamage));
     }
 
     @Override
@@ -183,7 +148,8 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
         }
     }
 
-    private void teleportPlayers() {
+    @Override
+    protected void teleportPlayers() {
         if (struct == null) return;
 
         OrientedStructurePiece oriented = struct.graph().root().oriented();
@@ -202,7 +168,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
 
         ServerLevel world = getLevel();
 
-        for (ServerPlayer player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : getGameHandle().getParticipants()) {
             player.teleportTo(world, spawn.x(), spawn.y(), spawn.z(), Set.of(), yaw, 0, true);
         }
     }
@@ -212,7 +178,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
     }
 
     private void checkPits() {
-        gameHandle.getParticipants().forEach(this::checkInPit);
+        getGameHandle().getParticipants().forEach(this::checkInPit);
     }
 
     private void checkInPit(ServerPlayer player) {
@@ -254,7 +220,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
                 .noneMatch(pos -> collides(pos, world, context, collisionBox, boxShape))) return;
 
         // hit the ground within a pit
-        DeathMessages msg = gameHandle.getDeathMessages();
+        DeathMessages msg = getGameHandle().getDeathMessages();
 
         eliminate(player, msg.root(FELL_INTO_PIT, msg.wrap(player)));
     }

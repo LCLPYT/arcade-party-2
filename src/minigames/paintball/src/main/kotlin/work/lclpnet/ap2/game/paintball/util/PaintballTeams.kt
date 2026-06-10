@@ -22,7 +22,8 @@ class PaintballTeams(
     private val map: GameMap,
     private val participants: Participants,
     private val random: Random,
-    private val logger: Logger
+    private val logger: Logger,
+    val openBases: () -> Unit,
 ) : Iterable<PaintballTeam> {
 
     private val teamsByKey = HashMap<TeamKey, PaintballTeam>()

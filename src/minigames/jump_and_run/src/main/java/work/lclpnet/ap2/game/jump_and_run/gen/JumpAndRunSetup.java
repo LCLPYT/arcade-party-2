@@ -4,7 +4,7 @@ import net.minecraft.server.level.ServerLevel;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
-import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.map.schema.MapSchemaLoader;
 import work.lclpnet.ap2.impl.util.structure.StructureUtil;
 import work.lclpnet.game.map.GameMap;

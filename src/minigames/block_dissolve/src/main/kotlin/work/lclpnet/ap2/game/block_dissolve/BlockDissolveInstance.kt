@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.longs.LongArrayList
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup
 import net.minecraft.core.BlockPos
 import net.minecraft.core.particles.ParticleTypes
+import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
@@ -13,7 +14,6 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.gamerules.GameRules
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
 import work.lclpnet.ap2.api.stats.CommonStats.Kills
 import work.lclpnet.ap2.api.stats.CommonStats.TimeSurvived
@@ -21,10 +21,12 @@ import work.lclpnet.ap2.core.hook.ProjectileHitEntityCallback
 import work.lclpnet.ap2.ext.gainKill
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.trackDistanceMoved
-import work.lclpnet.ap2.impl.game.EliminationGameInstance
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.world.KnockbackKillTracker
 import work.lclpnet.game.impl.prot.ProtectionTypes
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.scheduler.api.RunningTask
@@ -36,11 +38,12 @@ private const val WARNING_DELAY_TICKS = 70
 private const val WARNING_PERIOD_TICKS = 5
 private const val WARNING_AMOUNT = 150
 
-class BlockDissolveInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle) {
+class BlockDissolveInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
 
     private val markedBlocks = LongArrayList()
     private val random = Random()
     private val stats = createStats(TimeSurvived, Kills, DistanceMoved)
+    private val killTracker = KnockbackKillTracker(gameHandle.participants)
     private var nextSnowball = Ticks.seconds(3)
     private var tickOfSecond = 0
     private var extraDissolvedThisSecond = 0
@@ -50,7 +53,6 @@ class BlockDissolveInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
     private var warningTimer = 0
     private var warning = false
     private var physics = false
-    private lateinit var killTracker: KnockbackKillTracker
 
     init {
         useOldCombat()
@@ -83,7 +85,6 @@ class BlockDissolveInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
     }
 
     override fun go() {
-        killTracker = KnockbackKillTracker(gameHandle.participants)
         killTracker.init(gameHandle.scheduler)
 
         ProjectileHitEntityCallback.HOOK.registerWith(gameHandle.hooks) { projectile, hit ->

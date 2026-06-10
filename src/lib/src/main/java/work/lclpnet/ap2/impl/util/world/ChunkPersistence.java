@@ -6,7 +6,7 @@ import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
-import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.game.MiniGameHandle;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;

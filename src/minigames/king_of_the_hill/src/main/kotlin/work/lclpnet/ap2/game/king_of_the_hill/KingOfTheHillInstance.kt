@@ -15,8 +15,6 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.gamerules.GameRules
-import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.api.map.MapBootstrapFunction
 import work.lclpnet.ap2.ext.interval
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.playNotifySound
@@ -24,8 +22,9 @@ import work.lclpnet.ap2.ext.mc.setBlock
 import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.setupSidebarScoreboard
 import work.lclpnet.ap2.ext.translate
-import work.lclpnet.ap2.impl.game.FFAGameInstance
-import work.lclpnet.ap2.impl.game.data.DataContainers
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.FFAGameInstance
+import work.lclpnet.ap2.game.util.finaleCompatibleScoreContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.ItemHelper
@@ -41,18 +40,14 @@ import kotlin.time.Duration.Companion.seconds
 
 val DURATION = 2.minutes + 40.seconds
 
-class KingOfTheHillInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrapFunction {
+class KingOfTheHillInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
     
-    private val data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
+    override val data = finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
     var goalShape: BlockShape? = null
 
     init {
         useOldCombat()
     }
-
-    override fun getData() = data!!
-
-    override fun bootstrapWorld(world: ServerLevel, map: GameMap) = createMarkers(world, map)
 
     override fun prepare() {
         commons().teleportToRandomSpawns(Random.asJavaRandom())

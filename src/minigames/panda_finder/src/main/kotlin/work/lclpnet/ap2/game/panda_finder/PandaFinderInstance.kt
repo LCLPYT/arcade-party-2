@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.ints.IntList
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup
 import net.minecraft.ChatFormatting
 import net.minecraft.core.component.DataComponents
+import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
@@ -22,11 +23,10 @@ import net.minecraft.world.item.component.FireworkExplosion
 import net.minecraft.world.item.component.Fireworks
 import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.criteria.ObjectiveCriteria
-import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.runAfter
-import work.lclpnet.ap2.impl.game.FFAGameInstance
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.map.MapUtil
@@ -35,6 +35,7 @@ import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
 import work.lclpnet.ap2.impl.util.world.NotOccupiedBlockPredicate
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks
 import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.FireworkEntityAccess
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
@@ -53,17 +54,15 @@ val PandasStolen = Stat("pandas_stolen", 0)
 val PandasLost = Stat("pandas_lost", 0)
 val Cooldowns = Stat("cooldowns", 0)
 
-class PandaFinderInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle) {
+class PandaFinderInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
 
-    private val data = IntScoreDataContainer(PlayerRef::create)
+    override val data = IntScoreDataContainer(PlayerRef::create)
     private val random = Random()
     private val spamManager = SpamManager()
     private lateinit var pandaManager: PandaManager
     private lateinit var bossBar: DynamicTranslatedPlayerBossBar
     private val stats = createStats(data, PandasClicked, AvgSpawnDistance, CloseCalls, PandasStolen, PandasLost, Cooldowns)
     private var round = 0
-
-    override fun getData(): DataContainer<ServerPlayer, PlayerRef> = data
 
     override fun prepare() {
         scanWorld()

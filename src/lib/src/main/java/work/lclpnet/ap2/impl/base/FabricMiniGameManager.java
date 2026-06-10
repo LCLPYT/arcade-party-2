@@ -11,8 +11,8 @@ import net.fabricmc.loader.api.metadata.CustomValue;
 import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.MiniGameManager;
-import work.lclpnet.ap2.api.game.GameInfo;
-import work.lclpnet.ap2.api.game.MiniGame;
+import work.lclpnet.ap2.game.GameInfo;
+import work.lclpnet.ap2.game.MiniGame;
 
 import java.nio.file.Path;
 import java.util.*;

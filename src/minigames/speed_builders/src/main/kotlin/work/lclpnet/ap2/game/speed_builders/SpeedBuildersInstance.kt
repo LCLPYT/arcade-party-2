@@ -16,19 +16,18 @@ import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.PlayerTeam
 import net.minecraft.world.scores.Team
-import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.ext.allPlayers
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.ext.server
 import work.lclpnet.ap2.ext.translate
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.game.speed_builders.data.SbIsland
 import work.lclpnet.ap2.game.speed_builders.data.SbModule
 import work.lclpnet.ap2.game.speed_builders.util.*
 import work.lclpnet.ap2.impl.game.Announcer
-import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.util.ParticleHelper
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.game.map.GameMap
@@ -39,19 +38,22 @@ import work.lclpnet.kibu.hook.entity.ProjectileHooks
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.title.Title
 import java.util.*
-import java.util.concurrent.CompletableFuture
 import kotlin.time.Duration.Companion.seconds
 
 private const val LOOK_DURATION_SECONDS = 8
-private const val FAST_MODE_MIN_PLAYERS = 6
+const val FAST_MODE_MIN_PLAYERS = 6
 private val JUDGE_DURATION = 5.seconds
 private val JUDGE_ANNOUNCEMENT_DELAY = 3.seconds
 private val DESTROY_DELAY_TICKS = Ticks.seconds(4)
 
-class SpeedBuildersInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrap {
+class SpeedBuildersInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    val setup: SbSetup,
+    val islands: Map<UUID, SbIsland>,
+) : EliminationGameInstance(gameHandle, level, map) {
 
-    private val random = Random()
-    private val setup = SbSetup(random, gameHandle.logger)
     private val items = SbItems()
     private lateinit var destruction: SbDestruction
     private lateinit var manager: SbManager
@@ -60,40 +62,32 @@ class SpeedBuildersInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
     private lateinit var aelosId: UUID
     private var timer: BossBarTimer? = null
     private var timerTransaction = 0
-    private var fastMode = false
 
     init {
         useSurvivalMode()
         disableTeleportEliminated()
     }
 
-    override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
-        return setup.setup(map, world).thenRun {
-            val participants: Participants = gameHandle.participants
-            val islands = setup.createIslands(participants, world)
-
-            aelosId = setup.getAelosId()
-
-            fastMode = participants.count() >= FAST_MODE_MIN_PLAYERS
-
-            manager = SbManager(
-                islands,
-                setup.getModules(),
-                gameHandle,
-                world,
-                random,
-                fastMode,
-                this::allPlayersCompleted,
-                this::onLastPlayerRemaining
-            )
-
-            destruction = SbDestruction(world, random, aelosId)
-
-            world.gameRules.set(GameRules.BLOCK_DROPS, true, gameHandle.server)
-        }
-    }
-
     override fun prepare() {
+        val aelosId = setup.getAelosId()
+
+        val fastMode = gameHandle.participants.count() >= FAST_MODE_MIN_PLAYERS
+        val random = Random()
+
+        manager = SbManager(
+            islands,
+            setup.getModules(),
+            gameHandle,
+            level,
+            random,
+            fastMode,
+            this::allPlayersCompleted,
+            this::onLastPlayerRemaining
+        )
+
+        destruction = SbDestruction(level, random, aelosId)
+        level.gameRules.set(GameRules.BLOCK_DROPS, true, server)
+
         setupGameRules()
 
         ServerLevelBehaviour.setFluidTicksEnabled(level, false)
@@ -337,7 +331,7 @@ class SpeedBuildersInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
             velocity = projectile.deltaMovement.normalize()
         } else {
             impactPos = islandToDestroy!!.getCenter()
-            val entity = getLevel().getEntity(aelosId)
+            val entity = level.getEntity(aelosId)
 
             velocity = if (entity is Breeze) {
                 impactPos.subtract(getChargePos(entity)).normalize()
@@ -350,7 +344,7 @@ class SpeedBuildersInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
 
         islandToDestroy = null
 
-        val playerManager = gameHandle.getServer().playerList
+        val playerManager = gameHandle.server.playerList
         val player = playerManager.getPlayer(playerToEliminate!!)
 
         if (player == null) {

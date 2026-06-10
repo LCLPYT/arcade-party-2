@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "ap2-minigame-rapid-runner",
+  "version": "${version}",
+  "authors": [
+    "LCLP"
+  ],
+  "license": "AGPL-3.0",
+  "environment": "server",
+  "entrypoints": {
+    "ap2:minigame": [
+      {
+        "adapter": "kotlin",
+        "value": "work.lclpnet.ap2.rapid_runner.RapidRunnerMinigame"
+      }
+    ]
+  },
+  "depends": {
+    "ap2-lib": "*",
+    "fabric-language-kotlin": "*"
+  },
+  "custom": {
+    "timestamp": 1780920352,
+    "modmenu": {
+      "parent": "ap2-minigames"
+    }
+  }
+}

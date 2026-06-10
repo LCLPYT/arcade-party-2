@@ -15,40 +15,28 @@ import net.minecraft.world.entity.Display
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.item.DyeColor
 import net.minecraft.world.level.GameType
-import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.phys.Vec3
-import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.scores.Team
 import org.joml.Matrix4f
-import org.json.JSONArray
-import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.api.map.MapBootstrapFunction
 import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.Stat
-import work.lclpnet.ap2.api.util.world.BlockPredicate
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.setBlock
 import work.lclpnet.ap2.ext.mc.setBlocks
 import work.lclpnet.ap2.ext.mc.teleport
-import work.lclpnet.ap2.impl.game.FFAGameInstance
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.OrderedDataContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
-import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.Fireworks
 import work.lclpnet.ap2.impl.util.ParticleHelper
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.impl.util.handler.Visibility
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager
-import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
-import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks
-import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
-import work.lclpnet.gaco.ds.StructureMask
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager
 import work.lclpnet.gaco.dynamic_entities.PlayerSpecificDynamicEntity
 import work.lclpnet.game.impl.prot.ProtectionTypes
@@ -59,8 +47,6 @@ import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar
 import work.lclpnet.kibu.translate.text.FormatWrapper.styled
 import work.lclpnet.kibu.translate.text.LocalizedFormat
-import work.lclpnet.kibu.util.BlockStateUtils
-import work.lclpnet.kibu.util.math.Matrix3i
 import java.util.*
 import kotlin.math.max
 import kotlin.math.sqrt
@@ -72,79 +58,24 @@ const val DEBUG_PRESSURE_PLATE_POSITIONS = false
 
 val Exploded = Stat("exploded", 0, higherIsBetter = false)
 
-class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrapFunction {
-    
-    private val data = OrderedDataContainer(PlayerRef::create)
+class MinefieldInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    val spawnShape: BlockShape,
+    val goalShape: BlockShape,
+    val spawnYaw: Float,
+    val goalDistance: Double,
+) : FFAGameInstance(gameHandle, level, map) {
+
+    override val data = OrderedDataContainer(PlayerRef::create)
     private val stats = createStats(Exploded, CommonStats.DistanceMoved)
     val inGoal = mutableSetOf<UUID>()
     val entries = mutableMapOf<UUID, Entry>()
     lateinit var taskBar: TranslatedBossBar
-    lateinit var spawnShape: BlockShape
-    lateinit var goalShape: BlockShape
     lateinit var dynamicEntityManager: DynamicEntityManager
     lateinit var visibility: VisibilityHandler
     var gameEnd = -1
-    var goalDistance: Double? = null
-    var spawnYaw = 0f
-
-    override fun getData() = data
-
-    override fun bootstrapWorld(world: ServerLevel, map: GameMap) {
-        val scanPositions = map.properties.getJSONArray("scan-positions")
-        val mineDensity = map.properties.optNumber("mine-density", 0.55f).toFloat()
-        val scanShape = readShape("scan-shape")
-        val startAnchorPos = MapUtil.readVec3d(map.properties.getJSONArray("start-anchor-pos"))
-
-        spawnShape = readShape("spawn-shape")
-        goalShape = readShape("goal-shape")
-        spawnYaw = MapUtil.readAngle(map.properties.optNumber("spawn-yaw", 0))
-        goalDistance = sqrt(goalShape.bounds().squaredDistanceTo(startAnchorPos))
-
-        val defaultPressurePlates = JSONArray()
-        defaultPressurePlates.put(BlockStateUtils.stringify(Blocks.STONE_PRESSURE_PLATE.defaultBlockState()))
-        val pressurePlatesJson = map.properties.optJSONArray("pressure-plates", defaultPressurePlates)
-        val pressurePlates = mutableSetOf<BlockState>()
-        MapUtil.readBlockStates(pressurePlatesJson, pressurePlates, gameHandle.logger)
-
-        val predicate = BlockPredicate.and({
-            scanShape.contains(it)
-                    && !spawnShape.contains(it)
-                    && !goalShape.contains(it)
-                    && world.getBlockState(it).getCollisionShape(world, it, CollisionContext.empty()).isEmpty
-        }, WalkableBlockPredicate(world))
-
-        val scanner =  BfsWorldScanner(SimpleAdjacentBlocks(predicate, 1))
-        val debugVoxelShape = if (DEBUG_PRESSURE_PLATE_POSITIONS) StructureMask.createEmpty(scanShape.bounds()) else null
-        val minPos = scanShape.bounds().min()
-
-        for (elem in scanPositions) {
-            if (elem !is JSONArray) continue
-
-            val start = MapUtil.readBlockPos(elem)
-
-            scanner.scan(start).forEach {
-                debugVoxelShape?.setVoxelAt(it.x - minPos.x, it.y - minPos.y, it.z - minPos.z, true)
-
-                if (Random.nextFloat() > mineDensity) return@forEach
-
-                world.setBlock(it, pressurePlates.random(), Block.UPDATE_KNOWN_SHAPE or Block.UPDATE_SUPPRESS_DROPS)
-            }
-        }
-
-        if (debugVoxelShape != null) {
-            val boxes = debugVoxelShape.greedyMeshing().generateBoxes()
-
-            commons(map, world).debugController().visualizeBoxes(
-                boxes,
-                minPos,
-                Matrix3i.IDENTITY,
-                Blocks.BLUE_STAINED_GLASS.defaultBlockState()
-            )
-        }
-
-        commons().gameRuleBuilder()
-            .set(GameRules.NATURAL_HEALTH_REGENERATION, false)
-    }
 
     override fun prepare() {
         for (player in players()) {
@@ -160,15 +91,15 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
     }
 
     fun setupTeam() {
-        val scoreboardManager = gameHandle.getScoreboardManager()
+        val scoreboardManager = gameHandle.scoreboardManager
         val team = scoreboardManager.createTeam("team")
-        team.setCollisionRule(Team.CollisionRule.NEVER)
-        scoreboardManager.joinTeam(gameHandle.getParticipants(), team)
+        team.collisionRule = Team.CollisionRule.NEVER
+        scoreboardManager.joinTeam(players(), team)
 
         val visibilityManager = VisibilityManager(team, Visibility.PARTIALLY_VISIBLE)
         visibility = VisibilityHandler(visibilityManager, gameHandle.translations, gameHandle.participants)
 
-        visibility.init(gameHandle.getHooks())
+        visibility.init(hooks)
 
         visibility.giveItems()
     }
@@ -227,7 +158,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
 
         Fireworks.spawnGoalFirework(player)
 
-        if (inGoal.size >= gameHandle.getParticipants().count()) {
+        if (inGoal.size >= players().count()) {
             winManager.complete()
             return
         }
@@ -292,7 +223,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
 
         fun update(player: ServerPlayer) {
             val pos = player.position()
-            val dist = sqrt(goalShape.bounds().squaredDistanceTo(pos)).coerceAtMost(goalDistance!!)
+            val dist = sqrt(goalShape.bounds().squaredDistanceTo(pos)).coerceAtMost(goalDistance)
 
             if (dist >= this.bestDist) return
 
@@ -338,7 +269,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
             label.billboardConstraints = Display.BillboardConstraints.CENTER
             label.backgroundColor = 0
 
-            val dist = max(0.0, goalDistance!! - bestDist)
+            val dist = max(0.0, goalDistance - bestDist)
 
             label.text = translate(
                 "game.ap2.minefield.personal_best",

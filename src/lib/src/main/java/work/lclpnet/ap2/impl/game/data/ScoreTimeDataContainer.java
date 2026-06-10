@@ -160,7 +160,7 @@ public class ScoreTimeDataContainer<T, Ref extends SubjectRef> extends BaseDataC
     }
 
     @Override
-    public void register(IntScoreEvent<T> listener) {
+    public void register(@NotNull IntScoreEvent<T> listener) {
         listeners.add(Objects.requireNonNull(listener));
     }
 

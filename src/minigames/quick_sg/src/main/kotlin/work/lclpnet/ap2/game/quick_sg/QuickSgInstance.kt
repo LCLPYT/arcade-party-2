@@ -3,6 +3,7 @@ package work.lclpnet.ap2.game.quick_sg
 import net.minecraft.core.registries.Registries
 import net.minecraft.network.protocol.game.ClientboundSetDefaultSpawnPositionPacket
 import net.minecraft.resources.ResourceKey
+import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.item.Items
@@ -10,27 +11,30 @@ import net.minecraft.world.level.block.entity.BarrelBlockEntity
 import net.minecraft.world.level.block.entity.ChestBlockEntity
 import net.minecraft.world.level.storage.LevelData
 import net.minecraft.world.level.storage.loot.LootTable
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.ext.toTicks
-import work.lclpnet.ap2.game.teleportToRandomSpawns
-import work.lclpnet.ap2.impl.game.EliminationGameInstance
-import work.lclpnet.ap2.impl.map.schema.SchemaHolder
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.EliminationGameInstance
+import work.lclpnet.ap2.game.util.teleportToRandomSpawns
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
 import work.lclpnet.ap2.util.PvpBehavior
 import work.lclpnet.ap2.util.loot.LazyLootContainerManager
 import work.lclpnet.ap2.util.loot.VanillaLootTableFiller
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import java.util.concurrent.TimeUnit
 
 val WORLD_BORDER_DELAY = TimeUnit.MINUTES.toTicks(2)
 val WORLD_BORDER_TIME = TimeUnit.MINUTES.toTicks(2)
 
-class QuickSgInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle) {
-
-    val schemaHolder: SchemaHolder<QuickSgSchema> = useSchema(QuickSgSchema::class.java)
+class QuickSgInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    val mapSchema: QuickSgSchema,
+) : EliminationGameInstance(gameHandle, level, map) {
 
     val movementBlocker = SimpleMovementBlocker(gameHandle.scheduler).also {
         it.setModifySpeedAttribute(false)
@@ -60,8 +64,6 @@ class QuickSgInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(game
         useRemainingPlayersDisplay()
         useSmoothDeath()
 
-        teleportPlayers()
-
         movementBlocker.init(gameHandle.hooks)
 
         players().forEach {
@@ -71,11 +73,10 @@ class QuickSgInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(game
         commons().hideNameTags()
     }
 
-    private fun teleportPlayers() {
-        val schema = schemaHolder.get()
+    override fun teleportPlayers() {
         val spacing = map.properties.optNumber("spawn-spacing", 16.0).toDouble()
 
-        teleportToRandomSpawns(schema.scanBox!!, schema.scanStarts, spacing)
+        teleportToRandomSpawns(mapSchema.scanBox!!, mapSchema.scanStarts, spacing)
     }
 
     override fun go() {

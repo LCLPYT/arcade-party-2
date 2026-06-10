@@ -2,7 +2,7 @@ package work.lclpnet.ap2.game.one_in_the_chamber
 
 import net.minecraft.core.BlockPos
 import org.json.JSONArray
-import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.impl.map.MapUtil
 import java.util.*
 

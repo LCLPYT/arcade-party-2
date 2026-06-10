@@ -24,8 +24,6 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.scores.Team
 import work.lclpnet.ap2.*
-import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.util.heads.PlayerHead
 import work.lclpnet.ap2.ext.*
@@ -33,8 +31,8 @@ import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.ext.mc.resetAttribute
 import work.lclpnet.ap2.ext.mc.setAttribute
 import work.lclpnet.ap2.ext.mc.teleport
-import work.lclpnet.ap2.impl.game.EliminationGameInstance
-import work.lclpnet.ap2.impl.map.schema.SchemaHolder
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.impl.util.ApRegistries
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
@@ -57,7 +55,6 @@ import work.lclpnet.kibu.structure.BlockStructure
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar
 import work.lclpnet.kibu.translate.text.FormatWrapper.styled
 import java.util.*
-import java.util.concurrent.CompletableFuture
 
 const val DEBUG_VALID_POSITIONS = false
 const val DEBUG_BUTTON_POSITION = false
@@ -76,20 +73,27 @@ enum class GameState {
     IDLE
 }
 
-class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrap {
+class ButtonMasterInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    val mapSchema: ButtonMasterSchema,
+    capsuleSchematic: BlockStructure,
+) : EliminationGameInstance(gameHandle, level, map) {
 
-    val schemaHolder: SchemaHolder<ButtonMasterSchema> = useSchema(ButtonMasterSchema::class.java)
     val validPositions = mutableListOf<BlockPos>()
 
     private val stats = createStats(ButtonsFound, Escapes, CommonStats.DistanceMoved, ButtonsMissed)
     private val bmStats = ButtonMasterStats(stats)
-    private lateinit var missDetector: ButtonMissDetector
-    private var escapesRecorded = false
-
+    private val missDetector = ButtonMissDetector(level, bmStats)
     val movementBlocker = SimpleMovementBlocker(gameHandle.scheduler).also {
         it.setModifySpeedAttribute(false)
     }
+    val dynamicEntityManager = DynamicEntityManager(level)
+    val capsules = ButtonMasterCapsules(level, mapSchema, capsuleSchematic, commons())
+    val buttonPositions = ButtonPositions(level, map, mapSchema, commons(), gameHandle)
 
+    private var escapesRecorded = false
     var currentButtonMarker: Object3d? = null
     var currentButtonPos: BlockPos? = null
     var gameState = GameState.IDLE
@@ -98,30 +102,11 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     var ejectedPlayer: UUID? = null
     var task: TaskHandle? = null
     var taskBar: TranslatedBossBar? = null
-    var wallBlocks: ResetWorldModifier? = null
+    var wallBlocks: ResetWorldModifier = ResetWorldModifier(level, hooks)
     var scene: Scene? = null
-    lateinit var dynamicEntityManager: DynamicEntityManager
-    lateinit var capsules: ButtonMasterCapsules
-    lateinit var buttonPositions: ButtonPositions
-    lateinit var capsuleSchematic: BlockStructure
-
-    override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
-        wallBlocks = ResetWorldModifier(world, gameHandle.hooks)
-
-        return schematic(assetPath("capsule.schem")).thenAccept {
-            capsuleSchematic = it
-        }
-    }
-
 
     override fun prepare() {
-        capsules = ButtonMasterCapsules(level, schemaHolder.get(), capsuleSchematic, commons())
-        missDetector = ButtonMissDetector(level, bmStats)
-
-        dynamicEntityManager = DynamicEntityManager(level)
         dynamicEntityManager.init(gameHandle.scheduler, gameHandle.hooks)
-
-        buttonPositions = ButtonPositions(level, map, schemaHolder.get(), commons(), gameHandle)
 
         validPositions.addAll(buttonPositions.scanWorld())
 
@@ -135,10 +120,9 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
 
     private fun closeWall() {
         val world = this.level
-        val wallBlocks = wallBlocks ?: return
         val wallState = Blocks.WHITE_STAINED_GLASS.defaultBlockState()
 
-        for (box in schemaHolder.get().startWalls) {
+        for (box in mapSchema.startWalls) {
             for (pos in box) {
                 if (world.getBlockState(pos).isCollisionShapeFullBlock(world, pos)) continue
 
@@ -177,13 +161,11 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     }
 
     private fun setupTeam() {
-        val scoreboardManager = gameHandle.getScoreboardManager()
+        val scoreboardManager = gameHandle.scoreboardManager
         val team = scoreboardManager.createTeam("team")
         team.nameTagVisibility = Team.Visibility.NEVER
-        scoreboardManager.joinTeam(gameHandle.getParticipants(), team)
+        scoreboardManager.joinTeam(players(), team)
     }
-
-
 
     override fun go() {
         buttonPositions.filterNoEntityCollision(validPositions)
@@ -268,7 +250,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         task?.cancel()
         scene?.clear()
 
-        player.teleport(schemaHolder.get().buttonMasterSpawn!!)
+        player.teleport(mapSchema.buttonMasterSpawn!!)
         player.setAttribute(Attributes.JUMP_STRENGTH, 0.0)
 
         val otherPlayers = players().filter { it != player }
@@ -376,7 +358,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
             }
         }
 
-        wallBlocks?.undo()
+        wallBlocks.undo()
 
         task = gameHandle.scheduler.timeout(BUTTON_REVEAL_SECONDS * 20, Runnable {
             markButton()

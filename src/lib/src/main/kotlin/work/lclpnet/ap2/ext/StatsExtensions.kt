@@ -9,7 +9,7 @@ import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.CommonStats.Kills
 import work.lclpnet.ap2.api.stats.FFAStatsManager
 import work.lclpnet.ap2.ext.mc.playNotifySound
-import work.lclpnet.ap2.impl.game.BaseGameInstance
+import work.lclpnet.ap2.game.base.MapGameInstance
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback
 import work.lclpnet.kibu.hook.util.PositionRotation
@@ -24,7 +24,7 @@ import kotlin.math.sqrt
  *
  * @param stats The stats manager that holds [CommonStats.DistanceMoved].
  */
-fun BaseGameInstance.trackDistanceMoved(stats: FFAStatsManager) {
+fun MapGameInstance.trackDistanceMoved(stats: FFAStatsManager) {
     PlayerMoveCallback.HOOK.registerWith(gameHandle.hooks) { player, from, to ->
         updateDistanceMoved(stats, player, from, to)
         false
@@ -41,7 +41,7 @@ fun BaseGameInstance.trackDistanceMoved(stats: FFAStatsManager) {
  * @param from The position the player moved from.
  * @param to The position the player moved to.
  */
-fun BaseGameInstance.updateDistanceMoved(
+fun MapGameInstance.updateDistanceMoved(
     stats: FFAStatsManager,
     player: ServerPlayer,
     from: PositionRotation,
@@ -55,7 +55,7 @@ fun BaseGameInstance.updateDistanceMoved(
     stats.modify(player, CommonStats.DistanceMoved) { it + sqrt(dx * dx + dz * dz).toFloat() }
 }
 
-fun BaseGameInstance.gainKill(player: ServerPlayer, stats: BaseStatsManager<ServerPlayer, PlayerRef>) {
+fun MapGameInstance.gainKill(player: ServerPlayer, stats: BaseStatsManager<ServerPlayer, PlayerRef>) {
     gainKill(player, stats, gameHandle.translations)
 }
 
