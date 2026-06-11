@@ -58,7 +58,6 @@ abstract class MapGameInstance(
     private var countdownTime = 0
     private var countdownValue = 0
     private val activeEffects: MutableSet<ApEffect> = mutableSetOf()
-    private var locatorBarEnabled = false
 
     override fun start() {
         applyMapEffects()
@@ -294,10 +293,6 @@ abstract class MapGameInstance(
         bossBar.init(gameHandle.hooks)
 
         return bossBar
-    }
-
-    protected fun enableLocatorBar() {
-        this.locatorBarEnabled = true
     }
 
     /**
