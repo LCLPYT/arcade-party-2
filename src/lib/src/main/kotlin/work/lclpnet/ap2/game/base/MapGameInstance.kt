@@ -28,7 +28,6 @@ import work.lclpnet.ap2.impl.util.property.ApMapProperties
 import work.lclpnet.ap2.util.SubtitleCountdown
 import work.lclpnet.combatctl.impl.CombatStyles
 import work.lclpnet.game.map.GameMap
-import work.lclpnet.game.map.MapUtils
 import work.lclpnet.game.util.BossBarTimer
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
@@ -77,10 +76,10 @@ abstract class MapGameInstance(
             gameHandle.server,
             gameHandle.scheduler,
             { _ -> },
-            { PlayerLookup.all(gameHandle.server) }
+            ::allPlayers
         )
 
-        countdown.schedule(initialDelay) { this.afterInitialDelay() }
+        countdown.schedule(initialDelay) { afterInitialDelay() }
     }
 
     private fun registerDefaultHooks() {
@@ -94,11 +93,8 @@ abstract class MapGameInstance(
     }
 
     protected open fun teleportPlayers() {
-        val spawn = MapUtils.getSpawnPosition(map)
-        val yaw = MapUtils.getSpawnYaw(map)
-
-        for (player in PlayerLookup.all(gameHandle.server)) {
-            player.teleportTo(level, spawn.x(), spawn.y(), spawn.z(), emptySet(), yaw, 0f, true)
+        for (player in allPlayers()) {
+            gameHandle.worldFacade.teleport(player)
         }
     }
 
