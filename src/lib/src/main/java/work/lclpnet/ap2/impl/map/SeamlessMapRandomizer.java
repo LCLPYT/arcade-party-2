@@ -37,7 +37,7 @@ public class SeamlessMapRandomizer implements MapRandomizer {
 
     @Override
     public CompletableFuture<GameMap> nextMap(Identifier gameId) {
-        var mapIds = mapManager.getCollection()
+        var mapIds = mapManager.collection()
                 .mapIdsWithPrefix(gameId)
                 .collect(Collectors.toSet());
 
@@ -80,7 +80,7 @@ public class SeamlessMapRandomizer implements MapRandomizer {
     }
 
     private CompletableFuture<GameMap> getMapById(Identifier mapId) {
-        var optMap = mapManager.getCollection().getMap(mapId);
+        var optMap = mapManager.collection().getMap(mapId);
 
         return optMap.map(CompletableFuture::completedFuture).orElseGet(() -> {
             var err = new NoSuchElementException("Map %s not found".formatted(mapId));

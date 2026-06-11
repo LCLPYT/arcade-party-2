@@ -60,7 +60,7 @@ public class MapFacadeImpl implements MapFacade {
 
     @Override
     public CompletableFuture<ServerLevel> changeMap(Identifier identifier, WorldOptions options) {
-        var optMap = mapManager.getCollection().getMap(identifier);
+        var optMap = mapManager.collection().getMap(identifier);
 
         if (optMap.isEmpty()) {
             return CompletableFuture.failedFuture(new IllegalStateException("Unknown map %s".formatted(identifier)));
@@ -68,14 +68,16 @@ public class MapFacadeImpl implements MapFacade {
 
         GameMap map = optMap.get();
 
-        Vec3 pos = MapUtils.getSpawnPosition(map);
-        float yaw = MapUtils.getSpawnYaw(map);
-        PositionRotation spawn = new PositionRotation(pos.x(), pos.y(), pos.z(), yaw, 0f);
-
         return worldFacade.changeLevel(
                 identifier,
                 options,
-                spawn,
+                _ -> {
+                    Vec3 pos = MapUtils.getSpawnPosition(map);
+                    float yaw = MapUtils.getSpawnYaw(map);
+                    PositionRotation spawn = new PositionRotation(pos.x(), pos.y(), pos.z(), yaw, 0f);
+
+                    return CompletableFuture.completedFuture(spawn);
+                },
                 key -> changeToYetUnloadedMap(map, key)
         );
     }
@@ -133,7 +135,7 @@ public class MapFacadeImpl implements MapFacade {
 
     @Override
     public CompletableFuture<List<Identifier>> getMapIds(Identifier gameId) {
-        List<Identifier> mapIds = mapManager.getCollection()
+        List<Identifier> mapIds = mapManager.collection()
                 .mapIdsWithPrefix(gameId)
                 .sorted()
                 .toList();
@@ -143,7 +145,7 @@ public class MapFacadeImpl implements MapFacade {
 
     @Override
     public CompletableFuture<List<GameMap>> getMaps(Identifier gameId) {
-        List<GameMap> maps = mapManager.getCollection()
+        List<GameMap> maps = mapManager.collection()
                 .mapsWithPrefix(gameId)
                 .sorted(Comparator.comparing(map -> map.getDescriptor().getIdentifier()))
                 .toList();
@@ -153,7 +155,7 @@ public class MapFacadeImpl implements MapFacade {
 
     @Override
     public CompletableFuture<Optional<GameMap>> getMap(Identifier mapId) {
-        var optMap = mapManager.getCollection().getMap(mapId);
+        var optMap = mapManager.collection().getMap(mapId);
 
         return CompletableFuture.completedFuture(optMap);
     }
