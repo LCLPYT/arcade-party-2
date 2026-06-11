@@ -67,12 +67,12 @@ metafile = true
 
 [[files]]
 file = "mods/mg-api.pw.toml"
-hash = "6ac9cbc77cad4348611c42427952bebb5add3418a23b39c435ef1b5effa21686"
+hash = "2ca5a6fb9cbf4f6fe66ecff6602c355246a9b6204e8c03b8914d65704b3c29e2"
 metafile = true
 
 [[files]]
 file = "mods/mg-lobby.pw.toml"
-hash = "ec74b9c1fbfb945d0bb226e95ff63d82a701990a462fbc036c0bf509f05110a9"
+hash = "62ae0eeeec70541726616aa573d84a851e9efa2a756be61fc17b59a5ab2374b7"
 metafile = true
 
 [[files]]

@@ -62,7 +62,7 @@ import work.lclpnet.gaco.scene.MixedMountContext;
 import work.lclpnet.gaco.scene.Object3d;
 import work.lclpnet.gaco.scene.Scene;
 import work.lclpnet.gaco.scene.object.TranslatedTextDisplayObject;
-import work.lclpnet.game.api.MapOptions;
+import work.lclpnet.game.api.WorldOptions;
 import work.lclpnet.game.map.GameMap;
 import work.lclpnet.game.util.BossBarTimer;
 import work.lclpnet.game.util.ProtectorComponent;
@@ -166,7 +166,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         return miniGameArgs.mapFacade()
                 .findMapIdByPrefix(prefix)
                 .thenApply(mapId -> mapId.orElseThrow(() -> new IllegalStateException("No map found for prefix %s".formatted(prefix))))
-                .thenCompose(mapId -> miniGameArgs.worldFacade().changeMap(mapId, MapOptions.REUSABLE)
+                .thenCompose(mapId -> miniGameArgs.mapFacade().changeMap(mapId, WorldOptions.REUSABLE)
                         .thenCompose(world -> miniGameArgs.mapFacade().getMap(mapId)
                                 .thenApply(map -> new SetupResult(world, map
                                         .orElseThrow(() -> new IllegalStateException("Map %s not found".formatted(mapId)))))));
