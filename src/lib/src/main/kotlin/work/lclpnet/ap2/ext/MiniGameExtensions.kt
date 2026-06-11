@@ -11,6 +11,7 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.scores.DisplaySlot
 import org.slf4j.Logger
 import work.lclpnet.ap2.api.event.IntScoreEventSource
+import work.lclpnet.ap2.game.MiniGameInstance
 import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.base.MapGameInstance
 import work.lclpnet.ap2.impl.game.GameCommons
@@ -18,41 +19,44 @@ import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
 import work.lclpnet.game.util.BossBarTimer
+import work.lclpnet.kibu.hook.HookRegistrar
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback
+import work.lclpnet.kibu.scheduler.api.TaskScheduler
+import work.lclpnet.kibu.translate.Translations
 import work.lclpnet.kibu.translate.text.TranslatedText
 import kotlin.time.Duration
 
-fun MapGameInstance.players() =
+fun MiniGameInstance.players() =
     gameHandle.participants
 
-fun MapGameInstance.allPlayers() =
+fun MiniGameInstance.allPlayers() =
     PlayerLookup.all(gameHandle.server)
 
-fun MapGameInstance.translate(key: String, vararg args: Any) =
+fun MiniGameInstance.translate(key: String, vararg args: Any) =
     gameHandle.translations.translateText(key, *args)!!
 
-val MapGameInstance.logger: Logger
+val MiniGameInstance.logger: Logger
     get() = gameHandle.logger
 
-val MapGameInstance.server: MinecraftServer
+val MiniGameInstance.server: MinecraftServer
     get() = gameHandle.server
 
-fun FFAGameInstance.setupSidebarScoreboard(data: IntScoreEventSource<ServerPlayer>) {
-    val objective = gameHandle.scoreboardManager.translateObjective("points", "ap2.score")
+val MiniGameInstance.scheduler: TaskScheduler
+    get() = gameHandle.scheduler
 
-    useScoreboardStatsSync(data, objective)
-    objective.setSlot(DisplaySlot.SIDEBAR)
+val MiniGameInstance.translations: Translations
+    get() = gameHandle.translations
 
-    allPlayers().forEach(objective::add)
-}
+val MiniGameInstance.hooks: HookRegistrar
+    get() = gameHandle.hooks
 
-fun MapGameInstance.readShape(key: String): BlockShape =
-    MapUtil.readShape(map, key)
+fun MiniGameInstance.isParticipating(player: ServerPlayer): Boolean =
+    gameHandle.participants.isParticipating(player)
 
-inline fun <reified T : LivingEntity> MapGameInstance.onDeathOf(
+inline fun <reified T : LivingEntity> MiniGameInstance.onDeathOf(
     noinline action: (T, DamageSource) -> Unit
 ) {
-    EntityHealthCallback.HOOK.registerWith(gameHandle.hooks) { entity, health ->
+    EntityHealthCallback.HOOK.registerWith(hooks) { entity, health ->
         if (entity !is T) {
             return@registerWith false
         }
@@ -61,7 +65,7 @@ inline fun <reified T : LivingEntity> MapGameInstance.onDeathOf(
     }
 }
 
-fun MapGameInstance.playSound(
+fun MiniGameInstance.playSound(
     sound: SoundEvent,
     source: SoundSource,
     volume: Float,
@@ -69,12 +73,12 @@ fun MapGameInstance.playSound(
 ) =
     SoundHelper.playSound(level, sound, source, volume, pitch)
 
-fun MapGameInstance.createTimer(
+fun MiniGameInstance.createTimer(
     label: TranslatedText,
     duration: Duration,
     color: BossEvent.BossBarColor = BossEvent.BossBarColor.RED,
 ): BossBarTimer {
-    val translations = gameHandle.translations
+    val translations = translations
 
     val timer = BossBarTimer.builder(translations, label)
         .withAlertSound(false)
@@ -87,3 +91,15 @@ fun MapGameInstance.createTimer(
 
     return timer
 }
+
+fun FFAGameInstance.setupSidebarScoreboard(data: IntScoreEventSource<ServerPlayer>) {
+    val objective = gameHandle.scoreboardManager.translateObjective("points", "ap2.score")
+
+    useScoreboardStatsSync(data, objective)
+    objective.setSlot(DisplaySlot.SIDEBAR)
+
+    allPlayers().forEach(objective::add)
+}
+
+fun MapGameInstance.readShape(key: String): BlockShape =
+    MapUtil.readShape(map, key)

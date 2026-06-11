@@ -10,13 +10,11 @@ import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.BossEvent
 import net.minecraft.world.InteractionResult
-import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.level.GameType
 import org.json.JSONArray
 import org.json.JSONObject
 import work.lclpnet.ap2.ApConstants
 import work.lclpnet.ap2.ext.*
-import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.MiniGameInstance
@@ -32,13 +30,8 @@ import work.lclpnet.combatctl.impl.CombatStyles
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.map.MapUtils
 import work.lclpnet.game.util.BossBarTimer
-import work.lclpnet.game.util.ProtectorUtils
-import work.lclpnet.kibu.hook.HookRegistrar
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
-import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
-import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback
-import work.lclpnet.kibu.hook.player.PlayerWaypointCallback
 import work.lclpnet.kibu.scheduler.api.RunningTask
 import work.lclpnet.kibu.title.Title
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar
@@ -55,8 +48,8 @@ import kotlin.time.Duration.Companion.seconds
  *
  * Note that this game instance is not bound be of a specific type, i.e. subclasses can be ob type FFA, TEAM etc. */
 abstract class MapGameInstance(
-    val gameHandle: MiniGameHandle,
-    val level: ServerLevel,
+    override val gameHandle: MiniGameHandle,
+    override val level: ServerLevel,
     val map: GameMap
 ) : MiniGameInstance {
     protected val mapProperties: ApMapProperties = ApMapProperties()
@@ -69,27 +62,12 @@ abstract class MapGameInstance(
     private var locatorBarEnabled = false
 
     override fun start() {
-        gameHandle.protect { config ->
-            config.disallowAll()
-            ProtectorUtils.allowCreativeOperatorBypass(config)
-        }
-
-        registerDefaultHooks()
-
-        onMapReady()
-    }
-
-    protected fun onMapReady() {
         applyMapEffects()
         loadMapProperties()
-        configureLocatorBar()
-
-        resetPlayers()
+        configureDefaults()
         teleportPlayers()
-
+        registerDefaultHooks()
         sendMapCredits()
-
-        gameHandle.deathMessages.replaceVanillaDeathMessages(level, hooks)
 
         prepare()
 
@@ -105,6 +83,16 @@ abstract class MapGameInstance(
         countdown.schedule(initialDelay) { this.afterInitialDelay() }
     }
 
+    private fun registerDefaultHooks() {
+        PlayerInteractionHooks.USE_BLOCK.registerWith(hooks) { player, _, _, _ ->
+            if (player.isCreative || mapProperties.getBoolean(ApMapProperties.ALLOW_BLOCK_INTERACTION, true)) {
+                InteractionResult.PASS
+            } else {
+                InteractionResult.FAIL
+            }
+        }
+    }
+
     protected open fun teleportPlayers() {
         val spawn = MapUtils.getSpawnPosition(map)
         val yaw = MapUtils.getSpawnYaw(map)
@@ -112,17 +100,6 @@ abstract class MapGameInstance(
         for (player in PlayerLookup.all(gameHandle.server)) {
             player.teleportTo(level, spawn.x(), spawn.y(), spawn.z(), emptySet(), yaw, 0f, true)
         }
-    }
-
-    private fun configureLocatorBar() {
-        if (locatorBarEnabled) return
-
-        // hide players from locator by default
-        PlayerWaypointCallback.HOOK.registerWith(gameHandle.hooks) { _, waypoint ->
-            waypoint is ServerPlayer
-        }
-
-        level.waypointManager.breakAllConnections()
     }
 
     private fun sendMapCredits() {
@@ -233,11 +210,6 @@ abstract class MapGameInstance(
         activeEffects.clear()
     }
 
-    private fun resetPlayers() {
-        for (player in allPlayers()) {
-            gameHandle.playerUtil.resetPlayer(player)
-        }
-    }
 
     protected open fun afterInitialDelay() {
         for (player in allPlayers()) {
@@ -255,33 +227,6 @@ abstract class MapGameInstance(
         Title.get(player).title(text, Component.empty(), 5, 20, 5)
 
         player.playNotifySound(SoundEvents.CHICKEN_EGG, SoundSource.PLAYERS, 1f, 0f)
-    }
-
-    private fun registerDefaultHooks() {
-        val playerUtil = gameHandle.playerUtil
-
-        ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks) { entity, source, _ ->
-            if (!source.isOf(DamageTypes.FELL_OUT_OF_WORLD) || entity !is ServerPlayer) return@registerWith true
-
-            if (entity.isSpectator) {
-                gameHandle.worldFacade.teleport(entity)
-                false
-            } else {
-                true
-            }
-        }
-
-        PlayerSpawnLocationCallback.HOOK.registerWith(hooks) { data ->
-            playerUtil.resetPlayer(data.player)
-        }
-
-        PlayerInteractionHooks.USE_BLOCK.registerWith(hooks) { player, _, _, _ ->
-            if (player.isCreative || mapProperties.getBoolean(ApMapProperties.ALLOW_BLOCK_INTERACTION, true)) {
-                InteractionResult.PASS
-            } else {
-                InteractionResult.FAIL
-            }
-        }
     }
 
     val initialDelay: Int
@@ -384,12 +329,6 @@ abstract class MapGameInstance(
 
         return commons!!
     }
-
-    protected fun isParticipating(player: ServerPlayer): Boolean =
-        gameHandle.participants.isParticipating(player)
-
-    protected val hooks: HookRegistrar
-        get() = gameHandle.hooks
 
     protected abstract fun prepare()
 

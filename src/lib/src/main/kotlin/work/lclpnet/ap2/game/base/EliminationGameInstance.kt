@@ -13,6 +13,7 @@ import work.lclpnet.ap2.api.stats.FFAStatsManager
 import work.lclpnet.ap2.core.hook.PlayerEliminatedCallback
 import work.lclpnet.ap2.core.mixin.entity.LivingEntityAccessor
 import work.lclpnet.ap2.ext.allPlayers
+import work.lclpnet.ap2.ext.isParticipating
 import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.server
 import work.lclpnet.ap2.game.MiniGameHandle
