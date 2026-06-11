@@ -10,6 +10,7 @@ import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.player.Player
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.stats.StatUnits
+import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance

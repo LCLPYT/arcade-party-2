@@ -15,13 +15,10 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.gamerules.GameRules
-import work.lclpnet.ap2.ext.interval
+import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.mc.setBlock
-import work.lclpnet.ap2.ext.players
-import work.lclpnet.ap2.ext.setupSidebarScoreboard
-import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.util.finaleCompatibleScoreContainer

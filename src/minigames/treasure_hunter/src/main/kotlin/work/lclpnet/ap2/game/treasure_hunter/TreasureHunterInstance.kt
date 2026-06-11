@@ -16,6 +16,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.gamerules.GameRules
 import work.lclpnet.ap2.api.stats.CommonStats.BlocksBroken
+import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
