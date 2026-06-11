@@ -7,7 +7,7 @@ import work.lclpnet.ap2.game.MiniGameFactory
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.MiniGameInstance
 import work.lclpnet.ap2.impl.map.schema.MapSchemaLoader
-import work.lclpnet.game.api.MapOptions
+import work.lclpnet.game.api.WorldOptions
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.map_api.GameMapApi
 import kotlin.coroutines.resume
@@ -15,7 +15,7 @@ import kotlin.coroutines.resumeWithException
 
 suspend fun MiniGameHandle.openRandomMap(): Pair<ServerLevel, GameMap> {
     return suspendCancellableCoroutine { continuation ->
-        val options = object : MapOptions {
+        val options = object : WorldOptions {
             override fun shouldBeDeleted() = true
             override fun isCleanMapRequired() = true
             override fun shouldTeleportPlayers() = false
