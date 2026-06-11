@@ -18,6 +18,7 @@ import net.minecraft.world.entity.projectile.throwableitemprojectile.Snowball
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
+import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.setAttribute
 import work.lclpnet.ap2.ext.players

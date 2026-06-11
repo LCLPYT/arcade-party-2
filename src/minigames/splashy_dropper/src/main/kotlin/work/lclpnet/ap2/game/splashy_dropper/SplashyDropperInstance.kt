@@ -14,6 +14,7 @@ import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.Team
 import work.lclpnet.ap2.api.stats.Stat
+import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.runEveryTick
