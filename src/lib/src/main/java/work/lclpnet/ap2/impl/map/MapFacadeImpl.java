@@ -3,26 +3,40 @@ package work.lclpnet.ap2.impl.map;
 import it.unimi.dsi.fastutil.Pair;
 import lombok.Getter;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.gamerules.GameRules;
+import net.minecraft.world.level.storage.LevelStorageSource;
+import net.minecraft.world.phys.Vec3;
+import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.MapReady;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.map.MapRandomizer;
 import work.lclpnet.gaco.asset.AssetRepository;
-import work.lclpnet.game.api.MapOptions;
 import work.lclpnet.game.api.WorldFacade;
+import work.lclpnet.game.api.WorldOptions;
 import work.lclpnet.game.map.GameMap;
 import work.lclpnet.game.map.MapDescriptor;
 import work.lclpnet.game.map.MapManager;
+import work.lclpnet.game.map.MapUtils;
+import work.lclpnet.kibu.hook.util.PositionRotation;
+import work.lclpnet.kibu.world.KibuLevels;
+import work.lclpnet.kibu.world.mixin.MinecraftServerAccessor;
+import xyz.nucleoid.fantasy.RuntimeLevelHandle;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 public class MapFacadeImpl implements MapFacade {
 
@@ -45,11 +59,61 @@ public class MapFacadeImpl implements MapFacade {
     }
 
     @Override
-    public CompletableFuture<Pair<ServerLevel, GameMap>> openRandomMap(Identifier gameId, MapOptions mapOptions) {
+    public CompletableFuture<ServerLevel> changeMap(Identifier identifier, WorldOptions options) {
+        var optMap = mapManager.getCollection().getMap(identifier);
+
+        if (optMap.isEmpty()) {
+            return CompletableFuture.failedFuture(new IllegalStateException("Unknown map %s".formatted(identifier)));
+        }
+
+        GameMap map = optMap.get();
+
+        Vec3 pos = MapUtils.getSpawnPosition(map);
+        float yaw = MapUtils.getSpawnYaw(map);
+        PositionRotation spawn = new PositionRotation(pos.x(), pos.y(), pos.z(), yaw, 0f);
+
+        return worldFacade.changeLevel(
+                identifier,
+                options,
+                spawn,
+                key -> changeToYetUnloadedMap(map, key)
+        );
+    }
+
+    private CompletableFuture<RuntimeLevelHandle> changeToYetUnloadedMap(GameMap map, ResourceKey<Level> key) {
+        LevelStorageSource.LevelStorageAccess session = ((MinecraftServerAccessor) server).getStorageSource();
+        Path directory = session.getDimensionPath(key);
+
+        return CompletableFuture.runAsync(() -> prepareMapFiles(map, directory))
+                .thenComposeAsync(_ -> loadMap(key));
+    }
+
+    private void prepareMapFiles(GameMap map, Path directory) {
+        try {
+            if (Files.exists(directory)) {
+                FileUtils.forceDelete(directory.toFile());
+            }
+
+            mapManager.pull(map, directory);
+        } catch (IOException e) {
+            throw new CompletionException(e);
+        }
+    }
+
+    private @NonNull CompletableFuture<RuntimeLevelHandle> loadMap(ResourceKey<Level> key) {
+        return server.submit(() -> KibuLevels.getInstance()
+                .getWorldManager(server)
+                .openPersistentLevel(key.identifier())
+                .orElseThrow(() -> new IllegalStateException("Failed to load map"))
+        );
+    }
+
+    @Override
+    public CompletableFuture<Pair<ServerLevel, GameMap>> openRandomMap(Identifier gameId, WorldOptions options) {
         return mapRandomizer.nextMap(gameId)
                 .thenCompose(map -> {
                     Identifier id = map.getDescriptor().getIdentifier();
-                    return worldFacade.changeMap(id, mapOptions).thenApply(world -> Pair.of(world, map));
+                    return changeMap(id, options).thenApply(world -> Pair.of(world, map));
                 })
                 .thenApply(pair -> {
                     setupWorld(pair.left());
@@ -58,7 +122,7 @@ public class MapFacadeImpl implements MapFacade {
     }
 
     @Override
-    public void openRandomMap(Identifier gameId, MapOptions options, MapReady callback) {
+    public void openRandomMap(Identifier gameId, WorldOptions options, MapReady callback) {
         openRandomMap(gameId, options)
                 .thenCompose(pair -> server.submit(() -> callback.onReady(pair.left(), pair.right())))
                 .exceptionally(throwable -> {
