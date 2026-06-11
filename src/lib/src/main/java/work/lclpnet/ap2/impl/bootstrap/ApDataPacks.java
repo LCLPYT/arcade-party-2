@@ -60,7 +60,7 @@ public class ApDataPacks implements GameDataPacks {
                     return mapManager;
                 }, executor)
                 .thenAcceptAsync(mapManager -> {
-                    var maps = mapManager.getCollection().mapsWithPrefix(dataPacksPath);
+                    var maps = mapManager.collection().mapsWithPrefix(dataPacksPath);
 
                     fetchDataPacks(mapManager, maps, dataPackSink);
                 })
