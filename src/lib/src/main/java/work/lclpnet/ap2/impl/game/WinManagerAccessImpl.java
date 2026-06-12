@@ -4,6 +4,7 @@ import net.minecraft.server.level.ServerPlayer;
 import work.lclpnet.ap2.api.game.WinManagerAccess;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.data.SubjectRef;
+import work.lclpnet.ap2.game.util.WinManager;
 
 import java.util.Optional;
 import java.util.Set;

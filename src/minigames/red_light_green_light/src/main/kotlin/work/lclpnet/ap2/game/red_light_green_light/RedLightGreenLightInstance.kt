@@ -215,7 +215,7 @@ class RedLightGreenLightInstance(gameHandle: MiniGameHandle, level: ServerLevel,
     }
 
     private fun onMovedWhileRed(player: ServerPlayer) {
-        if (winManager.isGameOver
+        if (winManager.gameOver
             || !gameHandle.participants.isParticipating(player)
             || inGoal.contains(player.uuid)
             || !moved.add(player.uuid)) return

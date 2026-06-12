@@ -210,7 +210,7 @@ class KnockoutInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
         val participants = gameHandle.participants
 
         return source.isOf(DamageTypes.PLAYER_ATTACK) && entity is ServerPlayer
-                && !winManager.isGameOver
+                && !winManager.gameOver
                 && source.entity is ServerPlayer
                 && participants.isParticipating(entity)
                 && participants.isParticipating(source.entity as ServerPlayer)

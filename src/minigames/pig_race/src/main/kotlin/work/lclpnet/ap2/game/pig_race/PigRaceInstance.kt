@@ -212,7 +212,7 @@ class PigRaceInstance(
         val hooks = gameHandle.hooks
         val participants = gameHandle.participants
 
-        CheckpointHelper.setupResetItem(hooks, winManager::isGameOver, participants::isParticipating)
+        CheckpointHelper.setupResetItem(hooks, winManager::gameOver, participants::isParticipating)
             .then(::resetPlayerToCheckpoint)
 
         runEveryTick { tick() }
@@ -339,7 +339,7 @@ class PigRaceInstance(
 
     @Synchronized
     private fun onEnterGoal(player: ServerPlayer) {
-        if (winManager.isGameOver || !progress.path.isInLastSegment(player)) return
+        if (winManager.gameOver || !progress.path.isInLastSegment(player)) return
 
         val round = progress.getRound(player)
 

@@ -267,7 +267,7 @@ class PvpTournamentInstance(
 
         val data = matchInstanceOf(player)
 
-        if (!winManager.isGameOver && data != null) {
+        if (!winManager.gameOver && data != null) {
             loseMatch(data, player)
         }
     }

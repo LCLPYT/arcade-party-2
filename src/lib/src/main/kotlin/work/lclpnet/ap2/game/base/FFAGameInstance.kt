@@ -14,13 +14,11 @@ import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective
 import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.player.ParticipantListener
-import work.lclpnet.ap2.impl.game.WinManager
+import work.lclpnet.ap2.game.util.useFFAWinManager
 import work.lclpnet.ap2.impl.game.WinManagerAccessImpl
-import work.lclpnet.ap2.impl.game.data.type.FFAGameResult
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.game.map.GameMap
 import java.util.*
-import java.util.function.Function
 
 abstract class FFAGameInstance(
     gameHandle: MiniGameHandle,
@@ -29,19 +27,7 @@ abstract class FFAGameInstance(
 ) : MapGameInstance(gameHandle, world, map), ParticipantListener, WinManagerView {
 
     @JvmField
-    protected val winManager: WinManager<ServerPlayer, PlayerRef>
-
-    init {
-        val data: WinManager.Data<ServerPlayer, PlayerRef> = WinManager.Data(
-            { this.data },
-            { value -> Optional.of(value) },
-            { player -> PlayerRef.create(player) },
-            { player -> PlayerRef.create(player) },
-            Function { data -> FFAGameResult(data) }
-        )
-
-        this.winManager = WinManager(gameHandle, this::map, data)
-    }
+    protected val winManager = useFFAWinManager(map, data)
 
     override val participantListener: ParticipantListener
         get() = this
@@ -109,7 +95,7 @@ abstract class FFAGameInstance(
         return WinManagerAccessImpl(
             winManager,
             { value -> Optional.of(value) },
-            this.data
+            data
         )
     }
 

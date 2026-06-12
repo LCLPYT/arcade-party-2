@@ -223,7 +223,7 @@ class GlowingBombInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: G
     }
 
     private fun passBomb(player: ServerPlayer) {
-        if (winManager.isGameOver || !mayPass) return
+        if (winManager.gameOver || !mayPass) return
 
         val uuid = player.uuid
         val creditCount = credits.getOrDefault(uuid, 0)
@@ -327,7 +327,7 @@ class GlowingBombInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: G
     }
 
     private fun explodeAnchor(anchor: GbAnchor) {
-        if (winManager.isGameOver) return
+        if (winManager.gameOver) return
 
         val pos = anchor.pos
         val x = pos.x() + 0.5; val y = pos.y() + 0.5; val z = pos.z() + 0.5
@@ -346,7 +346,7 @@ class GlowingBombInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: G
 
         eliminate(player)
 
-        if (winManager.isGameOver) return
+        if (winManager.gameOver) return
 
         delayNextBomb()
     }

@@ -95,7 +95,7 @@ class MimicryInstance(
     }
 
     private fun onUseBlock(player: Player, world: Level, hand: InteractionHand, hitResult: BlockHitResult): InteractionResult {
-        if (winManager.isGameOver
+        if (winManager.gameOver
             || hand != InteractionHand.MAIN_HAND
             || player !is ServerPlayer
             || !gameHandle.participants.isParticipating(player)
@@ -145,7 +145,7 @@ class MimicryInstance(
 
     @Synchronized
     private fun nextSequence() {
-        if (phase != Phase.IDLE || winManager.isGameOver) return
+        if (phase != Phase.IDLE || winManager.gameOver) return
 
         removeTimer()
 
@@ -164,7 +164,7 @@ class MimicryInstance(
 
     @Synchronized
     private fun playSequence() {
-        if (phase != Phase.IDLE || winManager.isGameOver) return
+        if (phase != Phase.IDLE || winManager.gameOver) return
 
         phase = Phase.PLAYING
 
@@ -177,7 +177,7 @@ class MimicryInstance(
 
     @Synchronized
     private fun beginReplay() {
-        if (phase != Phase.PLAYING || winManager.isGameOver) return
+        if (phase != Phase.PLAYING || winManager.gameOver) return
 
         phase = Phase.REPLAY
 
@@ -205,7 +205,7 @@ class MimicryInstance(
 
     @Synchronized
     private fun endReplayAndEliminate() {
-        if (phase != Phase.REPLAY || winManager.isGameOver) return
+        if (phase != Phase.REPLAY || winManager.gameOver) return
 
         manager.playersToEliminate.forEach { softEliminate(it) }
 

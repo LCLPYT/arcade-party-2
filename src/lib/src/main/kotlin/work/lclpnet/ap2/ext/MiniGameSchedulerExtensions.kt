@@ -1,36 +1,36 @@
 package work.lclpnet.ap2.ext
 
-import work.lclpnet.ap2.game.base.MapGameInstance
+import work.lclpnet.ap2.game.MiniGameInstance
 import work.lclpnet.kibu.scheduler.api.RunningTask
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-fun MapGameInstance.timeout(ticks: Int = 0, seconds: Int = 0, action: () -> Unit) =
+fun MiniGameInstance.timeout(ticks: Int = 0, seconds: Int = 0, action: () -> Unit) =
     gameHandle.scheduler.timeout(ticks + seconds * 20, action)!!
 
-fun MapGameInstance.interval(ticks: Int, action: () -> Unit) =
+fun MiniGameInstance.interval(ticks: Int, action: () -> Unit) =
     gameHandle.scheduler.interval(ticks, action)!!
 
-fun MapGameInstance.interval(periodTicks: Int, delayTicks: Int, action: () -> Unit) =
+fun MiniGameInstance.interval(periodTicks: Int, delayTicks: Int, action: () -> Unit) =
     gameHandle.scheduler.interval(periodTicks, delayTicks, action)!!
 
-fun MapGameInstance.runAfter(
+fun MiniGameInstance.runAfter(
     delay: Duration,
     action: () -> Unit,
 )=
     gameHandle.scheduler.timeout(delay.inWholeTicks, action)!!
 
-fun MapGameInstance.runEvery(
+fun MiniGameInstance.runEvery(
     period: Duration,
     after: Duration = 0.seconds,
     action: RunningTask.() -> Unit
 ) =
     gameHandle.scheduler.interval(period.inWholeTicks, after.inWholeTicks, action)!!
 
-fun MapGameInstance.runEveryTick(action: RunningTask.() -> Unit) =
+fun MiniGameInstance.runEveryTick(action: RunningTask.() -> Unit) =
     runEvery(1.ticks, action = action)
 
-fun MapGameInstance.deferEvery(
+fun MiniGameInstance.deferEvery(
     period: Duration,
     after: Duration = period,
     action: RunningTask.() -> Unit

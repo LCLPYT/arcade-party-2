@@ -185,7 +185,7 @@ class AnvilFallInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
     }
 
     private fun spawnRandomAnvil() {
-        if (winManager.isGameOver) return
+        if (winManager.gameOver) return
 
         val pos = gameHandle.participants.getRandomParticipant(random)
             .map { player ->

@@ -57,22 +57,28 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
         val title = translations.translateText(player, summary.game.titleKey)
             .formatted(GOLD, BOLD)
 
-        val mapName = summary.map.getName(translations.getLanguage(player))
-        val mapLine = translations.translateText(
-            player,
-            "ap2.view_stats.map",
-            FormatWrapper.styled(mapName, AQUA)
-        ).formatted(GREEN)
+        val mapLine = summary.map?.let { map ->
+            val mapName = map.getName(translations.getLanguage(player))
+
+            translations.translateText(
+                player,
+                "ap2.view_stats.map",
+                FormatWrapper.styled(mapName, AQUA)
+            ).formatted(GREEN)
+        }
 
         val seconds = summary.duration.inWholeSeconds.toInt()
         val durationTime = TimeHelper.formatTime(translations, seconds).formatted(YELLOW)
         val durationLine = translations.translateText(player, "ap2.view_stats.duration", durationTime)
             .formatted(GREEN)
 
-        val text = Component.empty()
-            .append(title)
-            .append(Component.literal("\n")).append(mapLine)
-            .append(Component.literal("\n")).append(durationLine)
+        val text = Component.empty().append(title)
+
+        mapLine?.let {
+            text.append(Component.literal("\n")).append(mapLine)
+        }
+
+        text.append(Component.literal("\n")).append(durationLine)
 
         body.add(PlainMessage(text, sectionWidth))
         body.add(separator())

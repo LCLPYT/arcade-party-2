@@ -201,7 +201,7 @@ class EggventureInstance(
             Runnable(::checkNearbyEggs)
         )
 
-        CheckpointHelper.setupResetItem(hooks, { winManager.isGameOver }) {
+        CheckpointHelper.setupResetItem(hooks, { winManager.gameOver }) {
             gameHandle.participants.isParticipating(it)
         }.then(::reset)
 
@@ -227,7 +227,7 @@ class EggventureInstance(
     }
 
     private fun completeAndShowRemaining() {
-        if (winManager.isGameOver) return
+        if (winManager.gameOver) return
 
         winManager.complete()
 
@@ -257,7 +257,7 @@ class EggventureInstance(
     }
 
     private fun onFindEasterEgg(player: ServerPlayer, pos: BlockPos) {
-        if (winManager.isGameOver) return
+        if (winManager.gameOver) return
 
         level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_SUPPRESS_DROPS or Block.UPDATE_KNOWN_SHAPE or Block.UPDATE_CLIENTS)
 

@@ -367,7 +367,7 @@ class SpeedBuildersInstance(
     }
 
     private fun nextRoundOrGameOver() {
-        if (winManager.isGameOver) return
+        if (winManager.gameOver) return
 
         islandToDestroy = null
         playerToEliminate = null

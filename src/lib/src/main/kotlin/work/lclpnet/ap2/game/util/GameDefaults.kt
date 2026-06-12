@@ -2,14 +2,23 @@ package work.lclpnet.ap2.game.util
 
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.damagesource.DamageTypes
+import work.lclpnet.ap2.api.game.data.DataContainer
+import work.lclpnet.ap2.api.game.team.Team
+import work.lclpnet.ap2.api.game.team.TeamManager
 import work.lclpnet.ap2.ext.allPlayers
 import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.game.MiniGameInstance
+import work.lclpnet.ap2.impl.game.data.type.FFAGameResult
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.ap2.impl.game.data.type.TeamGameResult
+import work.lclpnet.ap2.impl.game.data.type.TeamRef
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.util.ProtectorUtils
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback
 import work.lclpnet.kibu.hook.player.PlayerWaypointCallback
+import java.util.*
 
 
 fun MiniGameInstance.configureDefaults(
@@ -67,4 +76,43 @@ private fun MiniGameInstance.configureLocatorBar() {
 
 fun MiniGameInstance.useStartup(go: () -> Unit) {
     GameStartSequence(gameHandle, ::allPlayers).startWithGo { go() }
+}
+
+fun MiniGameInstance.useFFAWinManager(
+    map: GameMap?,
+    data: DataContainer<ServerPlayer, PlayerRef>,
+): WinManager<ServerPlayer, PlayerRef> {
+    val data: WinManager.Data<ServerPlayer, PlayerRef> = WinManager.Data(
+        data,
+        { value -> Optional.of(value) },
+        { player -> PlayerRef.create(player) },
+        { player -> PlayerRef.create(player) },
+        { data -> FFAGameResult(data) }
+    )
+
+    return WinManager(gameHandle, map, data)
+}
+
+fun MiniGameInstance.useTeamWinManager(
+    teamManager: TeamManager,
+    map: GameMap?,
+    data: DataContainer<Team, TeamRef>
+): WinManager<Team, TeamRef> {
+    val data: WinManager.Data<Team, TeamRef> = WinManager.Data(
+        data,
+        { player: ServerPlayer -> teamManager.getTeam(player) },
+        { team: Team -> TeamRef(team.key(), gameHandle.translations) },
+        { player: ServerPlayer ->
+            teamManager.getTeam(player).map { team ->
+                TeamRef(team.key(), gameHandle.translations)
+            }.orElse(null)
+        },
+        { dataContainer ->
+            TeamGameResult(dataContainer) { ref ->
+                teamManager.getTeam(ref).orElse(null)
+            }
+        }
+    )
+
+    return WinManager(gameHandle, map, data)
 }

@@ -76,7 +76,7 @@ class MirrorHopInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
         movementObserver.init(gameHandle.hooks, gameHandle.server)
 
         movementObserver.whenEntering(goal) { player ->
-            if (winManager.isGameOver) return@whenEntering
+            if (winManager.gameOver) return@whenEntering
             winnerData.add(player)
             winManager.complete()
         }

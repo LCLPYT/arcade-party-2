@@ -134,7 +134,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
     public void participantRemoved(@NonNull ServerPlayer player) {
         super.participantRemoved(player);
 
-        if (!winManager.isGameOver()) {
+        if (!winManager.getGameOver()) {
             checkSegmentComplete();
         }
     }
@@ -184,7 +184,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
         Participants participants = getGameHandle().getParticipants();
         HookRegistrar hooks = getGameHandle().getHooks();
 
-        CheckpointHelper.setupResetItem(hooks, () -> winManager.isGameOver() || !segmentActive, participants::isParticipating)
+        CheckpointHelper.setupResetItem(hooks, () -> winManager.getGameOver() || !segmentActive, participants::isParticipating)
                 .then(this::resetPlayerToCheckpoint);
 
         CheckpointHelper.whenFallingIntoLava(hooks, participants::isParticipating)

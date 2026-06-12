@@ -67,7 +67,7 @@ class TreasureHunterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
                 return@registerWith InteractionResult.PASS
             }
 
-            if (winManager.isGameOver) {
+            if (winManager.gameOver) {
                 return@registerWith InteractionResult.FAIL
             }
 

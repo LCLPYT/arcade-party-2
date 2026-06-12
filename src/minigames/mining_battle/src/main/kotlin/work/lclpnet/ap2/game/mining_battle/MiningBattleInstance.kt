@@ -60,7 +60,7 @@ class MiningBattleInstance(
 
         BlockModificationHooks.BREAK_BLOCK.registerWith(hooks) { world, pos, entity ->
             if (entity !is ServerPlayer || !participants.isParticipating(entity)
-                || winManager.isGameOver || isOutsideMiningArea(pos)) return@registerWith false
+                || winManager.gameOver || isOutsideMiningArea(pos)) return@registerWith false
 
             val state = world.getBlockState(pos)
 

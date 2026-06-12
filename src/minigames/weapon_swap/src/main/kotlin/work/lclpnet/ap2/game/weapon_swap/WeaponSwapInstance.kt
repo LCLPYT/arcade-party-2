@@ -84,7 +84,7 @@ class WeaponSwapInstance(
         }
 
         ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks) { entity, source, _ ->
-            if (winManager.isGameOver) return@registerWith false
+            if (winManager.gameOver) return@registerWith false
 
             val victim = entity as? ServerPlayer ?: return@registerWith false
             val attacker = source.entity as? ServerPlayer ?: return@registerWith false
@@ -142,7 +142,7 @@ class WeaponSwapInstance(
     }
 
     private fun startCycle() {
-        if (winManager.isGameOver) return
+        if (winManager.gameOver) return
 
         val remaining = players().asSet.toList()
 
