@@ -36,6 +36,16 @@ class FreezingManager(
 ) {
     private val freezingTicks = maxOf(1, freezingTicks)
     private val tasks = HashMap<UUID, TaskHandle>()
+    private val startFreezingListeners = ArrayList<(ServerPlayer) -> Unit>()
+    private val stopFreezingListeners = ArrayList<(ServerPlayer) -> Unit>()
+
+    fun onStartFreezing(listener: (ServerPlayer) -> Unit) {
+        startFreezingListeners.add(listener)
+    }
+
+    fun onStopFreezing(listener: (ServerPlayer) -> Unit) {
+        stopFreezingListeners.add(listener)
+    }
 
     fun enable(hooks: HookRegistrar) {
         val idleManager = CombatIdleManager(participants, freezingStartTicks)
@@ -89,6 +99,10 @@ class FreezingManager(
     fun startFreezing(player: ServerPlayer) {
         player.setAttribute(JUMP_STRENGTH, 0.0)
 
+        for (listener in startFreezingListeners) {
+            listener(player)
+        }
+
         var time = 0
         val prevTask = tasks.put(player.uuid, scheduler.interval({ task ->
             if (player.hasDisconnected() || !player.isAlive) {
@@ -112,6 +126,10 @@ class FreezingManager(
     fun stopFreezing(player: ServerPlayer) {
         val task = tasks.remove(player.uuid) ?: return
         task.cancel()
+
+        for (listener in stopFreezingListeners) {
+            listener(player)
+        }
 
         player.ticksFrozen = 0
         player.resetAttribute(JUMP_STRENGTH)
