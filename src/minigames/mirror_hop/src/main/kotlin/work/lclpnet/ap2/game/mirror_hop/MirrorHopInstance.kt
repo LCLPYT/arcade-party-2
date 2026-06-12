@@ -10,6 +10,7 @@ import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.scores.Team
+import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer
@@ -27,6 +28,10 @@ import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.scheduler.Ticks
 import java.util.*
 
+private val Falls = Stat("falls", 0, higherIsBetter = false)
+private val PlatformsMaterialized = Stat("platforms_materialized", 0)
+private val PlatformsBroken = Stat("platforms_broken", 0, higherIsBetter = false)
+
 private fun removeGate(map: GameMap, world: ServerLevel) {
     val gate = MapUtil.readBox(map.requireProperty("gate"))
     val air = Blocks.AIR.defaultBlockState()
@@ -40,6 +45,7 @@ class MirrorHopInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
     private val winnerData = OrderedDataContainer(PlayerRef::create)
     private val scoreData = IntScoreDataContainer(PlayerRef::create)
     override val data = CombinedDataContainer(listOf(winnerData, scoreData))
+    private val stats = createStats(scoreData, Falls, PlatformsMaterialized, PlatformsBroken)
     private val collisionDetector: CollisionDetector = ChunkedCollisionDetector()
     private val movementObserver = PlayerMovementObserver(
         collisionDetector,
@@ -94,8 +100,10 @@ class MirrorHopInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
             collisionDetector.remove(collider)
 
             if (choices.isCorrect(collider, idx)) {
+                stats.increment(player, PlatformsMaterialized)
                 solidifyPlatform(collider)
             } else {
+                stats.increment(player, PlatformsBroken)
                 breakPlatform(collider)
             }
         }
@@ -108,6 +116,8 @@ class MirrorHopInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
     }
 
     private fun playerFell(player: ServerPlayer) {
+        stats.increment(player, Falls)
+
         gameHandle.worldFacade.teleport(player)
 
         val ticks = Ticks.seconds(4)
