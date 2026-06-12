@@ -1,16 +1,13 @@
 package work.lclpnet.ap2.game.base
 
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
 import net.minecraft.server.level.ServerLevel
-import net.minecraft.world.BossEvent
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.level.GameType
 import org.json.JSONArray
 import org.json.JSONObject
-import work.lclpnet.ap2.ApConstants
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.MiniGameInstance
@@ -18,16 +15,13 @@ import work.lclpnet.ap2.game.util.GameStartSequence
 import work.lclpnet.ap2.game.util.configureDefaults
 import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.ap2.impl.util.TranslationUtil
-import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar
 import work.lclpnet.ap2.impl.util.effect.ApEffect
 import work.lclpnet.ap2.impl.util.effect.ApEffects
 import work.lclpnet.ap2.impl.util.property.ApMapProperties
 import work.lclpnet.combatctl.impl.CombatStyles
 import work.lclpnet.game.map.GameMap
-import work.lclpnet.game.util.BossBarTimer
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
-import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar
 import kotlin.concurrent.Volatile
 
 /** A game instance that:
@@ -169,54 +163,6 @@ abstract class MapGameInstance(
         EntityHealthCallback.HOOK.registerWith(hooks) { entity, health ->
             health > entity.health
         }
-    }
-
-    protected fun useTaskDisplay(): TranslatedBossBar {
-        val gameInfo = gameHandle.gameInfo
-        val id = gameInfo.identifier("task")
-
-        val bossBar = gameHandle.translations.translateBossBar(id, gameInfo.taskKey, *gameInfo.taskArguments)
-            .with(gameHandle.bossBarProvider)
-            .formatted(ChatFormatting.GREEN)
-
-        bossBar.setColor(BossEvent.BossBarColor.GREEN)
-
-        bossBar.addPlayers(PlayerLookup.all(server))
-
-        gameHandle.bossBarHandler.showOnJoin(bossBar)
-
-        return bossBar
-    }
-
-    protected fun useTaskTimer(seconds: Int): BossBarTimer {
-        val subject = translate(gameHandle.gameInfo.taskKey)
-
-        return commons().createTimer(subject, seconds)
-    }
-
-    protected fun usePlayerDynamicTaskDisplay(vararg args: Any?): DynamicTranslatedPlayerBossBar {
-        return usePlayerDynamicDisplay(gameHandle.gameInfo.taskKey, *args)
-    }
-
-    protected fun usePlayerDynamicDisplay(key: String?, vararg args: Any?): DynamicTranslatedPlayerBossBar {
-        val id = ApConstants.identifier("task")
-
-        val translations = gameHandle.translations
-        val provider = gameHandle.bossBarProvider
-
-        val bossBar = DynamicTranslatedPlayerBossBar(id, key, args, translations, provider)
-            .formatted(ChatFormatting.GREEN)
-
-        bossBar.setColor(BossEvent.BossBarColor.GREEN)
-        bossBar.setPercent(1f)
-
-        for (player in gameHandle.participants) {
-            bossBar.add(player)
-        }
-
-        bossBar.init(gameHandle.hooks)
-
-        return bossBar
     }
 
     /**

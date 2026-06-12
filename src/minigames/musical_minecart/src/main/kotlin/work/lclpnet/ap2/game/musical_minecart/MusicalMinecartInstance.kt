@@ -26,6 +26,7 @@ import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.musical_minecart.cmd.SetSongCommand
 import work.lclpnet.ap2.game.musical_minecart.cmd.SkipSongCommand
 import work.lclpnet.ap2.game.player.Participants
+import work.lclpnet.ap2.game.util.createTimerTicks
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.music.SongHandler
 import work.lclpnet.ap2.impl.util.Hints
@@ -190,7 +191,7 @@ class MusicalMinecartInstance(
         if (DEBUG_INFO) {
             val total = songs.songs.size
             val done = songs.queue.transfer().occurred().size
-            timer = commons().createTimerTicks("Queue $done / $total", delay.toInt())
+            timer = createTimerTicks("Queue $done / $total", delay.toInt())
         }
 
         taskHandles = listOf(

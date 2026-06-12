@@ -34,6 +34,8 @@ import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.pig_race.util.PRProgress
 import work.lclpnet.ap2.game.pig_race.util.PRScoreboard
 import work.lclpnet.ap2.game.pig_race.util.createSegmentedPath
+import work.lclpnet.ap2.game.util.usePlayerDynamicDisplay
+import work.lclpnet.ap2.game.util.usePlayerDynamicTaskDisplay
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer
 import work.lclpnet.ap2.impl.game.data.DoubleScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.OrderedDataContainer

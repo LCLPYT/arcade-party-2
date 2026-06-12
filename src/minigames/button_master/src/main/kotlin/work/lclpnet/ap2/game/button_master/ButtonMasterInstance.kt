@@ -33,6 +33,8 @@ import work.lclpnet.ap2.ext.mc.setAttribute
 import work.lclpnet.ap2.ext.mc.teleport
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
+import work.lclpnet.ap2.game.util.createTimer
+import work.lclpnet.ap2.game.util.useTaskDisplay
 import work.lclpnet.ap2.impl.util.ApRegistries
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
@@ -262,7 +264,7 @@ class ButtonMasterInstance(
             it.setAttribute(Attributes.GRAVITY, 0.0)
         }
 
-        val ejectTimer = commons().createTimer(
+        val ejectTimer = createTimer(
             translate("game.ap2.button_master.eject"),
             EJECT_SECONDS,
         )

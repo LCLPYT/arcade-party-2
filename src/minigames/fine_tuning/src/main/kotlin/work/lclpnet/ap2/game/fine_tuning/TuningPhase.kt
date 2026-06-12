@@ -27,7 +27,7 @@ import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.fine_tuning.melody.*
-import work.lclpnet.ap2.impl.game.GameCommons
+import work.lclpnet.ap2.game.util.Announcer
 import work.lclpnet.ap2.impl.game.data.IntDataContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.util.ApRegistries
@@ -54,8 +54,8 @@ class TuningPhase(
     private val data: IntDataContainer<ServerPlayer, PlayerRef>,
     private val stats: FFAStatsManager,
     private val onEnd: Runnable,
-    private val commons: GameCommons,
-    private val world: ServerLevel
+    private val world: ServerLevel,
+    private val announcer: Announcer,
 ) {
     private val random = Random(System.currentTimeMillis())
     private val melodyProvider: MelodyProvider = SimpleMelodyProvider(random, SimpleNotesProvider(random), 5)
@@ -173,7 +173,7 @@ class TuningPhase(
     }
 
     fun beginListen() {
-        commons.announcer().announceSubtitle("game.ap2.fine_tuning.listen")
+        announcer.announceSubtitle("game.ap2.fine_tuning.listen")
         gameHandle.scheduler.timeout(::playNextMelody, 40)
     }
 
@@ -200,7 +200,7 @@ class TuningPhase(
     }
 
     private fun listenAgain() {
-        commons.announcer()
+        announcer
             .withSound(SoundEvents.CHICKEN_EGG, SoundSource.RECORDS, 0.5f, 0f)
             .announceSubtitle("game.ap2.fine_tuning.listen_again")
 

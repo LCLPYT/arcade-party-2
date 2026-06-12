@@ -20,6 +20,7 @@ import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.setSelectedSlot
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
+import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.game.util.teleportToRandomSpawns
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
 import work.lclpnet.ap2.util.SubtitleCountdown
@@ -110,7 +111,7 @@ class WeaponSwapInstance(
 
             val subject = gameHandle.translations.translateText("game.ap2.weapon_swap.end")
 
-            commons().createTimer(subject, WARN_BEFORE_END_DELAY.inWholeSeconds.toInt()).whenDone {
+            createTimer(subject, WARN_BEFORE_END_DELAY.inWholeSeconds.toInt()).whenDone {
                 winManager.complete()
             }
         }

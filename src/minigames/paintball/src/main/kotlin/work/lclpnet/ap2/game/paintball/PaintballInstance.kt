@@ -41,6 +41,8 @@ import work.lclpnet.ap2.game.paintball.kit.SniperKit
 import work.lclpnet.ap2.game.paintball.util.*
 import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.game.util.GameStartSequence
+import work.lclpnet.ap2.game.util.createTimer
+import work.lclpnet.ap2.game.util.useAnnouncer
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.Ordering
 import work.lclpnet.ap2.impl.game.item.SpecialItems
@@ -76,34 +78,46 @@ class PaintballInstance(
     private val paintManager: PaintManager,
 ) : TeamGameInstance(gameHandle, level, map, teamManager) {
 
+    private val respawnCooldown = VisualCooldown(gameHandle.scheduler)
+    private val vanishManager = VanishManager.setup(gameHandle)
+    private val announcer = useAnnouncer()
+    private val scene = Scene(ServerWorldMountContext(level))
+
+    private val paintGunManager = PaintGunManager(
+        level,
+        scene,
+        paintManager,
+        teams,
+        random,
+        gameHandle.participants,
+        gameHandle.translations,
+        commons().debugController(),
+        winManager::isGameOver
+    )
+
     override val data = IntScoreDataContainer(
         ::createReference,
         Ordering.DESCENDING,
         "game.ap2.paintball.blocks_painted"
     )
+
     private val stats = PaintballStats(createStats(
         data,
         /* teamStats = */ listOf(TotalBlocksPainted, BlocksRepainted, Kills, Deaths, DamageDealt, SpecialItemsUsed),
         /* memberStats = */ listOf(TotalBlocksPainted, BlocksRepainted, Kills, Deaths, KillDeathRatio, DamageDealt, SpecialItemsUsed)
     ), teamManager, gameHandle.translations)
+
     private val movementObserver = TickMovementObserver(
         ChunkedCollisionDetector(),
         gameHandle.participants::isParticipating
     ).also {
         it.init(gameHandle.scheduler, gameHandle.hooks, gameHandle.server)
     }
-    private val respawnCooldown = VisualCooldown(gameHandle.scheduler)
-    private val vanishManager = VanishManager.setup(gameHandle)
 
     private lateinit var kitHandler: KitHandler
-    private val scene = Scene(ServerWorldMountContext(level))
-    private val paintGunManager = PaintGunManager(
-        level, scene, paintManager, teams, random, gameHandle.participants,
-        gameHandle.translations, commons().debugController(), winManager::isGameOver
-    )
     private lateinit var results: PaintballResults
-    private var started = false
     private lateinit var specialItems: SpecialItems
+    private var started = false
 
     init {
         teamManager.setUseColorCodes(true)
@@ -125,7 +139,7 @@ class PaintballInstance(
 
         val resultSpot = resultSpotFromJson(map.properties.getJSONObject("result-spot"))
 
-        results = PaintballResults(gameHandle, commons().announcer(), level, resultSpot, data, winManager) {
+        results = PaintballResults(gameHandle, announcer, level, resultSpot, data, winManager) {
             teams.mapNotNull { teamManager.getTeam(it).orElse(null) }
                 .map { createReference(it) }
         }
@@ -255,7 +269,7 @@ class PaintballInstance(
 
     override fun configureStartup(sequence: GameStartSequence) {
         sequence.beforeGo { next ->
-            kitHandler.startKitSelectionTimer(commons()) { next.run() }
+            kitHandler.startKitSelectionTimer(this, announcer) { next.run() }
         }
 
         super.configureStartup(sequence)
@@ -273,7 +287,7 @@ class PaintballInstance(
         paintGunManager.shootingEnabled = true
 
         val subject = gameHandle.translations.translateText(gameHandle.gameInfo.taskKey)
-        commons().createTimer(subject, DURATION.inWholeSeconds.toInt()).whenDone(::beginResults)
+        createTimer(subject, DURATION.inWholeSeconds.toInt()).whenDone(::beginResults)
 
         started = true
 

@@ -26,6 +26,7 @@ import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.glowing_bomb.data.GbAnchor
 import work.lclpnet.ap2.game.glowing_bomb.data.GbBomb
 import work.lclpnet.ap2.game.glowing_bomb.data.GbManager
+import work.lclpnet.ap2.game.util.useTaskDisplay
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
 import work.lclpnet.gaco.scene.Scene
 import work.lclpnet.gaco.scene.ServerWorldMountContext

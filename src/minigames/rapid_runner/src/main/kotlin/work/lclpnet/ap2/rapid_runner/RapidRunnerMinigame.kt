@@ -12,9 +12,9 @@ class RapidRunnerMinigame : MiniGame {
     override val id = ApConstants.identifier("rapid_runner")
     override val type = GameType.FFA
     override val author = ApConstants.PERSON_LCLP
+    override val usesMaps = false
     override fun getIcon(manager: RegistryAccess) = ItemStack(Items.COPPER_BOOTS)
     override fun canBeFinale(context: GameStartContext) = true
     override fun canBePlayed(context: GameStartContext) = true
-    override val usesMaps = false
     override fun createFactory() = RapidRunnerFactory()
 }

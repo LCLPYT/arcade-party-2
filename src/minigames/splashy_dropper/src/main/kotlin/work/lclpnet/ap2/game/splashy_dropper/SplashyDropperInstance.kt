@@ -20,6 +20,7 @@ import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
+import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.game.util.finaleCompatibleScoreContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.util.handler.Visibility
@@ -86,7 +87,7 @@ class SplashyDropperInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
         val translations = gameHandle.translations
         val subject = translations.translateText(gameHandle.gameInfo.taskKey)
 
-        commons().createTimer(subject, DURATION.inWholeSeconds.toInt()).whenDone(winManager::complete)
+        createTimer(subject, DURATION.inWholeSeconds.toInt()).whenDone(winManager::complete)
 
         runEveryTick {
             tick()

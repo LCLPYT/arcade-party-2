@@ -7,7 +7,7 @@ import net.minecraft.world.phys.Vec3
 import org.json.JSONObject
 import work.lclpnet.ap2.api.game.team.Team
 import work.lclpnet.ap2.game.MiniGameHandle
-import work.lclpnet.ap2.impl.game.Announcer
+import work.lclpnet.ap2.game.util.Announcer
 import work.lclpnet.ap2.impl.game.WinManager
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.type.TeamRef
