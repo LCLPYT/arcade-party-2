@@ -57,11 +57,12 @@ import work.lclpnet.kibu.structure.BlockStructure
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar
 import work.lclpnet.kibu.translate.text.FormatWrapper.styled
 import java.util.*
+import kotlin.time.Duration.Companion.seconds
 
 const val DEBUG_VALID_POSITIONS = false
 const val DEBUG_BUTTON_POSITION = false
-const val EJECT_SECONDS = 15
-const val BUTTON_REVEAL_SECONDS = 45
+val EJECT_MAX_TIME = 15.seconds
+val BUTTON_REVEAL_TIME = 45.seconds
 
 val ASTRONAUT_HEAD: ResourceKey<PlayerHead> = ResourceKey.create(
     ApRegistries.PLAYER_HEAD,
@@ -266,7 +267,7 @@ class ButtonMasterInstance(
 
         val ejectTimer = createTimer(
             translate("game.ap2.button_master.eject"),
-            EJECT_SECONDS,
+            EJECT_MAX_TIME,
         )
 
         ejectTimer.whenDone {
@@ -275,7 +276,7 @@ class ButtonMasterInstance(
 
         translate(
             "game.ap2.button_master.choose_capsule",
-            styled(EJECT_SECONDS, ChatFormatting.YELLOW)
+            styled(EJECT_MAX_TIME.inWholeSeconds, ChatFormatting.YELLOW)
         ).formatted(ChatFormatting.AQUA).sendTo(player)
 
         this.ejectTimer = ejectTimer
@@ -362,9 +363,9 @@ class ButtonMasterInstance(
 
         wallBlocks.undo()
 
-        task = gameHandle.scheduler.timeout(BUTTON_REVEAL_SECONDS * 20, Runnable {
+        task = runAfter(BUTTON_REVEAL_TIME) {
             markButton()
-        })
+        }
     }
 
     private fun markButton() {

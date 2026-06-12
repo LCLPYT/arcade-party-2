@@ -109,6 +109,6 @@ class KingOfTheHillInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
             }
         }
 
-        useTaskTimer(DURATION.inWholeSeconds.toInt()).whenDone { winManager.complete() }
+        useTaskTimer(DURATION).whenDone { winManager.complete() }
     }
 }

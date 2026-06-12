@@ -191,7 +191,7 @@ class EggventureInstance(
 
         val subject = gameHandle.translations.translateText(gameHandle.gameInfo.taskKey)
 
-        createTimer(subject, DURATION.inWholeSeconds.toInt()).whenDone {
+        createTimer(subject, DURATION).whenDone {
             completeAndShowRemaining()
         }
 

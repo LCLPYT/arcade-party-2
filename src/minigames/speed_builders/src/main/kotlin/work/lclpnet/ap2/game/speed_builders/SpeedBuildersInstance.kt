@@ -38,7 +38,7 @@ import work.lclpnet.kibu.title.Title
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
 
-private const val LOOK_DURATION_SECONDS = 8
+private val LOOK_DURATION = 8.seconds
 const val FAST_MODE_MIN_PLAYERS = 6
 private val JUDGE_DURATION = 5.seconds
 private val JUDGE_ANNOUNCEMENT_DELAY = 3.seconds
@@ -160,7 +160,7 @@ class SpeedBuildersInstance(
 
         val label = translate("game.ap2.speed_builders.prepare_label")
 
-        timer = createTimer(label, LOOK_DURATION_SECONDS, BossEvent.BossBarColor.YELLOW)
+        timer = createTimer(label, LOOK_DURATION, BossEvent.BossBarColor.YELLOW)
 
         val transaction = timerTransaction
 
@@ -182,7 +182,7 @@ class SpeedBuildersInstance(
 
         val label = translate("game.ap2.speed_builders.label")
 
-        timer = createTimer(label, manager.getBuildingDurationTicks())
+        timer = createTimer(label, manager.getBuildingDuration())
 
         val transaction = timerTransaction
 

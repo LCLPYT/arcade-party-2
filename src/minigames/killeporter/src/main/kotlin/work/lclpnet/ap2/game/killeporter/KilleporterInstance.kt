@@ -44,6 +44,7 @@ import work.lclpnet.kibu.translate.text.FormatWrapper
 import java.lang.Math.floorMod
 import kotlin.random.Random
 import kotlin.random.asJavaRandom
+import kotlin.time.Duration.Companion.seconds
 
 val MIN_DURATION_TICKS = Ticks.seconds(18)
 val MAX_DURATION_TICKS = Ticks.seconds(32)
@@ -105,7 +106,7 @@ class KilleporterInstance(
 
     override fun configureStartup(sequence: GameStartSequence) {
         sequence.beforeGo { next ->
-            kitHandler?.startKitSelectionTimer(this, announcer, Ticks.seconds(15)) { next.run() }
+            kitHandler?.startKitSelectionTimer(this, announcer, 15.seconds) { next.run() }
         }
 
         super.configureStartup(sequence)

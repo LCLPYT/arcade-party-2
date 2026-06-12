@@ -18,6 +18,7 @@ import net.minecraft.world.phys.Vec3
 import org.json.JSONArray
 import work.lclpnet.ap2.api.music.ConfiguredSong
 import work.lclpnet.ap2.core.type.ApVariantHolder
+import work.lclpnet.ap2.ext.random
 import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.ext.runEvery
 import work.lclpnet.ap2.ext.ticks
@@ -26,7 +27,7 @@ import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.musical_minecart.cmd.SetSongCommand
 import work.lclpnet.ap2.game.musical_minecart.cmd.SkipSongCommand
 import work.lclpnet.ap2.game.player.Participants
-import work.lclpnet.ap2.game.util.createTimerTicks
+import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.music.SongHandler
 import work.lclpnet.ap2.impl.util.Hints
@@ -58,8 +59,8 @@ private const val DEBUG_INFINITE_SONGS = false
 private const val DEBUG_FULL_DELAY = false
 private const val DEBUG_INFO = false
 
-private val MIN_DELAY_TICKS = Ticks.seconds(10L)
-private val MAX_DELAY_TICKS = Ticks.seconds(20L)
+private val MIN_DELAY = 10.seconds
+private val MAX_DELAY = 20.seconds
 private val NEXT_SONG_DELAY = 2.seconds
 private const val PARTICLE_AMOUNT = 2
 private const val MAX_DECOYS = 4
@@ -182,20 +183,16 @@ class MusicalMinecartInstance(
         val notica = Notica.getInstance(server)
         songHandle = notica.playSong(song, playbackOptions, meta.startTick().orElse(0) ?: 0, players)
 
-        val delay = if (DEBUG_FULL_DELAY) {
-            MAX_DELAY_TICKS
-        } else {
-            MIN_DELAY_TICKS + random.nextInt((MAX_DELAY_TICKS - MIN_DELAY_TICKS + 1).toInt())
-        }
+        val delay = if (DEBUG_FULL_DELAY) MAX_DELAY else (MIN_DELAY..MAX_DELAY).random()
 
         if (DEBUG_INFO) {
             val total = songs.songs.size
             val done = songs.queue.transfer().occurred().size
-            timer = createTimerTicks("Queue $done / $total", delay.toInt())
+            timer = createTimer("Queue $done / $total", delay)
         }
 
         taskHandles = listOf(
-            runAfter(delay.ticks) {
+            runAfter(delay) {
                 stopMusic()
             }
         )

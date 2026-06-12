@@ -111,7 +111,7 @@ class WeaponSwapInstance(
 
             val subject = gameHandle.translations.translateText("game.ap2.weapon_swap.end")
 
-            createTimer(subject, WARN_BEFORE_END_DELAY.inWholeSeconds.toInt()).whenDone {
+            createTimer(subject, WARN_BEFORE_END_DELAY).whenDone {
                 winManager.complete()
             }
         }

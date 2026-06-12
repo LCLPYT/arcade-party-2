@@ -33,14 +33,16 @@ import work.lclpnet.game.util.BossBarTimer
 import work.lclpnet.kibu.hook.ServerMessageHooks
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import java.util.*
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.times
 
-private const val PREPARE_TICKS = 50
-private const val REPLAY_MIN_SECONDS = 8
-private const val REPLAY_SECONDS_PER_NOTE = 1
-private const val REPLAY_MAX_SECONDS = 30
-private const val NEXT_ROUND_DELAY_SECONDS = 4
 private const val INITIAL_SEQUENCE_LENGTH = 3
+private val PREPARE_TIME = 50.ticks
+private val REPLAY_MIN_TIME = 8.seconds
+private val REPLAY_MAX_TIME = 30.seconds
+private val REPLAY_TIME_PER_NOTE = 1.seconds
+private val NEXT_ROUND_DELAY = 4.seconds
 
 val DirectButtonClicks = Stat("direct_button_clicks", 0)
 val ButtonClicks = Stat("block_clicks", 0)
@@ -149,7 +151,7 @@ class MimicryInstance(
 
         announcer.announceSubtitle("game.ap2.mimicry.attention")
 
-        runAfter(PREPARE_TICKS.ticks) { playSequence() }
+        runAfter(PREPARE_TIME) { playSequence() }
     }
 
     @Synchronized
@@ -186,10 +188,10 @@ class MimicryInstance(
         val translations = gameHandle.translations
         val subject = translations.translateText(gameHandle.gameInfo.taskKey)
 
-        val replaySeconds = calcReplaySeconds()
-        manager.beginReplay(replaySeconds)
+        val replayTime = calcReplayTime()
+        manager.beginReplay(replayTime)
 
-        val t = createTimer(subject, replaySeconds)
+        val t = createTimer(subject, replayTime)
         timer = t
 
         val transaction = timerTransaction
@@ -209,7 +211,7 @@ class MimicryInstance(
 
         onRoundOver()
 
-        runAfter(NEXT_ROUND_DELAY_SECONDS.seconds) { nextSequence() }
+        runAfter(NEXT_ROUND_DELAY) { nextSequence() }
     }
 
     @Synchronized
@@ -225,8 +227,8 @@ class MimicryInstance(
         pseudoElimination.commit()
     }
 
-    private fun calcReplaySeconds(): Int =
-        (manager.sequenceLength() * REPLAY_SECONDS_PER_NOTE).coerceIn(REPLAY_MIN_SECONDS, REPLAY_MAX_SECONDS)
+    private fun calcReplayTime(): Duration =
+        (manager.sequenceLength() * REPLAY_TIME_PER_NOTE).coerceIn(REPLAY_MIN_TIME, REPLAY_MAX_TIME)
 
     private fun onCompleted(player: ServerPlayer) {
         commons().addScore(player, 1, data)

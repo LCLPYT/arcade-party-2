@@ -287,7 +287,7 @@ class PaintballInstance(
         paintGunManager.shootingEnabled = true
 
         val subject = gameHandle.translations.translateText(gameHandle.gameInfo.taskKey)
-        createTimer(subject, DURATION.inWholeSeconds.toInt()).whenDone(::beginResults)
+        createTimer(subject, DURATION).whenDone(::beginResults)
 
         started = true
 

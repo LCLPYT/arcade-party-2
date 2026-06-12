@@ -5,7 +5,6 @@ import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundSource
-import net.minecraft.world.BossEvent
 import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.scores.DisplaySlot
@@ -18,13 +17,10 @@ import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
-import work.lclpnet.game.util.BossBarTimer
 import work.lclpnet.kibu.hook.HookRegistrar
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback
 import work.lclpnet.kibu.scheduler.api.TaskScheduler
 import work.lclpnet.kibu.translate.Translations
-import work.lclpnet.kibu.translate.text.TranslatedText
-import kotlin.time.Duration
 
 fun MiniGameInstance.players() =
     gameHandle.participants
@@ -72,25 +68,6 @@ fun MiniGameInstance.playSound(
     pitch: Float
 ) =
     SoundHelper.playSound(level, sound, source, volume, pitch)
-
-fun MiniGameInstance.createTimer(
-    label: TranslatedText,
-    duration: Duration,
-    color: BossEvent.BossBarColor = BossEvent.BossBarColor.RED,
-): BossBarTimer {
-    val translations = translations
-
-    val timer = BossBarTimer.builder(translations, label)
-        .withAlertSound(false)
-        .withColor(color)
-        .withDurationTicks(duration.inWholeTicks.toInt())
-        .build()
-
-    timer.addPlayers(PlayerLookup.all(gameHandle.server))
-    timer.start(gameHandle.bossBarProvider, gameHandle.scheduler)
-
-    return timer
-}
 
 fun FFAGameInstance.setupSidebarScoreboard(data: IntScoreEventSource<ServerPlayer>) {
     val objective = gameHandle.scoreboardManager.translateObjective("points", "ap2.score")
