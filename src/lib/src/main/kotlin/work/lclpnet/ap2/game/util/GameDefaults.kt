@@ -80,25 +80,25 @@ fun MiniGameInstance.useStartup(go: () -> Unit) {
 
 fun MiniGameInstance.useFFAWinManager(
     map: GameMap?,
-    data: DataContainer<ServerPlayer, PlayerRef>,
+    data: () -> DataContainer<ServerPlayer, PlayerRef>,
 ): WinManager<ServerPlayer, PlayerRef> {
-    val data: WinManager.Data<ServerPlayer, PlayerRef> = WinManager.Data(
+    val winData: WinManager.Data<ServerPlayer, PlayerRef> = WinManager.Data(
         data,
         { value -> Optional.of(value) },
         { player -> PlayerRef.create(player) },
         { player -> PlayerRef.create(player) },
-        { data -> FFAGameResult(data) }
+        { container -> FFAGameResult(container) }
     )
 
-    return WinManager(gameHandle, map, data)
+    return WinManager(gameHandle, map, winData)
 }
 
 fun MiniGameInstance.useTeamWinManager(
     teamManager: TeamManager,
     map: GameMap?,
-    data: DataContainer<Team, TeamRef>
+    data: () -> DataContainer<Team, TeamRef>
 ): WinManager<Team, TeamRef> {
-    val data: WinManager.Data<Team, TeamRef> = WinManager.Data(
+    val winData: WinManager.Data<Team, TeamRef> = WinManager.Data(
         data,
         { player: ServerPlayer -> teamManager.getTeam(player) },
         { team: Team -> TeamRef(team.key(), gameHandle.translations) },
@@ -114,5 +114,5 @@ fun MiniGameInstance.useTeamWinManager(
         }
     )
 
-    return WinManager(gameHandle, map, data)
+    return WinManager(gameHandle, map, winData)
 }
