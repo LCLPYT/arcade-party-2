@@ -46,10 +46,8 @@ private val REPLAY_MAX_TIME = 30.seconds
 private val REPLAY_TIME_PER_NOTE = 1.seconds
 private val NEXT_ROUND_DELAY = 4.seconds
 
-val DirectButtonClicks = Stat("direct_button_clicks", 0)
-val ButtonClicks = Stat("block_clicks", 0)
-val AvgTimeUsage = Stat("avg_time_usage", 0f, unit = StatUnits.Percent)
-val AvgClickTime = Stat("avg_click_time", 0f, unit = StatUnits.Seconds)
+val AvgTimeUsage = Stat("avg_time_usage", 0f, unit = StatUnits.Percent, higherIsBetter = false)
+val AvgClickTime = Stat("avg_click_time", 0f, unit = StatUnits.Seconds, higherIsBetter = false)
 
 class MimicryInstance(
     gameHandle: MiniGameHandle,
@@ -67,7 +65,7 @@ class MimicryInstance(
         )
     }
     private val stats = useFFAStats(winManager, data, CommonStats.IntScore, listOf(
-        DirectButtonClicks, ButtonClicks, AvgTimeUsage, AvgClickTime
+        AvgTimeUsage, AvgClickTime
     ))
     private val manager = MimicryManager(gameHandle, result.rooms, buttons, Random(), level, stats, ::onCompleted)
     private val announcer = useAnnouncer()
@@ -109,15 +107,9 @@ class MimicryInstance(
             return InteractionResult.PASS
         }
 
-        val clicked = getEffectivelyClickedPos(world, hitResult) ?: return InteractionResult.PASS
+        val pos = getEffectivelyClickedPos(world, hitResult) ?: return InteractionResult.PASS
 
-        if (clicked.direct) {
-            stats.increment(player, DirectButtonClicks)
-        } else {
-            stats.increment(player, ButtonClicks)
-        }
-
-        if (!manager.onInputButton(player, clicked.pos)) {
+        if (!manager.onInputButton(player, pos)) {
             return InteractionResult.FAIL
         }
 
@@ -131,23 +123,21 @@ class MimicryInstance(
         return InteractionResult.FAIL
     }
 
-    private fun getEffectivelyClickedPos(world: Level, hitResult: BlockHitResult): ClickedButton? {
+    private fun getEffectivelyClickedPos(world: Level, hitResult: BlockHitResult): BlockPos? {
         val pos = hitResult.blockPos
 
         if (world.getBlockState(pos).isIn(BlockTags.BUTTONS)) {
-            return ClickedButton(pos, true)
+            return pos
         }
 
         val rel = pos.relative(hitResult.direction)
 
         if (world.getBlockState(rel).isIn(BlockTags.BUTTONS)) {
-            return ClickedButton(rel, false)
+            return rel
         }
 
         return null
     }
-
-    private class ClickedButton(val pos: BlockPos, val direct: Boolean)
 
     @Synchronized
     private fun nextSequence() {
