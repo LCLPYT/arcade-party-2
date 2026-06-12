@@ -292,7 +292,7 @@ class ButtonMasterInstance(
 
         eliminate(buttonMaster)
 
-        if (!winManager.isGameOver) {
+        if (!winManager.gameOver) {
             beginNextRound()
         }
     }
@@ -399,7 +399,7 @@ class ButtonMasterInstance(
     override fun onEliminated(player: ServerPlayer) {
         super.onEliminated(player)
 
-        if (winManager.isGameOver || gameState == GameState.SEARCHING_BUTTON) return
+        if (winManager.gameOver || gameState == GameState.SEARCHING_BUTTON) return
 
         beginNextRound()
     }

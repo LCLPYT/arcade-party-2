@@ -22,7 +22,7 @@ import work.lclpnet.ap2.game.fine_tuning.melody.FakeNoteBlockPlayer
 import work.lclpnet.ap2.game.fine_tuning.melody.Melody
 import work.lclpnet.ap2.game.fine_tuning.melody.Note
 import work.lclpnet.ap2.game.fine_tuning.melody.PlayMelodyTask
-import work.lclpnet.ap2.impl.game.WinManager
+import work.lclpnet.ap2.game.util.WinManager
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.ColorUtil

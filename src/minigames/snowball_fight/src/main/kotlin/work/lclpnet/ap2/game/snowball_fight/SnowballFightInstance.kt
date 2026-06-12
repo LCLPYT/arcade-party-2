@@ -60,7 +60,7 @@ class SnowballFightInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
 
         gameHandle.protect { config ->
             ProtectionTypes.BREAK_BLOCKS.allow(config) { entity, pos ->
-                if (entity is ServerPlayer && participants.isParticipating(entity) && !winManager.isGameOver) {
+                if (entity is ServerPlayer && participants.isParticipating(entity) && !winManager.gameOver) {
                     onBreakBlock(entity, pos)
                 }
                 false

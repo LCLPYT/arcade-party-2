@@ -92,7 +92,7 @@ class PaintballInstance(
         gameHandle.participants,
         gameHandle.translations,
         commons().debugController(),
-        winManager::isGameOver
+        winManager::gameOver
     )
 
     override val data = IntScoreDataContainer(
@@ -362,7 +362,7 @@ class PaintballInstance(
     }
 
     private fun onDamage(entity: LivingEntity, source: DamageSource, amount: Float): Boolean {
-        if (winManager.isGameOver) return false
+        if (winManager.gameOver) return false
 
         val player = entity as? ServerPlayer ?: return false
 

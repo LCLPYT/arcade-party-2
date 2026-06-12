@@ -16,11 +16,9 @@ import work.lclpnet.ap2.api.stats.TeamStatsManager
 import work.lclpnet.ap2.ext.logger
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.player.ParticipantListener
-import work.lclpnet.ap2.impl.game.WinManager
+import work.lclpnet.ap2.game.util.useTeamWinManager
 import work.lclpnet.ap2.impl.game.WinManagerAccessImpl
-import work.lclpnet.ap2.impl.game.data.type.TeamGameResult
 import work.lclpnet.ap2.impl.game.data.type.TeamRef
-import work.lclpnet.ap2.impl.game.data.type.TeamRefResolver
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.map.MapUtils
 import work.lclpnet.kibu.hook.util.PositionRotation
@@ -38,24 +36,11 @@ abstract class TeamGameInstance(
     TeamSpawnAccess,
     WinManagerView {
 
-    protected val resolver = TeamRefResolver(teamManager)
-    protected val winManager: WinManager<Team, TeamRef>
+    protected val winManager = useTeamWinManager(teamManager, map, data)
     @Volatile
     private var teamSpawns: MutableMap<String, PositionRotation>? = null
 
     init {
-        val data: WinManager.Data<Team, TeamRef> = WinManager.Data(
-            { data },
-            { player -> teamManager.getTeam(player) },
-            { team -> createReference(team) },
-            { player -> createReferenceFor(player) },
-            { dataContainer ->
-                TeamGameResult(dataContainer, resolver)
-            }
-        )
-
-        this.winManager = WinManager(gameHandle, this::map, data)
-
         teamManager.bind(this)
     }
 

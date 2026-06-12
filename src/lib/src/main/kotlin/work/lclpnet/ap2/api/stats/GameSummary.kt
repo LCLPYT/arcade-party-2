@@ -8,7 +8,7 @@ import kotlin.time.Instant
 
 data class GameSummary(
     val game: GameInfo,
-    val map: GameMap,
+    val map: GameMap?,
     val start: Instant,
     val end: Instant,
     val participants: Set<PlayerRef>

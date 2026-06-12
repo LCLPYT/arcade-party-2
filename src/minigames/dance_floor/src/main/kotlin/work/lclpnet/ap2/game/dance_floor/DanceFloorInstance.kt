@@ -300,7 +300,7 @@ class DanceFloorInstance(
             eliminateAll(eliminate)
         }
 
-        if (winManager.isGameOver) return
+        if (winManager.gameOver) return
 
         nextCycle()
     }

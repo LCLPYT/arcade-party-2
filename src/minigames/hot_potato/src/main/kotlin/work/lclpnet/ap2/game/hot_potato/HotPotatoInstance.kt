@@ -151,7 +151,7 @@ class HotPotatoInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
             player.removeEffect(MobEffects.GLOWING)
         }
 
-        if (winManager.isGameOver) return
+        if (winManager.gameOver) return
 
         runAfter(3.seconds) {
             nextRound()

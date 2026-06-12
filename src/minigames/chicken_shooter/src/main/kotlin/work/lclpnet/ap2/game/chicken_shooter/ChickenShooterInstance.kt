@@ -96,7 +96,7 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
 
             projectile.discard()
 
-            if (winManager.isGameOver) return@registerWith false
+            if (winManager.gameOver) return@registerWith false
             val attacker = source.entity as? ServerPlayer ?: return@registerWith false
 
             val pitch = if (chicken.isBaby) 1.4f else 0.8f

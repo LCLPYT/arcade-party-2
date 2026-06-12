@@ -364,7 +364,7 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
 
     @Synchronized
     private fun tick() {
-        if (winManager.isGameOver) return
+        if (winManager.gameOver) return
 
         var check = checkForCompletion
 
@@ -406,7 +406,7 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
     }
 
     private fun onReachGoal(player: ServerPlayer) {
-        if (!inGoal.add(player.uuid) || winManager.isGameOver) return
+        if (!inGoal.add(player.uuid) || winManager.gameOver) return
 
         val time = (milliTime() - startMs) / 1000.0
         val duration = TimeHelper.formatTime(gameHandle.translations, time, "%02d", "%06.3f", "%.3f")
@@ -435,7 +435,7 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
 
     @Synchronized
     private fun softEliminate(player: ServerPlayer) {
-        if (pseudoElimination.eliminate(player) && !winManager.isGameOver) {
+        if (pseudoElimination.eliminate(player) && !winManager.gameOver) {
             trackScore(player)
         }
 
@@ -498,7 +498,7 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
 
     @Synchronized
     private fun checkComplete() {
-        if (winManager.isGameOver) return
+        if (winManager.gameOver) return
 
         if (inGoal.size >= 3) {
             complete()
@@ -531,7 +531,7 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
 
     @Synchronized
     private fun complete() {
-        if (winManager.isGameOver) return
+        if (winManager.gameOver) return
 
         streamRemaining().forEach(::trackScore)
 

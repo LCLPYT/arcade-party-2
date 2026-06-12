@@ -131,7 +131,7 @@ class SpleefInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMa
      * Checks that every player stays only on breakable blocks at all times.
      */
     fun checkValidPositions() {
-        if (winManager.isGameOver) return
+        if (winManager.gameOver) return
         
         for (player in players()) {
             if (!OnGroundDetector.isOnGroundServer(player) || player.isInLava || player.isInPowderSnow) continue

@@ -129,7 +129,7 @@ class SplashyDropperInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
     }
 
     private fun tick() {
-        if (winManager.isGameOver) return
+        if (winManager.gameOver) return
 
         outer@ for (player in gameHandle.participants) {
             if (player.y >= minSpawnY - 1) continue

@@ -337,7 +337,7 @@ class MusicalMinecartInstance(
 
         eliminateAll(toEliminate)
 
-        if (winManager.isGameOver || participants.count() == 0) return
+        if (winManager.gameOver || participants.count() == 0) return
 
         val passDelay = (NEXT_SONG_DELAY - 1.seconds).coerceAtLeast(0.seconds)
 

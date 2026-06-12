@@ -214,7 +214,7 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle, level: ServerLevel, ma
     }
 
     private fun onDamage(entity: LivingEntity, source: DamageSource, amount: Float): Boolean {
-        if (entity !is ServerPlayer || winManager.isGameOver) return false
+        if (entity !is ServerPlayer || winManager.gameOver) return false
 
         if (source.directEntity is Projectile) {
             onProjectileDamage(entity, source.directEntity as Projectile)

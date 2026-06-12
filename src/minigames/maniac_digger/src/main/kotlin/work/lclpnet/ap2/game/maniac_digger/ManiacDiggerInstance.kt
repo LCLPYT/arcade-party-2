@@ -132,7 +132,7 @@ class ManiacDiggerInstance(
         }
 
         PlayerInventoryHooks.SLOT_CHANGE.registerWith(hooks) { player, slot ->
-            if (!gameHandle.participants.isParticipating(player) || winManager.isGameOver) {
+            if (!gameHandle.participants.isParticipating(player) || winManager.gameOver) {
                 return@registerWith
             }
 
@@ -149,7 +149,7 @@ class ManiacDiggerInstance(
     }
 
     private fun canBreak(player: ServerPlayer, pos: BlockPos): Boolean {
-        if (!gameHandle.participants.isParticipating(player) || winManager.isGameOver) {
+        if (!gameHandle.participants.isParticipating(player) || winManager.gameOver) {
             return false
         }
 
@@ -163,7 +163,7 @@ class ManiacDiggerInstance(
     }
 
     private fun checkGoal() {
-        if (winManager.isGameOver) return
+        if (winManager.gameOver) return
 
         for (player in gameHandle.participants) {
             if (player.blockY <= winHeight) {

@@ -86,7 +86,7 @@ class AimMasterInstance(
     }
 
     private fun invokeRayCaster(player: Player): InteractionResult {
-        if (winManager.isGameOver || player !is ServerPlayer) return InteractionResult.FAIL
+        if (winManager.gameOver || player !is ServerPlayer) return InteractionResult.FAIL
 
         val domain = manager.domains[player.uuid] ?: return InteractionResult.FAIL
 

@@ -196,7 +196,7 @@ class MinefieldInstance(
     }
 
     fun onStepOnMine(player: ServerPlayer, pos: BlockPos) {
-        if (winManager.isGameOver || player.isSpectator || inGoal.contains(player.uuid)) return
+        if (winManager.gameOver || player.isSpectator || inGoal.contains(player.uuid)) return
 
         level.setBlock(pos, Blocks.AIR)
         ParticleHelper.spawnParticleAt(player, ParticleTypes.EXPLOSION, 1, 0.0, 0.0, 0.0, 0.0)
