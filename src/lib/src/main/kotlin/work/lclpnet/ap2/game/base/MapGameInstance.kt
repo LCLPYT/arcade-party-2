@@ -5,9 +5,6 @@ import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
 import net.minecraft.server.level.ServerLevel
-import net.minecraft.server.level.ServerPlayer
-import net.minecraft.sounds.SoundEvents
-import net.minecraft.sounds.SoundSource
 import net.minecraft.world.BossEvent
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.level.GameType
@@ -15,28 +12,23 @@ import org.json.JSONArray
 import org.json.JSONObject
 import work.lclpnet.ap2.ApConstants
 import work.lclpnet.ap2.ext.*
-import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.MiniGameInstance
+import work.lclpnet.ap2.game.util.GameStartSequence
+import work.lclpnet.ap2.game.util.configureDefaults
 import work.lclpnet.ap2.impl.game.GameCommons
-import work.lclpnet.ap2.impl.game.PlayerUtil
 import work.lclpnet.ap2.impl.util.TranslationUtil
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar
 import work.lclpnet.ap2.impl.util.effect.ApEffect
 import work.lclpnet.ap2.impl.util.effect.ApEffects
 import work.lclpnet.ap2.impl.util.property.ApMapProperties
-import work.lclpnet.ap2.util.SubtitleCountdown
 import work.lclpnet.combatctl.impl.CombatStyles
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.util.BossBarTimer
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
-import work.lclpnet.kibu.scheduler.api.RunningTask
-import work.lclpnet.kibu.title.Title
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar
 import kotlin.concurrent.Volatile
-import kotlin.math.min
-import kotlin.time.Duration.Companion.seconds
 
 /** A game instance that:
  * - is played on a map
@@ -55,8 +47,6 @@ abstract class MapGameInstance(
 
     @Volatile
     private var commons: GameCommons? = null
-    private var countdownTime = 0
-    private var countdownValue = 0
     private val activeEffects: MutableSet<ApEffect> = mutableSetOf()
 
     override fun start() {
@@ -69,17 +59,16 @@ abstract class MapGameInstance(
 
         prepare()
 
-        val initialDelay = this.initialDelay
-
-        val countdown = SubtitleCountdown(
-            gameHandle.server,
-            gameHandle.scheduler,
-            { _ -> },
-            ::allPlayers
-        )
-
-        countdown.schedule(initialDelay) { afterInitialDelay() }
+        val sequence = GameStartSequence(gameHandle)
+        configureStartup(sequence)
+        sequence.startWithGo { go() }
     }
+
+    /**
+     * Hook for subclasses to register [GameStartSequence.beforeGo] phases that run between the initial
+     * countdown and the game start. Override and register the phase, then call `super.configureStartup`.
+     */
+    protected open fun configureStartup(sequence: GameStartSequence) {}
 
     private fun registerDefaultHooks() {
         PlayerInteractionHooks.USE_BLOCK.registerWith(hooks) { player, _, _, _ ->
@@ -113,47 +102,6 @@ abstract class MapGameInstance(
         translate("ap2.map.by", name, authors)
             .formatted(ChatFormatting.GREEN, ChatFormatting.BOLD)
             .sendTo(level.players())
-    }
-
-    private fun scheduleCountdown(durationTicks: Int) {
-        countdownValue = min(3, durationTicks / 20)
-
-        if (countdownValue <= 0) return
-
-        runEvery(1.ticks, after = durationTicks.ticks - countdownValue.seconds) {
-            tickCountdown(this)
-        }.whenComplete {
-            clearCountdown()
-        }
-    }
-
-    private fun tickCountdown(task: RunningTask) {
-        val time = countdownTime++
-
-        if (time % 20 != 0) return
-
-        if (countdownValue <= 0) {
-            task.cancel()
-        }
-
-        val color = when (countdownValue) {
-            3 -> ChatFormatting.RED
-            2 -> ChatFormatting.GOLD
-            1 -> ChatFormatting.YELLOW
-            else -> ChatFormatting.GREEN
-        }
-
-        val msg = Component.literal((countdownValue--).toString()).withStyle(color, ChatFormatting.BOLD)
-
-        for (player in PlayerLookup.all(gameHandle.server)) {
-            player.sendOverlayMessage(msg)
-        }
-    }
-
-    private fun clearCountdown() {
-        for (player in allPlayers()) {
-            player.sendOverlayMessage(Component.empty())
-        }
     }
 
     private fun loadMapProperties() {
@@ -205,30 +153,6 @@ abstract class MapGameInstance(
         activeEffects.clear()
     }
 
-
-    protected open fun afterInitialDelay() {
-        for (player in allPlayers()) {
-            sendGo(player)
-        }
-
-        go()
-    }
-
-    protected fun sendGo(player: ServerPlayer) {
-        val text = gameHandle.translations.translateText("ap2.go")
-            .formatted(ChatFormatting.RED)
-            .translateFor(player)
-
-        Title.get(player).title(text, Component.empty(), 5, 20, 5)
-
-        player.playNotifySound(SoundEvents.CHICKEN_EGG, SoundSource.PLAYERS, 1f, 0f)
-    }
-
-    val initialDelay: Int
-        get() {
-            val players = gameHandle.participants.asSet.size
-            return PlayerUtil.getLoadingDelayTicks(players)
-        }
 
     protected fun useSurvivalMode() {
         gameHandle.playerUtil.setDefaultGameMode(GameType.SURVIVAL)

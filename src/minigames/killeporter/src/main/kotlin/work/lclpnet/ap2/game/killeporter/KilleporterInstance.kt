@@ -25,6 +25,7 @@ import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.kit.KitHandle
 import work.lclpnet.ap2.game.kit.KitHandler
 import work.lclpnet.ap2.game.kit.PrefabKitLoader
+import work.lclpnet.ap2.game.util.GameStartSequence
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.util.loot.LazyLootContainerManager
 import work.lclpnet.ap2.util.loot.LootEntry
@@ -100,8 +101,12 @@ class KilleporterInstance(
         }
     }
 
-    override fun afterInitialDelay() {
-        kitHandler?.startKitSelectionTimer(commons(), Ticks.seconds(15)) {super.afterInitialDelay()}
+    override fun configureStartup(sequence: GameStartSequence) {
+        sequence.beforeGo { next ->
+            kitHandler?.startKitSelectionTimer(commons(), Ticks.seconds(15)) { next.run() }
+        }
+
+        super.configureStartup(sequence)
     }
 
     override fun go() {

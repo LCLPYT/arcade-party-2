@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.base
+package work.lclpnet.ap2.game.util
 
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.damagesource.DamageTypes
@@ -63,4 +63,8 @@ private fun MiniGameInstance.configureLocatorBar() {
     }
 
     level.waypointManager.breakAllConnections()
+}
+
+fun MiniGameInstance.useStartup(go: () -> Unit) {
+    GameStartSequence(gameHandle, ::allPlayers).startWithGo { go() }
 }

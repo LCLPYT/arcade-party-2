@@ -80,7 +80,7 @@ class DanceFloorInstance(
         SetSongCommand(songHandler, this::nextSong).register(gameHandle.commands)
         SkipSongCommand(this::nextSong).register(gameHandle.commands)
 
-        Hints(gameHandle).sendBeforeReady(this, Hints.Mod.NOTICA)
+        Hints(gameHandle).sendBeforeReady(gameHandle, Hints.Mod.NOTICA)
 
         blockRandomizer = BlockRandomizer(floorShape(), level)
 

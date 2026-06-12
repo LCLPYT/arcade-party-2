@@ -27,6 +27,7 @@ import work.lclpnet.ap2.game.dragon_escape.kit.EnderPearlKit
 import work.lclpnet.ap2.game.dragon_escape.kit.LeapKit
 import work.lclpnet.ap2.game.dragon_escape.kit.WindChargeKit
 import work.lclpnet.ap2.game.kit.KitHandler
+import work.lclpnet.ap2.game.util.GameStartSequence
 import work.lclpnet.ap2.impl.game.PseudoElimination
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer
 import work.lclpnet.ap2.impl.game.data.DoubleScoreDataContainer
@@ -292,8 +293,12 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
         scoreboardManager.setDisplay(DisplaySlot.LIST, progressObjective)
     }
 
-    override fun afterInitialDelay() {
-        kitHandler.startKitSelectionTimer(commons()) { super.afterInitialDelay() }
+    override fun configureStartup(sequence: GameStartSequence) {
+        sequence.beforeGo { next ->
+            kitHandler.startKitSelectionTimer(commons()) { next.run() }
+        }
+
+        super.configureStartup(sequence)
     }
 
     override fun go() {
