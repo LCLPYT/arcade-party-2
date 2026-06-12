@@ -1,5 +1,9 @@
 {
   "game.ap2.mirror_hop": "Spiegelbruch",
   "game.ap2.mirror_hop.description": "Bahne dir einen Weg über die Plattformen zum Ziel.\nEs ist immer nur eine Platform richtig!",
-  "game.ap2.mirror_hop.task": "Erreiche die Ziellinie"
+  "game.ap2.mirror_hop.task": "Erreiche die Ziellinie",
+  "game.ap2.mirror_hop.stat.score": "Aufgedeckte Plattformen",
+  "game.ap2.mirror_hop.stat.falls": "Stürze",
+  "game.ap2.mirror_hop.stat.platforms_materialized": "Materialisierte Plattformen",
+  "game.ap2.mirror_hop.stat.platforms_broken": "Zerbrochene Plattformen"
 }
