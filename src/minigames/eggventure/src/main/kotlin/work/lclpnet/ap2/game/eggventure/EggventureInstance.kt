@@ -32,9 +32,14 @@ import net.minecraft.world.scores.criteria.ObjectiveCriteria
 import org.joml.Matrix4f
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.util.heads.PlayerHead
+import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.mc.isOf
+import work.lclpnet.ap2.ext.players
+import work.lclpnet.ap2.ext.scheduler
+import work.lclpnet.ap2.ext.translations
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
+import work.lclpnet.ap2.game.util.GameStartSequence
 import work.lclpnet.ap2.game.util.finaleCompatibleScoreContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.map.MapUtil
@@ -130,12 +135,16 @@ class EggventureInstance(
         scoreboardManager.setDisplay(DisplaySlot.LIST, objective)
     }
 
-    override fun afterInitialDelay() {
-        val dynamicEntityManager = DynamicEntityManager(level)
-        val tutorial = EggventureTutorial(level, dynamicEntityManager, random, gameHandle.translations)
+    override fun configureStartup(sequence: GameStartSequence) {
+        sequence.beforeGo { next ->
+            val dynamicEntityManager = DynamicEntityManager(level)
+            val tutorial = EggventureTutorial(level, dynamicEntityManager, random, translations)
 
-        dynamicEntityManager.init(gameHandle.scheduler, gameHandle.hooks)
-        tutorial.start(gameHandle.scheduler, gameHandle.participants).thenRun { super.afterInitialDelay() }
+            dynamicEntityManager.init(scheduler, hooks)
+            tutorial.start(scheduler, players()).thenRun { next.run() }
+        }
+
+        super.configureStartup(sequence)
     }
 
     override fun go() {

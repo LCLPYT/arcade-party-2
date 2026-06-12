@@ -40,6 +40,7 @@ import work.lclpnet.ap2.game.paintball.kit.ShotgunKit
 import work.lclpnet.ap2.game.paintball.kit.SniperKit
 import work.lclpnet.ap2.game.paintball.util.*
 import work.lclpnet.ap2.game.player.Participants
+import work.lclpnet.ap2.game.util.GameStartSequence
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.Ordering
 import work.lclpnet.ap2.impl.game.item.SpecialItems
@@ -252,10 +253,12 @@ class PaintballInstance(
         }
     }
 
-    override fun afterInitialDelay() {
-        kitHandler.startKitSelectionTimer(commons()) {
-            super.afterInitialDelay()
+    override fun configureStartup(sequence: GameStartSequence) {
+        sequence.beforeGo { next ->
+            kitHandler.startKitSelectionTimer(commons()) { next.run() }
         }
+
+        super.configureStartup(sequence)
     }
 
     override fun go() {

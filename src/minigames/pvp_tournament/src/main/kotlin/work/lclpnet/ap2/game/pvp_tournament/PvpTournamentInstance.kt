@@ -373,7 +373,7 @@ class PvpTournamentInstance(
             inst.players
         }.schedule(3.seconds) {
             inst.players.forEach {
-                sendGo(it)
+                gameHandle.sendGo(it)
             }
 
             startMatch(match)
