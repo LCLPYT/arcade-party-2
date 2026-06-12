@@ -15,5 +15,6 @@ class RapidRunnerMinigame : MiniGame {
     override fun getIcon(manager: RegistryAccess) = ItemStack(Items.COPPER_BOOTS)
     override fun canBeFinale(context: GameStartContext) = true
     override fun canBePlayed(context: GameStartContext) = true
+    override val usesMaps = false
     override fun createFactory() = RapidRunnerFactory()
 }
