@@ -7,8 +7,7 @@
   "game.ap2.mimicry.wrong_button": "Your sequence is incorrect.",
   "game.ap2.mimicry.correct": "Your sequence is correct!",
   "game.ap2.mimicry.completed": "%s mimic(s)",
-  "game.ap2.mimicry.stat.direct_button_clicks": "Buttons clicked",
-  "game.ap2.mimicry.stat.block_clicks": "Blocks clicked",
+  "game.ap2.mimicry.stat.score": "Mimics",
   "game.ap2.mimicry.stat.avg_time_usage": "Avg. time used",
   "game.ap2.mimicry.stat.avg_click_time": "Avg. click time"
 }
