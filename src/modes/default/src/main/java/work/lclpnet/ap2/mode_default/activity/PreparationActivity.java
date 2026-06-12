@@ -258,10 +258,12 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         Identifier gameId = miniGame.getId();
 
-        whenTasksDone = args.miniGameArgs().mapFacade().reloadMaps(gameId).exceptionally(err -> {
-            args.miniGameArgs().logger().error("Failed to reload maps for {}", gameId, err);
-            return null;
-        });
+        if (miniGame.getUsesMaps()) {
+            whenTasksDone = args.miniGameArgs().mapFacade().reloadMaps(gameId).exceptionally(err -> {
+                args.miniGameArgs().logger().error("Failed to reload maps for {}", gameId, err);
+                return null;
+            });
+        }
 
         displayGameQueue();
         startTimer().whenDone(this::onTimerEnded);

@@ -26,4 +26,6 @@ interface MiniGame : GameInfo {
     fun canBePlayed(context: GameStartContext): Boolean
 
     fun createFactory(): MiniGameFactory
+
+    val usesMaps: Boolean get() = true
 }
