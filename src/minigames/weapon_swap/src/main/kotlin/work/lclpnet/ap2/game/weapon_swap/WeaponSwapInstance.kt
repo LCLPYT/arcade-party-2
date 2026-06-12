@@ -17,6 +17,7 @@ import work.lclpnet.ap2.api.stats.CommonStats.Kills
 import work.lclpnet.ap2.api.stats.FFAStatsManager
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.*
+import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.mc.setSelectedSlot
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
@@ -27,7 +28,7 @@ import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
 import work.lclpnet.ap2.util.SubtitleCountdown
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
-import work.lclpnet.kibu.access.entity.ServerPlayerAccess
+import work.lclpnet.game.util.PlayerReset
 import work.lclpnet.kibu.hook.entity.EntityDamageCallback
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks
@@ -42,6 +43,7 @@ private val MIN_SWAP_DELAY = 7.seconds
 private val MAX_SWAP_DELAY = 10.seconds
 private val DRAW_DELAY = 3.minutes
 private val WARN_BEFORE_END_DELAY = 30.seconds
+const val MOVEMENT_SPEED = 0.14f
 
 private val WeaponsReceived = Stat("weapons_received", 0)
 
@@ -181,6 +183,7 @@ class WeaponSwapInstance(
         for (p in currentHolders) {
             players().getParticipant(p).ifPresent {
                 removeWeaponFrom(it)
+                PlayerReset.modifyWalkSpeed(it, 0.1f)
             }
         }
 
@@ -190,7 +193,8 @@ class WeaponSwapInstance(
             giveWeaponTo(p)
             currentHolders.add(p.uuid)
             stats.increment(p, WeaponsReceived)
-            ServerPlayerAccess.playSoundToPlayer(p, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 1f, 1.5f)
+            p.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 1f, 1.5f)
+            PlayerReset.modifyWalkSpeed(p, MOVEMENT_SPEED)
         }
 
         translate("game.ap2.weapon_swap.received")
