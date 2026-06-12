@@ -36,7 +36,7 @@ abstract class TeamGameInstance(
     TeamSpawnAccess,
     WinManagerView {
 
-    protected val winManager = useTeamWinManager(teamManager, map, data)
+    protected val winManager = useTeamWinManager(teamManager, map) { data }
     @Volatile
     private var teamSpawns: MutableMap<String, PositionRotation>? = null
 

@@ -27,7 +27,7 @@ class RapidRunnerInstance(
 ) : MiniGameInstance {
 
     val data = DoubleScoreDataContainer(PlayerRef::create)
-    val winManager = useFFAWinManager(null, data)
+    val winManager = useFFAWinManager(null) { data }
 
     override fun start() {
         configureDefaults()

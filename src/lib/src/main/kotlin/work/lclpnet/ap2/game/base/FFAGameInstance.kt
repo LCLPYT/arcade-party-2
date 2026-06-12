@@ -27,7 +27,7 @@ abstract class FFAGameInstance(
 ) : MapGameInstance(gameHandle, world, map), ParticipantListener, WinManagerView {
 
     @JvmField
-    protected val winManager = useFFAWinManager(map, data)
+    protected val winManager = useFFAWinManager(map) { data }
 
     override val participantListener: ParticipantListener
         get() = this

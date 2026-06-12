@@ -74,7 +74,7 @@ class WinManager<T, Ref : SubjectRef>(
         val finalData = CombinedDataContainer(
             listOf(
                 forcedWinners,
-                data.container.copy()
+                data.container().copy()
             )
         )
 
@@ -130,7 +130,7 @@ class WinManager<T, Ref : SubjectRef>(
         if (size == 1) {
             val lastRemaining = participatingSubjects.iterator().next()
 
-            data.container.add(lastRemaining)
+            data.container().add(lastRemaining)
         }
 
         complete()
@@ -148,7 +148,7 @@ class WinManager<T, Ref : SubjectRef>(
 
     @JvmRecord
     data class Data<T, Ref : SubjectRef>(
-        val container: DataContainer<T, Ref>,
+        val container: () -> DataContainer<T, Ref>,
         val subjectMapper: Function<ServerPlayer, Optional<T>>,
         val subjectRefs: SubjectRefFactory<T, Ref>,
         val playerRefs: PlayerSubjectRefFactory<Ref>,
