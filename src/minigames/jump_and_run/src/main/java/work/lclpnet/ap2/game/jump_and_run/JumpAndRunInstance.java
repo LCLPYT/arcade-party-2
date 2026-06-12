@@ -61,6 +61,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static java.lang.Math.*;
 import static net.minecraft.ChatFormatting.*;
+import static work.lclpnet.ap2.game.util.TimersKt.usePlayerDynamicTaskDisplay;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class JumpAndRunInstance extends FFAGameInstance {
@@ -113,7 +114,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
 
         movementObserver.init(getGameHandle().getHooks(), getGameHandle().getServer());
 
-        bossBar = usePlayerDynamicTaskDisplay(styled(0, YELLOW), styled(jumpAndRun.modules().size(), YELLOW));
+        bossBar = usePlayerDynamicTaskDisplay(this, styled(0, YELLOW), styled(jumpAndRun.modules().size(), YELLOW));
         bossBar.setPercent(0);
 
         initModule();

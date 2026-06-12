@@ -14,6 +14,7 @@ import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
+import work.lclpnet.ap2.game.util.usePlayerDynamicTaskDisplay
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.game.map.GameMap

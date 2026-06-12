@@ -28,6 +28,8 @@ import work.lclpnet.ap2.ext.mc.setBlocks
 import work.lclpnet.ap2.ext.mc.teleport
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
+import work.lclpnet.ap2.game.util.addTimer
+import work.lclpnet.ap2.game.util.useTaskDisplay
 import work.lclpnet.ap2.impl.game.data.OrderedDataContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.util.Fireworks
@@ -172,7 +174,7 @@ class MinefieldInstance(
 
             gameEnd = Ticks.seconds(END_TIME_SECONDS)
 
-            commons().addTimer(taskBar, END_TIME_SECONDS).then {
+            addTimer(taskBar, END_TIME_SECONDS).then {
                 gradePlayers()
                 winManager.complete()
             }

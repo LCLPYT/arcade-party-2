@@ -27,6 +27,7 @@ import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
+import work.lclpnet.ap2.game.util.usePlayerDynamicTaskDisplay
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.map.MapUtil

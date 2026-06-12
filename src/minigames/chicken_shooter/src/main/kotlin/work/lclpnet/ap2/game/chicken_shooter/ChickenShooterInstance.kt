@@ -33,6 +33,7 @@ import work.lclpnet.ap2.core.type.ApVariantHolder
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
+import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.game.util.finaleCompatibleScoreContainer
 import work.lclpnet.ap2.game.util.teleportToRandomSpawns
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
@@ -165,7 +166,7 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
         }
 
         val subject = translations.translateText("game.ap2.chicken_shooter.task")
-        commons().createTimer(subject, DURATION.inWholeSeconds.toInt()).whenDone(winManager::complete)
+        createTimer(subject, DURATION.inWholeSeconds.toInt()).whenDone(winManager::complete)
     }
 
     private fun findChickenSpawner() {

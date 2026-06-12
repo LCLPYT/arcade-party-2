@@ -40,6 +40,7 @@ import work.lclpnet.ap2.ext.translations
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.util.GameStartSequence
+import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.game.util.finaleCompatibleScoreContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.map.MapUtil
@@ -190,7 +191,9 @@ class EggventureInstance(
 
         val subject = gameHandle.translations.translateText(gameHandle.gameInfo.taskKey)
 
-        commons().createTimer(subject, DURATION.inWholeSeconds.toInt()).whenDone { completeAndShowRemaining() }
+        createTimer(subject, DURATION.inWholeSeconds.toInt()).whenDone {
+            completeAndShowRemaining()
+        }
 
         gameHandle.scheduler.interval(
             20,

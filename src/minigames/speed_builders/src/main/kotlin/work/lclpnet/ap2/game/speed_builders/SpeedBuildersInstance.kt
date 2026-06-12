@@ -24,7 +24,8 @@ import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.game.speed_builders.data.SbIsland
 import work.lclpnet.ap2.game.speed_builders.data.SbModule
 import work.lclpnet.ap2.game.speed_builders.util.*
-import work.lclpnet.ap2.impl.game.Announcer
+import work.lclpnet.ap2.game.util.createTimer
+import work.lclpnet.ap2.game.util.useAnnouncer
 import work.lclpnet.ap2.impl.util.ParticleHelper
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.game.map.GameMap
@@ -52,11 +53,12 @@ class SpeedBuildersInstance(
 ) : EliminationGameInstance(gameHandle, level, map) {
 
     private val items = SbItems()
+    private val announcer = useAnnouncer()
     private lateinit var destruction: SbDestruction
     private lateinit var manager: SbManager
+    private lateinit var aelosId: UUID
     private var islandToDestroy: SbIsland? = null
     private var playerToEliminate: UUID? = null
-    private lateinit var aelosId: UUID
     private var timer: BossBarTimer? = null
     private var timerTransaction = 0
 
@@ -154,11 +156,11 @@ class SpeedBuildersInstance(
         manager.setModule(module)
         items.setModule(module)
 
-        commons().announcer().announceSubtitle("game.ap2.speed_builders.look")
+        announcer.announceSubtitle("game.ap2.speed_builders.look")
 
         val label = translate("game.ap2.speed_builders.prepare_label")
 
-        timer = commons().createTimer(label, LOOK_DURATION_SECONDS, BossEvent.BossBarColor.YELLOW)
+        timer = createTimer(label, LOOK_DURATION_SECONDS, BossEvent.BossBarColor.YELLOW)
 
         val transaction = timerTransaction
 
@@ -170,7 +172,7 @@ class SpeedBuildersInstance(
     }
 
     private fun startBuilding() {
-        commons().announcer().announceSubtitle("game.ap2.speed_builders.copy")
+        announcer.announceSubtitle("game.ap2.speed_builders.copy")
 
         val entities = manager.getPreviewEntities()
 
@@ -180,7 +182,7 @@ class SpeedBuildersInstance(
 
         val label = translate("game.ap2.speed_builders.label")
 
-        timer = commons().createTimer(label, manager.getBuildingDurationTicks())
+        timer = createTimer(label, manager.getBuildingDurationTicks())
 
         val transaction = timerTransaction
 
@@ -204,8 +206,6 @@ class SpeedBuildersInstance(
         manager.resetSuccessiveCompletion()
 
         onLeaveBuildingPhase()
-
-        val announcer: Announcer = commons().announcer()
 
         announcer.withTimes(5, 50, 0)
             .announce(titleKey, null)
@@ -238,7 +238,7 @@ class SpeedBuildersInstance(
     }
 
     private fun announceJudgementDone() {
-        commons().announcer().announceSubtitle("game.ap2.speed_builders.judgement")
+        announcer.announceSubtitle("game.ap2.speed_builders.judgement")
 
         runAfter(JUDGE_ANNOUNCEMENT_DELAY) {
             announceJudgement()
@@ -399,7 +399,7 @@ class SpeedBuildersInstance(
 
         onLeaveBuildingPhase()
 
-        commons().announcer()
+        announcer
             .withSound(SoundEvents.BREEZE_IDLE_AIR, SoundSource.HOSTILE, 1f, 1.2f)
             .announceSubtitle("game.ap2.speed_builders.impressed")
 

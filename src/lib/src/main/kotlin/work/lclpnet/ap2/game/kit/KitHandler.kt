@@ -16,8 +16,11 @@ import net.minecraft.world.item.Items
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.MiniGameInstance
+import work.lclpnet.ap2.game.base.MapGameInstance
 import work.lclpnet.ap2.game.player.Participants
-import work.lclpnet.ap2.impl.game.GameCommons
+import work.lclpnet.ap2.game.util.Announcer
+import work.lclpnet.ap2.game.util.createTimerTicks
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.access.misc.CustomNbt
 import work.lclpnet.kibu.hook.HookRegistrar
@@ -158,23 +161,23 @@ class KitHandler(
         }
     }
 
-    fun startKitSelectionTimer(commons: GameCommons, onComplete: Runnable) {
-        startKitSelectionTimer(commons, Ticks.seconds(10), onComplete)
+    fun startKitSelectionTimer(gameInstance: MapGameInstance, announcer: Announcer, onComplete: Runnable) {
+        startKitSelectionTimer(gameInstance, announcer, Ticks.seconds(10), onComplete)
     }
 
-    fun startKitSelectionTimer(commons: GameCommons, ticks: Int, onComplete: Runnable) {
+    fun startKitSelectionTimer(gameInstance: MiniGameInstance, announcer: Announcer, ticks: Int, onComplete: Runnable) {
         if (manager.kits.size < 2) {
             onComplete.run()
             return
         }
 
-        commons.announcer().announceSubtitle("ap2.kit_selector.hint")
+        announcer.announceSubtitle("ap2.kit_selector.hint")
 
         selectKitChanger()
 
         val label = kitHandle.translations.translateText("ap2.kit_selection")
 
-        commons.createTimerTicks(label, ticks).whenDone(onComplete)
+        gameInstance.createTimerTicks(label, ticks).whenDone(onComplete)
     }
 
     /**

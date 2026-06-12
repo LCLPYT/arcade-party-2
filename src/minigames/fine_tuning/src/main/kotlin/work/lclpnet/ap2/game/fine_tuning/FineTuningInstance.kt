@@ -6,6 +6,7 @@ import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.util.finaleCompatibleScoreContainer
+import work.lclpnet.ap2.game.util.useAnnouncer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.game.map.GameMap
 import java.util.*
@@ -27,6 +28,7 @@ class FineTuningInstance(
 
     override val data = finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
     private val stats = createStats(data, PitchChanges, Probes, Replays, MelodiesCompleted, CorrectNotes)
+    private val announcer = useAnnouncer()
     private lateinit var tuningPhase: TuningPhase
 
     init {
@@ -40,7 +42,7 @@ class FineTuningInstance(
 
         val rooms: Map<UUID, FineTuningRoom> = setup.rooms
 
-        tuningPhase = TuningPhase(gameHandle, rooms, data, stats, ::startStagePhase, commons(), level)
+        tuningPhase = TuningPhase(gameHandle, rooms, data, stats, ::startStagePhase, level, announcer)
         tuningPhase.init()
         tuningPhase.giveBooks()
     }
