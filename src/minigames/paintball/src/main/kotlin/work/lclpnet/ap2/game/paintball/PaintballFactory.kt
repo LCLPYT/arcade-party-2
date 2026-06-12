@@ -42,6 +42,8 @@ class PaintballFactory : MiniGameFactory {
             openBases = walls::undo
         )
 
+        teams.setup()
+
         val bounds = MapUtil.readShape(map, "bounds")
         val paintManager = PaintManager(level, teams, teamManager, bounds)
 
