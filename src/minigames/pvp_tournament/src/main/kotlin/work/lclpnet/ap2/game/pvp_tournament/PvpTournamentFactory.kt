@@ -40,7 +40,7 @@ class PvpTournamentFactory : MiniGameFactory {
 
         arenaPlacement.await()
 
-        return PvpTournamentInstance(handle, level, map, playerRefs, visualizer, scope)
+        return PvpTournamentInstance(handle, level, map, playerRefs, visualizer, scope, result)
     }
 
     private fun buildPlayerRefs(handle: MiniGameHandle): List<PlayerRef> {

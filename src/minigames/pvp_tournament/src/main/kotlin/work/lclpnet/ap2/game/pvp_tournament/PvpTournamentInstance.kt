@@ -66,6 +66,7 @@ class PvpTournamentInstance(
     private val playerRefs: List<PlayerRef>,
     private val visualizer: CanvasVisualizer,
     private val scope: CoroutineScope,
+    private val tournamentResult: TournamentResult
 ) : FFAGameInstance(gameHandle, level, map) {
 
     override val data = IntScoreDataContainer(PlayerRef::create, Ordering.ASCENDING, "")
@@ -76,7 +77,6 @@ class PvpTournamentInstance(
         it.init(gameHandle.hooks)
     }
     lateinit var pvp: PvpBehavior
-    lateinit var tournamentResult: TournamentResult
 
     init {
         useSurvivalMode()
