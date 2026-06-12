@@ -62,6 +62,9 @@ class WeaponSwapInstance(
     private val subtitleCountdown = SubtitleCountdown(gameHandle.server, gameHandle.scheduler, ::swapTimerTick) {
         allPlayers()
     }
+    private val holderTeam = gameHandle.scoreboardManager.createTeam("holders").also {
+        it.color = ChatFormatting.DARK_RED
+    }
 
     override fun prepare() {
         commons().gameRuleBuilder()
@@ -181,21 +184,23 @@ class WeaponSwapInstance(
     }
 
     private fun setHolders(newHolders: List<ServerPlayer>) {
-        for (p in currentHolders) {
-            players().getParticipant(p).ifPresent {
-                removeWeaponFrom(it)
-                PlayerReset.modifyWalkSpeed(it, 0.1f)
+        for (uuid in currentHolders) {
+            players().getParticipant(uuid).ifPresent { player ->
+                removeWeaponFrom(player)
+                PlayerReset.modifyWalkSpeed(player, 0.1f)
+                gameHandle.scoreboardManager.leaveTeam(player, holderTeam)
             }
         }
 
         currentHolders.clear()
 
-        for (p in newHolders) {
-            giveWeaponTo(p)
-            currentHolders.add(p.uuid)
-            stats.increment(p, WeaponsReceived)
-            p.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 1f, 1.5f)
-            PlayerReset.modifyWalkSpeed(p, MOVEMENT_SPEED)
+        for (player in newHolders) {
+            giveWeaponTo(player)
+            currentHolders.add(player.uuid)
+            stats.increment(player, WeaponsReceived)
+            player.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 1f, 1.5f)
+            PlayerReset.modifyWalkSpeed(player, MOVEMENT_SPEED)
+            gameHandle.scoreboardManager.joinTeam(player, holderTeam)
         }
 
         translate("game.ap2.weapon_swap.received")
