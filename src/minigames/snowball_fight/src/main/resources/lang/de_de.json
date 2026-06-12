@@ -2,5 +2,8 @@
   "game.ap2.snowball_fight": "Schneeballschlacht",
   "game.ap2.snowball_fight.description": "Sammle Schnee vom Boden. Treffe deine Gegner mit den Schneebällen. Der letzte Überlebende gewinnt!",
   "game.ap2.snowball_fight.idle": "Du wirst erfrieren, wenn du dich zu lange nicht am Kampf beteiligst...",
-  "game.ap2.snowball_fight.max_snowballs": "Du kannst nicht noch mehr Schneebälle einsammeln"
+  "game.ap2.snowball_fight.max_snowballs": "Du kannst nicht noch mehr Schneebälle einsammeln",
+  "game.ap2.snowball_fight.stat.snowballs_thrown": "Geworfene Schneebälle",
+  "game.ap2.snowball_fight.stat.accuracy": "Genauigkeit",
+  "game.ap2.snowball_fight.stat.time_out_of_combat": "Zeit außerhalb des Kampfes"
 }
