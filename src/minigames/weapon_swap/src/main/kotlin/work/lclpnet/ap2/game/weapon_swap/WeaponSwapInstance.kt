@@ -41,7 +41,7 @@ private const val TWO_WEAPONS_THRESHOLD = 8
 private const val SPAWN_SPACING_DEFAULT = 8.0
 private val MIN_SWAP_DELAY = 7.seconds
 private val MAX_SWAP_DELAY = 10.seconds
-private val DRAW_DELAY = 3.minutes
+private val DRAW_DELAY = 3.minutes + 30.seconds
 private val WARN_BEFORE_END_DELAY = 30.seconds
 const val MOVEMENT_SPEED = 0.14f
 
@@ -117,6 +117,7 @@ class WeaponSwapInstance(
             val subject = gameHandle.translations.translateText("game.ap2.weapon_swap.end")
 
             createTimer(subject, WARN_BEFORE_END_DELAY).whenDone {
+                data.addAll(players())
                 winManager.complete()
             }
         }
