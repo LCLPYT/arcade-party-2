@@ -33,8 +33,8 @@ fun MiniGameInstance.configureDefaults(
 
     resetPlayers()
 
-    if (locatorBar) {
-        configureLocatorBar()
+    if (!locatorBar) {
+        disableLocatorBar()
     }
 
     gameHandle.deathMessages.replaceVanillaDeathMessages(level, hooks)
@@ -65,7 +65,7 @@ private fun MiniGameInstance.resetPlayers() {
     }
 }
 
-private fun MiniGameInstance.configureLocatorBar() {
+private fun MiniGameInstance.disableLocatorBar() {
     // hide players from locator by default
     PlayerWaypointCallback.HOOK.registerWith(gameHandle.hooks) { _, waypoint ->
         waypoint is ServerPlayer
