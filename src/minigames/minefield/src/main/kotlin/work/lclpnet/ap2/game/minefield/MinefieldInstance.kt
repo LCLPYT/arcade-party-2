@@ -54,8 +54,9 @@ import kotlin.math.max
 import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlin.random.asJavaRandom
+import kotlin.time.Duration.Companion.seconds
 
-const val END_TIME_SECONDS = 15
+val END_TIME = 15.seconds
 const val DEBUG_PRESSURE_PLATE_POSITIONS = false
 
 val Exploded = Stat("exploded", 0, higherIsBetter = false)
@@ -169,12 +170,12 @@ class MinefieldInstance(
             translate(
                 "game.ap2.minefield.goal",
                 styled(player.scoreboardName, YELLOW),
-                styled(END_TIME_SECONDS, YELLOW)
+                styled(END_TIME, YELLOW)
             ).formatted(GREEN).sendTo(allPlayers())
 
-            gameEnd = Ticks.seconds(END_TIME_SECONDS)
+            gameEnd = END_TIME.inWholeSeconds.toInt()
 
-            addTimer(taskBar, END_TIME_SECONDS).then {
+            addTimer(taskBar, END_TIME).then {
                 gradePlayers()
                 winManager.complete()
             }

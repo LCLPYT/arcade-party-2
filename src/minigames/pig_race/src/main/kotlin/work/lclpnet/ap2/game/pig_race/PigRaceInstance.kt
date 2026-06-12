@@ -34,7 +34,6 @@ import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.pig_race.util.PRProgress
 import work.lclpnet.ap2.game.pig_race.util.PRScoreboard
 import work.lclpnet.ap2.game.pig_race.util.createSegmentedPath
-import work.lclpnet.ap2.game.util.usePlayerDynamicDisplay
 import work.lclpnet.ap2.game.util.usePlayerDynamicTaskDisplay
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer
 import work.lclpnet.ap2.impl.game.data.DoubleScoreDataContainer
@@ -148,10 +147,10 @@ class PigRaceInstance(
     }
 
     private fun createBossBar(rounds: Int): DynamicTranslatedPlayerBossBar =
-        if (rounds > 1) usePlayerDynamicDisplay(
-            "game.ap2.pig_race.task_rounds",
+        if (rounds > 1) usePlayerDynamicTaskDisplay(
             styled(1, YELLOW),
-            styled(rounds, YELLOW)
+            styled(rounds, YELLOW),
+            key = "game.ap2.pig_race.task_rounds",
         )
         else usePlayerDynamicTaskDisplay()
 

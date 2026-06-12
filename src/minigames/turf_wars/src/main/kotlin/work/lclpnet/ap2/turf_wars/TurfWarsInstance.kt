@@ -37,6 +37,7 @@ import work.lclpnet.ap2.game.base.TeamEliminationGameInstance
 import work.lclpnet.ap2.game.kit.KitHandler
 import work.lclpnet.ap2.game.kit.hasKitEquipped
 import work.lclpnet.ap2.game.team.getWoolBlock
+import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor
 import work.lclpnet.ap2.impl.util.TimeHelper
 import work.lclpnet.ap2.impl.util.math.MathUtil
@@ -585,8 +586,8 @@ class TurfWarsInstance(
         }
 
         createTimer(
-            label = translate("game.ap2.turf_wars.phase.${phase.name.lowercase()}"),
-            duration = duration
+            translate("game.ap2.turf_wars.phase.${phase.name.lowercase()}"),
+            duration
         ).whenDone { changePhase(nextPhase) }
 
         translate(titleKey).formatted(ChatFormatting.GREEN).acceptEach(players()) { player, text ->

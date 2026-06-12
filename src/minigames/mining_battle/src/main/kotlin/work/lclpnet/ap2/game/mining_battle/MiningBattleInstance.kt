@@ -73,7 +73,7 @@ class MiningBattleInstance(
 
         val subject = gameHandle.translations.translateText(gameHandle.gameInfo.taskKey)
 
-        createTimer(subject, DURATION.inWholeSeconds.toInt()).whenDone(winManager::complete)
+        createTimer(subject, DURATION).whenDone(winManager::complete)
     }
 
     private fun onGainPoints(player: ServerPlayer, points: Int) {

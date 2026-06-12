@@ -61,7 +61,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static java.lang.Math.*;
 import static net.minecraft.ChatFormatting.*;
-import static work.lclpnet.ap2.game.util.TimersKt.usePlayerDynamicTaskDisplay;
+import static work.lclpnet.ap2.game.util.GameTasksKt.usePlayerDynamicTaskDisplay;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class JumpAndRunInstance extends FFAGameInstance {

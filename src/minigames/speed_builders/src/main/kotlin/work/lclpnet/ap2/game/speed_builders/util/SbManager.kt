@@ -18,10 +18,13 @@ import work.lclpnet.ap2.game.speed_builders.data.SbModule
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import java.util.*
 import kotlin.math.floor
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.times
 
-private const val BASE_BUILD_DURATION_SECONDS = 25
-private const val MIN_BUILD_DURATION_SECONDS = 5
-private const val SUCCESSIVE_COMPLETION_REDUCTION_SECONDS = 7
+private val BASE_BUILD_DURATION = 25.seconds
+private val MIN_BUILD_DURATION = 5.seconds
+private val SUCCESSIVE_COMPLETION_REDUCTION = 7.seconds
 
 class SbManager(
     private val islands: Map<UUID, SbIsland>,
@@ -229,12 +232,12 @@ class SbManager(
         roundResolved = false
     }
 
-    fun getBuildingDurationTicks(): Int {
-        val module = currentModule ?: return BASE_BUILD_DURATION_SECONDS
+    fun getBuildingDuration(): Duration {
+        val module = currentModule ?: return BASE_BUILD_DURATION
         val complexity = module.getComplexity()
-        val bonusTime = floor((maxOf(0, complexity - 64) * 0.4)).toInt()
-        val reduction = maxOf(0, successiveCompletion * SUCCESSIVE_COMPLETION_REDUCTION_SECONDS)
-        return maxOf(MIN_BUILD_DURATION_SECONDS, BASE_BUILD_DURATION_SECONDS + bonusTime - reduction)
+        val bonusTime = floor((maxOf(0, complexity - 64) * 0.4)).seconds
+        val reduction = maxOf(0.seconds, successiveCompletion * SUCCESSIVE_COMPLETION_REDUCTION)
+        return maxOf(MIN_BUILD_DURATION, BASE_BUILD_DURATION + bonusTime - reduction)
     }
 
     fun incrementRound() { round++ }

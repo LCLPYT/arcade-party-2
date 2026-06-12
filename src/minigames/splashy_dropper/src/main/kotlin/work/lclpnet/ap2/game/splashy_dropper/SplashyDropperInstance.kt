@@ -87,7 +87,7 @@ class SplashyDropperInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
         val translations = gameHandle.translations
         val subject = translations.translateText(gameHandle.gameInfo.taskKey)
 
-        createTimer(subject, DURATION.inWholeSeconds.toInt()).whenDone(winManager::complete)
+        createTimer(subject, DURATION).whenDone(winManager::complete)
 
         runEveryTick {
             tick()

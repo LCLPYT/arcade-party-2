@@ -166,7 +166,7 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
         }
 
         val subject = translations.translateText("game.ap2.chicken_shooter.task")
-        createTimer(subject, DURATION.inWholeSeconds.toInt()).whenDone(winManager::complete)
+        createTimer(subject, DURATION).whenDone(winManager::complete)
     }
 
     private fun findChickenSpawner() {
