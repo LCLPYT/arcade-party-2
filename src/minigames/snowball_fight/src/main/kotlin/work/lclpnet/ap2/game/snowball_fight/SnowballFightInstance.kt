@@ -11,6 +11,7 @@ import net.minecraft.sounds.SoundSource
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.damagesource.DamageTypes
+import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.projectile.Projectile
@@ -18,20 +19,30 @@ import net.minecraft.world.entity.projectile.throwableitemprojectile.Snowball
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
+import work.lclpnet.ap2.api.stats.CommonStats.DamageDealt
+import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
+import work.lclpnet.ap2.api.stats.CommonStats.TimeSurvived
+import work.lclpnet.ap2.api.stats.Stat
+import work.lclpnet.ap2.api.stats.StatUnits
+import work.lclpnet.ap2.core.hook.ProjectileShootCallback
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.setAttribute
 import work.lclpnet.ap2.ext.players
+import work.lclpnet.ap2.ext.trackDistanceMoved
 import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.impl.util.world.SpawnFinder
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
+import work.lclpnet.kibu.hook.entity.EntityDamageCallback
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.scheduler.Ticks
 import java.util.*
 import kotlin.math.abs
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 private val WORLD_BORDER_DELAY = Ticks.minutes(1)
 private val WORLD_BORDER_TIME = Ticks.minutes(1) + Ticks.seconds(20)
@@ -40,7 +51,23 @@ private val FREEZING_DURATION_TICKS = Ticks.seconds(5)
 private const val MAX_SNOWBALL_STACKS = 9
 private const val SNOWBALL_DAMAGE = 0.75f
 
+private val SnowballsThrown = Stat("snowballs_thrown", 0)
+private val Accuracy = Stat("accuracy", 0f, unit = StatUnits.Percent)
+private val TimeOutOfCombat = Stat("time_out_of_combat", 0, higherIsBetter = false, unit = StatUnits.Seconds)
+
 class SnowballFightInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
+
+    private val stats = createStats(
+        DamageDealt,
+        TimeSurvived,
+        DistanceMoved,
+        SnowballsThrown,
+        Accuracy,
+        TimeOutOfCombat,
+    )
+    private val snowballsHit = HashMap<UUID, Int>()
+    private val outOfCombatStart = HashMap<UUID, Instant>()
+    private val outOfCombatMillis = HashMap<UUID, Long>()
 
     init {
         useSurvivalMode()
@@ -52,6 +79,15 @@ class SnowballFightInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
         useNoHealing()
         useSmoothDeath()
         commons().displayHealth()
+
+        trackSurvivalTime(stats)
+        trackDistanceMoved(stats)
+
+        winManager.addListener {
+            for (player in players()) {
+                recordOutOfCombat(player)
+            }
+        }
     }
 
     override fun go() {
@@ -81,6 +117,20 @@ class SnowballFightInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
             false
         }
 
+        // fires only when the damage is actually dealt, i.e. after the victim's damage cooldown elapsed
+        EntityDamageCallback.HOOK.registerWith(hooks) { entity, source, amount ->
+            if (source.directEntity is Snowball) {
+                onSnowballHit(entity, source, amount)
+            }
+            false
+        }
+
+        ProjectileShootCallback.HOOK.registerWith(hooks) { shooter, projectile ->
+            if (projectile is Snowball && shooter is ServerPlayer && participants.isParticipating(shooter)) {
+                onSnowballThrown(shooter)
+            }
+        }
+
         PlayerInteractionHooks.USE_ITEM.registerWith(hooks) { player, _, hand ->
             val stack = player.getItemInHand(hand)
             if (stack.isOf(Items.SNOWBALL) && stack.count == 1) {
@@ -99,13 +149,18 @@ class SnowballFightInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
             Ticks.seconds(5).toLong()
         )
 
-        FreezingManager(
+        val freezingManager = FreezingManager(
             gameHandle.scheduler,
             gameHandle.translations,
             participants,
             COMBAT_IDLE_TICKS,
             FREEZING_DURATION_TICKS
-        ).enable(hooks)
+        )
+
+        freezingManager.onStartFreezing(::beginOutOfCombat)
+        freezingManager.onStopFreezing(::recordOutOfCombat)
+
+        freezingManager.enable(hooks)
     }
 
     override fun eliminate(player: ServerPlayer, source: DamageSource?) {
@@ -123,6 +178,47 @@ class SnowballFightInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
         }
 
         super.eliminate(player, source)
+    }
+
+    override fun participantRemoved(player: ServerPlayer) {
+        // record out of combat time before super, which may end the game and freeze the stats
+        recordOutOfCombat(player)
+
+        super.participantRemoved(player)
+    }
+
+    private fun onSnowballThrown(player: ServerPlayer) {
+        stats.increment(player, SnowballsThrown)
+        updateAccuracy(player)
+    }
+
+    private fun onSnowballHit(victim: LivingEntity, source: DamageSource, amount: Float) {
+        val attacker = source.entity as? ServerPlayer ?: return
+        if (attacker === victim || !isParticipating(attacker)) return
+
+        snowballsHit.merge(attacker.uuid, 1, Int::plus)
+        stats.modify(attacker, DamageDealt) { it + amount.coerceAtMost(victim.health) }
+        updateAccuracy(attacker)
+    }
+
+    private fun updateAccuracy(player: ServerPlayer) {
+        val thrown = stats.get(player, SnowballsThrown)
+        val hits = snowballsHit[player.uuid] ?: 0
+        val accuracy = if (thrown <= 0) 0f else (hits.toFloat() / thrown).coerceIn(0f, 1f)
+        stats.set(player, Accuracy, accuracy)
+    }
+
+    private fun beginOutOfCombat(player: ServerPlayer) {
+        outOfCombatStart[player.uuid] = Clock.System.now()
+    }
+
+    private fun recordOutOfCombat(player: ServerPlayer) {
+        val start = outOfCombatStart.remove(player.uuid) ?: return
+
+        val elapsedMillis = Clock.System.now().toEpochMilliseconds() - start.toEpochMilliseconds()
+        val totalMillis = outOfCombatMillis.merge(player.uuid, elapsedMillis, Long::plus)!!
+
+        stats.set(player, TimeOutOfCombat, (totalMillis / 1000L).toInt())
     }
 
     private fun onDepleteStack(player: Player) {
