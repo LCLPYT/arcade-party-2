@@ -18,6 +18,7 @@ import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.data.type.TeamGameResult
 import work.lclpnet.ap2.game.data.type.TeamRef
 import work.lclpnet.ap2.game.player.ParticipantListener
+import work.lclpnet.ap2.impl.util.scoreboard.TranslatedScoreboardObjective
 import work.lclpnet.combatctl.impl.CombatStyles
 import work.lclpnet.game.impl.prot.MutableProtectionConfig
 import work.lclpnet.game.map.GameMap
@@ -163,5 +164,9 @@ fun MiniGameInstance.useScoreboardStatsSync(source: ScoreListenerView<ServerPlay
 }
 
 fun MiniGameInstance.useScoreboardStatsSync(source: ScoreListenerView<ServerPlayer, Int>, objective: CustomScoreboardObjective) {
+    gameHandle.scoreboardManager.sync(objective, source)
+}
+
+fun MiniGameInstance.useScoreboardStatsSync(source: ScoreListenerView<ServerPlayer, Double>, objective: TranslatedScoreboardObjective) {
     gameHandle.scoreboardManager.sync(objective, source)
 }
