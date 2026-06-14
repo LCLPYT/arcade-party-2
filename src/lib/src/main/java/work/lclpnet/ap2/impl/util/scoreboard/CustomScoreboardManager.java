@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective;
 import work.lclpnet.ap2.api.util.scoreboard.VirtualScoreboardObjective;
 import work.lclpnet.ap2.core.type.ApServerPlayerEntity;
-import work.lclpnet.ap2.game.data.IntScoreEventSource;
+import work.lclpnet.ap2.game.data.ScoreListenerView;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
 import work.lclpnet.kibu.translate.Translations;
@@ -178,11 +178,11 @@ public class CustomScoreboardManager {
         scoreboard.setDisplayObjective(slot, objective);
     }
 
-    public void sync(Objective objective, IntScoreEventSource<ServerPlayer> source) {
+    public void sync(Objective objective, ScoreListenerView<ServerPlayer, Integer> source) {
         source.register((player, score) -> setScore(player, objective, score));
     }
 
-    public void sync(CustomScoreboardObjective objective, IntScoreEventSource<ServerPlayer> source) {
+    public void sync(CustomScoreboardObjective objective, ScoreListenerView<ServerPlayer, Integer> source) {
         source.register(objective::setScore);
     }
 

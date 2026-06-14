@@ -21,6 +21,7 @@ import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.criteria.ObjectiveCriteria
 import org.json.JSONArray
+import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.CommonStats.DamageDealt
 import work.lclpnet.ap2.api.stats.CommonStats.Deaths
 import work.lclpnet.ap2.api.stats.Stat
@@ -31,7 +32,7 @@ import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.game.data.type.PlayerRef
-import work.lclpnet.ap2.game.util.createStats
+import work.lclpnet.ap2.game.util.createFFAStats
 import work.lclpnet.ap2.game.util.useOldCombat
 import work.lclpnet.ap2.game.util.useTaskDisplay
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
@@ -67,7 +68,9 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle, level: ServerLevel, ma
     }
     private val respawnCooldown = VisualCooldown(gameHandle.scheduler)
     private val bowType = BowType.entries.random(random.asKotlinRandom())
-    private val stats = createStats(winManager, data, DamageDealt, Deaths, ArrowsShot, ArrowsHit, Killstreak)
+    private val stats = createFFAStats(winManager, data, CommonStats.IntScore, listOf(
+        DamageDealt, Deaths, ArrowsShot, ArrowsHit, Killstreak
+    ))
     private val currentKillstreak = HashMap<UUID, Int>()
 
     init {

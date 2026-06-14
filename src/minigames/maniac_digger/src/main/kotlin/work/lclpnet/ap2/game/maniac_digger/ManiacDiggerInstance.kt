@@ -13,6 +13,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.StainedGlassBlock
 import net.minecraft.world.level.block.state.BlockState
+import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.mc.isOf
@@ -27,7 +28,7 @@ import work.lclpnet.ap2.game.data.OrderedDataContainer
 import work.lclpnet.ap2.game.data.Ordering
 import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.maniac_digger.data.MdPipe
-import work.lclpnet.ap2.game.util.createStats
+import work.lclpnet.ap2.game.util.createFFAStats
 import work.lclpnet.ap2.game.util.useSurvivalMode
 import work.lclpnet.ap2.game.util.useTaskDisplay
 import work.lclpnet.ap2.impl.util.world.WorldBorderUtil
@@ -60,7 +61,9 @@ class ManiacDiggerInstance(
     override val data = CombinedDataContainer(listOf(reachedBottom, score))
     private val wrongTool = HashSet<UUID>()
     private val correctToolStreak = Object2IntOpenHashMap<UUID>()
-    private val stats = createStats(winManager, score, BlocksBroken, ToolSwitches, WrongToolsSelected, WrongToolsUsed, CorrectToolStreak)
+    private val stats = createFFAStats(winManager, score, CommonStats.IntScore, listOf(
+        BlocksBroken, ToolSwitches, WrongToolsSelected, WrongToolsUsed, CorrectToolStreak
+    ))
 
     init {
         useSurvivalMode()

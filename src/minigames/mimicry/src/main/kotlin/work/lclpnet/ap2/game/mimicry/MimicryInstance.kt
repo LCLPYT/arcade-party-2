@@ -10,6 +10,7 @@ import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.Level
 import net.minecraft.world.phys.BlockHitResult
+import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.stats.StatUnits
 import work.lclpnet.ap2.ext.mc.isIn
@@ -23,7 +24,7 @@ import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.mimicry.data.MimicryManager
 import work.lclpnet.ap2.game.mimicry.data.MimicryRoom
 import work.lclpnet.ap2.game.mimicry.data.SequencePlayer
-import work.lclpnet.ap2.game.util.createStats
+import work.lclpnet.ap2.game.util.createFFAStats
 import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.game.util.useAnnouncer
 import work.lclpnet.ap2.impl.game.PseudoElimination
@@ -63,7 +64,9 @@ class MimicryInstance(
         Ordering.DESCENDING,
         "game.ap2.mimicry.completed"
     )
-    private val stats = createStats(winManager, data, DirectButtonClicks, ButtonClicks, AvgTimeUsage, AvgClickTime)
+    private val stats = createFFAStats(winManager, data, CommonStats.IntScore, listOf(
+        DirectButtonClicks, ButtonClicks, AvgTimeUsage, AvgClickTime
+    ))
     private val manager = MimicryManager(gameHandle, result.rooms, buttons, Random(), level, stats, ::onCompleted)
     private val announcer = useAnnouncer()
     private lateinit var pseudoElimination: PseudoElimination

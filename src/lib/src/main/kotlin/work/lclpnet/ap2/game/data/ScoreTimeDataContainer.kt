@@ -1,8 +1,6 @@
 package work.lclpnet.ap2.game.data
 
-import it.unimi.dsi.fastutil.objects.Object2IntMap
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
-import it.unimi.dsi.fastutil.objects.Object2LongMap
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap
 import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.game.data.DataEntry
@@ -24,9 +22,9 @@ class ScoreTimeDataContainer<T, Ref : SubjectRef> @JvmOverloads constructor(
     private val detailKey: String? = null
 ) : BaseDataContainer<T, Ref>(refs), IntDataContainer<T, Ref> {
 
-    private val score: Object2IntMap<Ref> = Object2IntOpenHashMap<Ref>()
-    private val lastTransaction: Object2LongMap<Ref> = Object2LongOpenHashMap<Ref>()
-    private val listeners: MutableList<IntScoreEvent<T>> = ArrayList<IntScoreEvent<T>>()
+    private val score = Object2IntOpenHashMap<Ref>()
+    private val lastTransaction = Object2LongOpenHashMap<Ref>()
+    private val listeners = ArrayList<ScoreListener<T, Int>>()
 
     /** An incrementing transaction counter. Used to determine who got to which score first.  */
     private var transaction: Long = 0
@@ -147,7 +145,7 @@ class ScoreTimeDataContainer<T, Ref : SubjectRef> @JvmOverloads constructor(
         lastTransaction.clear()
     }
 
-    override fun register(listener: IntScoreEvent<T>) {
+    override fun register(listener: ScoreListener<T, Int>) {
         listeners.add(listener)
     }
 

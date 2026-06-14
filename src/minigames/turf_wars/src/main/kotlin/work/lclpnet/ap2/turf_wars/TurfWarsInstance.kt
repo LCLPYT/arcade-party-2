@@ -37,6 +37,7 @@ import work.lclpnet.ap2.game.base.TeamEliminationGameInstance
 import work.lclpnet.ap2.game.kit.KitHandler
 import work.lclpnet.ap2.game.kit.hasKitEquipped
 import work.lclpnet.ap2.game.team.getWoolBlock
+import work.lclpnet.ap2.game.util.createTeamStats
 import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.game.util.useOldCombat
 import work.lclpnet.ap2.game.util.useSurvivalMode
@@ -84,9 +85,14 @@ class TurfWarsInstance(
     var phase: Phase = Nothing
     var blocksPerKill: Int = 1
     val repelTicks = mutableMapOf<UUID, Int>()
-    val stats = createStats(
-        /* teamStats = */ listOf(Kills, Deaths, TurfClaimed),
-        /* playerStats = */ listOf(Kills, Deaths, KillDeathRatio, TurfClaimed)
+    val stats = createTeamStats(
+        winManager,
+        teamStats = listOf(
+            Kills, Deaths, TurfClaimed
+        ),
+        playerStats = listOf(
+            Kills, Deaths, KillDeathRatio, TurfClaimed
+        )
     )
 
     init {

@@ -30,6 +30,7 @@ import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.criteria.ObjectiveCriteria
 import org.joml.Matrix4f
+import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.util.heads.PlayerHead
 import work.lclpnet.ap2.ext.hooks
@@ -41,7 +42,7 @@ import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.util.GameStartSequence
-import work.lclpnet.ap2.game.util.createStats
+import work.lclpnet.ap2.game.util.createFFAStats
 import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.game.util.finaleCompatibleScoreContainer
 import work.lclpnet.ap2.impl.map.MapUtil
@@ -100,7 +101,9 @@ class EggventureInstance(
 ) : FFAGameInstance(gameHandle, level, map) {
 
     override val data = finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
-    private val stats = createStats(winManager, data, EggsStolen, EggsLost)
+    private val stats = createFFAStats(winManager, data, CommonStats.IntScore, listOf(
+        EggsStolen, EggsLost
+    ))
     private val random = Random()
 
     override fun prepare() {

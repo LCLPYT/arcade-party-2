@@ -33,7 +33,7 @@ import work.lclpnet.ap2.ext.mc.setAttribute
 import work.lclpnet.ap2.ext.mc.teleport
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
-import work.lclpnet.ap2.game.util.createStats
+import work.lclpnet.ap2.game.util.createFFAStats
 import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.game.util.useTaskDisplay
 import work.lclpnet.ap2.impl.util.ApRegistries
@@ -87,7 +87,9 @@ class ButtonMasterInstance(
 
     val validPositions = mutableListOf<BlockPos>()
 
-    private val stats = createStats(winManager, ButtonsFound, Escapes, DistanceMoved, ButtonsMissed)
+    private val stats = createFFAStats(winManager, listOf(
+        ButtonsFound, Escapes, DistanceMoved, ButtonsMissed
+    ))
     private val bmStats = ButtonMasterStats(stats)
     private val missDetector = ButtonMissDetector(level, bmStats)
     val movementBlocker = SimpleMovementBlocker(gameHandle.scheduler).also {

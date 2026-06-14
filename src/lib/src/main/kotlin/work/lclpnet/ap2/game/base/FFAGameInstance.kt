@@ -9,7 +9,7 @@ import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective
 import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.game.MiniGameHandle
-import work.lclpnet.ap2.game.data.IntScoreEventSource
+import work.lclpnet.ap2.game.data.ScoreListenerView
 import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.player.ParticipantListener
 import work.lclpnet.ap2.game.util.useFFAWinManager
@@ -40,13 +40,13 @@ abstract class FFAGameInstance(
         winManager.checkForLastRemaining()
     }
 
-    fun useScoreboardStatsSync(source: IntScoreEventSource<ServerPlayer>, objective: Objective) {
+    fun useScoreboardStatsSync(source: ScoreListenerView<ServerPlayer, Int>, objective: Objective) {
         gameHandle.scoreboardManager.sync(objective, source)
 
         initScores()
     }
 
-    fun useScoreboardStatsSync(source: IntScoreEventSource<ServerPlayer>, objective: CustomScoreboardObjective) {
+    fun useScoreboardStatsSync(source: ScoreListenerView<ServerPlayer, Int>, objective: CustomScoreboardObjective) {
         gameHandle.scoreboardManager.sync(objective, source)
 
         initScores()

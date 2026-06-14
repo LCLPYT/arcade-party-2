@@ -12,7 +12,7 @@ import org.slf4j.Logger
 import work.lclpnet.ap2.game.MiniGameInstance
 import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.base.MapGameInstance
-import work.lclpnet.ap2.game.data.IntScoreEventSource
+import work.lclpnet.ap2.game.data.ScoreListenerView
 import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.SoundHelper
@@ -69,7 +69,7 @@ fun MiniGameInstance.playSound(
 ) =
     SoundHelper.playSound(level, sound, source, volume, pitch)
 
-fun FFAGameInstance.setupSidebarScoreboard(data: IntScoreEventSource<ServerPlayer>) {
+fun FFAGameInstance.setupSidebarScoreboard(data: ScoreListenerView<ServerPlayer, Int>) {
     val objective = gameHandle.scoreboardManager.translateObjective("points", "ap2.score")
 
     useScoreboardStatsSync(data, objective)

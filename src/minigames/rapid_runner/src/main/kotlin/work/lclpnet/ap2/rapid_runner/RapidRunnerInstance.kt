@@ -26,8 +26,8 @@ class RapidRunnerInstance(
 
     val data = DoubleScoreDataContainer(PlayerRef::create)
     val winManager = useFFAWinManager(null) { data }
+    val stats = createFFAStats(winManager, data, CommonStats.DoubleScore, listOf())
     override val participantListener = useLastRemainingParticipantListener(winManager)
-    val stats = createStats(winManager, CommonStats.DistanceMoved)
 
     override fun start() {
         useSurvivalMode()

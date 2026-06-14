@@ -18,7 +18,7 @@ class IntScoreDataContainer<T, Ref : SubjectRef> @JvmOverloads constructor(
     private val detailKey: String? = null
 ) : BaseDataContainer<T, Ref>(refs), IntDataContainer<T, Ref> {
     private val scoreMap = Object2IntOpenHashMap<Ref>()
-    private val listeners = ArrayList<IntScoreEvent<T>>()
+    private val listeners = ArrayList<ScoreListener<T, Int>>()
 
     override fun setScore(subject: T, score: Int) {
         val ref = refs.create(subject)
@@ -119,7 +119,7 @@ class IntScoreDataContainer<T, Ref : SubjectRef> @JvmOverloads constructor(
             .toSet()
     }
 
-    override fun register(listener: IntScoreEvent<T>) {
+    override fun register(listener: ScoreListener<T, Int>) {
         listeners.add(listener)
     }
 

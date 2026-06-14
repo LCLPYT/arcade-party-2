@@ -2,7 +2,10 @@ package work.lclpnet.ap2.api.stats
 
 object CommonStats {
     @JvmField
-    val Score = Stat("score", 0)
+    val IntScore = Stat("score", 0)
+
+    @JvmField
+    val DoubleScore = Stat("score", 0.0)
 
     @JvmField
     val Kills = Stat("kills", 0)

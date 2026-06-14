@@ -19,14 +19,15 @@ import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.Team
-import work.lclpnet.ap2.api.stats.CommonStats
+import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
+import work.lclpnet.ap2.api.stats.CommonStats.TimeSurvived
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.ext.trackDistanceMoved
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
-import work.lclpnet.ap2.game.util.createStats
+import work.lclpnet.ap2.game.util.createFFAStats
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar
 import work.lclpnet.ap2.impl.util.handler.Visibility
@@ -53,7 +54,9 @@ class AnvilFallInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
 
     private val directions = arrayOf(Direction.NORTH, Direction.WEST, Direction.SOUTH, Direction.WEST)
     private val random = Random()
-    private val stats = createStats(winManager, CommonStats.DistanceMoved, CommonStats.TimeSurvived)
+    private val stats = createFFAStats(winManager, listOf(
+        DistanceMoved, TimeSurvived
+    ))
     private lateinit var amountDisplay: DynamicTranslatedBossBar
     private lateinit var setup: AnvilFallSetup
     private lateinit var center: Vec3
