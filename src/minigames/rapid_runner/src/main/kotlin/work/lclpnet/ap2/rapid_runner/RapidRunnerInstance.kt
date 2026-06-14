@@ -1,11 +1,9 @@
 package work.lclpnet.ap2.rapid_runner
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup
-import net.minecraft.network.chat.numbers.StyledFormat
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.damagesource.DamageTypes
-import net.minecraft.world.scores.DisplaySlot
 import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.ext.allPlayers
 import work.lclpnet.ap2.ext.mc.isOf
@@ -45,15 +43,15 @@ class RapidRunnerInstance(
             gameHandle.worldFacade.teleport(player)
         }
 
+        setupObjective()
+
         useStartup(::go)
     }
 
     private fun setupObjective() {
         val objective = setupTranslatedSidebarObjective(gameHandle.scoreboardManager, "game.ap2.rapid_runner.distance")
 
-//        useScoreboardStatsSync(data, objective)
-        objective.setSlot(DisplaySlot.SIDEBAR)
-        objective.setNumberFormat(StyledFormat.PLAYER_LIST_DEFAULT)
+        useScoreboardStatsSync(data, objective)
 
         for (player in PlayerLookup.all(gameHandle.server)) {
             objective.add(player)

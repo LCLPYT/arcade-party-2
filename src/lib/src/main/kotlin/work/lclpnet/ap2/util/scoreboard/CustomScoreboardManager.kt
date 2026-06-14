@@ -1,6 +1,8 @@
 package work.lclpnet.ap2.util.scoreboard
 
+import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.numbers.FixedFormat
 import net.minecraft.network.chat.numbers.NumberFormat
 import net.minecraft.network.chat.numbers.StyledFormat
 import net.minecraft.server.ServerScoreboard
@@ -19,6 +21,7 @@ import work.lclpnet.kibu.hook.HookRegistrar
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks
 import work.lclpnet.kibu.translate.Translations
 import work.lclpnet.kibu.translate.hook.LanguageChangedCallback
+import work.lclpnet.kibu.translate.text.LocalizedFormat
 import java.util.function.Function
 
 class CustomScoreboardManager(
@@ -174,6 +177,36 @@ class CustomScoreboardManager(
     fun sync(objective: CustomScoreboardObjective, source: ScoreListenerView<ServerPlayer, Int>) {
         source.register { player, score ->
             objective.setScore(player, score)
+        }
+    }
+
+    @JvmOverloads
+    fun sync(
+        objective: TranslatedScoreboardObjective,
+        source: ScoreListenerView<ServerPlayer, Double>,
+        format: String = "%.2f",
+
+    ) {
+        // minecraft scoreboard scores are integers, so the double is displayed via a per-language
+        // FixedFormat while the integer score only carries the ranking order
+        val scores = HashMap<String, Double>()
+
+        source.register { player, score ->
+            val holder = player.scoreboardName
+            scores[holder] = score
+
+            val localized = LocalizedFormat.format(format, score)
+
+            objective.setNumberFormat(holder) { language ->
+                FixedFormat(localized.translateTo(language).copy().withStyle(ChatFormatting.YELLOW))
+            }
+
+            val ordered = scores.entries.sortedByDescending { it.value }
+            val n = ordered.size
+
+            ordered.forEachIndexed { index, entry ->
+                objective.setScore(entry.key, n - index)
+            }
         }
     }
 

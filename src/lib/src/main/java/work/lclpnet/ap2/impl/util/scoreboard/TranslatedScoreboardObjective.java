@@ -47,7 +47,7 @@ public class TranslatedScoreboardObjective implements
     private final Object2IntMap<String> scores = new Object2IntOpenHashMap<>();
     private final Map<String, CustomEntry> entries = new HashMap<>();
     private final ScoreboardLayout layout = new ScoreboardLayout();
-    private CustomEntry defaultEntry = new CustomEntry(null, null, StyledFormat.SIDEBAR_DEFAULT);
+    private CustomEntry defaultEntry = new CustomEntry(null, null, TranslatedNumberFormat.constant(StyledFormat.SIDEBAR_DEFAULT));
     private String translationKey;
     private Object[] args;
     private DisplaySlot slot = null;
@@ -129,7 +129,7 @@ public class TranslatedScoreboardObjective implements
         String suffix = language.replaceAll("[^a-zA-Z0-9._-]", "");  // remove invalid characters
         String localizedName = name + "_" + (suffix);
 
-        return new CustomObjective(localizedName, localizedTitle, renderType, defaultEntry.numberFormat());
+        return new CustomObjective(localizedName, localizedTitle, renderType, defaultEntry.numberFormat().translateTo(language));
     }
 
     @NotNull
@@ -224,6 +224,12 @@ public class TranslatedScoreboardObjective implements
         syncEntry(scoreHolder);
     }
 
+    public void setNumberFormat(String scoreHolder, TranslatedNumberFormat numberFormat) {
+        CustomEntry entry = getEntry(scoreHolder);
+        entries.put(scoreHolder, entry.withNumberFormat(numberFormat));
+        syncEntry(scoreHolder);
+    }
+
     public void setDisplayName(@Nullable Function<String, @Nullable Component> displayFunction) {
         this.displayFunction = displayFunction;
     }
@@ -252,7 +258,7 @@ public class TranslatedScoreboardObjective implements
         scores.forEach((scoreHolder, score) -> {
             var entry = getEntry(scoreHolder);
             Component display = getScoreHolderDisplay(entry, player);
-            NumberFormat format = entry.numberFormat();
+            NumberFormat format = entry.numberFormat().translateTo(translations.getLanguage(player));
 
             objective.sendScore(player, scoreHolder, score, display, format);
         });
@@ -263,13 +269,13 @@ public class TranslatedScoreboardObjective implements
         if (uuids == null) return;
 
         var entry = getEntry(scoreHolder);
-        NumberFormat format = entry.numberFormat();
 
         for (UUID uuid : uuids) {
             ServerPlayer player = playerManager.getPlayer(uuid);
             if (player == null) continue;
 
             Component display = getScoreHolderDisplay(entry, player);
+            NumberFormat format = entry.numberFormat().translateTo(translations.getLanguage(player));
 
             objective.sendScore(player, scoreHolder, score, display, format);
         }
@@ -349,7 +355,7 @@ public class TranslatedScoreboardObjective implements
     }
 
     public record CustomEntry(@Nullable Component display, @Nullable TextTranslatable translatedDisplay,
-                              NumberFormat numberFormat) {
+                              TranslatedNumberFormat numberFormat) {
 
         public CustomEntry withDisplay(@Nullable Component display) {
             return new CustomEntry(display, null, this.numberFormat);
@@ -360,6 +366,10 @@ public class TranslatedScoreboardObjective implements
         }
 
         public CustomEntry withNumberFormat(NumberFormat numberFormat) {
+            return new CustomEntry(this.display, this.translatedDisplay, TranslatedNumberFormat.constant(numberFormat));
+        }
+
+        public CustomEntry withNumberFormat(TranslatedNumberFormat numberFormat) {
             return new CustomEntry(this.display, this.translatedDisplay, numberFormat);
         }
     }
