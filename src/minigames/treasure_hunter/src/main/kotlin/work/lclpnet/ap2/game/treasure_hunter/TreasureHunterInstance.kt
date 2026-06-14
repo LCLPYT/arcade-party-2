@@ -20,6 +20,7 @@ import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
+import work.lclpnet.ap2.game.util.useSurvivalMode
 import work.lclpnet.ap2.game.util.useTaskDisplay
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer

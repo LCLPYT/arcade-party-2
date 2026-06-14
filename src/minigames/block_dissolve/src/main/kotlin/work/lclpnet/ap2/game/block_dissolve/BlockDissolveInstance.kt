@@ -23,6 +23,7 @@ import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.trackDistanceMoved
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
+import work.lclpnet.ap2.game.util.useOldCombat
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.world.KnockbackKillTracker
 import work.lclpnet.game.impl.prot.ProtectionTypes

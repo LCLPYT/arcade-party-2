@@ -33,6 +33,7 @@ import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.pvp_tournament.gen.Match
 import work.lclpnet.ap2.game.pvp_tournament.util.*
+import work.lclpnet.ap2.game.util.useSurvivalMode
 import work.lclpnet.ap2.impl.game.WinSequence
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.Ordering

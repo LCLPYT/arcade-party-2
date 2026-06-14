@@ -26,6 +26,7 @@ import work.lclpnet.ap2.game.speed_builders.data.SbModule
 import work.lclpnet.ap2.game.speed_builders.util.*
 import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.game.util.useAnnouncer
+import work.lclpnet.ap2.game.util.useSurvivalMode
 import work.lclpnet.ap2.impl.util.ParticleHelper
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.game.map.GameMap
