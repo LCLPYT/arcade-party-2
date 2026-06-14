@@ -15,11 +15,11 @@ import work.lclpnet.ap2.api.stats.StatsResult
 import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.impl.game.PlayerUtil
 import work.lclpnet.ap2.impl.util.DeathMessages
-import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.ap2.impl.util.world.SubWorldManager
 import work.lclpnet.ap2.util.AssetManager
 import work.lclpnet.ap2.util.FontService
 import work.lclpnet.ap2.util.TablistManager
+import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.game.api.WorldFacade
 import work.lclpnet.game.impl.prot.MutableProtectionConfig
 import work.lclpnet.kibu.cmd.type.CommandRegistrar

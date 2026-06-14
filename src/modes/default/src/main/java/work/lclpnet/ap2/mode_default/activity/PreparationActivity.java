@@ -43,7 +43,6 @@ import work.lclpnet.ap2.impl.activity.ScoreboardComponent;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.music.MusicHelper;
 import work.lclpnet.ap2.impl.util.IconMaker;
-import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.scoreboard.DynamicScoreboardObjective;
 import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout;
 import work.lclpnet.ap2.impl.util.title.AnimatedTitle;
@@ -56,7 +55,8 @@ import work.lclpnet.ap2.mode_default.util.ApBaseArgs;
 import work.lclpnet.ap2.mode_default.util.BaseActivityConfigurator;
 import work.lclpnet.ap2.mode_default.util.OptionChooser;
 import work.lclpnet.ap2.mode_default.util.ScoreManager;
-import work.lclpnet.ap2.util.ScoreboardUtilsKt;
+import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.ap2.util.scoreboard.ScoreboardUtilsKt;
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager;
 import work.lclpnet.gaco.scene.MixedMountContext;
 import work.lclpnet.gaco.scene.Object3d;
@@ -278,7 +278,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         ScoreboardComponent component = component(ArcadePartyComponents.SCORE_BOARD);
         CustomScoreboardManager scoreboard = component.scoreboardManager(args.miniGameArgs()::translations);
 
-        var objective = ScoreboardUtilsKt.setupDynamicSidebar(scoreboard, "game.%s.title".formatted(ApConstants.ID));
+        var objective = ScoreboardUtilsKt.setupDynamicSidebarObjective(scoreboard, "game.%s.title".formatted(ApConstants.ID));
 
         // header
         var round = new FixedFormat(Component.literal(String.valueOf(scoreManager.getRound())).withStyle(YELLOW));

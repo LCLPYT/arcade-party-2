@@ -26,11 +26,11 @@ import work.lclpnet.ap2.game.player.Participants;
 import work.lclpnet.ap2.game.util.DataContainersKt;
 import work.lclpnet.ap2.game.util.GameDefaultsKt;
 import work.lclpnet.ap2.impl.map.MapUtil;
-import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.scoreboard.ScoreHandle;
 import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
-import work.lclpnet.ap2.util.ScoreboardUtilsKt;
+import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.ap2.util.scoreboard.ScoreboardUtilsKt;
 import work.lclpnet.gaco.ds.IndexedSet;
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager;
 import work.lclpnet.game.map.GameMap;
@@ -166,7 +166,7 @@ public class GuessItInstance extends FFAGameInstance {
         CustomScoreboardManager scoreboardManager = getGameHandle().getScoreboardManager();
         Translations translations = getGameHandle().getTranslations();
 
-        var objective = ScoreboardUtilsKt.setupSidebar(scoreboardManager, getGameHandle().getGameInfo().getTitleKey());
+        var objective = ScoreboardUtilsKt.setupTranslatedSidebarObjective(scoreboardManager, getGameHandle().getGameInfo().getTitleKey());
 
         // round display
         roundHandle = objective.createText(translations.translateText("game.ap2.guess_it.round").formatted(GREEN));

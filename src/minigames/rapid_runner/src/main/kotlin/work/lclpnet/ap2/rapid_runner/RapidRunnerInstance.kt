@@ -15,7 +15,7 @@ import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.MiniGameInstance
 import work.lclpnet.ap2.game.data.DoubleScoreDataContainer
 import work.lclpnet.ap2.game.util.*
-import work.lclpnet.ap2.util.setupSidebar
+import work.lclpnet.ap2.util.scoreboard.setupTranslatedSidebarObjective
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.util.ResetWorldModifier
 import kotlin.time.Duration.Companion.minutes
@@ -49,7 +49,7 @@ class RapidRunnerInstance(
     }
 
     private fun setupObjective() {
-        val objective = setupSidebar(gameHandle.scoreboardManager, "game.ap2.rapid_runner.distance")
+        val objective = setupTranslatedSidebarObjective(gameHandle.scoreboardManager, "game.ap2.rapid_runner.distance")
 
 //        useScoreboardStatsSync(data, objective)
         objective.setSlot(DisplaySlot.SIDEBAR)
