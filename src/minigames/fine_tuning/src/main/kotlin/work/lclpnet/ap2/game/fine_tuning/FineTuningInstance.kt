@@ -6,11 +6,7 @@ import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
-import work.lclpnet.ap2.game.data.type.PlayerRef
-import work.lclpnet.ap2.game.util.createFFAStats
-import work.lclpnet.ap2.game.util.finaleCompatibleScoreContainer
-import work.lclpnet.ap2.game.util.useAnnouncer
-import work.lclpnet.ap2.game.util.useSurvivalMode
+import work.lclpnet.ap2.game.util.*
 import work.lclpnet.game.map.GameMap
 import java.util.*
 
@@ -29,8 +25,8 @@ class FineTuningInstance(
     private val setup: FineTuningSetup,
 ) : FFAGameInstance(gameHandle, level, map) {
 
-    override val data = finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
-    private val stats = createFFAStats(winManager, data, CommonStats.IntScore, listOf(
+    override val data = useDataContainer(::finaleCompatibleIntScoreContainer)
+    private val stats = useFFAStats(winManager, data, CommonStats.IntScore, listOf(
         PitchChanges, Probes, Replays, MelodiesCompleted, CorrectNotes
     ))
     private val announcer = useAnnouncer()

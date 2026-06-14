@@ -23,7 +23,7 @@ import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.trackDistanceMoved
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
-import work.lclpnet.ap2.game.util.createFFAStats
+import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.game.util.useOldCombat
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.world.KnockbackKillTracker
@@ -44,7 +44,7 @@ class BlockDissolveInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
 
     private val markedBlocks = LongArrayList()
     private val random = Random()
-    private val stats = createFFAStats(winManager, listOf(
+    private val stats = useFFAStats(winManager, listOf(
         TimeSurvived, Kills, DistanceMoved
     ))
     private val killTracker = KnockbackKillTracker(gameHandle.participants)

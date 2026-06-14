@@ -21,10 +21,7 @@ import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
-import work.lclpnet.ap2.game.data.type.PlayerRef
-import work.lclpnet.ap2.game.util.createFFAStats
-import work.lclpnet.ap2.game.util.createTimer
-import work.lclpnet.ap2.game.util.finaleCompatibleScoreContainer
+import work.lclpnet.ap2.game.util.*
 import work.lclpnet.ap2.impl.util.handler.Visibility
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager
@@ -48,8 +45,8 @@ val Missed = Stat("missed", 0)
 
 class SplashyDropperInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
 
-    override val data = finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
-    private val stats = createFFAStats(winManager, data, CommonStats.IntScore, listOf(
+    override val data = useDataContainer(::finaleCompatibleIntScoreContainer)
+    private val stats = useFFAStats(winManager, data, CommonStats.IntScore, listOf(
         HitSmall, HitMedium, HitLarge, Missed
     ))
     private val random = Random()

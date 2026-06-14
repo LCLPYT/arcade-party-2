@@ -20,13 +20,13 @@ import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.game.data.Ordering
-import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.mimicry.data.MimicryManager
 import work.lclpnet.ap2.game.mimicry.data.MimicryRoom
 import work.lclpnet.ap2.game.mimicry.data.SequencePlayer
-import work.lclpnet.ap2.game.util.createFFAStats
 import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.game.util.useAnnouncer
+import work.lclpnet.ap2.game.util.useDataContainer
+import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.impl.game.PseudoElimination
 import work.lclpnet.ap2.impl.util.world.StackedRoomGenerator
 import work.lclpnet.gaco.ds.BlockBox
@@ -59,12 +59,14 @@ class MimicryInstance(
     buttons: BlockBox
 ) : FFAGameInstance(gameHandle, level, map) {
 
-    override val data = IntScoreDataContainer(
-        PlayerRef::create,
-        Ordering.DESCENDING,
-        "game.ap2.mimicry.completed"
-    )
-    private val stats = createFFAStats(winManager, data, CommonStats.IntScore, listOf(
+    override val data = useDataContainer { refs ->
+        IntScoreDataContainer(
+            refs,
+            Ordering.DESCENDING,
+            "game.ap2.mimicry.completed"
+        )
+    }
+    private val stats = useFFAStats(winManager, data, CommonStats.IntScore, listOf(
         DirectButtonClicks, ButtonClicks, AvgTimeUsage, AvgClickTime
     ))
     private val manager = MimicryManager(gameHandle, result.rooms, buttons, Random(), level, stats, ::onCompleted)

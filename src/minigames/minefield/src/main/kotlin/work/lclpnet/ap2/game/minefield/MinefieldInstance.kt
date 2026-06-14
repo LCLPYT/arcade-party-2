@@ -29,9 +29,9 @@ import work.lclpnet.ap2.ext.mc.teleport
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.data.OrderedDataContainer
-import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.util.addTimer
-import work.lclpnet.ap2.game.util.createFFAStats
+import work.lclpnet.ap2.game.util.useDataContainer
+import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.game.util.useTaskDisplay
 import work.lclpnet.ap2.impl.util.Fireworks
 import work.lclpnet.ap2.impl.util.ParticleHelper
@@ -72,8 +72,8 @@ class MinefieldInstance(
     val goalDistance: Double,
 ) : FFAGameInstance(gameHandle, level, map) {
 
-    override val data = OrderedDataContainer(PlayerRef::create)
-    private val stats = createFFAStats(winManager, listOf(
+    override val data = useDataContainer(::OrderedDataContainer)
+    private val stats = useFFAStats(winManager, listOf(
         Exploded, DistanceMoved
     ))
     val inGoal = mutableSetOf<UUID>()

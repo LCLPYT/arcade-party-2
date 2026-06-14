@@ -44,9 +44,9 @@ import work.lclpnet.ap2.game.paintball.kit.SniperKit
 import work.lclpnet.ap2.game.paintball.util.*
 import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.game.util.GameStartSequence
-import work.lclpnet.ap2.game.util.createTeamStats
 import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.game.util.useAnnouncer
+import work.lclpnet.ap2.game.util.useTeamStats
 import work.lclpnet.ap2.impl.game.item.SpecialItems
 import work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
@@ -103,7 +103,7 @@ class PaintballInstance(
         "game.ap2.paintball.blocks_painted"
     )
 
-    private val stats = PaintballStats(createTeamStats(
+    private val stats = PaintballStats(useTeamStats(
         winManager,
         data,
         CommonStats.IntScore,

@@ -3,13 +3,16 @@ package work.lclpnet.ap2.game.util
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.level.GameType
+import net.minecraft.world.scores.Objective
 import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.game.team.Team
 import work.lclpnet.ap2.api.game.team.TeamManager
+import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective
 import work.lclpnet.ap2.ext.allPlayers
 import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.game.MiniGameInstance
+import work.lclpnet.ap2.game.data.ScoreListenerView
 import work.lclpnet.ap2.game.data.type.FFAGameResult
 import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.data.type.TeamGameResult
@@ -125,7 +128,7 @@ fun MiniGameInstance.useTeamWinManager(
  * Sets the default player game mode to survival mode.
  * Player game modes are updated by [work.lclpnet.ap2.impl.game.PlayerUtil.resetPlayer].
  * Should be called before [configureDefaults] is called.
- * For games extending [work.lclpnet.ap2.game.base.MapGameInstance], call this in the class initializer.
+ * Call this in the class initializer, for example.
  */
 fun MiniGameInstance.useSurvivalMode() {
     gameHandle.playerUtil.setDefaultGameMode(GameType.SURVIVAL)
@@ -153,4 +156,12 @@ fun useLastRemainingParticipantListener(
     winManager: WinManager<ServerPlayer, PlayerRef>
 ): ParticipantListener = {
     winManager.checkForLastRemaining()
+}
+
+fun MiniGameInstance.useScoreboardStatsSync(source: ScoreListenerView<ServerPlayer, Int>, objective: Objective) {
+    gameHandle.scoreboardManager.sync(objective, source)
+}
+
+fun MiniGameInstance.useScoreboardStatsSync(source: ScoreListenerView<ServerPlayer, Int>, objective: CustomScoreboardObjective) {
+    gameHandle.scoreboardManager.sync(objective, source)
 }

@@ -21,8 +21,8 @@ import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.mc.setBlock
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
-import work.lclpnet.ap2.game.data.type.PlayerRef
-import work.lclpnet.ap2.game.util.finaleCompatibleScoreContainer
+import work.lclpnet.ap2.game.util.finaleCompatibleIntScoreContainer
+import work.lclpnet.ap2.game.util.useDataContainer
 import work.lclpnet.ap2.game.util.useOldCombat
 import work.lclpnet.ap2.game.util.useTaskTimer
 import work.lclpnet.ap2.impl.map.MapUtil
@@ -41,7 +41,7 @@ val DURATION = 2.minutes + 40.seconds
 
 class KingOfTheHillInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
     
-    override val data = finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
+    override val data = useDataContainer(::finaleCompatibleIntScoreContainer)
     var goalShape: BlockShape? = null
 
     init {

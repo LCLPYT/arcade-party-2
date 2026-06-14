@@ -39,6 +39,7 @@ import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.pig_race.util.PRProgress
 import work.lclpnet.ap2.game.pig_race.util.PRScoreboard
 import work.lclpnet.ap2.game.pig_race.util.createSegmentedPath
+import work.lclpnet.ap2.game.util.useDataContainer
 import work.lclpnet.ap2.game.util.usePlayerDynamicTaskDisplay
 import work.lclpnet.ap2.impl.music.MusicHelper
 import work.lclpnet.ap2.impl.util.ApRegistries
@@ -92,7 +93,7 @@ class PigRaceInstance(
         Ordering.ASCENDING,
         "ap2.score.blocks_away"
     )
-    override val data = CombinedDataContainer(listOf(winnerData, distanceData))
+    override val data = useDataContainer { CombinedDataContainer(listOf(winnerData, distanceData)) }
     private val random = Random()
     private val collisionDetector: CollisionDetector = ChunkedCollisionDetector()
     private val movementObserver = TickMovementObserver(collisionDetector, gameHandle.participants::isParticipating)

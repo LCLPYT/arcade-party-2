@@ -33,8 +33,8 @@ import work.lclpnet.ap2.ext.mc.setAttribute
 import work.lclpnet.ap2.ext.mc.teleport
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
-import work.lclpnet.ap2.game.util.createFFAStats
 import work.lclpnet.ap2.game.util.createTimer
+import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.game.util.useTaskDisplay
 import work.lclpnet.ap2.impl.util.ApRegistries
 import work.lclpnet.ap2.impl.util.SoundHelper
@@ -87,7 +87,7 @@ class ButtonMasterInstance(
 
     val validPositions = mutableListOf<BlockPos>()
 
-    private val stats = createFFAStats(winManager, listOf(
+    private val stats = useFFAStats(winManager, listOf(
         ButtonsFound, Escapes, DistanceMoved, ButtonsMissed
     ))
     private val bmStats = ButtonMasterStats(stats)

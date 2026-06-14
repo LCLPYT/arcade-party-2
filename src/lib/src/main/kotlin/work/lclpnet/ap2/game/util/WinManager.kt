@@ -150,7 +150,7 @@ class WinManager<T, Ref : SubjectRef>(
         val container: () -> DataContainer<T, Ref>,
         val subjectMapper: Function<ServerPlayer, Optional<T>>,
         val subjectRefs: SubjectRefFactory<T, Ref>,
-        val playerRefs: PlayerSubjectRefFactory<Ref>,
+        val playerRefs: PlayerSubjectRefFactory<Ref?>,
         val winnersFactory: Function<DataContainer<T, Ref>, GenericGameResult<Ref>>,
     )
 }

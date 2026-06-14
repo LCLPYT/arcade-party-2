@@ -27,7 +27,7 @@ import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.ext.trackDistanceMoved
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
-import work.lclpnet.ap2.game.util.createFFAStats
+import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar
 import work.lclpnet.ap2.impl.util.handler.Visibility
@@ -54,7 +54,7 @@ class AnvilFallInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
 
     private val directions = arrayOf(Direction.NORTH, Direction.WEST, Direction.SOUTH, Direction.WEST)
     private val random = Random()
-    private val stats = createFFAStats(winManager, listOf(
+    private val stats = useFFAStats(winManager, listOf(
         DistanceMoved, TimeSurvived
     ))
     private lateinit var amountDisplay: DynamicTranslatedBossBar

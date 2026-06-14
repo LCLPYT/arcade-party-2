@@ -16,8 +16,8 @@ import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.data.IntScoreDataContainer
-import work.lclpnet.ap2.game.data.type.PlayerRef
-import work.lclpnet.ap2.game.util.createFFAStats
+import work.lclpnet.ap2.game.util.useDataContainer
+import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.game.util.usePlayerDynamicTaskDisplay
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
@@ -49,8 +49,8 @@ class AimMasterInstance(
     val manager: AimMasterManager,
 ) : FFAGameInstance(gameHandle, level, map) {
 
-    override val data = IntScoreDataContainer(PlayerRef::create)
-    private val stats = createFFAStats(winManager, data, CommonStats.IntScore, listOf(
+    override val data = useDataContainer(::IntScoreDataContainer)
+    private val stats = useFFAStats(winManager, data, CommonStats.IntScore, listOf(
         Clicks, Misses, Accuracy, Streak, AvgAdvanceTime
     ))
     private val currentStreak = HashMap<UUID, Int>()

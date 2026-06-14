@@ -34,6 +34,7 @@ import work.lclpnet.ap2.game.dragon_escape.kit.WindChargeKit
 import work.lclpnet.ap2.game.kit.KitHandler
 import work.lclpnet.ap2.game.util.GameStartSequence
 import work.lclpnet.ap2.game.util.useAnnouncer
+import work.lclpnet.ap2.game.util.useDataContainer
 import work.lclpnet.ap2.game.util.useOldCombat
 import work.lclpnet.ap2.impl.game.PseudoElimination
 import work.lclpnet.ap2.impl.map.MapUtil
@@ -72,7 +73,7 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
 
     private val completed = OrderedDataContainer(PlayerRef::create)
     private val score = DoubleScoreDataContainer(PlayerRef::create, Ordering.DESCENDING, "ap2.score.distance")
-    override val data = CombinedDataContainer(listOf(completed, score))
+    override val data = useDataContainer { CombinedDataContainer(listOf(completed, score)) }
     private val random = Random()
     private val inGoal = HashSet<UUID>()
     private val trackers = HashMap<UUID, Tracker>()

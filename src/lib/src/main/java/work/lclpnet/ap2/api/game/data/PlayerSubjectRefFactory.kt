@@ -8,6 +8,6 @@ import net.minecraft.server.level.ServerPlayer
  * If the player has no subject, null will be returned.
  * @param Ref The SubjectRef type.
  */
-fun interface PlayerSubjectRefFactory<Ref : SubjectRef> : SubjectRefFactory<ServerPlayer, Ref> {
+fun interface PlayerSubjectRefFactory<Ref : SubjectRef?> : SubjectRefFactory<ServerPlayer, Ref> {
     override fun create(subject: ServerPlayer): Ref
 }

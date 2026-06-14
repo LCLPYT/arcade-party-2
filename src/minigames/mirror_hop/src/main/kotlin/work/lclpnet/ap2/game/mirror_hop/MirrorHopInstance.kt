@@ -16,6 +16,7 @@ import work.lclpnet.ap2.game.data.CombinedDataContainer
 import work.lclpnet.ap2.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.game.data.OrderedDataContainer
 import work.lclpnet.ap2.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.util.useDataContainer
 import work.lclpnet.ap2.game.util.useTaskDisplay
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.effect.ApEffects
@@ -40,7 +41,7 @@ class MirrorHopInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
 
     private val winnerData = OrderedDataContainer(PlayerRef::create)
     private val scoreData = IntScoreDataContainer(PlayerRef::create)
-    override val data = CombinedDataContainer(listOf(winnerData, scoreData))
+    override val data = useDataContainer { CombinedDataContainer(listOf(winnerData, scoreData)) }
     private val collisionDetector: CollisionDetector = ChunkedCollisionDetector()
     private val movementObserver = PlayerMovementObserver(
         collisionDetector,

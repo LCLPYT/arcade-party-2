@@ -40,16 +40,7 @@ abstract class TeamGameInstance(
         teamManager.bind(this)
     }
 
-    override val participantListener: ParticipantListener
-        get() = this
-
-    override fun start() {
-        for (team in teamManager.getTeams()) {
-            data.identityIfAbsent(team)
-        }
-
-        super.start()
-    }
+    override val participantListener = this
 
     override fun participantRemoved(player: ServerPlayer) {
         val team = teamManager.getTeam(player).orElse(null)
@@ -101,14 +92,6 @@ abstract class TeamGameInstance(
 
     protected fun createReference(team: Team): TeamRef {
         return TeamRef(team.key(), gameHandle.translations)
-    }
-
-    protected fun createReferenceFor(player: ServerPlayer): TeamRef? {
-        val team = teamManager.getTeam(player)
-
-        return team.map { team ->
-            createReference(team)
-        }.orElse(null)
     }
 
     override fun getWinManagerAccess(): WinManagerAccess = WinManagerAccessImpl(

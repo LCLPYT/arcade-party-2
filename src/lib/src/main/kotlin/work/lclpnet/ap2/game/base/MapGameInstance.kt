@@ -101,8 +101,6 @@ abstract class MapGameInstance(
 
         if (prop !is JSONObject) return
 
-        val logger = gameHandle.logger
-
         for (key in prop.keySet()) {
             val id = Identifier.tryParse(key)
 
