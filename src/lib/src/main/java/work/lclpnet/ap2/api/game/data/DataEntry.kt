@@ -1,15 +1,13 @@
-package work.lclpnet.ap2.api.game.data;
+package work.lclpnet.ap2.api.game.data
 
-import org.jetbrains.annotations.Nullable;
-import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.kibu.translate.text.TranslatedText;
+import work.lclpnet.kibu.translate.Translations
+import work.lclpnet.kibu.translate.text.TranslatedText
 
-public interface DataEntry<Ref extends SubjectRef> {
+interface DataEntry<Ref : SubjectRef> {
 
-    Ref subject();
+    val subject: Ref
 
-    @Nullable
-    TranslatedText toText(Translations translationService);
+    fun toText(translationService: Translations): TranslatedText?
 
-    boolean scoreEquals(DataEntry<Ref> other);
+    fun scoreEquals(other: DataEntry<Ref>): Boolean
 }

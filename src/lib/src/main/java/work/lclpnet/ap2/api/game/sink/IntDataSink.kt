@@ -1,10 +1,9 @@
-package work.lclpnet.ap2.api.game.sink;
+package work.lclpnet.ap2.api.game.sink
 
-public interface IntDataSink<T> {
+interface IntDataSink<T> {
+    fun setScore(subject: T, score: Int)
 
-    void setScore(T subject, int score);
+    fun addScore(subject: T, add: Int)
 
-    void addScore(T subject, int add);
-
-    int getScore(T subject);
+    fun getScore(subject: T): Int
 }

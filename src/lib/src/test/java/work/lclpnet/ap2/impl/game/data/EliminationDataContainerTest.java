@@ -2,8 +2,10 @@ package work.lclpnet.ap2.impl.game.data;
 
 import org.junit.jupiter.api.Test;
 import work.lclpnet.ap2.api.game.data.DataEntry;
+import work.lclpnet.ap2.game.data.EliminationDataContainer;
 
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -17,7 +19,7 @@ public class EliminationDataContainerTest {
         data.add("test");
 
         var order = data.streamOrderedEntries()
-                .map(DataEntry::subject)
+                .map(DataEntry::getSubject)
                 .map(StringRef::name)
                 .toList();
 
@@ -36,10 +38,10 @@ public class EliminationDataContainerTest {
         data.addAll(List.of("bar", "baz"));
         data.add("test");
 
-        var foo = data.getEntry("foo").orElseThrow();
-        var bar = data.getEntry("bar").orElseThrow();
-        var baz = data.getEntry("baz").orElseThrow();
-        var test = data.getEntry("test").orElseThrow();
+        var foo = Objects.requireNonNull(data.getEntry("foo"));
+        var bar = Objects.requireNonNull(data.getEntry("bar"));
+        var baz = Objects.requireNonNull(data.getEntry("baz"));
+        var test = Objects.requireNonNull(data.getEntry("test"));
 
         var order = data.streamOrderedEntries().toList();
 

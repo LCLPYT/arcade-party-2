@@ -17,15 +17,16 @@ import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.ext.ticks
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
+import work.lclpnet.ap2.game.data.IntScoreDataContainer
+import work.lclpnet.ap2.game.data.Ordering
+import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.mimicry.data.MimicryManager
 import work.lclpnet.ap2.game.mimicry.data.MimicryRoom
 import work.lclpnet.ap2.game.mimicry.data.SequencePlayer
+import work.lclpnet.ap2.game.util.createStats
 import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.game.util.useAnnouncer
 import work.lclpnet.ap2.impl.game.PseudoElimination
-import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
-import work.lclpnet.ap2.impl.game.data.Ordering
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.util.world.StackedRoomGenerator
 import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.game.map.GameMap
@@ -62,7 +63,7 @@ class MimicryInstance(
         Ordering.DESCENDING,
         "game.ap2.mimicry.completed"
     )
-    private val stats = createStats(data, DirectButtonClicks, ButtonClicks, AvgTimeUsage, AvgClickTime)
+    private val stats = createStats(winManager, data, DirectButtonClicks, ButtonClicks, AvgTimeUsage, AvgClickTime)
     private val manager = MimicryManager(gameHandle, result.rooms, buttons, Random(), level, stats, ::onCompleted)
     private val announcer = useAnnouncer()
     private lateinit var pseudoElimination: PseudoElimination

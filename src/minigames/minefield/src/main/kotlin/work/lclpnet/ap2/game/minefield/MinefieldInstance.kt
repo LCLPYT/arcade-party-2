@@ -19,7 +19,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.Team
 import org.joml.Matrix4f
-import work.lclpnet.ap2.api.stats.CommonStats
+import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.isOf
@@ -28,10 +28,11 @@ import work.lclpnet.ap2.ext.mc.setBlocks
 import work.lclpnet.ap2.ext.mc.teleport
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
+import work.lclpnet.ap2.game.data.OrderedDataContainer
+import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.util.addTimer
+import work.lclpnet.ap2.game.util.createStats
 import work.lclpnet.ap2.game.util.useTaskDisplay
-import work.lclpnet.ap2.impl.game.data.OrderedDataContainer
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.util.Fireworks
 import work.lclpnet.ap2.impl.util.ParticleHelper
 import work.lclpnet.ap2.impl.util.SoundHelper
@@ -72,7 +73,7 @@ class MinefieldInstance(
 ) : FFAGameInstance(gameHandle, level, map) {
 
     override val data = OrderedDataContainer(PlayerRef::create)
-    private val stats = createStats(Exploded, CommonStats.DistanceMoved)
+    private val stats = createStats(winManager, Exploded, DistanceMoved)
     val inGoal = mutableSetOf<UUID>()
     val entries = mutableMapOf<UUID, Entry>()
     lateinit var taskBar: TranslatedBossBar

@@ -14,9 +14,10 @@ import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
+import work.lclpnet.ap2.game.data.IntScoreDataContainer
+import work.lclpnet.ap2.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.util.createStats
 import work.lclpnet.ap2.game.util.usePlayerDynamicTaskDisplay
-import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
@@ -48,7 +49,7 @@ class AimMasterInstance(
 ) : FFAGameInstance(gameHandle, level, map) {
 
     override val data = IntScoreDataContainer(PlayerRef::create)
-    private val stats = createStats(data, Clicks, Misses, Accuracy, Streak, AvgAdvanceTime)
+    private val stats = createStats(winManager, data, Clicks, Misses, Accuracy, Streak, AvgAdvanceTime)
     private val currentStreak = HashMap<UUID, Int>()
     private val lastAdvanceMillis = HashMap<UUID, Long>()
     private val advanceTimeSumMillis = HashMap<UUID, Long>()

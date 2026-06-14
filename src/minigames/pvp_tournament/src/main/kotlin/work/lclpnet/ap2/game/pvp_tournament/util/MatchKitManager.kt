@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.pvp_tournament.util
 
+import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.pvp_tournament.gen.Match
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.gaco.ds.WeightedList
 import kotlin.random.Random
 import kotlin.random.asJavaRandom

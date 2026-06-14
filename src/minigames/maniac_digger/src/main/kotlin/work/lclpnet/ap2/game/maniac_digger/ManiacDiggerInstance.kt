@@ -21,14 +21,15 @@ import work.lclpnet.ap2.ext.mc.unbreakable
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
+import work.lclpnet.ap2.game.data.CombinedDataContainer
+import work.lclpnet.ap2.game.data.IntScoreDataContainer
+import work.lclpnet.ap2.game.data.OrderedDataContainer
+import work.lclpnet.ap2.game.data.Ordering
+import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.maniac_digger.data.MdPipe
+import work.lclpnet.ap2.game.util.createStats
 import work.lclpnet.ap2.game.util.useSurvivalMode
 import work.lclpnet.ap2.game.util.useTaskDisplay
-import work.lclpnet.ap2.impl.game.data.CombinedDataContainer
-import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
-import work.lclpnet.ap2.impl.game.data.OrderedDataContainer
-import work.lclpnet.ap2.impl.game.data.Ordering
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.util.world.WorldBorderUtil
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
@@ -59,7 +60,7 @@ class ManiacDiggerInstance(
     override val data = CombinedDataContainer(listOf(reachedBottom, score))
     private val wrongTool = HashSet<UUID>()
     private val correctToolStreak = Object2IntOpenHashMap<UUID>()
-    private val stats = createStats(score, BlocksBroken, ToolSwitches, WrongToolsSelected, WrongToolsUsed, CorrectToolStreak)
+    private val stats = createStats(winManager, score, BlocksBroken, ToolSwitches, WrongToolsSelected, WrongToolsUsed, CorrectToolStreak)
 
     init {
         useSurvivalMode()

@@ -30,6 +30,8 @@ import work.lclpnet.ap2.ext.mc.resetAttribute
 import work.lclpnet.ap2.ext.mc.setAttribute
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.TeamGameInstance
+import work.lclpnet.ap2.game.data.IntScoreDataContainer
+import work.lclpnet.ap2.game.data.Ordering
 import work.lclpnet.ap2.game.kit.KitHandler
 import work.lclpnet.ap2.game.paintball.item.InkGrenadeItem
 import work.lclpnet.ap2.game.paintball.item.InkPackItem
@@ -43,8 +45,6 @@ import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.game.util.GameStartSequence
 import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.game.util.useAnnouncer
-import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
-import work.lclpnet.ap2.impl.game.data.Ordering
 import work.lclpnet.ap2.impl.game.item.SpecialItems
 import work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable

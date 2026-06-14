@@ -1,20 +1,12 @@
-package work.lclpnet.ap2.impl.game.data.type;
+package work.lclpnet.ap2.game.data.type
 
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.players.PlayerList;
-import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.api.game.data.SubjectRefResolver;
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.server.players.PlayerList
+import work.lclpnet.ap2.api.game.data.SubjectRefResolver
 
-public class PlayerRefResolver implements SubjectRefResolver<ServerPlayer, PlayerRef> {
+class PlayerRefResolver(private val playerManager: PlayerList) : SubjectRefResolver<ServerPlayer, PlayerRef> {
 
-    private final PlayerList playerManager;
-
-    public PlayerRefResolver(PlayerList playerManager) {
-        this.playerManager = playerManager;
-    }
-
-    @Override
-    public @Nullable ServerPlayer resolve(PlayerRef ref) {
-        return playerManager.getPlayer(ref.uuid());
+    override fun resolve(ref: PlayerRef): ServerPlayer? {
+        return playerManager.getPlayer(ref.uuid)
     }
 }

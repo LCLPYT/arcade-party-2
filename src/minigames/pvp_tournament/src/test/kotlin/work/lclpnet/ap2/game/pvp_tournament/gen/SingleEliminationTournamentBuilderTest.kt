@@ -3,7 +3,7 @@ package work.lclpnet.ap2.game.pvp_tournament.gen
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.data.type.PlayerRef
 import java.util.*
 import kotlin.math.ceil
 import kotlin.math.log2

@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.api.stats
 
 import work.lclpnet.ap2.game.GameInfo
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.game.map.GameMap
 import kotlin.time.Duration
 import kotlin.time.Instant

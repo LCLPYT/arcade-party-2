@@ -10,11 +10,11 @@ import work.lclpnet.ap2.ext.allPlayers
 import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.game.MiniGameInstance
+import work.lclpnet.ap2.game.data.type.FFAGameResult
+import work.lclpnet.ap2.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.data.type.TeamGameResult
+import work.lclpnet.ap2.game.data.type.TeamRef
 import work.lclpnet.ap2.game.player.ParticipantListener
-import work.lclpnet.ap2.impl.game.data.type.FFAGameResult
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
-import work.lclpnet.ap2.impl.game.data.type.TeamGameResult
-import work.lclpnet.ap2.impl.game.data.type.TeamRef
 import work.lclpnet.combatctl.impl.CombatStyles
 import work.lclpnet.game.impl.prot.MutableProtectionConfig
 import work.lclpnet.game.map.GameMap

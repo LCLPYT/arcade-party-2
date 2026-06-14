@@ -1,81 +1,69 @@
-package work.lclpnet.ap2.impl.game.data;
+package work.lclpnet.ap2.game.data
 
-import work.lclpnet.ap2.api.game.data.DataContainer;
-import work.lclpnet.ap2.api.game.data.DataEntry;
-import work.lclpnet.ap2.api.game.data.SubjectRef;
+import work.lclpnet.ap2.api.game.data.DataContainer
+import work.lclpnet.ap2.api.game.data.DataEntry
+import work.lclpnet.ap2.api.game.data.SubjectRef
+import java.util.stream.Stream
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Stream;
-
-public class CombinedDataContainer<T, Ref extends SubjectRef> implements DataContainer<T, Ref> {
-
-    private final List<DataContainer<T, Ref>> children;
-
-    public CombinedDataContainer(List<DataContainer<T, Ref>> children) {
-        if (children.isEmpty()) {
-            throw new IllegalArgumentException("There needs to be at least on child data container");
-        }
-
-        this.children = List.copyOf(children);
+class CombinedDataContainer<T, Ref : SubjectRef>(
+    children: List<DataContainer<T, Ref>>
+) : DataContainer<T, Ref> {
+    private val children: List<DataContainer<T, Ref>> = children.toList().also {
+        require(children.isNotEmpty()) { "There needs to be at least on child data container" }
     }
 
-    @Override
-    public synchronized Optional<DataEntry<Ref>> getEntry(T subject) {
-        for (var child : children) {
-            var entry = child.getEntry(subject);
+    @Synchronized
+    override fun getEntry(subject: T): DataEntry<Ref>? {
+        for (child in children) {
+            val entry = child.getEntry(subject)
 
-            if (entry.isPresent()) {
-                return entry;
+            if (entry != null) {
+                return entry
             }
         }
 
-        return Optional.empty();
+        return null
     }
 
-    @Override
-    public synchronized Optional<DataEntry<Ref>> getEntry(Ref ref) {
-        for (var child : children) {
-            var entry = child.getEntry(ref);
+    @Synchronized
+    override fun getEntry(ref: Ref): DataEntry<Ref>? {
+        for (child in children) {
+            val entry = child.getEntry(ref)
 
-            if (entry.isPresent()) {
-                return entry;
+            if (entry != null) {
+                return entry
             }
         }
 
-        return Optional.empty();
+        return null
     }
 
-    @Override
-    public synchronized Stream<? extends DataEntry<Ref>> streamOrderedEntries() {
-        Set<Ref> seen = new HashSet<>();
+    @Synchronized
+    override fun streamOrderedEntries(): Stream<out DataEntry<Ref>> {
+        val seen = mutableSetOf<Ref>()
 
         return children.stream()
-                .flatMap(DataContainer::streamOrderedEntries)
-                .filter(entry -> seen.add(entry.subject()));  // each entry only once. this is stateful, only sequential streams will work
+            .flatMap { obj -> obj.streamOrderedEntries() }
+            .filter { entry -> seen.add(entry.subject) }  // each entry only once. this is stateful, only sequential streams will work
     }
 
-    @Override
-    public void add(T subject) {
-        children.getFirst().add(subject);
+    override fun add(subject: T) {
+        children.first().add(subject)
     }
 
-    @Override
-    public void identityIfAbsent(T subject) {
-        children.getLast().identityIfAbsent(subject);
+    override fun identityIfAbsent(subject: T) {
+        children.last().identityIfAbsent(subject)
     }
 
-    @Override
-    public synchronized void clear() {
-        for (var child : children) {
-            child.clear();
+    @Synchronized
+    override fun clear() {
+        for (child in children) {
+            child.clear()
         }
     }
 
-    @Override
-    public synchronized DataContainer<T, Ref> copy() {
-        return new CombinedDataContainer<>(children.stream().map(DataContainer::copy).toList());
-    }
+    @Synchronized
+    override fun copy(): DataContainer<T, Ref> = CombinedDataContainer(
+        children.map { it.copy() }.toList()
+    )
 }

@@ -33,6 +33,7 @@ import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.bow_spleef.item.*
+import work.lclpnet.ap2.game.util.createStats
 import work.lclpnet.ap2.impl.game.item.SpecialItems
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.FallKillTracker
@@ -62,6 +63,7 @@ fun interface Impact {
 class BowSpleefInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
 
     private val stats = createStats(
+        winManager,
         TimeSurvived,
         Kills,
         BlocksBroken,

@@ -8,10 +8,10 @@ import kotlinx.coroutines.joinAll
 import work.lclpnet.ap2.game.MiniGameFactory
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.MiniGameInstance
+import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.util.assetPath
 import work.lclpnet.ap2.game.util.openRandomMap
 import work.lclpnet.ap2.game.util.schematic
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import java.util.*
 
 class PvpTournamentFactory : MiniGameFactory {

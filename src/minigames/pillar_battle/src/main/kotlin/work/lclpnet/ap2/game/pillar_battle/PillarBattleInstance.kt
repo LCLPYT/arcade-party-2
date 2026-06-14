@@ -29,6 +29,7 @@ import work.lclpnet.ap2.ext.mc.rangeTo
 import work.lclpnet.ap2.ext.mc.setBlocks
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
+import work.lclpnet.ap2.game.util.createStats
 import work.lclpnet.ap2.game.util.useOldCombat
 import work.lclpnet.ap2.game.util.useSurvivalMode
 import work.lclpnet.ap2.impl.game.GameCommons
@@ -71,7 +72,7 @@ class PillarBattleInstance(
     private val warnings = HashMap<UUID, Warning>()
     private var borderShrinking = false
     private lateinit var border: WorldBorder
-    private val stats = createStats(TimeSurvived, Kills, DistanceMoved, BlocksPlaced)
+    private val stats = createStats(winManager, TimeSurvived, Kills, DistanceMoved, BlocksPlaced)
     private val killTracker = KnockbackKillTracker(players()).also {
         it.init(gameHandle.scheduler)
     }

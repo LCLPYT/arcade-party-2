@@ -1,58 +1,49 @@
-package work.lclpnet.ap2.impl.game.data;
+package work.lclpnet.ap2.game.data
 
-import work.lclpnet.ap2.api.game.data.DataContainer;
-import work.lclpnet.ap2.api.game.data.DataEntry;
-import work.lclpnet.ap2.api.game.data.SubjectRef;
-import work.lclpnet.ap2.api.game.data.SubjectRefFactory;
-import work.lclpnet.ap2.impl.game.data.entry.SupremeDataEntry;
+import work.lclpnet.ap2.api.game.data.DataContainer
+import work.lclpnet.ap2.api.game.data.DataEntry
+import work.lclpnet.ap2.api.game.data.SubjectRef
+import work.lclpnet.ap2.api.game.data.SubjectRefFactory
+import work.lclpnet.ap2.game.data.entry.SupremeDataEntry
+import java.util.stream.Stream
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Stream;
+class SupremeDataContainer<T, Ref : SubjectRef>(
+    refs: SubjectRefFactory<T, Ref>
+) : BaseDataContainer<T, Ref>(refs) {
+    private val entries = HashSet<Ref>()
 
-public class SupremeDataContainer<T, Ref extends SubjectRef> extends BaseDataContainer<T, Ref> {
-
-    private final Set<Ref> entries = new HashSet<>();
-
-    public SupremeDataContainer(SubjectRefFactory<T, Ref> refs) {
-        super(refs);
+    @Synchronized
+    override fun add(subject: T) {
+        entries.add(refs.create(subject))
     }
 
-    @Override
-    public synchronized void add(T subject) {
-        entries.add(refs.create(subject));
-    }
-
-    @Override
-    public synchronized Optional<DataEntry<Ref>> getEntry(Ref ref) {
+    @Synchronized
+    override fun getEntry(ref: Ref): DataEntry<Ref>? {
         if (entries.contains(ref)) {
-            return Optional.of(new SupremeDataEntry<>(ref));
+            return SupremeDataEntry(ref)
         }
 
-        return Optional.empty();
+        return null
     }
 
-    @Override
-    public synchronized Stream<? extends DataEntry<Ref>> streamOrderedEntries() {
-        return entries.stream().map(SupremeDataEntry::new);
+    @Synchronized
+    override fun streamOrderedEntries(): Stream<out DataEntry<Ref>> {
+        return entries.stream().map { subject -> SupremeDataEntry(subject) }
     }
 
-    @Override
-    public void identityIfAbsent(T subject) {
-        // NOOP
+    override fun identityIfAbsent(subject: T) {}
+
+    @Synchronized
+    override fun clear() {
+        entries.clear()
     }
 
-    @Override
-    public synchronized void clear() {
-        entries.clear();
-    }
+    @Synchronized
+    override fun copy(): DataContainer<T, Ref> {
+        val copy = SupremeDataContainer(refs)
 
-    @Override
-    public synchronized DataContainer<T, Ref> copy() {
-        var copy = new SupremeDataContainer<>(refs);
-        copy.entries.addAll(this.entries);
+        copy.entries.addAll(this.entries)
 
-        return copy;
+        return copy
     }
 }

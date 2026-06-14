@@ -15,7 +15,7 @@ import work.lclpnet.ap2.api.game.WinManagerAccess;
 import work.lclpnet.ap2.api.game.WinManagerView;
 import work.lclpnet.ap2.game.MiniGameHandle;
 import work.lclpnet.ap2.game.MiniGameInstance;
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
+import work.lclpnet.ap2.game.data.type.PlayerRef;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.cmd.type.KibuCommand;
 

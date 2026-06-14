@@ -2,7 +2,6 @@ package work.lclpnet.ap2.game.base
 
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
-import work.lclpnet.ap2.api.event.IntScoreEventSource
 import work.lclpnet.ap2.api.game.WinManagerAccess
 import work.lclpnet.ap2.api.game.WinManagerView
 import work.lclpnet.ap2.api.game.data.DataContainer
@@ -15,10 +14,11 @@ import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.stats.TeamStatsManager
 import work.lclpnet.ap2.ext.logger
 import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.data.IntScoreEventSource
+import work.lclpnet.ap2.game.data.type.TeamRef
 import work.lclpnet.ap2.game.player.ParticipantListener
 import work.lclpnet.ap2.game.util.useTeamWinManager
 import work.lclpnet.ap2.impl.game.WinManagerAccessImpl
-import work.lclpnet.ap2.impl.game.data.type.TeamRef
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.map.MapUtils
 import work.lclpnet.kibu.hook.util.PositionRotation

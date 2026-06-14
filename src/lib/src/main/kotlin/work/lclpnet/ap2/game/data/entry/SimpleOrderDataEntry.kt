@@ -1,29 +1,28 @@
-package work.lclpnet.ap2.impl.game.data.entry;
+package work.lclpnet.ap2.game.data.entry
 
-import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.api.game.data.DataEntry;
-import work.lclpnet.ap2.api.game.data.SubjectRef;
-import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.kibu.translate.text.TranslatedText;
+import work.lclpnet.ap2.api.game.data.DataEntry
+import work.lclpnet.ap2.api.game.data.SubjectRef
+import work.lclpnet.kibu.translate.Translations
+import work.lclpnet.kibu.translate.text.TranslatedText
 
-public record SimpleOrderDataEntry<Ref extends SubjectRef>(Ref subject, int order, @Nullable TranslatedText data) implements DataEntry<Ref> {
+@JvmRecord
+data class SimpleOrderDataEntry<Ref : SubjectRef>(
+    override val subject: Ref,
+    val order: Int,
+    val data: TranslatedText?
+) : DataEntry<Ref> {
 
-    public SimpleOrderDataEntry(Ref subject, int order) {
-        this(subject, order, null);
+    constructor(subject: Ref, order: Int) : this(subject, order, null)
+
+    override fun toText(translationService: Translations): TranslatedText? {
+        return data
     }
 
-    @Nullable
-    @Override
-    public TranslatedText toText(Translations translationService) {
-        return data;
-    }
-
-    @Override
-    public boolean scoreEquals(DataEntry<Ref> _other) {
-        if (_other instanceof SimpleOrderDataEntry<Ref> other) {
-            return order == other.order;
+    override fun scoreEquals(other: DataEntry<Ref>): Boolean {
+        if (other is SimpleOrderDataEntry<Ref>) {
+            return order == other.order
         }
 
-        return false;
+        return false
     }
 }

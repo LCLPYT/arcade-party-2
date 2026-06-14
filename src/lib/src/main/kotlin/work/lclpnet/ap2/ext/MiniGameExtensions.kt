@@ -9,10 +9,10 @@ import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.scores.DisplaySlot
 import org.slf4j.Logger
-import work.lclpnet.ap2.api.event.IntScoreEventSource
 import work.lclpnet.ap2.game.MiniGameInstance
 import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.base.MapGameInstance
+import work.lclpnet.ap2.game.data.IntScoreEventSource
 import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.SoundHelper

@@ -24,7 +24,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.scores.Team
 import work.lclpnet.ap2.*
-import work.lclpnet.ap2.api.stats.CommonStats
+import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
 import work.lclpnet.ap2.api.util.heads.PlayerHead
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.isIn
@@ -33,6 +33,7 @@ import work.lclpnet.ap2.ext.mc.setAttribute
 import work.lclpnet.ap2.ext.mc.teleport
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
+import work.lclpnet.ap2.game.util.createStats
 import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.game.util.useTaskDisplay
 import work.lclpnet.ap2.impl.util.ApRegistries
@@ -86,7 +87,7 @@ class ButtonMasterInstance(
 
     val validPositions = mutableListOf<BlockPos>()
 
-    private val stats = createStats(ButtonsFound, Escapes, CommonStats.DistanceMoved, ButtonsMissed)
+    private val stats = createStats(winManager, ButtonsFound, Escapes, DistanceMoved, ButtonsMissed)
     private val bmStats = ButtonMasterStats(stats)
     private val missDetector = ButtonMissDetector(level, bmStats)
     val movementBlocker = SimpleMovementBlocker(gameHandle.scheduler).also {

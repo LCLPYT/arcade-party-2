@@ -3,7 +3,7 @@ package work.lclpnet.ap2.game.player
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerPlayer
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.data.type.PlayerRef
 import java.util.*
 
 class PlayerManagerImpl(private val server: MinecraftServer) : PlayerManager {

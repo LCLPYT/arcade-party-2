@@ -1,64 +1,61 @@
-package work.lclpnet.ap2.impl.game.data.type;
+package work.lclpnet.ap2.game.data.type
 
-import net.minecraft.ChatFormatting;
-import net.minecraft.core.RegistryAccess;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.contents.objects.PlayerSprite;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.component.ResolvableProfile;
-import org.jetbrains.annotations.NotNull;
-import work.lclpnet.ap2.api.game.data.SubjectRef;
+import net.minecraft.ChatFormatting
+import net.minecraft.core.RegistryAccess
+import net.minecraft.core.component.DataComponents
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.contents.objects.PlayerSprite
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.component.ResolvableProfile
+import work.lclpnet.ap2.api.game.data.SubjectRef
+import java.util.*
 
-import java.util.Objects;
-import java.util.UUID;
+@JvmRecord
+data class PlayerRef(val uuid: UUID, val name: String) : SubjectRef {
 
-public record PlayerRef(@NotNull UUID uuid, @NotNull String name) implements SubjectRef {
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        PlayerRef playerRef = (PlayerRef) o;
-        return Objects.equals(uuid, playerRef.uuid);
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || javaClass != other.javaClass) return false
+        val playerRef = other as PlayerRef
+        return uuid == playerRef.uuid
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(uuid);
+    override fun hashCode(): Int {
+        return Objects.hash(uuid)
     }
 
-    @Override
-    public Component getNameFor(ServerPlayer viewer) {
+    override fun getNameFor(viewer: ServerPlayer): Component {
         return Component.empty()
-                .append(Component.object(new PlayerSprite(ResolvableProfile.createUnresolved(uuid), true))
-                        .withStyle(ChatFormatting.WHITE))
-                .append(" ")
-                .append(name);
+            .append(
+                Component.`object`(PlayerSprite(ResolvableProfile.createUnresolved(uuid), true))
+                    .withStyle(ChatFormatting.WHITE)
+            )
+            .append(" ")
+            .append(name)
     }
 
-    @Override
-    public ItemStack getIconStackFor(RegistryAccess registryManager, ServerPlayer viewer) {
-        ItemStack stack = new ItemStack(Items.PLAYER_HEAD);
+    override fun getIconStackFor(registryManager: RegistryAccess, viewer: ServerPlayer): ItemStack {
+        val stack = ItemStack(Items.PLAYER_HEAD)
 
-        stack.set(DataComponents.PROFILE, ResolvableProfile.createUnresolved(uuid));
+        stack.set(DataComponents.PROFILE, ResolvableProfile.createUnresolved(uuid))
 
-        return stack;
+        return stack
     }
 
-    @Override
-    public String getIdentifier() {
-        return uuid.toString();
-    }
+    override val identifier: String
+        get() = uuid.toString()
 
-    @NotNull
-    public static PlayerRef create(@NotNull ServerPlayer player) {
-        return new PlayerRef(player.getUUID(), player.getScoreboardName());
-    }
+    companion object {
 
-    public static @NotNull PlayerRef createForUuid(@NotNull UUID uuid) {
-        return new PlayerRef(uuid, "?");
+        @JvmStatic
+        fun create(player: ServerPlayer): PlayerRef {
+            return PlayerRef(player.getUUID(), player.scoreboardName)
+        }
+
+        fun createForUuid(uuid: UUID): PlayerRef {
+            return PlayerRef(uuid, "?")
+        }
     }
 }

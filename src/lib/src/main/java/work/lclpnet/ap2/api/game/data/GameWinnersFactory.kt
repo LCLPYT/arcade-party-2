@@ -1,6 +1,6 @@
-package work.lclpnet.ap2.api.game.data;
+package work.lclpnet.ap2.api.game.data
 
-public interface GameWinnersFactory<T, Ref extends SubjectRef> {
+fun interface GameWinnersFactory<T, Ref : SubjectRef> {
 
-    GenericGameResult<Ref> create(DataContainer<T, Ref> data);
+    fun create(data: DataContainer<T, Ref>): GenericGameResult<Ref>
 }

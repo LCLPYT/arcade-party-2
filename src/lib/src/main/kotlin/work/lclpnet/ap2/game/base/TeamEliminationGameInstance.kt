@@ -11,7 +11,7 @@ import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.isParticipating
 import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.game.MiniGameHandle
-import work.lclpnet.ap2.impl.game.data.EliminationDataContainer
+import work.lclpnet.ap2.game.data.EliminationDataContainer
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback
 import work.lclpnet.kibu.translate.text.TranslatedText

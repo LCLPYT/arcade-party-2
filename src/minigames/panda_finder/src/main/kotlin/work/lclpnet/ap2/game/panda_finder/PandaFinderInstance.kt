@@ -27,9 +27,10 @@ import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
+import work.lclpnet.ap2.game.data.IntScoreDataContainer
+import work.lclpnet.ap2.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.util.createStats
 import work.lclpnet.ap2.game.util.usePlayerDynamicTaskDisplay
-import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar
 import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
@@ -62,7 +63,7 @@ class PandaFinderInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: G
     private val spamManager = SpamManager()
     private lateinit var pandaManager: PandaManager
     private lateinit var bossBar: DynamicTranslatedPlayerBossBar
-    private val stats = createStats(data, PandasClicked, AvgSpawnDistance, CloseCalls, PandasStolen, PandasLost, Cooldowns)
+    private val stats = createStats(winManager, data, PandasClicked, AvgSpawnDistance, CloseCalls, PandasStolen, PandasLost, Cooldowns)
     private var round = 0
 
     override fun prepare() {

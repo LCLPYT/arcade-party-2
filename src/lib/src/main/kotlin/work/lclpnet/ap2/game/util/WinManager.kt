@@ -8,9 +8,8 @@ import work.lclpnet.ap2.api.stats.GameSummary
 import work.lclpnet.ap2.api.stats.StatsManager
 import work.lclpnet.ap2.api.util.action.Action
 import work.lclpnet.ap2.game.MiniGameHandle
-import work.lclpnet.ap2.impl.game.WinSequence
-import work.lclpnet.ap2.impl.game.data.CombinedDataContainer
-import work.lclpnet.ap2.impl.game.data.SupremeDataContainer
+import work.lclpnet.ap2.game.data.CombinedDataContainer
+import work.lclpnet.ap2.game.data.SupremeDataContainer
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.util.ProtectorUtils
 import work.lclpnet.kibu.hook.Hook
