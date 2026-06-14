@@ -27,8 +27,8 @@ import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.unbreakable
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
-import work.lclpnet.ap2.game.util.createFFAStats
 import work.lclpnet.ap2.game.util.teleportToRandomSpawns
+import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.game.util.useSurvivalMode
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.FallKillTracker
@@ -48,7 +48,7 @@ const val WORLD_BORDER_SHRINK_PER_SECOND = 1.0
 
 class SpleefInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
 
-    private val stats = createFFAStats(winManager, listOf(
+    private val stats = useFFAStats(winManager, listOf(
         TimeSurvived, Kills, BlocksBroken, DistanceMoved
     ))
     private val killTracker = FallKillTracker(gameHandle.participants).also {

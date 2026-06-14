@@ -13,9 +13,9 @@ import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.block.state.BlockState
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
-import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.util.createTimer
-import work.lclpnet.ap2.game.util.finaleCompatibleScoreContainer
+import work.lclpnet.ap2.game.util.finaleCompatibleIntScoreContainer
+import work.lclpnet.ap2.game.util.useDataContainer
 import work.lclpnet.ap2.game.util.useSurvivalMode
 import work.lclpnet.ap2.impl.util.ItemHelper
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
@@ -38,7 +38,7 @@ class MiningBattleInstance(
     private val box: BlockBox,
 ) : FFAGameInstance(gameHandle, level, map) {
 
-    override val data = finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
+    override val data = useDataContainer(::finaleCompatibleIntScoreContainer)
 
     init {
         useSurvivalMode()

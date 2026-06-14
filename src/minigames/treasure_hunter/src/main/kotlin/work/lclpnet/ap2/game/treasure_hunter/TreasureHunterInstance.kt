@@ -25,7 +25,8 @@ import work.lclpnet.ap2.game.data.CombinedDataContainer
 import work.lclpnet.ap2.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.game.data.OrderedDataContainer
 import work.lclpnet.ap2.game.data.type.PlayerRef
-import work.lclpnet.ap2.game.util.createFFAStats
+import work.lclpnet.ap2.game.util.useDataContainer
+import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.game.util.useSurvivalMode
 import work.lclpnet.ap2.game.util.useTaskDisplay
 import work.lclpnet.ap2.impl.map.MapUtil
@@ -46,9 +47,9 @@ class TreasureHunterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
     private val random = Random()
     private val foundChest = OrderedDataContainer(PlayerRef::create)
     private val score = IntScoreDataContainer(PlayerRef::create)
-    override val data = CombinedDataContainer(listOf(foundChest, score))
+    override val data = useDataContainer { CombinedDataContainer(listOf(foundChest, score)) }
     private val materials = HashSet<BlockState>()
-    private val stats = createFFAStats(winManager, score, CommonStats.IntScore, listOf(
+    private val stats = useFFAStats(winManager, score, CommonStats.IntScore, listOf(
         BlocksBroken
     ))
 

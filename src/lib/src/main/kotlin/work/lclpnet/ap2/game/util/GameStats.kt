@@ -17,13 +17,13 @@ import work.lclpnet.ap2.game.data.type.TeamRef
  * @param stats The additional stats to track. Must be updated by the game implementation.
  * @return The [work.lclpnet.ap2.api.stats.FFAStatsManager] to track stats.
  */
-fun <T : Any> createFFAStats(
+fun <T : Any> useFFAStats(
     winManager: WinManager<ServerPlayer, PlayerRef>,
     data: ScoreListenerView<ServerPlayer, T>,
     scoreStat: Stat<T>,
     stats: Iterable<Stat<out Any>>
 ): FFAStatsManager {
-    val manager = createFFAStats(winManager, buildSet {
+    val manager = useFFAStats(winManager, buildSet {
         add(scoreStat)
         addAll(stats)
     })
@@ -35,7 +35,7 @@ fun <T : Any> createFFAStats(
     return manager
 }
 
-fun createFFAStats(
+fun useFFAStats(
     winManager: WinManager<ServerPlayer, PlayerRef>,
     stats: Iterable<Stat<out Any>>
 ): FFAStatsManager {
@@ -48,14 +48,14 @@ fun createFFAStats(
     return manager
 }
 
-fun <T : Any> MiniGameInstance.createTeamStats(
+fun <T : Any> MiniGameInstance.useTeamStats(
     winManager: WinManager<Team, TeamRef>,
     teamScore: ScoreListenerView<Team, T>,
     scoreStat: Stat<T>,
     teamStats: Iterable<Stat<out Any>>,
     memberStats: Iterable<Stat<out Any>>
 ): TeamStatsManager {
-    val manager = createTeamStats(
+    val manager = useTeamStats(
         winManager,
         buildSet {
             add(CommonStats.IntScore)
@@ -71,7 +71,7 @@ fun <T : Any> MiniGameInstance.createTeamStats(
     return manager
 }
 
-fun MiniGameInstance.createTeamStats(
+fun MiniGameInstance.useTeamStats(
     winManager: WinManager<Team, TeamRef>,
     teamStats: Iterable<Stat<out Any>>,
     playerStats: Iterable<Stat<out Any>>

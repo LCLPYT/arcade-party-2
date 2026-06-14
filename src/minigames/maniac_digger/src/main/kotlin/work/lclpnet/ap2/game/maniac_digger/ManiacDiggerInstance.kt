@@ -28,7 +28,8 @@ import work.lclpnet.ap2.game.data.OrderedDataContainer
 import work.lclpnet.ap2.game.data.Ordering
 import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.maniac_digger.data.MdPipe
-import work.lclpnet.ap2.game.util.createFFAStats
+import work.lclpnet.ap2.game.util.useDataContainer
+import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.game.util.useSurvivalMode
 import work.lclpnet.ap2.game.util.useTaskDisplay
 import work.lclpnet.ap2.impl.util.world.WorldBorderUtil
@@ -58,10 +59,10 @@ class ManiacDiggerInstance(
 
     private val reachedBottom = OrderedDataContainer(PlayerRef::create)
     private val score = IntScoreDataContainer(PlayerRef::create, Ordering.ASCENDING, "ap2.score.blocks_away")
-    override val data = CombinedDataContainer(listOf(reachedBottom, score))
+    override val data = useDataContainer { CombinedDataContainer(listOf(reachedBottom, score)) }
     private val wrongTool = HashSet<UUID>()
     private val correctToolStreak = Object2IntOpenHashMap<UUID>()
-    private val stats = createFFAStats(winManager, score, CommonStats.IntScore, listOf(
+    private val stats = useFFAStats(winManager, score, CommonStats.IntScore, listOf(
         BlocksBroken, ToolSwitches, WrongToolsSelected, WrongToolsUsed, CorrectToolStreak
     ))
 

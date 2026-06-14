@@ -18,8 +18,8 @@ import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.server
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.data.EliminationDataContainer
-import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.util.GameStartSequence
+import work.lclpnet.ap2.game.util.useDataContainer
 import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar
 import work.lclpnet.game.map.GameMap
@@ -35,9 +35,7 @@ abstract class EliminationGameInstance(
     map: GameMap
 ) : FFAGameInstance(gameHandle, world, map), EliminationController {
 
-    override val data = EliminationDataContainer { player: ServerPlayer ->
-        PlayerRef.create(player)
-    }
+    override val data = useDataContainer(::EliminationDataContainer)
     private var remainingDisplay: DynamicTranslatedBossBar? = null
     private var eliminatedMessages = true
     private var teleportEliminated = true

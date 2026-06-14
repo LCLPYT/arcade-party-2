@@ -13,6 +13,7 @@ import work.lclpnet.ap2.game.MiniGameInstance
 import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.base.MapGameInstance
 import work.lclpnet.ap2.game.data.ScoreListenerView
+import work.lclpnet.ap2.game.util.useScoreboardStatsSync
 import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.SoundHelper

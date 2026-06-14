@@ -37,7 +37,7 @@ private const val POST_GAME_SECONDS: Int = 7
 class WinSequence<T, Ref : SubjectRef>(
     private val gameHandle: MiniGameHandle,
     private val data: DataContainer<T, Ref>,
-    private val refs: PlayerSubjectRefFactory<Ref>,
+    private val refs: PlayerSubjectRefFactory<Ref?>,
     private val winners: GenericGameResult<Ref>,
     private val status: MiniGameResults.Status,
     private val statsId: CompletableFuture<Optional<UUID>>
@@ -133,7 +133,7 @@ class WinSequence<T, Ref : SubjectRef>(
 
             var winnerName = winner.getNameFor(player)
 
-            if (winner == ref) {
+            if (ref != null && winner == ref) {
                 playWinSound(player)
 
                 if (winner is TeamRef) {
@@ -143,7 +143,7 @@ class WinSequence<T, Ref : SubjectRef>(
                 playLoseSound(player)
             }
 
-            if (winnerName.getStyle().getColor() == null) {
+            if (winnerName.style.color == null) {
                 winnerName = winnerName.copy().withStyle(ChatFormatting.AQUA)
             }
 

@@ -25,7 +25,7 @@ import work.lclpnet.ap2.game.apocalypse_survival.util.AsSetup
 import work.lclpnet.ap2.game.apocalypse_survival.util.MonsterSpawner
 import work.lclpnet.ap2.game.apocalypse_survival.util.TargetManager
 import work.lclpnet.ap2.game.base.EliminationGameInstance
-import work.lclpnet.ap2.game.util.createFFAStats
+import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.game.util.useTaskDisplay
 import work.lclpnet.ap2.impl.util.TimeHelper
 import work.lclpnet.game.impl.prot.ProtectionTypes
@@ -40,7 +40,7 @@ class ApocalypseSurvivalInstance(gameHandle: MiniGameHandle, level: ServerLevel,
 
     private val random = Random()
     private val targetManager = TargetManager(players(), map, random)
-    private val stats = createFFAStats(winManager, listOf(
+    private val stats = useFFAStats(winManager, listOf(
         DistanceMoved, TimeSurvived
     ))
     private lateinit var spawners: List<MonsterSpawner>

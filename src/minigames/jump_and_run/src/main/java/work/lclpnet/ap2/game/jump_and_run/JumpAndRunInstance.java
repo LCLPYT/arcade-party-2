@@ -31,6 +31,8 @@ import work.lclpnet.ap2.game.data.type.PlayerRef;
 import work.lclpnet.ap2.game.jump_and_run.gen.JumpAndRun;
 import work.lclpnet.ap2.game.jump_and_run.gen.JumpModule;
 import work.lclpnet.ap2.game.player.Participants;
+import work.lclpnet.ap2.game.util.DataContainersKt;
+import work.lclpnet.ap2.game.util.GameDefaultsKt;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointHelper;
@@ -73,7 +75,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
 
     public static final float TARGET_MINUTES = 4.0f;  // target completion time of the jump and run (approximate)
 
-    private final IntScoreDataContainer<ServerPlayer, PlayerRef> data = new IntScoreDataContainer<>(PlayerRef::create);
+    private final IntScoreDataContainer<ServerPlayer, PlayerRef> data = DataContainersKt.useDataContainer(this, IntScoreDataContainer::new);
     private final CollisionDetector collisionDetector = new ChunkedCollisionDetector();
     private final PlayerMovementObserver movementObserver;
     private final List<BlockPos> gateBlocks = new ArrayList<>();
@@ -144,7 +146,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
                 Component.literal("Points").withStyle(YELLOW, BOLD), ObjectiveCriteria.RenderType.INTEGER,
                 StyledFormat.PLAYER_LIST_DEFAULT);
 
-        useScoreboardStatsSync(data, objective);
+        GameDefaultsKt.useScoreboardStatsSync(this, data, objective);
 
         scoreboardManager.setDisplay(DisplaySlot.LIST, objective);
     }

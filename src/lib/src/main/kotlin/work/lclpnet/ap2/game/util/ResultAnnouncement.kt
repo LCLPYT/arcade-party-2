@@ -20,7 +20,7 @@ import kotlin.math.roundToInt
 class ResultAnnouncement<Ref : SubjectRef>(
     private val translations: Translations,
     private val font: FontService,
-    private val refs: PlayerSubjectRefFactory<Ref>,
+    private val refs: PlayerSubjectRefFactory<Ref?>,
     private val order: List<ObjectIntPair<Ref>>,
     entryGetter: Function<Ref, DataEntry<Ref>?>
 ) {
@@ -75,7 +75,7 @@ class ResultAnnouncement<Ref : SubjectRef>(
     private fun sendOwnScoreIfExists(player: ServerPlayer, sepSm: MutableComponent) {
         val ownRef = refs.create(player)
 
-        if (!placement.containsKey(ownRef)) return
+        if (ownRef == null || !placement.containsKey(ownRef)) return
 
         val playerIndex: Int = placement[ownRef]!!
         val entry: DataEntry<Ref> = entryByRef[ownRef]!!

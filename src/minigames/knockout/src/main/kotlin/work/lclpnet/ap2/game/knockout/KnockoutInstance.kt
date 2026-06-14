@@ -29,7 +29,7 @@ import work.lclpnet.ap2.ext.trackDistanceMoved
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.knockout.util.ImpactDetector
-import work.lclpnet.ap2.game.util.createFFAStats
+import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.game.util.useOldCombat
 import work.lclpnet.ap2.impl.actor.GravityFieldActor
 import work.lclpnet.ap2.impl.util.world.CombatIdleManager
@@ -75,7 +75,7 @@ class KnockoutInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
     private lateinit var impactDetector: ImpactDetector
     private lateinit var destroyStageManager: DestroyStageManager
     private lateinit var killTracker: KnockbackKillTracker
-    private val stats = createFFAStats(winManager, listOf(
+    private val stats = useFFAStats(winManager, listOf(
         Kills, DistanceMoved, TimeSurvived, DamageDealt, DamageReceived, ImpactDamageDone, ImpactDamageCaused
     ))
 
