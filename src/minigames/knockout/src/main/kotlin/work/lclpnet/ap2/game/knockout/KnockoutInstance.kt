@@ -27,6 +27,7 @@ import work.lclpnet.ap2.ext.trackDistanceMoved
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.knockout.util.ImpactDetector
+import work.lclpnet.ap2.game.util.useOldCombat
 import work.lclpnet.ap2.impl.actor.GravityFieldActor
 import work.lclpnet.ap2.impl.util.world.CombatIdleManager
 import work.lclpnet.ap2.impl.util.world.DestroyStageManager

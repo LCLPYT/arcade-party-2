@@ -5,7 +5,6 @@ import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.InteractionResult
-import net.minecraft.world.level.GameType
 import org.json.JSONArray
 import org.json.JSONObject
 import work.lclpnet.ap2.ext.*
@@ -18,7 +17,6 @@ import work.lclpnet.ap2.impl.util.TranslationUtil
 import work.lclpnet.ap2.impl.util.effect.ApEffect
 import work.lclpnet.ap2.impl.util.effect.ApEffects
 import work.lclpnet.ap2.impl.util.property.ApMapProperties
-import work.lclpnet.combatctl.impl.CombatStyles
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
@@ -147,14 +145,6 @@ abstract class MapGameInstance(
         activeEffects.clear()
     }
 
-
-    protected fun useSurvivalMode() {
-        gameHandle.playerUtil.setDefaultGameMode(GameType.SURVIVAL)
-    }
-
-    protected fun useOldCombat() {
-        gameHandle.playerUtil.setDefaultCombatStyle(CombatStyles.CLASSIC)
-    }
 
     /**
      * Disables any form of healing. Damage is still allowed.

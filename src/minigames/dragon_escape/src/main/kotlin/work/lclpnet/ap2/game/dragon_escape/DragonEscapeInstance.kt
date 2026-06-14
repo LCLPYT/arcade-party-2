@@ -29,6 +29,7 @@ import work.lclpnet.ap2.game.dragon_escape.kit.WindChargeKit
 import work.lclpnet.ap2.game.kit.KitHandler
 import work.lclpnet.ap2.game.util.GameStartSequence
 import work.lclpnet.ap2.game.util.useAnnouncer
+import work.lclpnet.ap2.game.util.useOldCombat
 import work.lclpnet.ap2.impl.game.PseudoElimination
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer
 import work.lclpnet.ap2.impl.game.data.DoubleScoreDataContainer

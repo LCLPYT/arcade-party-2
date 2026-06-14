@@ -22,6 +22,7 @@ import work.lclpnet.ap2.ext.mc.setBlock
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.util.finaleCompatibleScoreContainer
+import work.lclpnet.ap2.game.util.useOldCombat
 import work.lclpnet.ap2.game.util.useTaskTimer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.map.MapUtil

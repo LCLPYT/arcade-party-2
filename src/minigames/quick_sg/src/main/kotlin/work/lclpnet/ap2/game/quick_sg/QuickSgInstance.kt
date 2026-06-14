@@ -16,6 +16,8 @@ import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.util.teleportToRandomSpawns
+import work.lclpnet.ap2.game.util.useOldCombat
+import work.lclpnet.ap2.game.util.useSurvivalMode
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
 import work.lclpnet.ap2.util.PvpBehavior
 import work.lclpnet.ap2.util.loot.LazyLootContainerManager

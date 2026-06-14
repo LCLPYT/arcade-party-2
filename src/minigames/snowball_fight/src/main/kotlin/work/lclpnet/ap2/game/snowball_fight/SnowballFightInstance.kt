@@ -25,6 +25,8 @@ import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
+import work.lclpnet.ap2.game.util.useOldCombat
+import work.lclpnet.ap2.game.util.useSurvivalMode
 import work.lclpnet.ap2.impl.util.world.SpawnFinder
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap

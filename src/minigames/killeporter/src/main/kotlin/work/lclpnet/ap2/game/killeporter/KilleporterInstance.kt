@@ -27,6 +27,7 @@ import work.lclpnet.ap2.game.kit.KitHandler
 import work.lclpnet.ap2.game.kit.PrefabKitLoader
 import work.lclpnet.ap2.game.util.GameStartSequence
 import work.lclpnet.ap2.game.util.useAnnouncer
+import work.lclpnet.ap2.game.util.useSurvivalMode
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.util.loot.LazyLootContainerManager
 import work.lclpnet.ap2.util.loot.LootEntry

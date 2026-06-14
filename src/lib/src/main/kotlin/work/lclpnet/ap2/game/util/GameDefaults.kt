@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game.util
 
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.damagesource.DamageTypes
+import net.minecraft.world.level.GameType
 import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.game.team.Team
 import work.lclpnet.ap2.api.game.team.TeamManager
@@ -9,10 +10,13 @@ import work.lclpnet.ap2.ext.allPlayers
 import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.game.MiniGameInstance
+import work.lclpnet.ap2.game.player.ParticipantListener
 import work.lclpnet.ap2.impl.game.data.type.FFAGameResult
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.game.data.type.TeamGameResult
 import work.lclpnet.ap2.impl.game.data.type.TeamRef
+import work.lclpnet.combatctl.impl.CombatStyles
+import work.lclpnet.game.impl.prot.MutableProtectionConfig
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.util.ProtectorUtils
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
@@ -115,4 +119,38 @@ fun MiniGameInstance.useTeamWinManager(
     )
 
     return WinManager(gameHandle, map, winData)
+}
+
+/**
+ * Sets the default player game mode to survival mode.
+ * Player game modes are updated by [work.lclpnet.ap2.impl.game.PlayerUtil.resetPlayer].
+ * Should be called before [configureDefaults] is called.
+ * For games extending [work.lclpnet.ap2.game.base.MapGameInstance], call this in the class initializer.
+ */
+fun MiniGameInstance.useSurvivalMode() {
+    gameHandle.playerUtil.setDefaultGameMode(GameType.SURVIVAL)
+}
+
+/**
+ * Sets the combat style to classic combat.
+ * Player combat styles are updated by [work.lclpnet.ap2.impl.game.PlayerUtil.resetPlayer].
+ * Should be called before [configureDefaults] is called.
+ * For games extending [work.lclpnet.ap2.game.base.MapGameInstance], call this in the class initializer.
+ */
+fun MiniGameInstance.useOldCombat() {
+    gameHandle.playerUtil.setDefaultCombatStyle(CombatStyles.CLASSIC)
+}
+
+/**
+ * Resets the protector and applies new configuration using the given closure.
+ * @param configure The protector configuration function.
+ */
+fun MiniGameInstance.useProtector(configure: MutableProtectionConfig.() -> Unit) = gameHandle.protect {
+    configure(it)
+}
+
+fun useLastRemainingParticipantListener(
+    winManager: WinManager<ServerPlayer, PlayerRef>
+): ParticipantListener = {
+    winManager.checkForLastRemaining()
 }

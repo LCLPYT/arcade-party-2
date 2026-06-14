@@ -38,6 +38,8 @@ import work.lclpnet.ap2.game.kit.KitHandler
 import work.lclpnet.ap2.game.kit.hasKitEquipped
 import work.lclpnet.ap2.game.team.getWoolBlock
 import work.lclpnet.ap2.game.util.createTimer
+import work.lclpnet.ap2.game.util.useOldCombat
+import work.lclpnet.ap2.game.util.useSurvivalMode
 import work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor
 import work.lclpnet.ap2.impl.util.TimeHelper
 import work.lclpnet.ap2.impl.util.math.MathUtil

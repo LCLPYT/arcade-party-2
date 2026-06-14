@@ -7,13 +7,10 @@ import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.MiniGameInstance
-import work.lclpnet.ap2.game.player.ParticipantListener
-import work.lclpnet.ap2.game.util.configureDefaults
-import work.lclpnet.ap2.game.util.useFFAWinManager
-import work.lclpnet.ap2.game.util.useStartup
-import work.lclpnet.ap2.game.util.useTaskTimer
+import work.lclpnet.ap2.game.util.*
 import work.lclpnet.ap2.impl.game.data.DoubleScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.util.ResetWorldModifier
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -28,8 +25,10 @@ class RapidRunnerInstance(
 
     val data = DoubleScoreDataContainer(PlayerRef::create)
     val winManager = useFFAWinManager(null) { data }
+    override val participantListener = useLastRemainingParticipantListener(winManager)
 
     override fun start() {
+        useSurvivalMode()
         configureDefaults()
 
         for (player in allPlayers()) {
@@ -42,23 +41,30 @@ class RapidRunnerInstance(
     private fun go() {
         walls.undo()
 
-        val spawn = level.respawnData.pos().center
-
         runEveryTick {
-            for (player in players()) {
-                val dist = player.position().subtract(spawn).horizontalDistance()
-                data.setScore(player, dist)
-            }
+            updateScore()
         }
 
         useTaskTimer(DURATION).whenDone {
             winManager.complete()
         }
+        
+        useProtector { 
+            allowAll()
+            
+            ProtectionTypes.ALLOW_DAMAGE.disallow(this) { victim, source ->
+                victim is ServerPlayer && source.entity is ServerPlayer
+            }
+        }
     }
 
-    override val participantListener = object : ParticipantListener {
-        override fun participantRemoved(player: ServerPlayer) {
-            winManager.checkForLastRemaining()
+    private fun updateScore() {
+        val spawn = level.respawnData.pos().center
+
+        for (player in players()) {
+            val dist = player.position().subtract(spawn).horizontalDistance()
+
+            data.setScore(player, dist)
         }
     }
 }

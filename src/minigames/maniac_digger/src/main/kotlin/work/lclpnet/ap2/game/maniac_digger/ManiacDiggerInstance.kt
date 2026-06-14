@@ -22,6 +22,7 @@ import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.maniac_digger.data.MdPipe
+import work.lclpnet.ap2.game.util.useSurvivalMode
 import work.lclpnet.ap2.game.util.useTaskDisplay
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
