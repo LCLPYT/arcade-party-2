@@ -28,7 +28,7 @@ import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.game.util.useAnnouncer
 import work.lclpnet.ap2.game.util.useSurvivalMode
 import work.lclpnet.ap2.impl.util.ParticleHelper
-import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager
+import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.util.BossBarTimer
 import work.lclpnet.kibu.access.VelocityModifier

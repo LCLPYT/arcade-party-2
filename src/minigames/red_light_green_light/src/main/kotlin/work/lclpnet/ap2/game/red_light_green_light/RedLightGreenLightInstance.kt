@@ -26,7 +26,7 @@ import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.Fireworks
 import work.lclpnet.ap2.impl.util.movement.MovementListener
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
-import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager
+import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.map.MapUtils

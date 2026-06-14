@@ -24,7 +24,7 @@ import net.minecraft.world.scores.PlayerTeam
 import org.slf4j.Logger
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.impl.util.ItemHelper
-import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager
+import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.gaco.math.AffineIntMatrix
 import work.lclpnet.kibu.nbt.FabricNbtConversion

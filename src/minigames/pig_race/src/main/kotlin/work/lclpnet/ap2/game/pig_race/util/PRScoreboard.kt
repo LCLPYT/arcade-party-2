@@ -11,7 +11,7 @@ import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar
 import work.lclpnet.ap2.impl.util.scoreboard.DynamicScoreHandle
 import work.lclpnet.ap2.impl.util.scoreboard.DynamicScoreboardObjective
 import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout
-import work.lclpnet.ap2.util.setupDynamicSidebar
+import work.lclpnet.ap2.util.scoreboard.setupDynamicSidebarObjective
 import work.lclpnet.kibu.translate.text.FormatWrapper.styled
 
 class PRScoreboard(
@@ -27,7 +27,7 @@ class PRScoreboard(
     private var roundHandle: DynamicScoreHandle? = null
 
     fun setup() {
-        objective = setupDynamicSidebar(gameHandle.scoreboardManager, gameHandle.gameInfo.titleKey)
+        objective = setupDynamicSidebarObjective(gameHandle.scoreboardManager, gameHandle.gameInfo.titleKey)
 
         if (progress.rounds <= 1) return
 

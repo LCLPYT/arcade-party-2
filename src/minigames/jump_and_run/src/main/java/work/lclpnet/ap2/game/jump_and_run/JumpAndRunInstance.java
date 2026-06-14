@@ -40,7 +40,7 @@ import work.lclpnet.ap2.impl.util.checkpoint.CheckpointManager;
 import work.lclpnet.ap2.impl.util.handler.Visibility;
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager;
-import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.gaco.collisions.ChunkedCollisionDetector;
 import work.lclpnet.gaco.collisions.CollisionDetector;
 import work.lclpnet.gaco.collisions.movement.PlayerMovementObserver;

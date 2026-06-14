@@ -1,16 +1,15 @@
-package work.lclpnet.ap2.util
+package work.lclpnet.ap2.util.scoreboard
 
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.numbers.StyledFormat
 import net.minecraft.world.scores.DisplaySlot
 import work.lclpnet.ap2.ApConstants
-import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.ap2.impl.util.scoreboard.DynamicScoreboardObjective
 import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout
 import work.lclpnet.ap2.impl.util.scoreboard.TranslatedScoreboardObjective
 
-fun setupSidebar(
+fun setupTranslatedSidebarObjective(
     scoreboardManager: CustomScoreboardManager,
     titleTranslationKey: String,
 ): TranslatedScoreboardObjective {
@@ -35,7 +34,7 @@ fun setupSidebar(
     return objective
 }
 
-fun setupDynamicSidebar(scoreboardManager: CustomScoreboardManager, titleTranslationKey: String): DynamicScoreboardObjective {
+fun setupDynamicSidebarObjective(scoreboardManager: CustomScoreboardManager, titleTranslationKey: String): DynamicScoreboardObjective {
     val title = scoreboardManager.translations.translateText(titleTranslationKey)
         .formatted(ChatFormatting.AQUA, ChatFormatting.BOLD)
 
