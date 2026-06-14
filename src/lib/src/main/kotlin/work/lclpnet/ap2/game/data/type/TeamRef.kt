@@ -1,58 +1,45 @@
-package work.lclpnet.ap2.impl.game.data.type;
+package work.lclpnet.ap2.game.data.type
 
-import net.minecraft.core.RegistryAccess;
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
-import work.lclpnet.ap2.api.game.data.SubjectRef;
-import work.lclpnet.ap2.api.game.team.TeamKey;
-import work.lclpnet.ap2.api.game.team.TeamKeyable;
-import work.lclpnet.ap2.impl.util.BlockHelper;
-import work.lclpnet.ap2.impl.util.ColorUtil;
-import work.lclpnet.kibu.translate.Translations;
+import net.minecraft.core.RegistryAccess
+import net.minecraft.network.chat.Component
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.item.ItemStack
+import work.lclpnet.ap2.api.game.data.SubjectRef
+import work.lclpnet.ap2.api.game.team.TeamKey
+import work.lclpnet.ap2.api.game.team.TeamKeyable
+import work.lclpnet.ap2.impl.util.BlockHelper
+import work.lclpnet.ap2.impl.util.ColorUtil
+import work.lclpnet.kibu.translate.Translations
+import java.util.*
 
-import java.util.Objects;
+class TeamRef(
+    private val key: TeamKey,
+    private val translations: Translations,
+) : SubjectRef, TeamKeyable {
 
-public class TeamRef implements SubjectRef, TeamKeyable {
-
-    private final TeamKey key;
-    private final Translations translations;
-
-    public TeamRef(TeamKey key, Translations translations) {
-        this.key = key;
-        this.translations = translations;
+    override fun getNameFor(viewer: ServerPlayer): Component {
+        return key.getDisplayName(translations).translateFor(viewer)
     }
 
-    @Override
-    public Component getNameFor(ServerPlayer viewer) {
-        return key.getDisplayName(translations).translateFor(viewer);
+    override fun getIconStackFor(registryManager: RegistryAccess, viewer: ServerPlayer): ItemStack {
+        return ItemStack(BlockHelper.getWool(ColorUtil.closestEntityDyeColor(key.color())))
     }
 
-    @Override
-    public ItemStack getIconStackFor(RegistryAccess registryManager, ServerPlayer viewer) {
-        return new ItemStack(BlockHelper.getWool(ColorUtil.closestEntityDyeColor(key.color())));
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || javaClass != other.javaClass) return false
+        val teamRef = other as TeamRef
+        return key == teamRef.key
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        TeamRef teamRef = (TeamRef) o;
-        return Objects.equals(key, teamRef.key);
+    override fun hashCode(): Int {
+        return Objects.hash(key)
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(key);
+    override fun key(): TeamKey {
+        return key
     }
 
-    @Override
-    public TeamKey key() {
-        return key;
-    }
-
-    @Override
-    public String getIdentifier() {
-        return key.id();
-    }
+    override val identifier: String
+        get() = key.id()
 }

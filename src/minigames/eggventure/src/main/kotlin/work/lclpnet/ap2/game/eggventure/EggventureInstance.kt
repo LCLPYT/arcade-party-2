@@ -39,10 +39,11 @@ import work.lclpnet.ap2.ext.scheduler
 import work.lclpnet.ap2.ext.translations
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
+import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.util.GameStartSequence
+import work.lclpnet.ap2.game.util.createStats
 import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.game.util.finaleCompatibleScoreContainer
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.tags.PlayerHeadTags
 import work.lclpnet.ap2.impl.util.ApRegistries
@@ -99,7 +100,7 @@ class EggventureInstance(
 ) : FFAGameInstance(gameHandle, level, map) {
 
     override val data = finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
-    private val stats = createStats(data, EggsStolen, EggsLost)
+    private val stats = createStats(winManager, data, EggsStolen, EggsLost)
     private val random = Random()
 
     override fun prepare() {

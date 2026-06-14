@@ -18,12 +18,12 @@ import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
 import org.json.JSONArray
 import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.fine_tuning.melody.FakeNoteBlockPlayer
 import work.lclpnet.ap2.game.fine_tuning.melody.Melody
 import work.lclpnet.ap2.game.fine_tuning.melody.Note
 import work.lclpnet.ap2.game.fine_tuning.melody.PlayMelodyTask
 import work.lclpnet.ap2.game.util.WinManager
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.ColorUtil
 import work.lclpnet.ap2.impl.util.SoundHelper
@@ -199,7 +199,7 @@ class StagePhase(
     private fun announceBest() {
         val bestMelody = records.getBestMelody(melodyNumber)
         val bestRef = bestMelody.playerRef
-        val name: MutableComponent = Component.literal(bestRef.name()).withStyle(ChatFormatting.GREEN)
+        val name: MutableComponent = Component.literal(bestRef.name).withStyle(ChatFormatting.GREEN)
 
         val server = gameHandle.server
         SoundHelper.playSound(server, SoundEvents.UI_LOOM_TAKE_RESULT, SoundSource.NEUTRAL, 0.5f, 1f)
@@ -236,7 +236,7 @@ class StagePhase(
     private fun announceWorst() {
         val worstMelody = records.getWorstMelody(melodyNumber)
         val worstRef = worstMelody.playerRef
-        val name: MutableComponent = Component.literal(worstRef.name()).withStyle(ChatFormatting.RED)
+        val name: MutableComponent = Component.literal(worstRef.name).withStyle(ChatFormatting.RED)
 
         val server = gameHandle.server
         SoundHelper.playSound(server, SoundEvents.UI_LOOM_TAKE_RESULT, SoundSource.NEUTRAL, 0.5f, 0f)
@@ -265,7 +265,7 @@ class StagePhase(
             Title.get(player).title(name, Component.empty(), 5, 30, 5)
         }
 
-        val player = server.playerList.getPlayer(ref.uuid()) ?: return null
+        val player = server.playerList.getPlayer(ref.uuid) ?: return null
 
         player.teleportTo(
             world,

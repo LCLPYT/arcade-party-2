@@ -2,7 +2,7 @@ package work.lclpnet.ap2.api.stats
 
 import net.minecraft.server.level.ServerPlayer
 import work.lclpnet.ap2.api.game.data.GenericGameResult
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.data.type.PlayerRef
 
 class FFAStatsManager(stats: StatSet) : BaseStatsManager<ServerPlayer, PlayerRef>(stats, PlayerRef::create), StatsManager<PlayerRef> {
 

@@ -26,10 +26,10 @@ import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.data.IntDataContainer
+import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.fine_tuning.melody.*
 import work.lclpnet.ap2.game.util.Announcer
-import work.lclpnet.ap2.impl.game.data.IntDataContainer
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.util.ApRegistries
 import work.lclpnet.ap2.impl.util.BookUtil
 import work.lclpnet.ap2.impl.util.heads.PlayerHeads

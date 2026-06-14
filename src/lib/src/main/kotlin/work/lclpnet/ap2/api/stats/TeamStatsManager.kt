@@ -4,9 +4,9 @@ import net.minecraft.server.level.ServerPlayer
 import work.lclpnet.ap2.api.game.data.GenericGameResult
 import work.lclpnet.ap2.api.game.data.SubjectRefFactory
 import work.lclpnet.ap2.api.game.team.Team
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
-import work.lclpnet.ap2.impl.game.data.type.TeamGameResult
-import work.lclpnet.ap2.impl.game.data.type.TeamRef
+import work.lclpnet.ap2.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.data.type.TeamGameResult
+import work.lclpnet.ap2.game.data.type.TeamRef
 
 class TeamStatsManager(
     teamStats: StatSet,

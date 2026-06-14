@@ -7,7 +7,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.server.level.ServerPlayer;
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
+import work.lclpnet.ap2.game.data.type.PlayerRef;
 import work.lclpnet.ap2.mode_default.util.ScoreManager;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.cmd.type.KibuCommand;

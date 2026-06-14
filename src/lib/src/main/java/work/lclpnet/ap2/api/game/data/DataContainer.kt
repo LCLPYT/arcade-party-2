@@ -1,32 +1,28 @@
-package work.lclpnet.ap2.api.game.data;
+package work.lclpnet.ap2.api.game.data
 
-import com.google.common.collect.AbstractIterator;
-import it.unimi.dsi.fastutil.objects.ObjectIntPair;
-import work.lclpnet.ap2.impl.util.RankUtil;
+import com.google.common.collect.AbstractIterator
+import it.unimi.dsi.fastutil.objects.ObjectIntPair
+import work.lclpnet.ap2.impl.util.RankUtil
+import java.util.*
+import java.util.stream.Stream
+import java.util.stream.StreamSupport
 
-import java.util.Iterator;
-import java.util.Optional;
-import java.util.Set;
-import java.util.Spliterators;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
+interface DataContainer<T, Ref : SubjectRef> {
 
-public interface DataContainer<T, Ref extends SubjectRef> {
+    fun getEntry(subject: T): DataEntry<Ref>?
 
-    Optional<DataEntry<Ref>> getEntry(T subject);
+    fun getEntry(ref: Ref): DataEntry<Ref>?
 
-    Optional<DataEntry<Ref>> getEntry(Ref ref);
-
-    Stream<? extends DataEntry<Ref>> streamOrderedEntries();
+    fun streamOrderedEntries(): Stream<out DataEntry<Ref>>
 
     /**
      * Adds a player to the container.
      * Can be used to add the winner for data containers that track order.
-     * In the case of score containers, this is probably equivalent to calling {@link #identityIfAbsent(Object)}.
+     * In the case of score containers, this is probably equivalent to calling [identityIfAbsent].
      * For other containers, e.g. the EliminationDataContainer, this is different though, as it modifies the order.
      * @param subject The subject.
      */
-    void add(T subject);
+    fun add(subject: T)
 
     /**
      * Sets the identity value for the given subject, if it doesn't exist in the container yet.
@@ -34,54 +30,59 @@ public interface DataContainer<T, Ref extends SubjectRef> {
      * For some containers, e.g. the EliminationDataContainer, this may be a noop, as they need to track the order.
      * @param subject The subject.
      */
-    void identityIfAbsent(T subject);
+    fun identityIfAbsent(subject: T)
 
-    void clear();
+    fun clear()
 
-    DataContainer<T, Ref> copy();
+    fun copy(): DataContainer<T, Ref>
 
-    default boolean isEmpty() {
-        return streamEntriesRanked().findAny().isEmpty();
+    val isEmpty: Boolean
+        get() = streamEntriesRanked().findAny().isEmpty
+
+    fun streamEntriesRanked(): Stream<Set<ObjectIntPair<Ref>>> = RankUtil.rank(
+        { streamRankedEntries() },
+        { it.rightInt() }
+    )
+
+    fun streamRankedEntries(): Stream<ObjectIntPair<Ref>> {
+        return StreamSupport.stream(
+            Spliterators.spliteratorUnknownSize(
+                this.rankedEntries, 0
+            ), false
+        )
     }
 
-    default Stream<Set<ObjectIntPair<Ref>>> streamEntriesRanked() {
-        return RankUtil.rank(this::streamRankedEntries, ObjectIntPair::rightInt);
-    }
+    val rankedEntries: MutableIterator<ObjectIntPair<Ref>>
+        get() {
+            val parent: MutableIterator<DataEntry<Ref>> = streamOrderedEntries().iterator()
 
-    default Stream<ObjectIntPair<Ref>> streamRankedEntries() {
-        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(getRankedEntries(), 0), false);
-    }
+            return object : AbstractIterator<ObjectIntPair<Ref>>() {
+                var rank: Int = 1
+                var skippedRanks: Int = 0
+                var prevEntry: DataEntry<Ref>? = null
 
-    default Iterator<ObjectIntPair<Ref>> getRankedEntries() {
-        var parent = streamOrderedEntries().iterator();
-
-        return new AbstractIterator<>() {
-            int rank = 1;
-            int skippedRanks = 0;
-            DataEntry<Ref> prevEntry = null;
-
-            @Override
-            protected ObjectIntPair<Ref> computeNext() {
-                if (!parent.hasNext()) {
-                    endOfData();
-                    return null;
-                }
-
-                DataEntry<Ref> dataEntry = parent.next();
-
-                if (prevEntry != null) {
-                    if (prevEntry.scoreEquals(dataEntry)) {
-                        skippedRanks++;
-                    } else {
-                        rank = rank + skippedRanks + 1;
-                        skippedRanks = 0;
+                override fun computeNext(): ObjectIntPair<Ref>? {
+                    if (!parent.hasNext()) {
+                        endOfData()
+                        return null
                     }
+
+                    val dataEntry = parent.next()
+                    val prevEntry = this.prevEntry
+
+                    if (prevEntry != null) {
+                        if (prevEntry.scoreEquals(dataEntry)) {
+                            skippedRanks++
+                        } else {
+                            rank += skippedRanks + 1
+                            skippedRanks = 0
+                        }
+                    }
+
+                    this.prevEntry = dataEntry
+
+                    return ObjectIntPair.of(dataEntry.subject, rank)
                 }
-
-                prevEntry = dataEntry;
-
-                return ObjectIntPair.of(dataEntry.subject(), rank);
             }
-        };
-    }
+        }
 }

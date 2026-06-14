@@ -2,7 +2,7 @@ package work.lclpnet.ap2.game.pvp_tournament.gen
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.data.type.PlayerRef
 import java.util.*
 
 class TournamentTest {

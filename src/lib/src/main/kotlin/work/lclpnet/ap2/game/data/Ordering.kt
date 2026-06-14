@@ -1,53 +1,51 @@
-package work.lclpnet.ap2.impl.game.data;
+package work.lclpnet.ap2.game.data
 
-import java.util.Comparator;
-import java.util.Optional;
-import java.util.function.ToDoubleFunction;
-import java.util.function.ToIntFunction;
-import java.util.stream.DoubleStream;
-import java.util.stream.IntStream;
+import java.util.*
+import java.util.function.ToDoubleFunction
+import java.util.function.ToIntFunction
+import java.util.stream.DoubleStream
+import java.util.stream.IntStream
 
-public enum Ordering {
-
+enum class Ordering {
     DESCENDING,
     ASCENDING;
 
-    public Optional<Integer> best(IntStream stream) {
-        return (switch (this) {
-            case DESCENDING -> stream.max();
-            case ASCENDING -> stream.min();
-        }).stream().boxed().findAny();
+    fun best(stream: IntStream): Optional<Int> {
+        return (when (this) {
+            DESCENDING -> stream.max()
+            ASCENDING -> stream.min()
+        }).stream().boxed().findAny()
     }
 
-    public Optional<Double> best(DoubleStream stream) {
-        return (switch (this) {
-            case DESCENDING -> stream.max();
-            case ASCENDING -> stream.min();
-        }).stream().boxed().findAny();
+    fun best(stream: DoubleStream): Optional<Double> {
+        return (when (this) {
+            DESCENDING -> stream.max()
+            ASCENDING -> stream.min()
+        }).stream().boxed().findAny()
     }
 
-    public Ordering opposite() {
-        return switch (this) {
-            case DESCENDING -> ASCENDING;
-            case ASCENDING -> DESCENDING;
-        };
+    fun opposite(): Ordering {
+        return when (this) {
+            DESCENDING -> ASCENDING
+            ASCENDING -> DESCENDING
+        }
     }
 
-    public <T> Comparator<T> orderInt(ToIntFunction<T> keyExtractor) {
-        var comparator = Comparator.comparingInt(keyExtractor);
+    fun <T> orderInt(keyExtractor: ToIntFunction<T>): Comparator<T> {
+        val comparator = Comparator.comparingInt(keyExtractor)
 
-        return switch (this) {
-            case DESCENDING -> comparator.reversed();
-            case ASCENDING -> comparator;
-        };
+        return when (this) {
+            DESCENDING -> comparator.reversed()
+            ASCENDING -> comparator
+        }
     }
 
-    public <T> Comparator<T> orderDouble(ToDoubleFunction<T> keyExtractor) {
-        var comparator = Comparator.comparingDouble(keyExtractor);
+    fun <T> orderDouble(keyExtractor: ToDoubleFunction<T>): Comparator<T> {
+        val comparator = Comparator.comparingDouble(keyExtractor)
 
-        return switch (this) {
-            case DESCENDING -> comparator.reversed();
-            case ASCENDING -> comparator;
-        };
+        return when (this) {
+            DESCENDING -> comparator.reversed()
+            ASCENDING -> comparator
+        }
     }
 }

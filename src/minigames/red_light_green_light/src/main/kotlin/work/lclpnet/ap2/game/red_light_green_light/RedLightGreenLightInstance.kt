@@ -18,9 +18,10 @@ import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
+import work.lclpnet.ap2.game.data.OrderedDataContainer
+import work.lclpnet.ap2.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.util.createStats
 import work.lclpnet.ap2.game.util.useTaskDisplay
-import work.lclpnet.ap2.impl.game.data.OrderedDataContainer
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.Fireworks
 import work.lclpnet.ap2.impl.util.movement.MovementListener
@@ -60,7 +61,7 @@ class RedLightGreenLightInstance(gameHandle: MiniGameHandle, level: ServerLevel,
     private val moved = HashSet<UUID>()
     private val trafficLights = ArrayList<TrafficLight>()
     private val movementDetector = RLGLMovementDetector()
-    private val stats = createStats(Resets, YellowMovingTime, ClosestStopTime, DistanceReset, AvgYellowTimeUsage)
+    private val stats = createStats(winManager, Resets, YellowMovingTime, ClosestStopTime, DistanceReset, AvgYellowTimeUsage)
     private val rlglStats = RedLightGreenLightStats(stats)
     private val lastMovingTick = HashMap<UUID, Int>()
     private val pendingStopTime = HashMap<UUID, Float>()

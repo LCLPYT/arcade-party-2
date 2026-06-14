@@ -1,149 +1,134 @@
-package work.lclpnet.ap2.impl.game.data;
+package work.lclpnet.ap2.game.data
 
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.api.event.IntScoreEvent;
-import work.lclpnet.ap2.api.game.data.*;
-import work.lclpnet.ap2.impl.game.data.entry.IntScoreDataEntry;
-import work.lclpnet.ap2.impl.game.data.entry.ScoreView;
-
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
+import work.lclpnet.ap2.api.game.data.*
+import work.lclpnet.ap2.game.data.entry.IntScoreDataEntry
+import java.util.*
+import java.util.stream.IntStream
+import java.util.stream.Stream
 
 /**
  * A data container that orders the subjects by their integer score.
  * The scores can still be updated after a subject was added.
  * The subject with the highest score is the winner.
  */
-public class IntScoreDataContainer<T, Ref extends SubjectRef> extends BaseDataContainer<T, Ref> implements IntDataContainer<T, Ref>  {
+class IntScoreDataContainer<T, Ref : SubjectRef> @JvmOverloads constructor(
+    refs: SubjectRefFactory<T, Ref>,
+    val ordering: Ordering = Ordering.DESCENDING,
+    private val detailKey: String? = null
+) : BaseDataContainer<T, Ref>(refs), IntDataContainer<T, Ref> {
+    private val scoreMap = Object2IntOpenHashMap<Ref>()
+    private val listeners = ArrayList<IntScoreEvent<T>>()
 
-    private final Object2IntMap<Ref> scoreMap = new Object2IntOpenHashMap<>();
-    private final List<IntScoreEvent<T>> listeners = new ArrayList<>();
-    private final Ordering ordering;
-    private final @Nullable String detailKey;
+    override fun setScore(subject: T, score: Int) {
+        val ref = refs.create(subject)
 
-    public IntScoreDataContainer(SubjectRefFactory<T, Ref> refs) {
-        this(refs, Ordering.DESCENDING);
+        setScore(ref, score)
+
+        for (listener in listeners) {
+            listener.accept(subject, score)
+        }
     }
 
-    public IntScoreDataContainer(SubjectRefFactory<T, Ref> refs, Ordering ordering) {
-        this(refs, ordering, null);
+    @Synchronized
+    fun setScore(ref: Ref, score: Int) {
+        scoreMap.put(ref, score)
     }
 
-    public IntScoreDataContainer(SubjectRefFactory<T, Ref> refs, Ordering ordering, @Nullable String detailKey) {
-        super(refs);
-        this.ordering = Objects.requireNonNull(ordering);
-        this.detailKey = detailKey;
+    override fun addScore(subject: T, add: Int) {
+        val key = refs.create(subject)
+
+        val score = addScore(key, add)
+
+        for (listener in listeners) {
+            listener.accept(subject, score)
+        }
     }
 
-    @Override
-    public void setScore(T subject, int score) {
-        Ref ref = refs.create(subject);
+    @Synchronized
+    fun addScore(ref: Ref, add: Int): Int =
+        scoreMap.compute(ref) { _, score: Int? -> (score ?: 0) + add }!!
 
-        setScore(ref, score);
+    override fun getScore(subject: T): Int =
+        getScore(refs.create(subject))
 
-        listeners.forEach(listener -> listener.accept(subject, score));
-    }
+    @Synchronized
+    fun getScore(ref: Ref): Int =
+        scoreMap.computeIfAbsent(ref) { _ -> 0 }
 
-    public synchronized void setScore(Ref ref, int score) {
-        scoreMap.put(ref, score);
-    }
-
-    @Override
-    public void addScore(T subject, int add) {
-        Ref key = refs.create(subject);
-
-        int score = addScore(key, add);
-
-        listeners.forEach(listener -> listener.accept(subject, score));
-    }
-
-    public synchronized int addScore(Ref ref, int add) {
-        return scoreMap.compute(ref, (_, score) -> (score != null ? score : 0) + add);
-    }
-
-    @Override
-    public int getScore(T subject) {
-        return getScore(refs.create(subject));
-    }
-
-    public synchronized @NotNull Integer getScore(Ref ref) {
-        return scoreMap.computeIfAbsent(ref, _ -> 0);
-    }
-
-    @Override
-    public synchronized Optional<DataEntry<Ref>> getEntry(Ref ref) {
+    @Synchronized
+    override fun getEntry(ref: Ref): DataEntry<Ref>? {
         if (!scoreMap.containsKey(ref)) {
-            return Optional.empty();
+            return null
         }
 
-        int score = scoreMap.getInt(ref);
+        val score = scoreMap.getInt(ref)
 
-        return Optional.of(new IntScoreDataEntry<>(ref, score, detailKey));
+        return IntScoreDataEntry(ref, score, detailKey)
     }
 
-    @Override
-    public synchronized Stream<IntScoreDataEntry<Ref>> streamOrderedEntries() {
+    @Synchronized
+    override fun streamOrderedEntries(): Stream<IntScoreDataEntry<Ref>> {
         return scoreMap.object2IntEntrySet().stream()
-                .map(e -> new IntScoreDataEntry<>(e.getKey(), e.getIntValue(), detailKey))
-                .sorted(ordering.orderInt(ScoreView::score));
+            .map { entry ->
+                IntScoreDataEntry(
+                    entry.key,
+                    entry.intValue,
+                    detailKey
+                )
+            }
+            .sorted(ordering.orderInt { entry -> entry.score })
     }
 
-    @Override
-    public void add(T subject) {
-        identityIfAbsent(subject);
+    override fun add(subject: T) {
+        identityIfAbsent(subject)
     }
 
-    @Override
-    public void identityIfAbsent(T subject) {
-        addScore(subject, 0);
+    override fun identityIfAbsent(subject: T) {
+        addScore(subject, 0)
     }
 
-    @Override
-    public synchronized void clear() {
-        scoreMap.clear();
+    @Synchronized
+    override fun clear() {
+        scoreMap.clear()
     }
 
-    public synchronized Optional<Integer> getBestScore() {
-        return ordering.best(scores());
+    @get:Synchronized
+    val bestScore: Optional<Int>
+        get() = ordering.best(scores())
+
+    @get:Synchronized
+    val worstScore: Optional<Int>
+        get() = ordering.opposite().best(scores())
+
+    @Synchronized
+    private fun scores(): IntStream =
+        scoreMap.values.intStream()
+
+    @Synchronized
+    fun getBestSubjects(resolver: SubjectRefResolver<T, Ref>): Set<T> {
+        val best = this.bestScore
+
+        if (best.isEmpty) return emptySet()
+
+        val bestScore = best.get()
+
+        return scoreMap.keys
+            .filter { ref: Ref -> scoreMap.getInt(ref) == bestScore }
+            .mapNotNull { ref: Ref -> resolver.resolve(ref) }
+            .toSet()
     }
 
-    public synchronized Optional<Integer> getWorstScore() {
-        return ordering.opposite().best(scores());
+    override fun register(listener: IntScoreEvent<T>) {
+        listeners.add(listener)
     }
 
-    private synchronized IntStream scores() {
-        return scoreMap.values().intStream();
-    }
+    @Synchronized
+    override fun copy(): DataContainer<T, Ref> {
+        val copy = IntScoreDataContainer(refs, ordering, detailKey)
 
-    public synchronized Set<T> getBestSubjects(SubjectRefResolver<T, Ref> resolver) {
-        Optional<Integer> best = getBestScore();
+        copy.scoreMap.putAll(this.scoreMap)
 
-        if (best.isEmpty()) return Set.of();
-
-        final int bestScore = best.get();
-
-        return scoreMap.keySet().stream()
-                .filter(ref -> scoreMap.getInt(ref) == bestScore)
-                .map(resolver::resolve)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toUnmodifiableSet());
-    }
-
-    @Override
-    public void register(@NotNull IntScoreEvent<T> listener) {
-        listeners.add(Objects.requireNonNull(listener));
-    }
-
-    @Override
-    public synchronized DataContainer<T, Ref> copy() {
-        var copy = new IntScoreDataContainer<>(refs, ordering, detailKey);
-        copy.scoreMap.putAll(this.scoreMap);
-
-        return copy;
+        return copy
     }
 }

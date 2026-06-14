@@ -1,19 +1,15 @@
-package work.lclpnet.ap2.api.game.data;
+package work.lclpnet.ap2.api.game.data
 
-import it.unimi.dsi.fastutil.objects.ObjectIntPair;
-import org.jetbrains.annotations.NotNull;
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
+import it.unimi.dsi.fastutil.objects.ObjectIntPair
+import work.lclpnet.ap2.game.data.type.PlayerRef
 
-import java.util.List;
-import java.util.Set;
+interface GenericGameResult<Ref : SubjectRef> {
 
-public interface GenericGameResult<Ref extends SubjectRef> {
+    val winningPlayers: Set<PlayerRef>
 
-    @NotNull Set<@NotNull PlayerRef> getWinningPlayers();
+    val winningSubjects: Set<Ref>
 
-    @NotNull Set<@NotNull Ref> getWinningSubjects();
+    val playerResults: List<ObjectIntPair<PlayerRef>>
 
-    @NotNull List<@NotNull ObjectIntPair<@NotNull PlayerRef>> getPlayerResults();
-
-    @NotNull List<@NotNull ObjectIntPair<@NotNull Ref>> getSubjectResults();
+    val subjectResults: List<ObjectIntPair<Ref>>
 }

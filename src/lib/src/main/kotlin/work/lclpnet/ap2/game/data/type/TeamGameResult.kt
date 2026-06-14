@@ -1,88 +1,57 @@
-package work.lclpnet.ap2.impl.game.data.type;
+package work.lclpnet.ap2.game.data.type
 
-import it.unimi.dsi.fastutil.objects.ObjectIntPair;
-import net.minecraft.server.level.ServerPlayer;
-import org.jetbrains.annotations.NotNull;
-import org.jspecify.annotations.NonNull;
-import work.lclpnet.ap2.api.game.data.DataContainer;
-import work.lclpnet.ap2.api.game.data.GenericGameResult;
-import work.lclpnet.ap2.api.game.data.SubjectRefResolver;
-import work.lclpnet.ap2.api.game.team.Team;
+import it.unimi.dsi.fastutil.objects.ObjectIntPair
+import work.lclpnet.ap2.api.game.data.DataContainer
+import work.lclpnet.ap2.api.game.data.GenericGameResult
+import work.lclpnet.ap2.api.game.data.SubjectRefResolver
+import work.lclpnet.ap2.api.game.team.Team
+import java.util.*
 
-import java.util.*;
-import java.util.stream.Collectors;
+class TeamGameResult(
+    data: DataContainer<Team, TeamRef>,
+    refResolver: SubjectRefResolver<Team, TeamRef>
+) : GenericGameResult<TeamRef> {
+    override val playerResults: List<ObjectIntPair<PlayerRef>>
+    override val subjectResults: List<ObjectIntPair<TeamRef>>
+    val playerTeams: MutableMap<PlayerRef, TeamRef>
+    override val winningPlayers: Set<PlayerRef>
+    override val winningSubjects: Set<TeamRef>
 
-public class TeamGameResult implements GenericGameResult<TeamRef> {
-
-    private final List<ObjectIntPair<PlayerRef>> playerResults;
-    private final List<ObjectIntPair<TeamRef>> subjectResults;
-    private final Map<PlayerRef, TeamRef> playerTeams;
-    private final Set<PlayerRef> players;
-    private final Set<TeamRef> refs;
-
-    public TeamGameResult(DataContainer<Team, TeamRef> data, SubjectRefResolver<Team, TeamRef> refResolver) {
-        var byRank = data.streamEntriesRanked().toList();
+    init {
+        val byRank: List<Set<ObjectIntPair<TeamRef>>> = data.streamEntriesRanked().toList()
 
         this.subjectResults = byRank.stream()
-                .flatMap(Collection::stream)
-                .toList();
+            .flatMap { it.stream() }
+            .toList()
 
-        List<ObjectIntPair<PlayerRef>> playerResults = new ArrayList<>();
-        Map<PlayerRef, TeamRef> playerTeams = new LinkedHashMap<>();
+        val playerResults = ArrayList<ObjectIntPair<PlayerRef>>()
+        val playerTeams = LinkedHashMap<PlayerRef, TeamRef>()
 
-        for (ObjectIntPair<TeamRef> teamRank : this.subjectResults) {
-            TeamRef teamRef = teamRank.key();
-            Team team = refResolver.resolve(teamRef);
+        for (teamRank in this.subjectResults) {
+            val teamRef: TeamRef = teamRank.key()
+            val team = refResolver.resolve(teamRef) ?: continue
 
-            if (team == null) {
-                continue;
-            }
-
-            for (ServerPlayer player : team.getPlayers()) {
-                PlayerRef ref = PlayerRef.create(player);
-                playerResults.add(ObjectIntPair.of(ref, teamRank.rightInt()));
-                playerTeams.put(ref, teamRef);
+            for (player in team.getPlayers()) {
+                val ref = PlayerRef.create(player)
+                playerResults.add(ObjectIntPair.of(ref, teamRank.rightInt()))
+                playerTeams[ref] = teamRef
             }
         }
 
-        this.playerResults = List.copyOf(playerResults);
-        this.playerTeams = Collections.unmodifiableMap(playerTeams);
+        this.playerResults = playerResults.toList()
+        this.playerTeams = Collections.unmodifiableMap(playerTeams)
 
-        this.refs = byRank.isEmpty()
-                ? Set.of()
-                : byRank.getFirst().stream()
-                .map(ObjectIntPair::left)
-                .collect(Collectors.toSet());
+        this.winningSubjects = when {
+            byRank.isEmpty() -> emptySet()
+            else -> byRank.first()
+                .map { it.left() }
+                .toSet()
+        }
 
-        this.players = this.refs.stream()
-                .map(refResolver::resolve)
-                .filter(Objects::nonNull)
-                .flatMap(team -> team.getPlayers().stream())
-                .map(PlayerRef::create)
-                .collect(Collectors.toUnmodifiableSet());
-    }
-
-    @Override
-    public @NonNull Set<PlayerRef> getWinningPlayers() {
-        return players;
-    }
-
-    @Override
-    public @NonNull Set<TeamRef> getWinningSubjects() {
-        return refs;
-    }
-
-    @Override
-    public @NotNull List<@NotNull ObjectIntPair<@NotNull PlayerRef>> getPlayerResults() {
-        return playerResults;
-    }
-
-    @Override
-    public @NotNull List<@NotNull ObjectIntPair<TeamRef>> getSubjectResults() {
-        return subjectResults;
-    }
-
-    public @NotNull Map<@NotNull PlayerRef, @NotNull TeamRef> getPlayerTeams() {
-        return playerTeams;
+        this.winningPlayers = winningSubjects
+            .mapNotNull { ref -> refResolver.resolve(ref) }
+            .flatMap { team -> team.players }
+            .map { player -> PlayerRef.create(player) }
+            .toSet()
     }
 }

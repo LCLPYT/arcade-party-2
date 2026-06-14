@@ -1,25 +1,29 @@
-package work.lclpnet.ap2.impl.game.data.entry;
+package work.lclpnet.ap2.game.data.entry
 
-import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.api.game.data.DataEntry;
-import work.lclpnet.ap2.api.game.data.SubjectRef;
-import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.kibu.translate.text.TranslatedText;
+import work.lclpnet.ap2.api.game.data.DataEntry
+import work.lclpnet.ap2.api.game.data.SubjectRef
+import work.lclpnet.kibu.translate.Translations
+import work.lclpnet.kibu.translate.text.TranslatedText
 
-public record ScoreTimeDataEntry<Ref extends SubjectRef>(Ref subject, int score, @Nullable String keyOverride, int ranking) implements DataEntry<Ref>, ScoreView {
+@JvmRecord
+data class ScoreTimeDataEntry<Ref : SubjectRef>(
+    override val subject: Ref,
+    override val score: Int,
+    val keyOverride: String?,
+    val ranking: Int
+) : DataEntry<Ref>, ScoreView {
 
-    @Override
-    public @Nullable TranslatedText toText(Translations translationService) {
-        String key = keyOverride != null ? keyOverride : "ap2.score.points_timed";
-        return translationService.translateText(key, score, ranking);
+    override fun toText(translationService: Translations): TranslatedText {
+        val key = keyOverride ?: "ap2.score.points_timed"
+
+        return translationService.translateText(key, score, ranking)
     }
 
-    @Override
-    public boolean scoreEquals(DataEntry<Ref> _other) {
-        if ((_other instanceof ScoreTimeDataEntry<Ref> other)) {
-            return score == other.score && ranking == other.ranking;
+    override fun scoreEquals(other: DataEntry<Ref>): Boolean {
+        if ((other is ScoreTimeDataEntry<Ref>)) {
+            return score == other.score && ranking == other.ranking
         }
 
-        return false;
+        return false
     }
 }

@@ -2,14 +2,15 @@ package work.lclpnet.ap2.rapid_runner
 
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
+import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.ext.allPlayers
 import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.MiniGameInstance
+import work.lclpnet.ap2.game.data.DoubleScoreDataContainer
+import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.util.*
-import work.lclpnet.ap2.impl.game.data.DoubleScoreDataContainer
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.util.ResetWorldModifier
 import kotlin.time.Duration.Companion.minutes
@@ -26,6 +27,7 @@ class RapidRunnerInstance(
     val data = DoubleScoreDataContainer(PlayerRef::create)
     val winManager = useFFAWinManager(null) { data }
     override val participantListener = useLastRemainingParticipantListener(winManager)
+    val stats = createStats(winManager, CommonStats.DistanceMoved)
 
     override fun start() {
         useSurvivalMode()

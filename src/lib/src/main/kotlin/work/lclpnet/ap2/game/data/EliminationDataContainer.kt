@@ -1,110 +1,98 @@
-package work.lclpnet.ap2.impl.game.data;
+package work.lclpnet.ap2.game.data
 
-import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import work.lclpnet.ap2.api.game.data.DataContainer;
-import work.lclpnet.ap2.api.game.data.DataEntry;
-import work.lclpnet.ap2.api.game.data.SubjectRef;
-import work.lclpnet.ap2.api.game.data.SubjectRefFactory;
-import work.lclpnet.ap2.impl.game.data.entry.SimpleOrderDataEntry;
-import work.lclpnet.kibu.translate.text.TranslatedText;
-
-import java.util.*;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
+import it.unimi.dsi.fastutil.objects.Object2IntArrayMap
+import work.lclpnet.ap2.api.game.data.DataContainer
+import work.lclpnet.ap2.api.game.data.DataEntry
+import work.lclpnet.ap2.api.game.data.SubjectRef
+import work.lclpnet.ap2.api.game.data.SubjectRefFactory
+import work.lclpnet.ap2.game.data.entry.SimpleOrderDataEntry
+import work.lclpnet.kibu.translate.text.TranslatedText
+import java.util.stream.IntStream
+import java.util.stream.Stream
 
 /**
  * A data container for last one standing game modes.
  * The last added subject is the winner.
  */
-public class EliminationDataContainer<T, Ref extends SubjectRef> extends BaseDataContainer<T, Ref> {
+class EliminationDataContainer<T, Ref : SubjectRef>(
+    refs: SubjectRefFactory<T, Ref>
+) : BaseDataContainer<T, Ref>(refs) {
 
-    private final Object2IntMap<Ref> index = new Object2IntArrayMap<>();
-    private final List<Map<Ref, SimpleOrderDataEntry<Ref>>> order = new ArrayList<>();
+    private val index = Object2IntArrayMap<Ref>()
+    private val order = ArrayList<MutableMap<Ref, SimpleOrderDataEntry<Ref>>>()
 
-    public EliminationDataContainer(SubjectRefFactory<T, Ref> refs) {
-        super(refs);
+    override fun add(subject: T) {
+        add(subject, null)
     }
 
-    @Override
-    public void add(T subject) {
-        add(subject, null);
+    fun add(subject: T, data: TranslatedText?) {
+        addAll(listOf(subject), data)
     }
 
-    public void add(T subject, TranslatedText data) {
-        addAll(List.of(subject), data);
+    fun addAll(subjects: Iterable<T>) {
+        addAll(subjects, null)
     }
 
-    public void addAll(Iterable<? extends T> subjects) {
-        addAll(subjects, null);
-    }
+    @Synchronized
+    fun addAll(subjects: Iterable<T>, data: TranslatedText?) {
+        val rank = order.size
+        val mapping = HashMap<Ref, SimpleOrderDataEntry<Ref>>()
 
-    public synchronized void addAll(Iterable<? extends T> subjects, TranslatedText data) {
-        int rank = order.size();
-        Map<Ref, SimpleOrderDataEntry<Ref>> mapping = new HashMap<>();
+        for (subject in subjects) {
+            val ref = refs.create(subject)
 
-        for (T subject : subjects) {
-            Ref ref = refs.create(subject);
+            if (index.containsKey(ref)) continue
 
-            if (index.containsKey(ref)) continue;
-
-            index.put(ref, rank);
-            mapping.put(ref, new SimpleOrderDataEntry<>(ref, rank, data));
+            index.put(ref, rank)
+            mapping[ref] = SimpleOrderDataEntry(ref, rank, data)
         }
 
-        if (mapping.isEmpty()) return;
+        if (mapping.isEmpty()) return
 
-        order.add(mapping);
+        order.add(mapping)
     }
 
-    @Override
-    public synchronized Optional<DataEntry<Ref>> getEntry(Ref ref) {
-        int rank = getRank(ref);
+    @Synchronized
+    override fun getEntry(ref: Ref): DataEntry<Ref>? {
+        val rank = getRank(ref)
 
-        if (rank < 0 || rank >= order.size()) {
-            return Optional.empty();
+        if (rank < 0 || rank >= order.size) {
+            return null
         }
 
-        var mapping = order.get(rank);
+        val mapping = order[rank]
+        val dataEntry = mapping[ref]
 
-        if (mapping == null) {
-            return Optional.empty();
-        }
-
-        var dataEntry = mapping.get(ref);
-
-        return Optional.ofNullable(dataEntry);
+        return dataEntry
     }
 
-    @Override
-    public synchronized Stream<DataEntry<Ref>> streamOrderedEntries() {
+    @Synchronized
+    override fun streamOrderedEntries(): Stream<DataEntry<Ref>> {
         // order needs to be reversed
-        return IntStream.range(0, order.size())
-                .mapToObj(i -> order.get(order.size() - i - 1))
-                .flatMap(mapping -> mapping.values().stream());
+        return IntStream.range(0, order.size)
+            .mapToObj { i -> order[order.size - i - 1] }
+            .flatMap { mapping -> mapping.values.stream() }
     }
 
-    @Override
-    public void identityIfAbsent(T subject) {
-        // NOOP
+    override fun identityIfAbsent(subject: T) {}
+
+    @Synchronized
+    override fun clear() {
+        index.clear()
+        order.clear()
     }
 
-    @Override
-    public synchronized void clear() {
-        index.clear();
-        order.clear();
+    private fun getRank(ref: Ref): Int {
+        return index.getOrDefault(ref, -1)
     }
 
-    private int getRank(Ref ref) {
-        return index.getOrDefault(ref, -1);
-    }
+    @Synchronized
+    override fun copy(): DataContainer<T, Ref> {
+        val copy = EliminationDataContainer(refs)
 
-    @Override
-    public synchronized DataContainer<T, Ref> copy() {
-        var copy = new EliminationDataContainer<>(refs);
-        copy.index.putAll(this.index);
-        copy.order.addAll(this.order);
+        copy.index.putAll(this.index)
+        copy.order.addAll(this.order)
 
-        return copy;
+        return copy
     }
 }

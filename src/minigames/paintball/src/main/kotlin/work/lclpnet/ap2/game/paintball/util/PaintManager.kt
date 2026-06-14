@@ -16,11 +16,11 @@ import work.lclpnet.ap2.api.game.team.DyeTeamKey
 import work.lclpnet.ap2.api.game.team.Team
 import work.lclpnet.ap2.api.game.team.TeamManager
 import work.lclpnet.ap2.core.mixin.ServerExplosionAccessor
+import work.lclpnet.ap2.game.data.IntScoreDataContainer
+import work.lclpnet.ap2.game.data.type.TeamRef
 import work.lclpnet.ap2.game.team.DyeBlockManager
 import work.lclpnet.ap2.game.team.Paintable
 import work.lclpnet.ap2.game.team.getConcreteBlock
-import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
-import work.lclpnet.ap2.impl.game.data.type.TeamRef
 import work.lclpnet.ap2.impl.util.world.ExplosionUtil
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
 import java.util.*

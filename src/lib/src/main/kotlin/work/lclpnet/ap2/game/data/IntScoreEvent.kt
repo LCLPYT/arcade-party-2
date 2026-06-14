@@ -1,8 +1,5 @@
-package work.lclpnet.ap2.api.event;
+package work.lclpnet.ap2.game.data
 
-import org.jetbrains.annotations.NotNull;
-
-public interface IntScoreEvent<Type> {
-
-    void accept(@NotNull Type player, int score);
+fun interface IntScoreEvent<Type> {
+    fun accept(player: Type, score: Int)
 }

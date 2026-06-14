@@ -1,8 +1,11 @@
 package work.lclpnet.ap2.impl.game.data;
 
 import org.junit.jupiter.api.Test;
-import work.lclpnet.ap2.impl.game.data.entry.IntScoreDataEntry;
-import work.lclpnet.ap2.impl.game.data.entry.ScoreTimeDataEntry;
+import work.lclpnet.ap2.game.data.ScoreTimeDataContainer;
+import work.lclpnet.ap2.game.data.entry.IntScoreDataEntry;
+import work.lclpnet.ap2.game.data.entry.ScoreTimeDataEntry;
+
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -21,8 +24,8 @@ class ScoreTimeDataContainerTest {
         container.setScore(playerB, 6);
         container.setScore(playerA, 6);
 
-        assertEquals(1, ((ScoreTimeDataEntry<StringRef>) container.getEntry(playerB).orElseThrow()).ranking());
-        assertEquals(2, ((ScoreTimeDataEntry<StringRef>) container.getEntry(playerA).orElseThrow()).ranking());
+        assertEquals(1, ((ScoreTimeDataEntry<StringRef>) Objects.requireNonNull(container.getEntry(playerB))).ranking());
+        assertEquals(2, ((ScoreTimeDataEntry<StringRef>) Objects.requireNonNull(container.getEntry(playerA))).ranking());
     }
 
     @Test
@@ -35,8 +38,8 @@ class ScoreTimeDataContainerTest {
         container.setScore(playerA, 5);
         container.setScore(playerB, 6);
 
-        assertInstanceOf(IntScoreDataEntry.class, container.getEntry(playerA).orElseThrow());
-        assertInstanceOf(IntScoreDataEntry.class, container.getEntry(playerB).orElseThrow());
+        assertInstanceOf(IntScoreDataEntry.class, Objects.requireNonNull(container.getEntry(playerA)));
+        assertInstanceOf(IntScoreDataEntry.class, Objects.requireNonNull(container.getEntry(playerB)));
     }
 
     @Test
@@ -52,9 +55,9 @@ class ScoreTimeDataContainerTest {
         container.setScore(playerB, 10);
 
         var order = container.streamOrderedEntries().toList();
-        assertEquals(playerC, order.getFirst().subject().name());
-        assertEquals(playerB, order.get(1).subject().name());
-        assertEquals(playerA, order.get(2).subject().name());
+        assertEquals(playerC, order.getFirst().getSubject().name());
+        assertEquals(playerB, order.get(1).getSubject().name());
+        assertEquals(playerA, order.get(2).getSubject().name());
 
         assertInstanceOf(ScoreTimeDataEntry.class, order.getFirst());
         assertInstanceOf(ScoreTimeDataEntry.class, order.get(1));

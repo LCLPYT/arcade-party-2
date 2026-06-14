@@ -17,10 +17,10 @@ import work.lclpnet.ap2.ext.isParticipating
 import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.server
 import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.data.EliminationDataContainer
+import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.util.GameStartSequence
 import work.lclpnet.ap2.impl.game.GameCommons
-import work.lclpnet.ap2.impl.game.data.EliminationDataContainer
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback
