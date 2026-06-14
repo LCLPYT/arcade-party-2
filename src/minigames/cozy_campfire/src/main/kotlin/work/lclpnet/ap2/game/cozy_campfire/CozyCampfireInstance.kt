@@ -28,6 +28,7 @@ import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.TeamEliminationGameInstance
 import work.lclpnet.ap2.game.cozy_campfire.setup.*
 import work.lclpnet.ap2.game.player.Participants
+import work.lclpnet.ap2.game.util.createTeamStats
 import work.lclpnet.ap2.game.util.useOldCombat
 import work.lclpnet.ap2.game.util.usePlayerDynamicTaskDisplay
 import work.lclpnet.ap2.game.util.useSurvivalMode
@@ -67,9 +68,14 @@ class CozyCampfireInstance(
     private val movementObserver = PlayerMovementObserver(collisionDetector, gameHandle.participants::isParticipating)
     private val campfireFuel = TeamStorage.create(::createCampfireFuel)
     private val toEliminate = mutableSetOf<Team>()
-    private val stats = CCStats(createStats(
-        /* teamStats = */ listOf(FuelAdded, FuelRemaining, Kills, Deaths, DamageDealt),
-        /* playerStats = */ listOf(FuelAdded, Kills, Deaths, KillDeathRatio, DamageDealt)
+    private val stats = CCStats(createTeamStats(
+        winManager,
+        teamStats = listOf(
+            FuelAdded, FuelRemaining, Kills, Deaths, DamageDealt
+        ),
+        playerStats = listOf(
+            FuelAdded, Kills, Deaths, KillDeathRatio, DamageDealt
+        )
     ), teamManager, gameHandle.translations)
     private val fuel = CCFuel(level, baseManager)
     private val kitManager = CCKitManager(teamManager, level, random)

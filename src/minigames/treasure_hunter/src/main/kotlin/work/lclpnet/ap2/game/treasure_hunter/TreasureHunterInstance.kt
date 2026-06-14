@@ -15,6 +15,7 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.gamerules.GameRules
+import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.CommonStats.BlocksBroken
 import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.mc.isOf
@@ -24,7 +25,7 @@ import work.lclpnet.ap2.game.data.CombinedDataContainer
 import work.lclpnet.ap2.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.game.data.OrderedDataContainer
 import work.lclpnet.ap2.game.data.type.PlayerRef
-import work.lclpnet.ap2.game.util.createStats
+import work.lclpnet.ap2.game.util.createFFAStats
 import work.lclpnet.ap2.game.util.useSurvivalMode
 import work.lclpnet.ap2.game.util.useTaskDisplay
 import work.lclpnet.ap2.impl.map.MapUtil
@@ -47,7 +48,9 @@ class TreasureHunterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
     private val score = IntScoreDataContainer(PlayerRef::create)
     override val data = CombinedDataContainer(listOf(foundChest, score))
     private val materials = HashSet<BlockState>()
-    private val stats = createStats(winManager, score, BlocksBroken)
+    private val stats = createFFAStats(winManager, score, CommonStats.IntScore, listOf(
+        BlocksBroken
+    ))
 
     init {
         useSurvivalMode()

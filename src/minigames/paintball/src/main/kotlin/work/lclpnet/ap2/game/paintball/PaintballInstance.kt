@@ -17,6 +17,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.level.GameType
 import net.minecraft.world.level.gamerules.GameRules
 import work.lclpnet.ap2.api.game.team.TeamManager
+import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.CommonStats.DamageDealt
 import work.lclpnet.ap2.api.stats.CommonStats.Deaths
 import work.lclpnet.ap2.api.stats.CommonStats.KillDeathRatio
@@ -43,6 +44,7 @@ import work.lclpnet.ap2.game.paintball.kit.SniperKit
 import work.lclpnet.ap2.game.paintball.util.*
 import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.game.util.GameStartSequence
+import work.lclpnet.ap2.game.util.createTeamStats
 import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.game.util.useAnnouncer
 import work.lclpnet.ap2.impl.game.item.SpecialItems
@@ -101,10 +103,16 @@ class PaintballInstance(
         "game.ap2.paintball.blocks_painted"
     )
 
-    private val stats = PaintballStats(createStats(
+    private val stats = PaintballStats(createTeamStats(
+        winManager,
         data,
-        /* teamStats = */ listOf(TotalBlocksPainted, BlocksRepainted, Kills, Deaths, DamageDealt, SpecialItemsUsed),
-        /* memberStats = */ listOf(TotalBlocksPainted, BlocksRepainted, Kills, Deaths, KillDeathRatio, DamageDealt, SpecialItemsUsed)
+        CommonStats.IntScore,
+        teamStats = listOf(
+            TotalBlocksPainted, BlocksRepainted, Kills, Deaths, DamageDealt, SpecialItemsUsed
+        ),
+        memberStats = listOf(
+            TotalBlocksPainted, BlocksRepainted, Kills, Deaths, KillDeathRatio, DamageDealt, SpecialItemsUsed
+        )
     ), teamManager, gameHandle.translations)
 
     private val movementObserver = TickMovementObserver(

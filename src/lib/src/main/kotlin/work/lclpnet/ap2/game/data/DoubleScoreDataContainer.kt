@@ -19,13 +19,19 @@ class DoubleScoreDataContainer<T, Ref : SubjectRef> @JvmOverloads constructor(
     val ordering: Ordering = Ordering.DESCENDING,
     private val detailKey: String? = null,
     private val format: String = "%.2f"
-) : BaseDataContainer<T, Ref>(refs), DataContainer<T, Ref> {
+) : BaseDataContainer<T, Ref>(refs), DataContainer<T, Ref>, ScoreListenerView<T, Double> {
+
     private val scoreMap: Object2DoubleMap<Ref> = Object2DoubleOpenHashMap<Ref>()
+    private val listeners = ArrayList<ScoreListener<T, Double>>()
 
     fun setScore(subject: T, score: Double) {
         val ref = refs.create(subject)
 
         setScore(ref, score)
+
+        for (listener in listeners) {
+            listener.accept(subject, score)
+        }
     }
 
     @Synchronized
@@ -36,7 +42,11 @@ class DoubleScoreDataContainer<T, Ref : SubjectRef> @JvmOverloads constructor(
     fun addScore(subject: T, add: Double) {
         val key = refs.create(subject)
 
-        addScore(key, add)
+        val score = addScore(key, add)
+
+        for (listener in listeners) {
+            listener.accept(subject, score)
+        }
     }
 
     @Synchronized
@@ -121,5 +131,9 @@ class DoubleScoreDataContainer<T, Ref : SubjectRef> @JvmOverloads constructor(
         copy.scoreMap.putAll(this.scoreMap)
 
         return copy
+    }
+
+    override fun register(listener: ScoreListener<T, Double>) {
+        listeners.add(listener)
     }
 }

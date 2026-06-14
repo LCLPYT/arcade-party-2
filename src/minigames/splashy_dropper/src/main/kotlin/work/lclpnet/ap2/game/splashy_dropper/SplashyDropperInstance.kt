@@ -13,6 +13,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.Team
+import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.mc.isIn
@@ -21,7 +22,7 @@ import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.data.type.PlayerRef
-import work.lclpnet.ap2.game.util.createStats
+import work.lclpnet.ap2.game.util.createFFAStats
 import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.game.util.finaleCompatibleScoreContainer
 import work.lclpnet.ap2.impl.util.handler.Visibility
@@ -48,7 +49,9 @@ val Missed = Stat("missed", 0)
 class SplashyDropperInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
 
     override val data = finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
-    private val stats = createStats(winManager, data, HitSmall, HitMedium, HitLarge, Missed)
+    private val stats = createFFAStats(winManager, data, CommonStats.IntScore, listOf(
+        HitSmall, HitMedium, HitLarge, Missed
+    ))
     private val random = Random()
     private val blocksBelow = ArrayList<BlockPos>()
     private val movementBlocker = SimpleMovementBlocker(gameHandle.rootScheduler).also {

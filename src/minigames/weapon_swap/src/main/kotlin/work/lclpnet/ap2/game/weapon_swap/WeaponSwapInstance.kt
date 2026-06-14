@@ -20,7 +20,7 @@ import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.setSelectedSlot
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
-import work.lclpnet.ap2.game.util.createStats
+import work.lclpnet.ap2.game.util.createFFAStats
 import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.game.util.teleportToRandomSpawns
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
@@ -52,7 +52,9 @@ class WeaponSwapInstance(
     val schema: WeaponSwapSchema,
 ) : EliminationGameInstance(gameHandle, level, map) {
 
-    private val stats: FFAStatsManager = createStats(winManager, DamageDealt, WeaponsReceived, Kills)
+    private val stats: FFAStatsManager = createFFAStats(winManager, listOf(
+        DamageDealt, WeaponsReceived, Kills
+    ))
     private val currentHolders = mutableSetOf<UUID>()
     private var previousHolders: Set<UUID> = emptySet()
     private val subtitleCountdown = SubtitleCountdown(gameHandle.server, gameHandle.scheduler, ::swapTimerTick) {

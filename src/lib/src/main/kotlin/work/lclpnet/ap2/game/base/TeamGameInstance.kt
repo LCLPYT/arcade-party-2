@@ -9,12 +9,8 @@ import work.lclpnet.ap2.api.game.team.Team
 import work.lclpnet.ap2.api.game.team.TeamEliminatedListener
 import work.lclpnet.ap2.api.game.team.TeamManager
 import work.lclpnet.ap2.api.game.team.TeamSpawnAccess
-import work.lclpnet.ap2.api.stats.CommonStats
-import work.lclpnet.ap2.api.stats.Stat
-import work.lclpnet.ap2.api.stats.TeamStatsManager
 import work.lclpnet.ap2.ext.logger
 import work.lclpnet.ap2.game.MiniGameHandle
-import work.lclpnet.ap2.game.data.IntScoreEventSource
 import work.lclpnet.ap2.game.data.type.TeamRef
 import work.lclpnet.ap2.game.player.ParticipantListener
 import work.lclpnet.ap2.game.util.useTeamWinManager
@@ -122,41 +118,4 @@ abstract class TeamGameInstance(
     )
 
     protected abstract val data: DataContainer<Team, TeamRef>
-
-    fun createStats(
-        teamStats: Iterable<Stat<out Any>>,
-        playerStats: Iterable<Stat<out Any>>
-    ): TeamStatsManager {
-        val manager = TeamStatsManager(teamStats.toSet(), playerStats.toSet()) { team ->
-            this.createReference(team)
-        }
-
-        winManager.setStatsManager(manager)
-
-        return manager
-    }
-
-    fun createStats(
-        teamScore: IntScoreEventSource<Team>,
-        teamStats: Iterable<Stat<out Any>>,
-        memberStats: Iterable<Stat<out Any>>
-    ): TeamStatsManager {
-        val manager = TeamStatsManager(
-            buildSet {
-                add(CommonStats.Score)
-                addAll(teamStats)
-            },
-            memberStats.toSet()
-        ) { team ->
-            createReference(team)
-        }
-
-        teamScore.register { team, score ->
-            manager.teams.set(team, CommonStats.Score, score)
-        }
-
-        winManager.setStatsManager(manager)
-
-        return manager
-    }
 }
