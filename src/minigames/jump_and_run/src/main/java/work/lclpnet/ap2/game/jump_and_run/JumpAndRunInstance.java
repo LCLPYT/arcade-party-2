@@ -26,11 +26,13 @@ import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.core.hook.DripLeafTiltCallback;
 import work.lclpnet.ap2.game.MiniGameHandle;
 import work.lclpnet.ap2.game.base.FFAGameInstance;
+import work.lclpnet.ap2.game.data.IntScoreDataContainer;
+import work.lclpnet.ap2.game.data.type.PlayerRef;
 import work.lclpnet.ap2.game.jump_and_run.gen.JumpAndRun;
 import work.lclpnet.ap2.game.jump_and_run.gen.JumpModule;
 import work.lclpnet.ap2.game.player.Participants;
-import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
+import work.lclpnet.ap2.game.util.DataContainersKt;
+import work.lclpnet.ap2.game.util.GameDefaultsKt;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointHelper;
@@ -38,7 +40,7 @@ import work.lclpnet.ap2.impl.util.checkpoint.CheckpointManager;
 import work.lclpnet.ap2.impl.util.handler.Visibility;
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager;
-import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.gaco.collisions.ChunkedCollisionDetector;
 import work.lclpnet.gaco.collisions.CollisionDetector;
 import work.lclpnet.gaco.collisions.movement.PlayerMovementObserver;
@@ -61,6 +63,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static java.lang.Math.*;
 import static net.minecraft.ChatFormatting.*;
+import static work.lclpnet.ap2.game.util.GameTasksKt.usePlayerDynamicTaskDisplay;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class JumpAndRunInstance extends FFAGameInstance {
@@ -72,7 +75,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
 
     public static final float TARGET_MINUTES = 4.0f;  // target completion time of the jump and run (approximate)
 
-    private final IntScoreDataContainer<ServerPlayer, PlayerRef> data = new IntScoreDataContainer<>(PlayerRef::create);
+    private final IntScoreDataContainer<ServerPlayer, PlayerRef> data = DataContainersKt.useDataContainer(this, IntScoreDataContainer::new);
     private final CollisionDetector collisionDetector = new ChunkedCollisionDetector();
     private final PlayerMovementObserver movementObserver;
     private final List<BlockPos> gateBlocks = new ArrayList<>();
@@ -113,7 +116,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
 
         movementObserver.init(getGameHandle().getHooks(), getGameHandle().getServer());
 
-        bossBar = usePlayerDynamicTaskDisplay(styled(0, YELLOW), styled(jumpAndRun.modules().size(), YELLOW));
+        bossBar = usePlayerDynamicTaskDisplay(this, styled(0, YELLOW), styled(jumpAndRun.modules().size(), YELLOW));
         bossBar.setPercent(0);
 
         initModule();
@@ -133,7 +136,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
     public void participantRemoved(@NonNull ServerPlayer player) {
         super.participantRemoved(player);
 
-        if (!winManager.isGameOver()) {
+        if (!getWinManager().getGameOver()) {
             checkSegmentComplete();
         }
     }
@@ -143,7 +146,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
                 Component.literal("Points").withStyle(YELLOW, BOLD), ObjectiveCriteria.RenderType.INTEGER,
                 StyledFormat.PLAYER_LIST_DEFAULT);
 
-        useScoreboardStatsSync(data, objective);
+        GameDefaultsKt.useScoreboardStatsSync(this, data, objective);
 
         scoreboardManager.setDisplay(DisplaySlot.LIST, objective);
     }
@@ -183,7 +186,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
         Participants participants = getGameHandle().getParticipants();
         HookRegistrar hooks = getGameHandle().getHooks();
 
-        CheckpointHelper.setupResetItem(hooks, () -> winManager.isGameOver() || !segmentActive, participants::isParticipating)
+        CheckpointHelper.setupResetItem(hooks, () -> getWinManager().getGameOver() || !segmentActive, participants::isParticipating)
                 .then(this::resetPlayerToCheckpoint);
 
         CheckpointHelper.whenFallingIntoLava(hooks, participants::isParticipating)
@@ -377,7 +380,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
         jumpAndRun.onModuleCompleted();
 
         if (jumpAndRun.isDone()) {
-            winManager.complete();
+            getWinManager().complete();
             return;
         }
 

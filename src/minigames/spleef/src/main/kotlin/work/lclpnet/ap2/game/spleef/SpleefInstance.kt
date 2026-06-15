@@ -28,6 +28,8 @@ import work.lclpnet.ap2.ext.mc.unbreakable
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.util.teleportToRandomSpawns
+import work.lclpnet.ap2.game.util.useFFAStats
+import work.lclpnet.ap2.game.util.useSurvivalMode
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.FallKillTracker
 import work.lclpnet.ap2.impl.util.ParticleHelper
@@ -46,7 +48,9 @@ const val WORLD_BORDER_SHRINK_PER_SECOND = 1.0
 
 class SpleefInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
 
-    private val stats = createStats(TimeSurvived, Kills, BlocksBroken, DistanceMoved)
+    private val stats = useFFAStats(winManager, listOf(
+        TimeSurvived, Kills, BlocksBroken, DistanceMoved
+    ))
     private val killTracker = FallKillTracker(gameHandle.participants).also {
         it.init(gameHandle.scheduler)
     }
@@ -131,7 +135,7 @@ class SpleefInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMa
      * Checks that every player stays only on breakable blocks at all times.
      */
     fun checkValidPositions() {
-        if (winManager.isGameOver) return
+        if (winManager.gameOver) return
         
         for (player in players()) {
             if (!OnGroundDetector.isOnGroundServer(player) || player.isInLava || player.isInPowderSnow) continue

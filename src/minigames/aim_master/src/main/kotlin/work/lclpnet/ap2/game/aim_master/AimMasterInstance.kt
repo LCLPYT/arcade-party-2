@@ -8,13 +8,17 @@ import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.player.Player
+import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.stats.StatUnits
+import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
-import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.data.IntScoreDataContainer
+import work.lclpnet.ap2.game.util.useDataContainer
+import work.lclpnet.ap2.game.util.useFFAStats
+import work.lclpnet.ap2.game.util.usePlayerDynamicTaskDisplay
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
@@ -45,8 +49,10 @@ class AimMasterInstance(
     val manager: AimMasterManager,
 ) : FFAGameInstance(gameHandle, level, map) {
 
-    override val data = IntScoreDataContainer(PlayerRef::create)
-    private val stats = createStats(data, Clicks, Misses, Accuracy, Streak, AvgAdvanceTime)
+    override val data = useDataContainer(::IntScoreDataContainer)
+    private val stats = useFFAStats(winManager, data, CommonStats.IntScore, listOf(
+        Clicks, Misses, Accuracy, Streak, AvgAdvanceTime
+    ))
     private val currentStreak = HashMap<UUID, Int>()
     private val lastAdvanceMillis = HashMap<UUID, Long>()
     private val advanceTimeSumMillis = HashMap<UUID, Long>()
@@ -84,7 +90,7 @@ class AimMasterInstance(
     }
 
     private fun invokeRayCaster(player: Player): InteractionResult {
-        if (winManager.isGameOver || player !is ServerPlayer) return InteractionResult.FAIL
+        if (winManager.gameOver || player !is ServerPlayer) return InteractionResult.FAIL
 
         val domain = manager.domains[player.uuid] ?: return InteractionResult.FAIL
 

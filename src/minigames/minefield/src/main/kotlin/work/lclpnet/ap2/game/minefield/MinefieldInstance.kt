@@ -19,7 +19,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.Team
 import org.joml.Matrix4f
-import work.lclpnet.ap2.api.stats.CommonStats
+import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.isOf
@@ -28,8 +28,11 @@ import work.lclpnet.ap2.ext.mc.setBlocks
 import work.lclpnet.ap2.ext.mc.teleport
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
-import work.lclpnet.ap2.impl.game.data.OrderedDataContainer
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.data.OrderedDataContainer
+import work.lclpnet.ap2.game.util.addTimer
+import work.lclpnet.ap2.game.util.useDataContainer
+import work.lclpnet.ap2.game.util.useFFAStats
+import work.lclpnet.ap2.game.util.useTaskDisplay
 import work.lclpnet.ap2.impl.util.Fireworks
 import work.lclpnet.ap2.impl.util.ParticleHelper
 import work.lclpnet.ap2.impl.util.SoundHelper
@@ -52,8 +55,9 @@ import kotlin.math.max
 import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlin.random.asJavaRandom
+import kotlin.time.Duration.Companion.seconds
 
-const val END_TIME_SECONDS = 15
+val END_TIME = 15.seconds
 const val DEBUG_PRESSURE_PLATE_POSITIONS = false
 
 val Exploded = Stat("exploded", 0, higherIsBetter = false)
@@ -68,8 +72,10 @@ class MinefieldInstance(
     val goalDistance: Double,
 ) : FFAGameInstance(gameHandle, level, map) {
 
-    override val data = OrderedDataContainer(PlayerRef::create)
-    private val stats = createStats(Exploded, CommonStats.DistanceMoved)
+    override val data = useDataContainer(::OrderedDataContainer)
+    private val stats = useFFAStats(winManager, listOf(
+        Exploded, DistanceMoved
+    ))
     val inGoal = mutableSetOf<UUID>()
     val entries = mutableMapOf<UUID, Entry>()
     lateinit var taskBar: TranslatedBossBar
@@ -167,12 +173,12 @@ class MinefieldInstance(
             translate(
                 "game.ap2.minefield.goal",
                 styled(player.scoreboardName, YELLOW),
-                styled(END_TIME_SECONDS, YELLOW)
+                styled(END_TIME, YELLOW)
             ).formatted(GREEN).sendTo(allPlayers())
 
-            gameEnd = Ticks.seconds(END_TIME_SECONDS)
+            gameEnd = END_TIME.inWholeSeconds.toInt()
 
-            commons().addTimer(taskBar, END_TIME_SECONDS).then {
+            addTimer(taskBar, END_TIME).then {
                 gradePlayers()
                 winManager.complete()
             }
@@ -193,7 +199,7 @@ class MinefieldInstance(
     }
 
     fun onStepOnMine(player: ServerPlayer, pos: BlockPos) {
-        if (winManager.isGameOver || player.isSpectator || inGoal.contains(player.uuid)) return
+        if (winManager.gameOver || player.isSpectator || inGoal.contains(player.uuid)) return
 
         level.setBlock(pos, Blocks.AIR)
         ParticleHelper.spawnParticleAt(player, ParticleTypes.EXPLOSION, 1, 0.0, 0.0, 0.0, 0.0)

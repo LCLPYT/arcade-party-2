@@ -15,17 +15,16 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.gamerules.GameRules
-import work.lclpnet.ap2.ext.interval
+import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.mc.setBlock
-import work.lclpnet.ap2.ext.players
-import work.lclpnet.ap2.ext.setupSidebarScoreboard
-import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
-import work.lclpnet.ap2.game.util.finaleCompatibleScoreContainer
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.util.finaleCompatibleIntScoreContainer
+import work.lclpnet.ap2.game.util.useDataContainer
+import work.lclpnet.ap2.game.util.useOldCombat
+import work.lclpnet.ap2.game.util.useTaskTimer
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.ItemHelper
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
@@ -42,7 +41,7 @@ val DURATION = 2.minutes + 40.seconds
 
 class KingOfTheHillInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
     
-    override val data = finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
+    override val data = useDataContainer(::finaleCompatibleIntScoreContainer)
     var goalShape: BlockShape? = null
 
     init {
@@ -111,6 +110,6 @@ class KingOfTheHillInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
             }
         }
 
-        useTaskTimer(DURATION.inWholeSeconds.toInt()).whenDone { winManager.complete() }
+        useTaskTimer(DURATION).whenDone { winManager.complete() }
     }
 }

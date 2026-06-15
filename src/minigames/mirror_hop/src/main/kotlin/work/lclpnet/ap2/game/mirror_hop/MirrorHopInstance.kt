@@ -10,13 +10,17 @@ import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.scores.Team
+import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
-import work.lclpnet.ap2.impl.game.data.CombinedDataContainer
-import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
-import work.lclpnet.ap2.impl.game.data.OrderedDataContainer
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.data.CombinedDataContainer
+import work.lclpnet.ap2.game.data.IntScoreDataContainer
+import work.lclpnet.ap2.game.data.OrderedDataContainer
+import work.lclpnet.ap2.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.util.useDataContainer
+import work.lclpnet.ap2.game.util.useFFAStats
+import work.lclpnet.ap2.game.util.useTaskDisplay
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.effect.ApEffects
 import work.lclpnet.ap2.impl.util.movement.CooldownMovementBlocker
@@ -44,8 +48,10 @@ class MirrorHopInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
 
     private val winnerData = OrderedDataContainer(PlayerRef::create)
     private val scoreData = IntScoreDataContainer(PlayerRef::create)
-    override val data = CombinedDataContainer(listOf(winnerData, scoreData))
-    private val stats = createStats(scoreData, Falls, PlatformsMaterialized, PlatformsBroken)
+    override val data = useDataContainer { CombinedDataContainer(listOf(winnerData, scoreData)) }
+    private val stats = useFFAStats(winManager, scoreData, CommonStats.IntScore, listOf(
+        Falls, PlatformsMaterialized, PlatformsBroken
+    ))
     private val collisionDetector: CollisionDetector = ChunkedCollisionDetector()
     private val movementObserver = PlayerMovementObserver(
         collisionDetector,
@@ -81,7 +87,7 @@ class MirrorHopInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
         movementObserver.init(gameHandle.hooks, gameHandle.server)
 
         movementObserver.whenEntering(goal) { player ->
-            if (winManager.isGameOver) return@whenEntering
+            if (winManager.gameOver) return@whenEntering
             winnerData.add(player)
             winManager.complete()
         }

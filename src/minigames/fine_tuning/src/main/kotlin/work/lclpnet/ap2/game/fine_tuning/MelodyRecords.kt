@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.game.fine_tuning
 
 import net.minecraft.server.level.ServerPlayer
+import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.fine_tuning.melody.Melody
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 
 class MelodyRecords {
 

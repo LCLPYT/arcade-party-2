@@ -2,11 +2,11 @@ package work.lclpnet.ap2.game.fine_tuning
 
 import net.minecraft.server.level.ServerLevel
 import org.json.JSONArray
+import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
-import work.lclpnet.ap2.game.util.finaleCompatibleScoreContainer
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.util.*
 import work.lclpnet.game.map.GameMap
 import java.util.*
 
@@ -25,8 +25,11 @@ class FineTuningInstance(
     private val setup: FineTuningSetup,
 ) : FFAGameInstance(gameHandle, level, map) {
 
-    override val data = finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
-    private val stats = createStats(data, PitchChanges, Probes, Replays, MelodiesCompleted, CorrectNotes)
+    override val data = useDataContainer(::finaleCompatibleIntScoreContainer)
+    private val stats = useFFAStats(winManager, data, CommonStats.IntScore, listOf(
+        PitchChanges, Probes, Replays, MelodiesCompleted, CorrectNotes
+    ))
+    private val announcer = useAnnouncer()
     private lateinit var tuningPhase: TuningPhase
 
     init {
@@ -40,7 +43,7 @@ class FineTuningInstance(
 
         val rooms: Map<UUID, FineTuningRoom> = setup.rooms
 
-        tuningPhase = TuningPhase(gameHandle, rooms, data, stats, ::startStagePhase, commons(), level)
+        tuningPhase = TuningPhase(gameHandle, rooms, data, stats, ::startStagePhase, level, announcer)
         tuningPhase.init()
         tuningPhase.giveBooks()
     }

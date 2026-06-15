@@ -10,6 +10,7 @@ import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.Level
 import net.minecraft.world.phys.BlockHitResult
+import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.stats.StatUnits
 import work.lclpnet.ap2.ext.mc.isIn
@@ -17,13 +18,16 @@ import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.ext.ticks
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
+import work.lclpnet.ap2.game.data.IntScoreDataContainer
+import work.lclpnet.ap2.game.data.Ordering
 import work.lclpnet.ap2.game.mimicry.data.MimicryManager
 import work.lclpnet.ap2.game.mimicry.data.MimicryRoom
 import work.lclpnet.ap2.game.mimicry.data.SequencePlayer
+import work.lclpnet.ap2.game.util.createTimer
+import work.lclpnet.ap2.game.util.useAnnouncer
+import work.lclpnet.ap2.game.util.useDataContainer
+import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.impl.game.PseudoElimination
-import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
-import work.lclpnet.ap2.impl.game.data.Ordering
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.util.world.StackedRoomGenerator
 import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.game.map.GameMap
@@ -31,14 +35,16 @@ import work.lclpnet.game.util.BossBarTimer
 import work.lclpnet.kibu.hook.ServerMessageHooks
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import java.util.*
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.times
 
-private const val PREPARE_TICKS = 50
-private const val REPLAY_MIN_SECONDS = 8
-private const val REPLAY_SECONDS_PER_NOTE = 1
-private const val REPLAY_MAX_SECONDS = 30
-private const val NEXT_ROUND_DELAY_SECONDS = 4
 private const val INITIAL_SEQUENCE_LENGTH = 3
+private val PREPARE_TIME = 50.ticks
+private val REPLAY_MIN_TIME = 8.seconds
+private val REPLAY_MAX_TIME = 30.seconds
+private val REPLAY_TIME_PER_NOTE = 1.seconds
+private val NEXT_ROUND_DELAY = 4.seconds
 
 val AvgTimeUsage = Stat("avg_time_usage", 0f, unit = StatUnits.Percent, higherIsBetter = false)
 val AvgClickTime = Stat("avg_click_time", 0f, unit = StatUnits.Seconds, higherIsBetter = false)
@@ -51,15 +57,20 @@ class MimicryInstance(
     buttons: BlockBox
 ) : FFAGameInstance(gameHandle, level, map) {
 
-    override val data = IntScoreDataContainer(
-        PlayerRef::create,
-        Ordering.DESCENDING,
-        "game.ap2.mimicry.completed"
-    )
-    private val stats = createStats(data, AvgTimeUsage, AvgClickTime)
+    override val data = useDataContainer { refs ->
+        IntScoreDataContainer(
+            refs,
+            Ordering.DESCENDING,
+            "game.ap2.mimicry.completed"
+        )
+    }
+    private val stats = useFFAStats(winManager, data, CommonStats.IntScore, listOf(
+        AvgTimeUsage, AvgClickTime
+    ))
+    private val manager = MimicryManager(gameHandle, result.rooms, buttons, Random(), level, stats, ::onCompleted)
+    private val announcer = useAnnouncer()
     private lateinit var pseudoElimination: PseudoElimination
     private lateinit var sequencePlayer: SequencePlayer
-    private val manager = MimicryManager(gameHandle, result.rooms, buttons, Random(), level, stats, ::onCompleted)
     private var timer: BossBarTimer? = null
     private var timerTransaction = 0
     private var phase = Phase.IDLE
@@ -88,7 +99,7 @@ class MimicryInstance(
     }
 
     private fun onUseBlock(player: Player, world: Level, hand: InteractionHand, hitResult: BlockHitResult): InteractionResult {
-        if (winManager.isGameOver
+        if (winManager.gameOver
             || hand != InteractionHand.MAIN_HAND
             || player !is ServerPlayer
             || !gameHandle.participants.isParticipating(player)
@@ -130,13 +141,13 @@ class MimicryInstance(
 
     @Synchronized
     private fun nextSequence() {
-        if (phase != Phase.IDLE || winManager.isGameOver) return
+        if (phase != Phase.IDLE || winManager.gameOver) return
 
         removeTimer()
 
-        commons().announcer().announceSubtitle("game.ap2.mimicry.attention")
+        announcer.announceSubtitle("game.ap2.mimicry.attention")
 
-        runAfter(PREPARE_TICKS.ticks) { playSequence() }
+        runAfter(PREPARE_TIME) { playSequence() }
     }
 
     @Synchronized
@@ -149,7 +160,7 @@ class MimicryInstance(
 
     @Synchronized
     private fun playSequence() {
-        if (phase != Phase.IDLE || winManager.isGameOver) return
+        if (phase != Phase.IDLE || winManager.gameOver) return
 
         phase = Phase.PLAYING
 
@@ -162,21 +173,21 @@ class MimicryInstance(
 
     @Synchronized
     private fun beginReplay() {
-        if (phase != Phase.PLAYING || winManager.isGameOver) return
+        if (phase != Phase.PLAYING || winManager.gameOver) return
 
         phase = Phase.REPLAY
 
-        commons().announcer().announceSubtitle("game.ap2.mimicry.repeat")
+        announcer.announceSubtitle("game.ap2.mimicry.repeat")
 
         manager.replay = true
 
         val translations = gameHandle.translations
         val subject = translations.translateText(gameHandle.gameInfo.taskKey)
 
-        val replaySeconds = calcReplaySeconds()
-        manager.beginReplay(replaySeconds)
+        val replayTime = calcReplayTime()
+        manager.beginReplay(replayTime)
 
-        val t = commons().createTimer(subject, replaySeconds)
+        val t = createTimer(subject, replayTime)
         timer = t
 
         val transaction = timerTransaction
@@ -190,13 +201,13 @@ class MimicryInstance(
 
     @Synchronized
     private fun endReplayAndEliminate() {
-        if (phase != Phase.REPLAY || winManager.isGameOver) return
+        if (phase != Phase.REPLAY || winManager.gameOver) return
 
         manager.playersToEliminate.forEach { softEliminate(it) }
 
         onRoundOver()
 
-        runAfter(NEXT_ROUND_DELAY_SECONDS.seconds) { nextSequence() }
+        runAfter(NEXT_ROUND_DELAY) { nextSequence() }
     }
 
     @Synchronized
@@ -212,8 +223,8 @@ class MimicryInstance(
         pseudoElimination.commit()
     }
 
-    private fun calcReplaySeconds(): Int =
-        (manager.sequenceLength() * REPLAY_SECONDS_PER_NOTE).coerceIn(REPLAY_MIN_SECONDS, REPLAY_MAX_SECONDS)
+    private fun calcReplayTime(): Duration =
+        (manager.sequenceLength() * REPLAY_TIME_PER_NOTE).coerceIn(REPLAY_MIN_TIME, REPLAY_MAX_TIME)
 
     private fun onCompleted(player: ServerPlayer) {
         commons().addScore(player, 1, data)

@@ -9,7 +9,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.util.mojang.SkinFetcher
 import work.lclpnet.gaco.asset.cache.SqliteCacheIndex
 import java.awt.image.BufferedImage

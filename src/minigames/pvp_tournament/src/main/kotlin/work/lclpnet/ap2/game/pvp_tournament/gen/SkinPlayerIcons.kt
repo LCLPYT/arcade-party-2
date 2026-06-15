@@ -2,7 +2,7 @@ package work.lclpnet.ap2.game.pvp_tournament.gen
 
 import com.mojang.authlib.GameProfile
 import kotlinx.serialization.json.Json
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.util.mojang.Profile
 import work.lclpnet.ap2.util.mojang.Property
 import work.lclpnet.ap2.util.mojang.SkinFetcher
@@ -21,7 +21,7 @@ class SkinPlayerIcons(val skinFetcher: SkinFetcher) : PlayerIcons {
             return cached
         }
 
-        val skin = requireNotNull(skinFetcher.fetchSkin(player.uuid())) {
+        val skin = requireNotNull(skinFetcher.fetchSkin(player.uuid)) {
             "Skin of $player or default skin could not be loaded"
         }
 

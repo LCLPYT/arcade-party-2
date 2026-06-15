@@ -28,14 +28,13 @@ import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.Team
+import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.core.type.ApVariantHolder
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
-import work.lclpnet.ap2.game.util.finaleCompatibleScoreContainer
-import work.lclpnet.ap2.game.util.teleportToRandomSpawns
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.util.*
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.ItemHelper
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
@@ -67,8 +66,10 @@ private val ChickensExploded = Stat("chickens_exploded", 0)
 
 class ChickenShooterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
 
-    override val data = finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
-    private val stats = createStats(data, BabyChickens, TntDetonated, ChickensExploded)
+    override val data = useDataContainer(::finaleCompatibleIntScoreContainer)
+    private val stats = useFFAStats(winManager, data, CommonStats.IntScore, listOf(
+        BabyChickens, TntDetonated, ChickensExploded
+    ))
     private val random = Random()
     private val chickenSet = mutableSetOf<Chicken>()
     private lateinit var chickenSpawns: List<Vec3>
@@ -95,7 +96,7 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
 
             projectile.discard()
 
-            if (winManager.isGameOver) return@registerWith false
+            if (winManager.gameOver) return@registerWith false
             val attacker = source.entity as? ServerPlayer ?: return@registerWith false
 
             val pitch = if (chicken.isBaby) 1.4f else 0.8f
@@ -165,7 +166,7 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
         }
 
         val subject = translations.translateText("game.ap2.chicken_shooter.task")
-        commons().createTimer(subject, DURATION.inWholeSeconds.toInt()).whenDone(winManager::complete)
+        createTimer(subject, DURATION).whenDone(winManager::complete)
     }
 
     private fun findChickenSpawner() {

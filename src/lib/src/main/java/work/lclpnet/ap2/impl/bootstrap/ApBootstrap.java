@@ -175,7 +175,7 @@ public class ApBootstrap {
 
         AssetRepository mapAssetRepo = createMapAssetRepo(config, mapsCache);
         MapManager mapManager = createMapManager(mapAssetRepo);
-        WorldFacade worldFacade = environment.getWorldFacade(() -> mapManager);
+        WorldFacade worldFacade = environment.getWorldFacade();
 
         var randomizer = new SeamlessMapRandomizer(mapManager, new Random(), logger);
         MapFacade mapFacade = createMapFacade(server, mapManager, worldFacade, randomizer, mapAssetRepo);

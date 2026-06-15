@@ -16,18 +16,18 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.level.material.Fluids
-import work.lclpnet.ap2.ext.allPlayers
+import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.setDayTime
 import work.lclpnet.ap2.ext.mc.teleport
-import work.lclpnet.ap2.ext.players
-import work.lclpnet.ap2.ext.timeout
-import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.kit.KitHandle
 import work.lclpnet.ap2.game.kit.KitHandler
 import work.lclpnet.ap2.game.kit.PrefabKitLoader
+import work.lclpnet.ap2.game.util.GameStartSequence
+import work.lclpnet.ap2.game.util.useAnnouncer
+import work.lclpnet.ap2.game.util.useSurvivalMode
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.util.loot.LazyLootContainerManager
 import work.lclpnet.ap2.util.loot.LootEntry
@@ -45,6 +45,7 @@ import work.lclpnet.kibu.translate.text.FormatWrapper
 import java.lang.Math.floorMod
 import kotlin.random.Random
 import kotlin.random.asJavaRandom
+import kotlin.time.Duration.Companion.seconds
 
 val MIN_DURATION_TICKS = Ticks.seconds(18)
 val MAX_DURATION_TICKS = Ticks.seconds(32)
@@ -59,6 +60,7 @@ class KilleporterInstance(
     private val loot: WeightedList<LootEntry>,
 ) : EliminationGameInstance(gameHandle, level, map) {
 
+    val announcer = useAnnouncer()
     var kitHandler: KitHandler? = null
     var itemUseAllowed = false
     lateinit var lootContainerManager: LazyLootContainerManager
@@ -103,8 +105,12 @@ class KilleporterInstance(
         }
     }
 
-    override fun afterInitialDelay() {
-        kitHandler?.startKitSelectionTimer(commons(), Ticks.seconds(15)) {super.afterInitialDelay()}
+    override fun configureStartup(sequence: GameStartSequence) {
+        sequence.beforeGo { next ->
+            kitHandler?.startKitSelectionTimer(this, announcer, 15.seconds) { next.run() }
+        }
+
+        super.configureStartup(sequence)
     }
 
     override fun go() {

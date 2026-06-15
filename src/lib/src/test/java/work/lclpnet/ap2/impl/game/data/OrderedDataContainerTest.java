@@ -2,8 +2,10 @@ package work.lclpnet.ap2.impl.game.data;
 
 import org.junit.jupiter.api.Test;
 import work.lclpnet.ap2.api.game.data.DataEntry;
+import work.lclpnet.ap2.game.data.OrderedDataContainer;
 
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -18,7 +20,7 @@ public class OrderedDataContainerTest {
         data.add("baz");
 
         assertEquals(List.of("foo", "bar", "baz"), data.streamOrderedEntries()
-                .map(DataEntry::subject)
+                .map(DataEntry::getSubject)
                 .map(StringRef::name)
                 .toList());
     }
@@ -30,9 +32,9 @@ public class OrderedDataContainerTest {
         data.add("bar");
         data.add("baz");
 
-        var foo = data.getEntry("foo").orElseThrow();
-        var bar = data.getEntry("bar").orElseThrow();
-        var baz = data.getEntry("baz").orElseThrow();
+        var foo = Objects.requireNonNull(data.getEntry("foo"));
+        var bar = Objects.requireNonNull(data.getEntry("bar"));
+        var baz = Objects.requireNonNull(data.getEntry("baz"));
 
         List<DataEntry<StringRef>> expectedList = List.of(foo, bar, baz);
         var actualList = data.streamOrderedEntries().toList();

@@ -11,13 +11,13 @@ import net.minecraft.world.level.block.entity.BarrelBlockEntity
 import net.minecraft.world.level.block.entity.ChestBlockEntity
 import net.minecraft.world.level.storage.LevelData
 import net.minecraft.world.level.storage.loot.LootTable
+import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.isOf
-import work.lclpnet.ap2.ext.players
-import work.lclpnet.ap2.ext.runEveryTick
-import work.lclpnet.ap2.ext.toTicks
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.util.teleportToRandomSpawns
+import work.lclpnet.ap2.game.util.useOldCombat
+import work.lclpnet.ap2.game.util.useSurvivalMode
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
 import work.lclpnet.ap2.util.PvpBehavior
 import work.lclpnet.ap2.util.loot.LazyLootContainerManager

@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.pvp_tournament.gen
 
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.data.type.PlayerRef
 import java.awt.BasicStroke
 import java.awt.Color
 import java.awt.Graphics2D
@@ -9,10 +9,9 @@ import java.awt.geom.Ellipse2D
 import java.awt.geom.Line2D
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
-import java.util.Base64
+import java.util.*
 import javax.imageio.ImageIO
 import kotlin.math.max
-import kotlin.math.roundToInt
 
 private class VisualNode(
     val match: Match,

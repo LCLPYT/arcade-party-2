@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.team.*;
 import work.lclpnet.ap2.core.hook.PlayerDisplayNameCallback;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
-import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
 

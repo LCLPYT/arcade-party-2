@@ -15,14 +15,20 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.gamerules.GameRules
+import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.CommonStats.BlocksBroken
+import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
-import work.lclpnet.ap2.impl.game.data.CombinedDataContainer
-import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
-import work.lclpnet.ap2.impl.game.data.OrderedDataContainer
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.data.CombinedDataContainer
+import work.lclpnet.ap2.game.data.IntScoreDataContainer
+import work.lclpnet.ap2.game.data.OrderedDataContainer
+import work.lclpnet.ap2.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.util.useDataContainer
+import work.lclpnet.ap2.game.util.useFFAStats
+import work.lclpnet.ap2.game.util.useSurvivalMode
+import work.lclpnet.ap2.game.util.useTaskDisplay
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.ItemHelper
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
@@ -41,9 +47,11 @@ class TreasureHunterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
     private val random = Random()
     private val foundChest = OrderedDataContainer(PlayerRef::create)
     private val score = IntScoreDataContainer(PlayerRef::create)
-    override val data = CombinedDataContainer(listOf(foundChest, score))
+    override val data = useDataContainer { CombinedDataContainer(listOf(foundChest, score)) }
     private val materials = HashSet<BlockState>()
-    private val stats = createStats(score, BlocksBroken)
+    private val stats = useFFAStats(winManager, score, CommonStats.IntScore, listOf(
+        BlocksBroken
+    ))
 
     init {
         useSurvivalMode()
@@ -65,7 +73,7 @@ class TreasureHunterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
                 return@registerWith InteractionResult.PASS
             }
 
-            if (winManager.isGameOver) {
+            if (winManager.gameOver) {
                 return@registerWith InteractionResult.FAIL
             }
 
@@ -73,8 +81,8 @@ class TreasureHunterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
             ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.CHEST_LOCKED, SoundSource.BLOCKS, 0.2f, 0.5f)
 
             val scoreEntry = score.getEntry(player)
-                .map<Any> { it.toText(translations) }
-                .orElse(Component.literal("-"))
+                ?.toText(translations)
+                ?: Component.literal("-")
 
             val detail = translations.translateText("game.ap2.treasure_hunter.found_treasure", scoreEntry)
             foundChest.add(player, detail)

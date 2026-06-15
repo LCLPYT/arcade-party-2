@@ -13,12 +13,14 @@ import work.lclpnet.ap2.api.stats.FFAStatsManager
 import work.lclpnet.ap2.core.hook.PlayerEliminatedCallback
 import work.lclpnet.ap2.core.mixin.entity.LivingEntityAccessor
 import work.lclpnet.ap2.ext.allPlayers
+import work.lclpnet.ap2.ext.isParticipating
 import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.server
 import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.data.EliminationDataContainer
+import work.lclpnet.ap2.game.util.GameStartSequence
+import work.lclpnet.ap2.game.util.useDataContainer
 import work.lclpnet.ap2.impl.game.GameCommons
-import work.lclpnet.ap2.impl.game.data.EliminationDataContainer
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback
@@ -33,19 +35,20 @@ abstract class EliminationGameInstance(
     map: GameMap
 ) : FFAGameInstance(gameHandle, world, map), EliminationController {
 
-    override val data = EliminationDataContainer { player: ServerPlayer ->
-        PlayerRef.create(player)
-    }
+    override val data = useDataContainer(::EliminationDataContainer)
     private var remainingDisplay: DynamicTranslatedBossBar? = null
     private var eliminatedMessages = true
     private var teleportEliminated = true
     private var survivalStart: Instant? = null
     private var survivalStats: FFAStatsManager? = null
 
-    override fun afterInitialDelay() {
-        survivalStart = Clock.System.now()
+    override fun configureStartup(sequence: GameStartSequence) {
+        sequence.beforeGo { next ->
+            survivalStart = Clock.System.now()
+            next.run()
+        }
 
-        super.afterInitialDelay()
+        super.configureStartup(sequence)
     }
 
     override fun participantRemoved(player: ServerPlayer) {

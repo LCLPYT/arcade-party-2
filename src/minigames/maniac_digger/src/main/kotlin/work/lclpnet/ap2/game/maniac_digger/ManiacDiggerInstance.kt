@@ -13,19 +13,25 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.StainedGlassBlock
 import net.minecraft.world.level.block.state.BlockState
+import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.Stat
+import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.setAttribute
 import work.lclpnet.ap2.ext.mc.unbreakable
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
+import work.lclpnet.ap2.game.data.CombinedDataContainer
+import work.lclpnet.ap2.game.data.IntScoreDataContainer
+import work.lclpnet.ap2.game.data.OrderedDataContainer
+import work.lclpnet.ap2.game.data.Ordering
+import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.maniac_digger.data.MdPipe
-import work.lclpnet.ap2.impl.game.data.CombinedDataContainer
-import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
-import work.lclpnet.ap2.impl.game.data.OrderedDataContainer
-import work.lclpnet.ap2.impl.game.data.Ordering
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.util.useDataContainer
+import work.lclpnet.ap2.game.util.useFFAStats
+import work.lclpnet.ap2.game.util.useSurvivalMode
+import work.lclpnet.ap2.game.util.useTaskDisplay
 import work.lclpnet.ap2.impl.util.world.WorldBorderUtil
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
@@ -53,10 +59,12 @@ class ManiacDiggerInstance(
 
     private val reachedBottom = OrderedDataContainer(PlayerRef::create)
     private val score = IntScoreDataContainer(PlayerRef::create, Ordering.ASCENDING, "ap2.score.blocks_away")
-    override val data = CombinedDataContainer(listOf(reachedBottom, score))
+    override val data = useDataContainer { CombinedDataContainer(listOf(reachedBottom, score)) }
     private val wrongTool = HashSet<UUID>()
     private val correctToolStreak = Object2IntOpenHashMap<UUID>()
-    private val stats = createStats(score, BlocksBroken, ToolSwitches, WrongToolsSelected, WrongToolsUsed, CorrectToolStreak)
+    private val stats = useFFAStats(winManager, score, CommonStats.IntScore, listOf(
+        BlocksBroken, ToolSwitches, WrongToolsSelected, WrongToolsUsed, CorrectToolStreak
+    ))
 
     init {
         useSurvivalMode()
@@ -130,7 +138,7 @@ class ManiacDiggerInstance(
         }
 
         PlayerInventoryHooks.SLOT_CHANGE.registerWith(hooks) { player, slot ->
-            if (!gameHandle.participants.isParticipating(player) || winManager.isGameOver) {
+            if (!gameHandle.participants.isParticipating(player) || winManager.gameOver) {
                 return@registerWith
             }
 
@@ -147,7 +155,7 @@ class ManiacDiggerInstance(
     }
 
     private fun canBreak(player: ServerPlayer, pos: BlockPos): Boolean {
-        if (!gameHandle.participants.isParticipating(player) || winManager.isGameOver) {
+        if (!gameHandle.participants.isParticipating(player) || winManager.gameOver) {
             return false
         }
 
@@ -161,7 +169,7 @@ class ManiacDiggerInstance(
     }
 
     private fun checkGoal() {
-        if (winManager.isGameOver) return
+        if (winManager.gameOver) return
 
         for (player in gameHandle.participants) {
             if (player.blockY <= winHeight) {

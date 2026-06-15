@@ -8,7 +8,7 @@ import work.lclpnet.activity.component.ComponentView;
 import work.lclpnet.activity.component.DependentComponent;
 import work.lclpnet.activity.component.builtin.BuiltinComponents;
 import work.lclpnet.ap2.impl.util.Lazy;
-import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.translate.Translations;
 

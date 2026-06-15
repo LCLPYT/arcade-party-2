@@ -37,6 +37,10 @@ import work.lclpnet.ap2.game.base.TeamEliminationGameInstance
 import work.lclpnet.ap2.game.kit.KitHandler
 import work.lclpnet.ap2.game.kit.hasKitEquipped
 import work.lclpnet.ap2.game.team.getWoolBlock
+import work.lclpnet.ap2.game.util.createTimer
+import work.lclpnet.ap2.game.util.useOldCombat
+import work.lclpnet.ap2.game.util.useSurvivalMode
+import work.lclpnet.ap2.game.util.useTeamStats
 import work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor
 import work.lclpnet.ap2.impl.util.TimeHelper
 import work.lclpnet.ap2.impl.util.math.MathUtil
@@ -81,9 +85,14 @@ class TurfWarsInstance(
     var phase: Phase = Nothing
     var blocksPerKill: Int = 1
     val repelTicks = mutableMapOf<UUID, Int>()
-    val stats = createStats(
-        /* teamStats = */ listOf(Kills, Deaths, TurfClaimed),
-        /* playerStats = */ listOf(Kills, Deaths, KillDeathRatio, TurfClaimed)
+    val stats = useTeamStats(
+        winManager,
+        teamStats = listOf(
+            Kills, Deaths, TurfClaimed
+        ),
+        playerStats = listOf(
+            Kills, Deaths, KillDeathRatio, TurfClaimed
+        )
     )
 
     init {
@@ -585,8 +594,8 @@ class TurfWarsInstance(
         }
 
         createTimer(
-            label = translate("game.ap2.turf_wars.phase.${phase.name.lowercase()}"),
-            duration = duration
+            translate("game.ap2.turf_wars.phase.${phase.name.lowercase()}"),
+            duration
         ).whenDone { changePhase(nextPhase) }
 
         translate(titleKey).formatted(ChatFormatting.GREEN).acceptEach(players()) { player, text ->

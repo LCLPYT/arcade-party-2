@@ -3,6 +3,9 @@ package work.lclpnet.ap2.game
 import work.lclpnet.ap2.api.game.GameStartContext
 
 interface MiniGame : GameInfo {
+
+    val usesMaps: Boolean get() = true
+
     /**
      * Returns whether the game ca be a finale.
      * Games which can be a finale must always determine a winner.

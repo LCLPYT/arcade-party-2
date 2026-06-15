@@ -4,12 +4,14 @@ import it.unimi.dsi.fastutil.objects.ObjectIntPair
 import work.lclpnet.ap2.api.game.data.GenericGameResult
 import work.lclpnet.ap2.api.game.data.SubjectRef
 import work.lclpnet.ap2.api.game.data.SubjectRefFactory
+import work.lclpnet.kibu.translate.text.TranslatedText
 
 data class Stat<T>(
     val id: String,
     val default: T,
     val higherIsBetter: Boolean = true,
     val unit: StatUnit = StatUnits.Plain,
+    val display: Boolean = true,
 )
 
 typealias StatSet = Set<Stat<out Any>>
@@ -40,6 +42,7 @@ class StatsView<Ref : SubjectRef>(
     val stats: StatSet,
     val order: List<ObjectIntPair<Ref>>,
     val results: Map<Ref, Stats>,
+    val details: Map<Ref, TranslatedText> = emptyMap(),
 )
 
 interface StatsResult {
@@ -50,7 +53,7 @@ interface StatsResult {
 interface StatsManager<Ref : SubjectRef> {
     fun fillDefaults(result: GenericGameResult<Ref>)
     fun freeze()
-    fun getResult(summary: GameSummary, result: GenericGameResult<Ref>): StatsResult
+    fun getResult(summary: GameSummary, result: GenericGameResult<Ref>, details: Map<Ref, TranslatedText>): StatsResult
 }
 
 open class BaseStatsManager<T, Ref : SubjectRef>(

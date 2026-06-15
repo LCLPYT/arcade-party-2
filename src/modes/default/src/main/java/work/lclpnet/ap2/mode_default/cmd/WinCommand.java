@@ -11,11 +11,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.game.MiniGameResults;
-import work.lclpnet.ap2.api.game.WinManagerAccess;
-import work.lclpnet.ap2.api.game.WinManagerView;
 import work.lclpnet.ap2.game.MiniGameHandle;
 import work.lclpnet.ap2.game.MiniGameInstance;
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
+import work.lclpnet.ap2.game.data.type.PlayerRef;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.cmd.type.KibuCommand;
 
@@ -60,12 +58,7 @@ public class WinCommand implements KibuCommand {
 
         ctx.getSource().sendSystemMessage(Component.literal("Made yourself the winner of the current mini game"));
 
-        if (miniGame instanceof WinManagerView view) {
-            WinManagerAccess winManagerAccess = view.getWinManagerAccess();
-            winManagerAccess.win(player);
-        } else {
-            complete(player);
-        }
+        miniGame.getWinManager().win(player);
 
         return 1;
     }
@@ -83,12 +76,7 @@ public class WinCommand implements KibuCommand {
     private int winPlayers(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         var players = getWinners(ctx);
 
-        if (miniGame instanceof WinManagerView view) {
-            WinManagerAccess winManagerAccess = view.getWinManagerAccess();
-            winManagerAccess.win(players);
-        } else {
-            complete(players);
-        }
+        miniGame.getWinManager().win(players);
 
         return 1;
     }

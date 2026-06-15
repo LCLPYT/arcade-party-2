@@ -3,26 +3,40 @@ package work.lclpnet.ap2.impl.map;
 import it.unimi.dsi.fastutil.Pair;
 import lombok.Getter;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.gamerules.GameRules;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.LevelStorageSource;
+import net.minecraft.world.phys.Vec3;
+import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.MapReady;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.map.MapRandomizer;
+import work.lclpnet.ap2.game.util.GameLevelsKt;
 import work.lclpnet.gaco.asset.AssetRepository;
-import work.lclpnet.game.api.MapOptions;
 import work.lclpnet.game.api.WorldFacade;
+import work.lclpnet.game.api.WorldOptions;
 import work.lclpnet.game.map.GameMap;
 import work.lclpnet.game.map.MapDescriptor;
 import work.lclpnet.game.map.MapManager;
+import work.lclpnet.game.map.MapUtils;
+import work.lclpnet.kibu.hook.util.PositionRotation;
+import work.lclpnet.kibu.world.KibuLevels;
+import work.lclpnet.kibu.world.mixin.MinecraftServerAccessor;
+import xyz.nucleoid.fantasy.RuntimeLevelHandle;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 public class MapFacadeImpl implements MapFacade {
 
@@ -45,20 +59,72 @@ public class MapFacadeImpl implements MapFacade {
     }
 
     @Override
-    public CompletableFuture<Pair<ServerLevel, GameMap>> openRandomMap(Identifier gameId, MapOptions mapOptions) {
+    public CompletableFuture<ServerLevel> changeMap(Identifier identifier, WorldOptions options) {
+        var optMap = mapManager.collection().getMap(identifier);
+
+        if (optMap.isEmpty()) {
+            return CompletableFuture.failedFuture(new IllegalStateException("Unknown map %s".formatted(identifier)));
+        }
+
+        GameMap map = optMap.get();
+
+        return worldFacade.changeLevel(
+                identifier,
+                options,
+                _ -> {
+                    Vec3 pos = MapUtils.getSpawnPosition(map);
+                    float yaw = MapUtils.getSpawnYaw(map);
+                    PositionRotation spawn = new PositionRotation(pos.x(), pos.y(), pos.z(), yaw, 0f);
+
+                    return CompletableFuture.completedFuture(spawn);
+                },
+                key -> changeToYetUnloadedMap(map, key)
+        );
+    }
+
+    private CompletableFuture<RuntimeLevelHandle> changeToYetUnloadedMap(GameMap map, ResourceKey<Level> key) {
+        LevelStorageSource.LevelStorageAccess session = ((MinecraftServerAccessor) server).getStorageSource();
+        Path directory = session.getDimensionPath(key);
+
+        return CompletableFuture.runAsync(() -> prepareMapFiles(map, directory))
+                .thenComposeAsync(_ -> loadMap(key));
+    }
+
+    private void prepareMapFiles(GameMap map, Path directory) {
+        try {
+            if (Files.exists(directory)) {
+                FileUtils.forceDelete(directory.toFile());
+            }
+
+            mapManager.pull(map, directory);
+        } catch (IOException e) {
+            throw new CompletionException(e);
+        }
+    }
+
+    private @NonNull CompletableFuture<RuntimeLevelHandle> loadMap(ResourceKey<Level> key) {
+        return server.submit(() -> KibuLevels.getInstance()
+                .getWorldManager(server)
+                .openPersistentLevel(key.identifier())
+                .orElseThrow(() -> new IllegalStateException("Failed to load map"))
+        );
+    }
+
+    @Override
+    public CompletableFuture<Pair<ServerLevel, GameMap>> openRandomMap(Identifier gameId, WorldOptions options) {
         return mapRandomizer.nextMap(gameId)
                 .thenCompose(map -> {
                     Identifier id = map.getDescriptor().getIdentifier();
-                    return worldFacade.changeMap(id, mapOptions).thenApply(world -> Pair.of(world, map));
+                    return changeMap(id, options).thenApply(world -> Pair.of(world, map));
                 })
                 .thenApply(pair -> {
-                    setupWorld(pair.left());
+                    GameLevelsKt.setupGameLevel(pair.left());
                     return pair;
                 });
     }
 
     @Override
-    public void openRandomMap(Identifier gameId, MapOptions options, MapReady callback) {
+    public void openRandomMap(Identifier gameId, WorldOptions options, MapReady callback) {
         openRandomMap(gameId, options)
                 .thenCompose(pair -> server.submit(() -> callback.onReady(pair.left(), pair.right())))
                 .exceptionally(throwable -> {
@@ -69,7 +135,7 @@ public class MapFacadeImpl implements MapFacade {
 
     @Override
     public CompletableFuture<List<Identifier>> getMapIds(Identifier gameId) {
-        List<Identifier> mapIds = mapManager.getCollection()
+        List<Identifier> mapIds = mapManager.collection()
                 .mapIdsWithPrefix(gameId)
                 .sorted()
                 .toList();
@@ -79,7 +145,7 @@ public class MapFacadeImpl implements MapFacade {
 
     @Override
     public CompletableFuture<List<GameMap>> getMaps(Identifier gameId) {
-        List<GameMap> maps = mapManager.getCollection()
+        List<GameMap> maps = mapManager.collection()
                 .mapsWithPrefix(gameId)
                 .sorted(Comparator.comparing(map -> map.getDescriptor().getIdentifier()))
                 .toList();
@@ -89,7 +155,7 @@ public class MapFacadeImpl implements MapFacade {
 
     @Override
     public CompletableFuture<Optional<GameMap>> getMap(Identifier mapId) {
-        var optMap = mapManager.getCollection().getMap(mapId);
+        var optMap = mapManager.collection().getMap(mapId);
 
         return CompletableFuture.completedFuture(optMap);
     }
@@ -108,12 +174,5 @@ public class MapFacadeImpl implements MapFacade {
     @Override
     public void forceMap(@Nullable Identifier mapId) {
         mapRandomizer.forceMap(mapId);
-    }
-
-    private void setupWorld(ServerLevel world) {
-        GameRules gameRules = world.getGameRules();
-        gameRules.set(GameRules.IMMEDIATE_RESPAWN, true, server);
-        gameRules.set(GameRules.SHOW_ADVANCEMENT_MESSAGES, false, server);
-        gameRules.set(GameRules.PVP, true, server);
     }
 }
