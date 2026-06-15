@@ -7,7 +7,6 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.phys.Vec3;
 import org.apache.commons.io.FileUtils;
@@ -17,6 +16,7 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.MapReady;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.map.MapRandomizer;
+import work.lclpnet.ap2.game.util.GameLevelsKt;
 import work.lclpnet.gaco.asset.AssetRepository;
 import work.lclpnet.game.api.WorldFacade;
 import work.lclpnet.game.api.WorldOptions;
@@ -118,7 +118,7 @@ public class MapFacadeImpl implements MapFacade {
                     return changeMap(id, options).thenApply(world -> Pair.of(world, map));
                 })
                 .thenApply(pair -> {
-                    setupWorld(pair.left());
+                    GameLevelsKt.setupGameLevel(pair.left());
                     return pair;
                 });
     }
@@ -174,12 +174,5 @@ public class MapFacadeImpl implements MapFacade {
     @Override
     public void forceMap(@Nullable Identifier mapId) {
         mapRandomizer.forceMap(mapId);
-    }
-
-    private void setupWorld(ServerLevel world) {
-        GameRules gameRules = world.getGameRules();
-        gameRules.set(GameRules.IMMEDIATE_RESPAWN, true, server);
-        gameRules.set(GameRules.SHOW_ADVANCEMENT_MESSAGES, false, server);
-        gameRules.set(GameRules.PVP, true, server);
     }
 }

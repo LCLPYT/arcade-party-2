@@ -111,7 +111,7 @@ class RapidRunnerInstance(
                     val stack = entity.inventory.getItem(i)
 
                     if (stack.isOf(Items.COMPASS)) {
-                        entity.inventory.setItem(i, ItemStack.EMPTY)
+                        entity.inventory.removeItemNoUpdate(i)
                     }
                 }
             }
