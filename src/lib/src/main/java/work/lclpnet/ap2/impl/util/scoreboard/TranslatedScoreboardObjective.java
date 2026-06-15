@@ -238,6 +238,10 @@ public class TranslatedScoreboardObjective implements
         defaultEntry = defaultEntry.withNumberFormat(numberFormat);
     }
 
+    public CustomEntry getDefaultEntry() {
+        return defaultEntry;
+    }
+
     private CustomEntry getEntry(String scoreHolder) {
         if (displayFunction == null) {
             return entries.getOrDefault(scoreHolder, defaultEntry);

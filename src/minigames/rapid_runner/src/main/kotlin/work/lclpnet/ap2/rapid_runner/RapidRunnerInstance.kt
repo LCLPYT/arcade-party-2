@@ -27,7 +27,7 @@ class RapidRunnerInstance(
     val walls: ResetWorldModifier,
 ) : MiniGameInstance {
 
-    val data = useDataContainer { DoubleScoreDataContainer(it) }
+    val data = useDataContainer { DoubleScoreDataContainer(it, detailKey = "ap2.score.blocks_away") }
     val winManager = useFFAWinManager(null) { data }
     val stats = useFFAStats(winManager, data, CommonStats.DoubleScore, listOf())
     override val participantListener = useLastRemainingParticipantListener(winManager)
