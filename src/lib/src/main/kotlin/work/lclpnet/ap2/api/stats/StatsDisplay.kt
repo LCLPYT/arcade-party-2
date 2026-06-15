@@ -175,6 +175,8 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
         if (ranking) body.add(rankingSection(view, player, renderName))
 
         for (stat in view.stats) {
+            if (!stat.display) continue
+
             body.add(statSection(view, stat, gameId, player, ranks, renderName))
         }
     }
@@ -195,6 +197,13 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
             text.append(Component.literal("\n"))
                 .append(Component.literal("#$rank ").withStyle(YELLOW))
                 .append(renderName(ref, rank))
+
+            val detail = view.details[ref]
+
+            if (detail != null) {
+                text.append(Component.literal(" "))
+                    .append(detail.translateFor(player).copy().withColor(positionColor(rank)))
+            }
         }
 
         return PlainMessage(text, sectionWidth)

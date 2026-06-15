@@ -2,7 +2,6 @@ package work.lclpnet.ap2.game.util
 
 import net.minecraft.server.level.ServerPlayer
 import work.lclpnet.ap2.api.game.team.Team
-import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.FFAStatsManager
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.stats.TeamStatsManager
@@ -23,13 +22,17 @@ fun <T : Any> useFFAStats(
     scoreStat: Stat<T>,
     stats: Iterable<Stat<out Any>>
 ): FFAStatsManager {
+    // the score is shown as the data container detail next to each ranking entry, so it is tracked
+    // for the backend but not rendered as its own stat section
+    val hiddenScore = scoreStat.copy(display = false)
+
     val manager = useFFAStats(winManager, buildSet {
-        add(scoreStat)
+        add(hiddenScore)
         addAll(stats)
     })
 
     data.register { player, score ->
-        manager.set(player, scoreStat, score)
+        manager.set(player, hiddenScore, score)
     }
 
     return manager
@@ -55,17 +58,21 @@ fun <T : Any> MiniGameInstance.useTeamStats(
     teamStats: Iterable<Stat<out Any>>,
     memberStats: Iterable<Stat<out Any>>
 ): TeamStatsManager {
+    // the score is shown as the data container detail next to each ranking entry, so it is tracked
+    // for the backend but not rendered as its own stat section
+    val hiddenScore = scoreStat.copy(display = false)
+
     val manager = useTeamStats(
         winManager,
         buildSet {
-            add(CommonStats.IntScore)
+            add(hiddenScore)
             addAll(teamStats)
         },
         memberStats
     )
 
     teamScore.register { team, score ->
-        manager.teams.set(team, scoreStat, score)
+        manager.teams.set(team, hiddenScore, score)
     }
 
     return manager

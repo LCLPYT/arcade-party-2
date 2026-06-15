@@ -7,6 +7,7 @@ import work.lclpnet.ap2.api.game.team.Team
 import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.data.type.TeamGameResult
 import work.lclpnet.ap2.game.data.type.TeamRef
+import work.lclpnet.kibu.translate.text.TranslatedText
 
 class TeamStatsManager(
     teamStats: StatSet,
@@ -27,8 +28,12 @@ class TeamStatsManager(
         players.freeze()
     }
 
-    override fun getResult(summary: GameSummary, result: GenericGameResult<TeamRef>): TeamStatsResult {
-        val teamView = StatsView(teams.stats, result.subjectResults, teams.getEntries())
+    override fun getResult(
+        summary: GameSummary,
+        result: GenericGameResult<TeamRef>,
+        details: Map<TeamRef, TranslatedText>
+    ): TeamStatsResult {
+        val teamView = StatsView(teams.stats, result.subjectResults, teams.getEntries(), details)
         val playerView = StatsView(players.stats, result.playerResults, players.getEntries())
         val playerTeams = (result as? TeamGameResult)?.playerTeams ?: emptyMap()
 
