@@ -136,4 +136,10 @@ class DoubleScoreDataContainer<T, Ref : SubjectRef> @JvmOverloads constructor(
     override fun register(listener: ScoreListener<T, Double>) {
         listeners.add(listener)
     }
+
+    override fun dispatchScoreEvents(subjects: Iterable<T>) {
+        for (subject in subjects) {
+            identityIfAbsent(subject)
+        }
+    }
 }

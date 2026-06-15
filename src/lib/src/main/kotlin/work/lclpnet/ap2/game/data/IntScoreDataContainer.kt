@@ -123,6 +123,12 @@ class IntScoreDataContainer<T, Ref : SubjectRef> @JvmOverloads constructor(
         listeners.add(listener)
     }
 
+    override fun dispatchScoreEvents(subjects: Iterable<T>) {
+        for (subject in subjects) {
+            identityIfAbsent(subject)
+        }
+    }
+
     @Synchronized
     override fun copy(): DataContainer<T, Ref> {
         val copy = IntScoreDataContainer(refs, ordering, detailKey)
