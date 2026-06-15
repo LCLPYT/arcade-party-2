@@ -8,6 +8,7 @@ import net.minecraft.world.scores.Objective
 import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.game.team.Team
 import work.lclpnet.ap2.api.game.team.TeamManager
+import work.lclpnet.ap2.api.stats.LevelInfo
 import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective
 import work.lclpnet.ap2.ext.allPlayers
 import work.lclpnet.ap2.ext.hooks
@@ -100,7 +101,9 @@ fun MiniGameInstance.useFFAWinManager(
         { container -> FFAGameResult(container) }
     )
 
-    return WinManager(gameHandle, map, winData)
+    val levelInfo = createLevelInfo(map)
+
+    return WinManager(gameHandle, levelInfo, winData)
 }
 
 fun MiniGameInstance.useTeamWinManager(
@@ -124,8 +127,15 @@ fun MiniGameInstance.useTeamWinManager(
         }
     )
 
-    return WinManager(gameHandle, map, winData)
+    val levelInfo = createLevelInfo(map)
+
+    return WinManager(gameHandle, levelInfo, winData)
 }
+
+private fun MiniGameInstance.createLevelInfo(map: GameMap?): LevelInfo = LevelInfo(
+    map,
+    if (map == null) level.seed else null
+)
 
 /**
  * Sets the default player game mode to survival mode.

@@ -2,7 +2,9 @@ package work.lclpnet.ap2.api.stats
 
 import net.minecraft.ChatFormatting.*
 import net.minecraft.core.Holder
+import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.HoverEvent
 import net.minecraft.resources.Identifier
 import net.minecraft.server.dialog.*
 import net.minecraft.server.dialog.body.DialogBody
@@ -57,14 +59,41 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
         val title = translations.translateText(player, summary.game.titleKey)
             .formatted(GOLD, BOLD)
 
-        val mapLine = summary.map?.let { map ->
-            val mapName = map.getName(translations.getLanguage(player))
+        val mapLine = when {
+            summary.levelInfo.map != null -> {
+                val mapName = summary.levelInfo.map.getName(translations.getLanguage(player))
 
-            translations.translateText(
-                player,
-                "ap2.view_stats.map",
-                FormatWrapper.styled(mapName, AQUA)
-            ).formatted(GREEN)
+                translations.translateText(
+                    player,
+                    "ap2.view_stats.map",
+                    FormatWrapper.styled(mapName, AQUA)
+                ).formatted(GREEN)
+            }
+
+            summary.levelInfo.seed != null -> {
+                val seedLine = translations.translateText(
+                    player,
+                    "ap2.view_stats.seed",
+                    FormatWrapper.styled(summary.levelInfo.seed, YELLOW)
+                ).formatted(GREEN)
+                    .append(Component.literal(" 📋").withStyle(AQUA))
+                    .styled { style -> style
+                        .withClickEvent(ClickEvent.CopyToClipboard(summary.levelInfo.seed.toString()))
+                        .withHoverEvent(HoverEvent.ShowText(
+                            translations.translateText(player, "ap2.click_to_copy")
+                        ))
+                    }
+
+                val versionLine = translations.translateText(
+                    player,
+                    "ap2.view_stats.minecraft_version",
+                    FormatWrapper.styled(summary.minecraftVersion, YELLOW)
+                ).formatted(GREEN)
+
+                Component.empty().append(seedLine).append("\n").append(versionLine)
+            }
+
+            else -> null
         }
 
         val seconds = summary.duration.inWholeSeconds.toInt()

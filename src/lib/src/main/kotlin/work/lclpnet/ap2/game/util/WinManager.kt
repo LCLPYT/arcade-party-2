@@ -1,16 +1,17 @@
 package work.lclpnet.ap2.game.util
 
+import net.minecraft.SharedConstants
 import net.minecraft.server.level.ServerPlayer
 import work.lclpnet.ap2.api.game.GameOverListener
 import work.lclpnet.ap2.api.game.MiniGameResults
 import work.lclpnet.ap2.api.game.data.*
 import work.lclpnet.ap2.api.stats.GameSummary
+import work.lclpnet.ap2.api.stats.LevelInfo
 import work.lclpnet.ap2.api.stats.StatsManager
 import work.lclpnet.ap2.api.util.action.Action
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.data.CombinedDataContainer
 import work.lclpnet.ap2.game.data.SupremeDataContainer
-import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.util.ProtectorUtils
 import work.lclpnet.kibu.hook.Hook
 import work.lclpnet.kibu.hook.HookFactory
@@ -21,7 +22,7 @@ import kotlin.time.Clock
 
 class WinManager<T, Ref : SubjectRef>(
     private val gameHandle: MiniGameHandle,
-    private val map: GameMap?,
+    private val levelInfo: LevelInfo,
     private val data: Data<T, Ref>
 ) : WinManagerAccess {
     private val gameOverHook: Hook<GameOverListener> = HookFactory.createArrayBacked(
@@ -94,7 +95,8 @@ class WinManager<T, Ref : SubjectRef>(
 
         val summary = GameSummary(
             gameHandle.gameInfo,
-            map,
+            SharedConstants.getCurrentVersion().name(),
+            levelInfo,
             gameHandle.startTime,
             end,
             initialParticipants

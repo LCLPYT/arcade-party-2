@@ -8,10 +8,16 @@ import kotlin.time.Instant
 
 data class GameSummary(
     val game: GameInfo,
-    val map: GameMap?,
+    val minecraftVersion: String,
+    val levelInfo: LevelInfo,
     val start: Instant,
     val end: Instant,
     val participants: Set<PlayerRef>
 ) {
     val duration: Duration = end - start
 }
+
+data class LevelInfo(
+    val map: GameMap?,
+    val seed: Long?,
+)
