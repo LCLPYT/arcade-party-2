@@ -225,7 +225,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         dynamicEntityManager = new DynamicEntityManager(world);
         dynamicEntityManager.init(scheduler, hooks);
 
-        giveDevelopmentItems(hooks);
+        setupAdminItems(hooks);
 
         showLeaderboard();
         displayGameQueue();
@@ -270,6 +270,10 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         taskHandle = component(BuiltinComponents.SCHEDULER).scheduler()
                 .interval(this::tick, 1);
+
+        for (ServerPlayer player : PlayerLookup.all(getServer())) {
+            giveAdminItems(player);
+        }
     }
 
     private void showLeaderboard() {
@@ -714,11 +718,11 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         return skipPreparation;
     }
 
-    private void giveDevelopmentItems(HookRegistrar hooks) {
+    private void setupAdminItems(HookRegistrar hooks) {
         MinecraftServer server = getServer();
 
         for (ServerPlayer player : PlayerLookup.all(server)) {
-            giveDevelopmentItems(player);
+            giveAdminItems(player);
         }
 
         PlayerInteractionHooks.USE_ITEM.registerWith(hooks, (player, _, hand) -> {
@@ -742,7 +746,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             return InteractionResult.SUCCESS_SERVER;
         });
 
-        PlayerConnectionHooks.JOIN.registerWith(hooks, this::giveDevelopmentItems);
+        PlayerConnectionHooks.JOIN.registerWith(hooks, this::giveAdminItems);
 
         gameChooser.listen(hooks, (game, player) -> {
             forceGame(game);
@@ -756,24 +760,28 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         });
     }
 
-    private void giveDevelopmentItems(ServerPlayer player) {
+    private void giveAdminItems(ServerPlayer player) {
         MinecraftServer server = getServer();
 
         if (!Commands.LEVEL_GAMEMASTERS.check(server.getProfilePermissions(player.nameAndId()))) return;
 
+        Inventory inventory = player.getInventory();
+
         ItemStack gameSelector = new ItemStack(Items.TOTEM_OF_UNDYING);
         gameSelector.set(DataComponents.CUSTOM_NAME, Component.literal("Select Game").withStyle(style -> style.withItalic(false).applyFormat(YELLOW)));
-
-        ItemStack mapSelector = new ItemStack(Items.HEART_OF_THE_SEA);
-        mapSelector.set(DataComponents.CUSTOM_NAME, Component.literal("Select Map").withStyle(style -> style.withItalic(false).applyFormat(YELLOW)));
+        inventory.setItem(0, gameSelector);
 
         ItemStack skip = new ItemStack(Items.EMERALD_BLOCK);
         skip.set(DataComponents.CUSTOM_NAME, Component.literal("Skip Preparation").withStyle(style -> style.withItalic(false).applyFormat(GREEN)));
-
-        Inventory inventory = player.getInventory();
-        inventory.setItem(0, gameSelector);
         inventory.setItem(1, skip);
-        inventory.setItem(8, mapSelector);
+
+        if (miniGame != null && miniGame.getUsesMaps()) {
+            ItemStack mapSelector = new ItemStack(Items.HEART_OF_THE_SEA);
+            mapSelector.set(DataComponents.CUSTOM_NAME, Component.literal("Select Map").withStyle(style -> style.withItalic(false).applyFormat(YELLOW)));
+            inventory.setItem(8, mapSelector);
+        } else {
+            inventory.setItem(8, ItemStack.EMPTY);
+        }
     }
 
     private void openGamePicker(ServerPlayer player) {
