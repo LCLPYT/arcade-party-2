@@ -35,6 +35,9 @@ toml4j = "0.7.2"
 junit-jupiter = "5.8.1"
 mockito = "5.23.0"
 sqlite-jdbc = "3.41.2.2"
+c2me = "0.4.0-alpha.0.9+26.1.2"
+lithium = "mc26.1.2-0.24.5-fabric"
+scalablelux = "0.2.0+fabric.2b63825"
 
 [plugins]
 fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }
@@ -94,3 +97,6 @@ junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", vers
 junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit-jupiter" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite-jdbc" }
+c2me-fabric = { module = "maven.modrinth:c2me-fabric", version.ref = "c2me" }
+lithium = { module = "maven.modrinth:lithium", version.ref = "lithium" }
+scalablelux = { module = "maven.modrinth:scalablelux", version.ref = "scalablelux" }

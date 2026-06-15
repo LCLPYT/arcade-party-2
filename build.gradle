@@ -192,6 +192,9 @@ dependencies {
     localRuntime(libs.modrinth.anti.xray)
     localRuntime(libs.simple.ac)
     localRuntime(libs.toml4j)
+    localRuntime(libs.c2me.fabric)
+    localRuntime(libs.lithium)
+    localRuntime(libs.scalablelux)
 
     // test dependencies
     testImplementation(libs.junit.jupiter.api)
