@@ -2,8 +2,6 @@ package work.lclpnet.ap2.game.base
 
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
-import work.lclpnet.ap2.api.game.WinManagerAccess
-import work.lclpnet.ap2.api.game.WinManagerView
 import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.game.team.Team
 import work.lclpnet.ap2.api.game.team.TeamEliminatedListener
@@ -14,7 +12,6 @@ import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.data.type.TeamRef
 import work.lclpnet.ap2.game.player.ParticipantListener
 import work.lclpnet.ap2.game.util.useTeamWinManager
-import work.lclpnet.ap2.impl.game.WinManagerAccessImpl
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.map.MapUtils
 import work.lclpnet.kibu.hook.util.PositionRotation
@@ -29,10 +26,9 @@ abstract class TeamGameInstance(
 ) : MapGameInstance(gameHandle, world, map),
     ParticipantListener,
     TeamEliminatedListener,
-    TeamSpawnAccess,
-    WinManagerView {
+    TeamSpawnAccess {
 
-    protected val winManager = useTeamWinManager(teamManager, map) { data }
+    override val winManager = useTeamWinManager(teamManager, map) { data }
     @Volatile
     private var teamSpawns: MutableMap<String, PositionRotation>? = null
 
@@ -93,12 +89,6 @@ abstract class TeamGameInstance(
     protected fun createReference(team: Team): TeamRef {
         return TeamRef(team.key(), gameHandle.translations)
     }
-
-    override fun getWinManagerAccess(): WinManagerAccess = WinManagerAccessImpl(
-        winManager,
-        { player -> teamManager.getTeam(player) },
-        this.data
-    )
 
     protected abstract val data: DataContainer<Team, TeamRef>
 }

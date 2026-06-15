@@ -16,8 +16,6 @@ import work.lclpnet.kibu.hook.Hook
 import work.lclpnet.kibu.hook.HookFactory
 import java.util.*
 import java.util.concurrent.CompletableFuture
-import java.util.function.Function
-import java.util.stream.Collectors
 import kotlin.concurrent.Volatile
 import kotlin.time.Clock
 
@@ -25,7 +23,7 @@ class WinManager<T, Ref : SubjectRef>(
     private val gameHandle: MiniGameHandle,
     private val map: GameMap?,
     private val data: Data<T, Ref>
-) {
+) : WinManagerAccess {
     private val gameOverHook: Hook<GameOverListener> = HookFactory.createArrayBacked(
         GameOverListener::class.java
     ) { hooks ->
@@ -35,7 +33,7 @@ class WinManager<T, Ref : SubjectRef>(
             }
         }
     }
-    private val forcedWinners = SupremeDataContainer<T, Ref>(data.subjectRefs)
+    private val forcedWinners = SupremeDataContainer(data.subjectRefs)
 
     @Volatile
     var gameOver = false
@@ -77,7 +75,7 @@ class WinManager<T, Ref : SubjectRef>(
             )
         )
 
-        val result = data.winnersFactory.apply(finalData)
+        val result = data.winnersFactory(finalData)
         val statsId = submitStats(result)
         val winSequence = WinSequence(gameHandle, finalData, data.playerRefs, result, status, statsId)
 
@@ -117,10 +115,9 @@ class WinManager<T, Ref : SubjectRef>(
     }
 
     fun checkForLastRemaining() {
-        val participatingSubjects = gameHandle.participants.stream()
-            .map(data.subjectMapper)
-            .flatMap { it.stream() }
-            .collect(Collectors.toSet())
+        val participatingSubjects = gameHandle.participants
+            .mapNotNull(data.subjectMapper)
+            .toSet()
 
         val size = participatingSubjects.size
 
@@ -145,12 +142,34 @@ class WinManager<T, Ref : SubjectRef>(
         complete()
     }
 
-    @JvmRecord
+    override fun draw() {
+        data.container().clear()
+        complete()
+    }
+
+    override fun win(player: ServerPlayer) {
+        val subject = data.subjectMapper(player)
+
+        if (subject != null) {
+            forceWin(setOf(subject))
+        } else {
+            draw()
+        }
+    }
+
+    override fun win(players: Set<ServerPlayer>) {
+        val subjects = players
+            .mapNotNull(data.subjectMapper)
+            .toSet()
+
+        forceWin(subjects)
+    }
+
     data class Data<T, Ref : SubjectRef>(
         val container: () -> DataContainer<T, Ref>,
-        val subjectMapper: Function<ServerPlayer, Optional<T>>,
+        val subjectMapper: (ServerPlayer) -> T?,
         val subjectRefs: SubjectRefFactory<T, Ref>,
         val playerRefs: PlayerSubjectRefFactory<Ref?>,
-        val winnersFactory: Function<DataContainer<T, Ref>, GenericGameResult<Ref>>,
+        val winnersFactory: (DataContainer<T, Ref>) -> GenericGameResult<Ref>,
     )
 }

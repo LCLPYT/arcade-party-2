@@ -94,7 +94,7 @@ class MiniGameActivity(
 
         if (maxDurationTicks.isPositive()) {
             scheduler.timeout(maxDurationTicks.inWholeTicks) { ->
-                DrawCommand.dispatchDraw(instance, handle)
+                DrawCommand.dispatchDraw(instance)
             }
         }
 
