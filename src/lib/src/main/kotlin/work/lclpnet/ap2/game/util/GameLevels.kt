@@ -14,6 +14,7 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.level.biome.MultiNoiseBiomeSource
 import net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterLists
 import net.minecraft.world.level.dimension.BuiltinDimensionTypes
+import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings
@@ -36,10 +37,20 @@ object GameLevels {
     }
 }
 
+fun setupGameLevel(level: ServerLevel) {
+    val server = level.server
+
+    level.gameRules.apply {
+        set(GameRules.IMMEDIATE_RESPAWN, true, server)
+        set(GameRules.SHOW_ADVANCEMENT_MESSAGES, false, server)
+        set(GameRules.PVP, true, server)
+    }
+}
+
 suspend fun MiniGameHandle.generateRandomLevel(
     factory: (ResourceKey<Level>) -> CompletableFuture<RuntimeLevelHandle> = ::createOverworldLevel
 ): ServerLevel {
-    return worldFacade.changeLevel(
+    val level = worldFacade.changeLevel(
         gameInfo.identifier("overworld"),
         GameLevels.TemporaryNoTeleport,
         { level ->
@@ -53,6 +64,10 @@ suspend fun MiniGameHandle.generateRandomLevel(
         },
        factory
     ).await()
+
+    setupGameLevel(level)
+
+    return level
 }
 
 /**
