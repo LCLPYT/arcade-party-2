@@ -158,7 +158,7 @@ class MusicalMinecartInstance(
             }
 
             gameHandle.logger.error("Failed to load next song", err)
-            winManagerAccess.draw()
+            winManager.draw()
         }
     }
 

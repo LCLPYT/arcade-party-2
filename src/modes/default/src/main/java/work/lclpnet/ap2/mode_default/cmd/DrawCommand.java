@@ -6,7 +6,6 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import work.lclpnet.ap2.api.game.MiniGameResults;
-import work.lclpnet.ap2.api.game.WinManagerView;
 import work.lclpnet.ap2.game.MiniGameHandle;
 import work.lclpnet.ap2.game.MiniGameInstance;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
@@ -40,7 +39,7 @@ public class DrawCommand implements KibuCommand {
     private int draw(CommandContext<CommandSourceStack> ctx) {
         ctx.getSource().sendSystemMessage(Component.literal("Ended the current mini game with a draw"));
 
-        dispatchDraw(miniGame, gameHandle);
+        dispatchDraw(miniGame);
 
         return 1;
     }
@@ -53,11 +52,7 @@ public class DrawCommand implements KibuCommand {
         return 1;
     }
 
-    public static void dispatchDraw(MiniGameInstance instance, MiniGameHandle gameHandle) {
-        if (instance instanceof WinManagerView view) {
-            view.getWinManagerAccess().draw();
-        } else {
-            gameHandle.complete(MiniGameResults.EMPTY);
-        }
+    public static void dispatchDraw(MiniGameInstance instance) {
+        instance.getWinManager().draw();
     }
 }

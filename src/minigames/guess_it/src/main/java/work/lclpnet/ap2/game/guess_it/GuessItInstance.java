@@ -295,7 +295,7 @@ public class GuessItInstance extends FFAGameInstance {
 
         if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
             // to many errors in a row, abort the game
-            winManager.complete();
+            getWinManager().complete();
             return;
         }
 
@@ -357,7 +357,7 @@ public class GuessItInstance extends FFAGameInstance {
         inputManager.reset();
 
         if (round >= rounds) {
-            winManager.complete();
+            getWinManager().complete();
             return;
         }
 

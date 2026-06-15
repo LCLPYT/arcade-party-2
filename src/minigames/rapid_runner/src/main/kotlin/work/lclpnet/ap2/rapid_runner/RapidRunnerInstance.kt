@@ -32,7 +32,7 @@ class RapidRunnerInstance(
 ) : MiniGameInstance {
 
     val data = useDataContainer { DoubleScoreDataContainer(it, detailKey = "ap2.score.blocks_away") }
-    val winManager = useFFAWinManager(null) { data }
+    override val winManager = useFFAWinManager(null) { data }
     override val participantListener = useLastRemainingParticipantListener(winManager)
 
     init {

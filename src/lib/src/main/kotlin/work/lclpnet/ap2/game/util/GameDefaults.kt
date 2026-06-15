@@ -29,7 +29,6 @@ import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback
 import work.lclpnet.kibu.hook.player.PlayerWaypointCallback
 import work.lclpnet.kibu.translate.text.LocalizedFormat
-import java.util.*
 
 
 fun MiniGameInstance.configureDefaults(
@@ -95,7 +94,7 @@ fun MiniGameInstance.useFFAWinManager(
 ): WinManager<ServerPlayer, PlayerRef> {
     val winData: WinManager.Data<ServerPlayer, PlayerRef> = WinManager.Data(
         data,
-        { value -> Optional.of(value) },
+        { player -> player },
         { player -> PlayerRef.create(player) },
         { player -> PlayerRef.create(player) },
         { container -> FFAGameResult(container) }
@@ -111,7 +110,7 @@ fun MiniGameInstance.useTeamWinManager(
 ): WinManager<Team, TeamRef> {
     val winData: WinManager.Data<Team, TeamRef> = WinManager.Data(
         data,
-        { player: ServerPlayer -> teamManager.getTeam(player) },
+        { player: ServerPlayer -> teamManager.getTeam(player).orElse(null) },
         { team: Team -> TeamRef(team.key(), gameHandle.translations) },
         { player: ServerPlayer ->
             teamManager.getTeam(player).map { team ->
