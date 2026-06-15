@@ -1,7 +1,6 @@
 package work.lclpnet.ap2.util.scoreboard
 
 import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.numbers.FixedFormat
 import net.minecraft.network.chat.numbers.NumberFormat
 import net.minecraft.network.chat.numbers.StyledFormat
 import net.minecraft.server.ServerScoreboard
@@ -10,17 +9,14 @@ import net.minecraft.server.players.PlayerList
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.scores.*
 import net.minecraft.world.scores.criteria.ObjectiveCriteria
-import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective
 import work.lclpnet.ap2.api.util.scoreboard.VirtualScoreboardObjective
 import work.lclpnet.ap2.core.type.ApServerPlayerEntity
-import work.lclpnet.ap2.game.data.ScoreListenerView
 import work.lclpnet.ap2.impl.util.scoreboard.DynamicScoreboardObjective
 import work.lclpnet.ap2.impl.util.scoreboard.TranslatedScoreboardObjective
 import work.lclpnet.kibu.hook.HookRegistrar
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks
 import work.lclpnet.kibu.translate.Translations
 import work.lclpnet.kibu.translate.hook.LanguageChangedCallback
-import work.lclpnet.kibu.translate.text.LocalizedFormat
 import java.util.function.Function
 
 class CustomScoreboardManager(
@@ -165,51 +161,6 @@ class CustomScoreboardManager(
 
     fun setDisplay(slot: DisplaySlot, objective: Objective?) {
         scoreboard.setDisplayObjective(slot, objective)
-    }
-
-    fun sync(objective: Objective, source: ScoreListenerView<ServerPlayer, Int>) {
-        source.register { player, score ->
-            setScore(player, objective, score)
-        }
-    }
-
-    fun sync(objective: CustomScoreboardObjective, source: ScoreListenerView<ServerPlayer, Int>) {
-        source.register { player, score ->
-            objective.setScore(player, score)
-        }
-    }
-
-    @JvmOverloads
-    fun sync(
-        objective: TranslatedScoreboardObjective,
-        source: ScoreListenerView<ServerPlayer, Double>,
-        format: String = "%.2f",
-
-    ) {
-        // minecraft scoreboard scores are integers, so the double is displayed via a per-language
-        // FixedFormat while the integer score only carries the ranking order
-        val scores = HashMap<String, Double>()
-
-        source.register { player, score ->
-            val holder = player.scoreboardName
-            scores[holder] = score
-
-            val localized = LocalizedFormat.format(format, score)
-
-            objective.setNumberFormat(holder) { language ->
-                val defaultFormat = objective.defaultEntry.numberFormat.translateTo(language)
-                val defaultStyle = defaultFormat.format(0).style
-
-                FixedFormat(localized.translateTo(language).copy().withStyle(defaultStyle))
-            }
-
-            val ordered = scores.entries.sortedByDescending { it.value }
-            val n = ordered.size
-
-            ordered.forEachIndexed { index, entry ->
-                objective.setScore(entry.key, n - index)
-            }
-        }
     }
 
     fun translateObjective(
