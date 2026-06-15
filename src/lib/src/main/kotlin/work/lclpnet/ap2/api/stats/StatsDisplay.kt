@@ -74,7 +74,7 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
                 val seedLine = translations.translateText(
                     player,
                     "ap2.view_stats.seed",
-                    FormatWrapper.styled(summary.levelInfo.seed, YELLOW)
+                    FormatWrapper.styled(summary.levelInfo.seed, AQUA)
                 ).formatted(GREEN)
                     .append(Component.literal(" 📋").withStyle(AQUA))
                     .styled { style -> style
