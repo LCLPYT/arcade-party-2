@@ -3,5 +3,6 @@
   "game.ap2.rapid_runner.description": "Laufe so weit vom Spawn weg, wie du kannst. Der am weitesten entfernte Spieler gewinnt!",
   "game.ap2.rapid_runner.task": "Laufe weit weg",
   "game.ap2.rapid_runner.distance": "Distanz",
-  "game.ap2.rapid_runner.stat.score": "Distanz"
+  "game.ap2.rapid_runner.stat.score": "Distanz",
+  "game.ap2.rapid_runner.compass_name": "Richtung zum Spawn"
 }
