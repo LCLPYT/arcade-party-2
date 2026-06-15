@@ -5,7 +5,6 @@
   "game.ap2.eggventure.find_sample": "Finde diese Ostereier",
   "game.ap2.eggventure.eggs_left": "Es gab noch %s Ostereier",
   "game.ap2.eggventure.no_eggs_nearby": "Keine Ostereier in der Nähe",
-  "game.ap2.eggventure.stat.score": "Gefundene Eier",
   "game.ap2.eggventure.stat.eggs_stolen": "Gestohlene Eier",
   "game.ap2.eggventure.stat.eggs_lost": "Eier entgangen"
 }
