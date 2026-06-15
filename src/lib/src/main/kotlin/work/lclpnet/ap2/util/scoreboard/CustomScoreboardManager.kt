@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.util.scoreboard
 
-import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.numbers.FixedFormat
 import net.minecraft.network.chat.numbers.NumberFormat
@@ -198,7 +197,10 @@ class CustomScoreboardManager(
             val localized = LocalizedFormat.format(format, score)
 
             objective.setNumberFormat(holder) { language ->
-                FixedFormat(localized.translateTo(language).copy().withStyle(ChatFormatting.YELLOW))
+                val defaultFormat = objective.defaultEntry.numberFormat.translateTo(language)
+                val defaultStyle = defaultFormat.format(0).style
+
+                FixedFormat(localized.translateTo(language).copy().withStyle(defaultStyle))
             }
 
             val ordered = scores.entries.sortedByDescending { it.value }
