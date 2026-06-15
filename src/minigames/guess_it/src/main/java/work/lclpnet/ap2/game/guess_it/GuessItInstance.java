@@ -16,19 +16,21 @@ import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.core.hook.CopperGolemTurnIntoStatueCallback;
 import work.lclpnet.ap2.game.MiniGameHandle;
 import work.lclpnet.ap2.game.base.FFAGameInstance;
+import work.lclpnet.ap2.game.data.IntScoreDataContainer;
+import work.lclpnet.ap2.game.data.type.PlayerRef;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.DynamicEntityModifier;
 import work.lclpnet.ap2.game.guess_it.util.SetChallengeCommand;
 import work.lclpnet.ap2.game.guess_it.util.SkipChallengeCommand;
 import work.lclpnet.ap2.game.player.Participants;
-import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
+import work.lclpnet.ap2.game.util.DataContainersKt;
+import work.lclpnet.ap2.game.util.GameDefaultsKt;
 import work.lclpnet.ap2.impl.map.MapUtil;
-import work.lclpnet.ap2.impl.util.ScoreboardUtil;
-import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.scoreboard.ScoreHandle;
 import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
+import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.ap2.util.scoreboard.ScoreboardUtilsKt;
 import work.lclpnet.gaco.ds.IndexedSet;
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager;
 import work.lclpnet.game.map.GameMap;
@@ -58,7 +60,7 @@ public class GuessItInstance extends FFAGameInstance {
     private static final int DELAY_TICKS = Ticks.seconds(5);
     private static final int MIN_ROUNDS = 8, MAX_ROUNDS = 14;
     private static final int MAX_CONSECUTIVE_ERRORS = 5;
-    private final IntScoreDataContainer<ServerPlayer, PlayerRef> data = new IntScoreDataContainer<>(PlayerRef::create);
+    private final IntScoreDataContainer<ServerPlayer, PlayerRef> data = DataContainersKt.useDataContainer(this, IntScoreDataContainer::new);
     private final Random random = new Random();
     private final PlayerChoices choices;
     private final ChallengeResult result;
@@ -164,7 +166,7 @@ public class GuessItInstance extends FFAGameInstance {
         CustomScoreboardManager scoreboardManager = getGameHandle().getScoreboardManager();
         Translations translations = getGameHandle().getTranslations();
 
-        var objective = ScoreboardUtil.setupSidebar(scoreboardManager, getGameHandle().getGameInfo().getTitleKey());
+        var objective = ScoreboardUtilsKt.setupTranslatedSidebarObjective(scoreboardManager, getGameHandle().getGameInfo().getTitleKey());
 
         // round display
         roundHandle = objective.createText(translations.translateText("game.ap2.guess_it.round").formatted(GREEN));
@@ -182,7 +184,7 @@ public class GuessItInstance extends FFAGameInstance {
             objective.add(player);
         }
 
-        useScoreboardStatsSync(data, objective);
+        GameDefaultsKt.useScoreboardStatsSync(this, data, objective);
     }
 
     private void updateRoundDisplay() {
@@ -293,7 +295,7 @@ public class GuessItInstance extends FFAGameInstance {
 
         if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
             // to many errors in a row, abort the game
-            winManager.complete();
+            getWinManager().complete();
             return;
         }
 
@@ -355,7 +357,7 @@ public class GuessItInstance extends FFAGameInstance {
         inputManager.reset();
 
         if (round >= rounds) {
-            winManager.complete();
+            getWinManager().complete();
             return;
         }
 

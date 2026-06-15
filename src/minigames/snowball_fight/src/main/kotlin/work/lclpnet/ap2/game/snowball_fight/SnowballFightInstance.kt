@@ -25,6 +25,8 @@ import work.lclpnet.ap2.api.stats.CommonStats.TimeSurvived
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.stats.StatUnits
 import work.lclpnet.ap2.core.hook.ProjectileShootCallback
+import work.lclpnet.ap2.ext.hooks
+import work.lclpnet.ap2.ext.isParticipating
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.setAttribute
 import work.lclpnet.ap2.ext.players
@@ -32,6 +34,9 @@ import work.lclpnet.ap2.ext.trackDistanceMoved
 import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
+import work.lclpnet.ap2.game.util.useFFAStats
+import work.lclpnet.ap2.game.util.useOldCombat
+import work.lclpnet.ap2.game.util.useSurvivalMode
 import work.lclpnet.ap2.impl.util.world.SpawnFinder
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
@@ -57,14 +62,9 @@ private val TimeOutOfCombat = Stat("time_out_of_combat", 0, higherIsBetter = fal
 
 class SnowballFightInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
 
-    private val stats = createStats(
-        DamageDealt,
-        TimeSurvived,
-        DistanceMoved,
-        SnowballsThrown,
-        Accuracy,
-        TimeOutOfCombat,
-    )
+    private val stats = useFFAStats(winManager, listOf(
+        DamageDealt, TimeSurvived, DistanceMoved, SnowballsThrown, Accuracy, TimeOutOfCombat,
+    ))
     private val snowballsHit = HashMap<UUID, Int>()
     private val outOfCombatStart = HashMap<UUID, Instant>()
     private val outOfCombatMillis = HashMap<UUID, Long>()
@@ -95,7 +95,7 @@ class SnowballFightInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
 
         gameHandle.protect { config ->
             ProtectionTypes.BREAK_BLOCKS.allow(config) { entity, pos ->
-                if (entity is ServerPlayer && participants.isParticipating(entity) && !winManager.isGameOver) {
+                if (entity is ServerPlayer && participants.isParticipating(entity) && !winManager.gameOver) {
                     onBreakBlock(entity, pos)
                 }
                 false

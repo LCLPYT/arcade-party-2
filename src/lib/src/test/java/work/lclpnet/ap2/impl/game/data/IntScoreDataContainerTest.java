@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.impl.game.data;
 
 import org.junit.jupiter.api.Test;
+import work.lclpnet.ap2.game.data.IntScoreDataContainer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

@@ -1,12 +1,9 @@
 package work.lclpnet.ap2.game.pvp_tournament.gen
 
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Assertions.assertSame
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
-import java.util.UUID
+import work.lclpnet.ap2.game.data.type.PlayerRef
+import java.util.*
 
 class MatchTest {
 

@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.api.game;
 
 import lombok.Getter;
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
+import work.lclpnet.ap2.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.RankUtil;
 
 import java.util.List;

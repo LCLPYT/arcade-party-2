@@ -20,6 +20,7 @@ import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.scheduler.api.TaskHandle
 import java.util.*
 import kotlin.math.round
+import kotlin.time.Duration
 
 class MimicryManager(
     private val gameHandle: MiniGameHandle,
@@ -66,9 +67,9 @@ class MimicryManager(
         sequence.add(random.nextInt(buttonCount))
     }
 
-    fun beginReplay(maxSeconds: Int) {
+    fun beginReplay(maxTime: Duration) {
         replayStartMillis = System.currentTimeMillis()
-        maxReplayMillis = maxSeconds * 1000L
+        maxReplayMillis = maxTime.inWholeMilliseconds
         lastClickMillis.clear()
     }
 

@@ -23,16 +23,20 @@ import work.lclpnet.ap2.api.game.MiniGameResults
 import work.lclpnet.ap2.core.mixin.entity.LivingEntityAccessor
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
+import work.lclpnet.ap2.game.data.CombinedDataContainer
+import work.lclpnet.ap2.game.data.DoubleScoreDataContainer
+import work.lclpnet.ap2.game.data.OrderedDataContainer
+import work.lclpnet.ap2.game.data.Ordering
+import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.dragon_escape.kit.EnderPearlKit
 import work.lclpnet.ap2.game.dragon_escape.kit.LeapKit
 import work.lclpnet.ap2.game.dragon_escape.kit.WindChargeKit
 import work.lclpnet.ap2.game.kit.KitHandler
+import work.lclpnet.ap2.game.util.GameStartSequence
+import work.lclpnet.ap2.game.util.useAnnouncer
+import work.lclpnet.ap2.game.util.useDataContainer
+import work.lclpnet.ap2.game.util.useOldCombat
 import work.lclpnet.ap2.impl.game.PseudoElimination
-import work.lclpnet.ap2.impl.game.data.CombinedDataContainer
-import work.lclpnet.ap2.impl.game.data.DoubleScoreDataContainer
-import work.lclpnet.ap2.impl.game.data.OrderedDataContainer
-import work.lclpnet.ap2.impl.game.data.Ordering
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.Fireworks
 import work.lclpnet.ap2.impl.util.TimeHelper
@@ -69,13 +73,14 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
 
     private val completed = OrderedDataContainer(PlayerRef::create)
     private val score = DoubleScoreDataContainer(PlayerRef::create, Ordering.DESCENDING, "ap2.score.distance")
-    override val data = CombinedDataContainer(listOf(completed, score))
+    override val data = useDataContainer { CombinedDataContainer(listOf(completed, score)) }
     private val random = Random()
     private val inGoal = HashSet<UUID>()
     private val trackers = HashMap<UUID, Tracker>()
     private val movementBlocker = SimpleMovementBlocker(gameHandle.scheduler).also {
         it.setModifySpeedAttribute(false)
     }
+    private val announcer = useAnnouncer()
     private var startMs = 0L
     private lateinit var goalShape: BlockShape
     private lateinit var path: SplinePath
@@ -292,8 +297,12 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
         scoreboardManager.setDisplay(DisplaySlot.LIST, progressObjective)
     }
 
-    override fun afterInitialDelay() {
-        kitHandler.startKitSelectionTimer(commons()) { super.afterInitialDelay() }
+    override fun configureStartup(sequence: GameStartSequence) {
+        sequence.beforeGo { next ->
+            kitHandler.startKitSelectionTimer(this, announcer) { next.run() }
+        }
+
+        super.configureStartup(sequence)
     }
 
     override fun go() {
@@ -357,7 +366,7 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
 
     @Synchronized
     private fun tick() {
-        if (winManager.isGameOver) return
+        if (winManager.gameOver) return
 
         var check = checkForCompletion
 
@@ -399,7 +408,7 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
     }
 
     private fun onReachGoal(player: ServerPlayer) {
-        if (!inGoal.add(player.uuid) || winManager.isGameOver) return
+        if (!inGoal.add(player.uuid) || winManager.gameOver) return
 
         val time = (milliTime() - startMs) / 1000.0
         val duration = TimeHelper.formatTime(gameHandle.translations, time, "%02d", "%06.3f", "%.3f")
@@ -428,7 +437,7 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
 
     @Synchronized
     private fun softEliminate(player: ServerPlayer) {
-        if (pseudoElimination.eliminate(player) && !winManager.isGameOver) {
+        if (pseudoElimination.eliminate(player) && !winManager.gameOver) {
             trackScore(player)
         }
 
@@ -491,7 +500,7 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
 
     @Synchronized
     private fun checkComplete() {
-        if (winManager.isGameOver) return
+        if (winManager.gameOver) return
 
         if (inGoal.size >= 3) {
             complete()
@@ -524,7 +533,7 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
 
     @Synchronized
     private fun complete() {
-        if (winManager.isGameOver) return
+        if (winManager.gameOver) return
 
         streamRemaining().forEach(::trackScore)
 

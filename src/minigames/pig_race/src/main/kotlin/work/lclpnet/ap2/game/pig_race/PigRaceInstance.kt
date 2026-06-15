@@ -25,19 +25,22 @@ import net.minecraft.world.scores.PlayerTeam
 import net.minecraft.world.scores.Team
 import work.lclpnet.ap2.api.music.WeightedSong
 import work.lclpnet.ap2.api.util.heads.PlayerHead
+import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
+import work.lclpnet.ap2.game.data.CombinedDataContainer
+import work.lclpnet.ap2.game.data.DoubleScoreDataContainer
+import work.lclpnet.ap2.game.data.OrderedDataContainer
+import work.lclpnet.ap2.game.data.Ordering
+import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.pig_race.util.PRProgress
 import work.lclpnet.ap2.game.pig_race.util.PRScoreboard
 import work.lclpnet.ap2.game.pig_race.util.createSegmentedPath
-import work.lclpnet.ap2.impl.game.data.CombinedDataContainer
-import work.lclpnet.ap2.impl.game.data.DoubleScoreDataContainer
-import work.lclpnet.ap2.impl.game.data.OrderedDataContainer
-import work.lclpnet.ap2.impl.game.data.Ordering
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.util.useDataContainer
+import work.lclpnet.ap2.game.util.usePlayerDynamicTaskDisplay
 import work.lclpnet.ap2.impl.music.MusicHelper
 import work.lclpnet.ap2.impl.util.ApRegistries
 import work.lclpnet.ap2.impl.util.Fireworks
@@ -50,7 +53,7 @@ import work.lclpnet.ap2.impl.util.handler.Visibility
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager
 import work.lclpnet.ap2.impl.util.heads.PlayerHeads
-import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager
+import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.gaco.collisions.ChunkedCollisionDetector
 import work.lclpnet.gaco.collisions.CollisionDetector
 import work.lclpnet.gaco.collisions.movement.TickMovementObserver
@@ -90,7 +93,7 @@ class PigRaceInstance(
         Ordering.ASCENDING,
         "ap2.score.blocks_away"
     )
-    override val data = CombinedDataContainer(listOf(winnerData, distanceData))
+    override val data = useDataContainer { CombinedDataContainer(listOf(winnerData, distanceData)) }
     private val random = Random()
     private val collisionDetector: CollisionDetector = ChunkedCollisionDetector()
     private val movementObserver = TickMovementObserver(collisionDetector, gameHandle.participants::isParticipating)
@@ -145,10 +148,10 @@ class PigRaceInstance(
     }
 
     private fun createBossBar(rounds: Int): DynamicTranslatedPlayerBossBar =
-        if (rounds > 1) usePlayerDynamicDisplay(
-            "game.ap2.pig_race.task_rounds",
+        if (rounds > 1) usePlayerDynamicTaskDisplay(
             styled(1, YELLOW),
-            styled(rounds, YELLOW)
+            styled(rounds, YELLOW),
+            key = "game.ap2.pig_race.task_rounds",
         )
         else usePlayerDynamicTaskDisplay()
 
@@ -210,7 +213,7 @@ class PigRaceInstance(
         val hooks = gameHandle.hooks
         val participants = gameHandle.participants
 
-        CheckpointHelper.setupResetItem(hooks, winManager::isGameOver, participants::isParticipating)
+        CheckpointHelper.setupResetItem(hooks, winManager::gameOver, participants::isParticipating)
             .then(::resetPlayerToCheckpoint)
 
         runEveryTick { tick() }
@@ -337,7 +340,7 @@ class PigRaceInstance(
 
     @Synchronized
     private fun onEnterGoal(player: ServerPlayer) {
-        if (winManager.isGameOver || !progress.path.isInLastSegment(player)) return
+        if (winManager.gameOver || !progress.path.isInLastSegment(player)) return
 
         val round = progress.getRound(player)
 

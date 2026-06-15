@@ -7,7 +7,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.BossEvent;
 import net.minecraft.world.damagesource.CombatEntry;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
@@ -37,23 +36,19 @@ import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.handler.Visibility;
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager;
-import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.world.WorldBorderRandomizer;
+import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.gaco.collisions.movement.TickMovementDetector;
 import work.lclpnet.gaco.collisions.util.PlayerAction;
 import work.lclpnet.gaco.math.Vec2i;
 import work.lclpnet.game.map.GameMap;
 import work.lclpnet.game.map.MapUtils;
-import work.lclpnet.game.util.BossBarTimer;
 import work.lclpnet.kibu.access.entity.ArmorStandAccess;
 import work.lclpnet.kibu.access.entity.EntityUtil;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.access.misc.DamageTrackerAccess;
 import work.lclpnet.kibu.hook.HookFactory;
 import work.lclpnet.kibu.hook.util.PositionRotation;
-import work.lclpnet.kibu.scheduler.Ticks;
-import work.lclpnet.kibu.scheduler.api.RunningTask;
-import work.lclpnet.kibu.scheduler.api.SchedulerAction;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.Translations;
 
@@ -70,7 +65,6 @@ public class GameCommons {
     private final GameMap map;
     private final ServerLevel world;
     private final DebugController debugController;
-    private volatile Announcer announcer = null;
     private volatile List<PositionRotation> spawns = null;
     private volatile GameRuleBuilder gameRuleBuilder = null;
     private volatile HealthDisplay healthDisplay = null;
@@ -212,65 +206,6 @@ public class GameCommons {
         return worldBorder;
     }
 
-    public Action<Runnable> addTimer(BossEvent bossBar, int durationSeconds) {
-        return addTimerTicks(bossBar, durationSeconds * 20);
-    }
-
-    public Action<Runnable> addTimerTicks(BossEvent bossBar, int durationTicks) {
-        var onEnd = HookFactory.createArrayBacked(Runnable.class, ops -> () -> {
-            for (Runnable op : ops) {
-                op.run();
-            }
-        });
-
-        gameHandle.getScheduler().interval(1, new SchedulerAction() {
-            int timer = durationTicks;
-
-            @Override
-            public void run(RunningTask info) {
-                if (timer-- <= 0) {
-                    info.cancel();
-                    bossBar.setProgress(0);
-                    onEnd.invoker().run();
-                    return;
-                }
-
-                if (timer % 20 == 0) {
-                    bossBar.setProgress(((float) timer / durationTicks));
-                }
-            }
-        });
-
-        return Action.create(onEnd);
-    }
-
-    public BossBarTimer createTimer(Object subject, int durationSeconds) {
-        return createTimer(subject, durationSeconds, BossEvent.BossBarColor.RED);
-    }
-
-    public BossBarTimer createTimer(Object subject, int durationSeconds, BossEvent.BossBarColor color) {
-        return createTimerTicks(subject, Ticks.seconds(durationSeconds), color);
-    }
-
-    public BossBarTimer createTimerTicks(Object subject, int durationTicks) {
-        return createTimerTicks(subject, durationTicks, BossEvent.BossBarColor.RED);
-    }
-
-    public BossBarTimer createTimerTicks(Object subject, int durationTicks, BossEvent.BossBarColor color) {
-        Translations translations = gameHandle.getTranslations();
-
-        BossBarTimer timer = BossBarTimer.builder(translations, subject)
-                .withAlertSound(false)
-                .withColor(color)
-                .withDurationTicks(durationTicks)
-                .build();
-
-        timer.addPlayers(PlayerLookup.all(gameHandle.getServer()));
-        timer.start(gameHandle.getBossBarProvider(), gameHandle.getScheduler());
-
-        return timer;
-    }
-
     public PlayerTeam noCollision() {
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
 
@@ -303,20 +238,6 @@ public class GameCommons {
                 .formatted(ChatFormatting.GREEN);
 
         player.sendOverlayMessage(msg);
-    }
-
-    public Announcer announcer() {
-        if (announcer != null) {
-            return announcer.withDefaults();
-        }
-
-        synchronized (this) {
-            if (announcer == null) {
-                announcer = new Announcer(gameHandle.getTranslations(), gameHandle.getServer());
-            }
-        }
-
-        return announcer.withDefaults();
     }
 
     public void teleportToRandomSpawns(Random random) {

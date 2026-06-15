@@ -2,7 +2,8 @@ package work.lclpnet.ap2.api.stats
 
 import net.minecraft.server.level.ServerPlayer
 import work.lclpnet.ap2.api.game.data.GenericGameResult
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.data.type.PlayerRef
+import work.lclpnet.kibu.translate.text.TranslatedText
 
 class FFAStatsManager(stats: StatSet) : BaseStatsManager<ServerPlayer, PlayerRef>(stats, PlayerRef::create), StatsManager<PlayerRef> {
 
@@ -10,9 +11,13 @@ class FFAStatsManager(stats: StatSet) : BaseStatsManager<ServerPlayer, PlayerRef
         fillDefaults(result.playerResults.mapNotNull { it.left() })
     }
 
-    override fun getResult(summary: GameSummary, result: GenericGameResult<PlayerRef>): FFAStatsResult {
+    override fun getResult(
+        summary: GameSummary,
+        result: GenericGameResult<PlayerRef>,
+        details: Map<PlayerRef, TranslatedText>
+    ): FFAStatsResult {
         val results: Map<PlayerRef, Stats> = getEntries()
-        val statsView = StatsView(stats, result.playerResults, results)
+        val statsView = StatsView(stats, result.playerResults, results, details)
 
         return FFAStatsResult(
             summary = summary,

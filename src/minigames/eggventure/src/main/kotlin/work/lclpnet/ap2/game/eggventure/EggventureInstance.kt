@@ -30,13 +30,17 @@ import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.criteria.ObjectiveCriteria
 import org.joml.Matrix4f
+import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.util.heads.PlayerHead
+import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.mc.isOf
+import work.lclpnet.ap2.ext.players
+import work.lclpnet.ap2.ext.scheduler
+import work.lclpnet.ap2.ext.translations
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
-import work.lclpnet.ap2.game.util.finaleCompatibleScoreContainer
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.util.*
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.tags.PlayerHeadTags
 import work.lclpnet.ap2.impl.util.ApRegistries
@@ -92,8 +96,10 @@ class EggventureInstance(
     private val remainingPositions: MutableSet<BlockPos>,
 ) : FFAGameInstance(gameHandle, level, map) {
 
-    override val data = finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
-    private val stats = createStats(data, EggsStolen, EggsLost)
+    override val data = useDataContainer(::finaleCompatibleIntScoreContainer)
+    private val stats = useFFAStats(winManager, data, CommonStats.IntScore, listOf(
+        EggsStolen, EggsLost
+    ))
     private val random = Random()
 
     override fun prepare() {
@@ -130,12 +136,16 @@ class EggventureInstance(
         scoreboardManager.setDisplay(DisplaySlot.LIST, objective)
     }
 
-    override fun afterInitialDelay() {
-        val dynamicEntityManager = DynamicEntityManager(level)
-        val tutorial = EggventureTutorial(level, dynamicEntityManager, random, gameHandle.translations)
+    override fun configureStartup(sequence: GameStartSequence) {
+        sequence.beforeGo { next ->
+            val dynamicEntityManager = DynamicEntityManager(level)
+            val tutorial = EggventureTutorial(level, dynamicEntityManager, random, translations)
 
-        dynamicEntityManager.init(gameHandle.scheduler, gameHandle.hooks)
-        tutorial.start(gameHandle.scheduler, gameHandle.participants).thenRun { super.afterInitialDelay() }
+            dynamicEntityManager.init(scheduler, hooks)
+            tutorial.start(scheduler, players()).thenRun { next.run() }
+        }
+
+        super.configureStartup(sequence)
     }
 
     override fun go() {
@@ -181,7 +191,9 @@ class EggventureInstance(
 
         val subject = gameHandle.translations.translateText(gameHandle.gameInfo.taskKey)
 
-        commons().createTimer(subject, DURATION.inWholeSeconds.toInt()).whenDone { completeAndShowRemaining() }
+        createTimer(subject, DURATION).whenDone {
+            completeAndShowRemaining()
+        }
 
         gameHandle.scheduler.interval(
             20,
@@ -189,7 +201,7 @@ class EggventureInstance(
             Runnable(::checkNearbyEggs)
         )
 
-        CheckpointHelper.setupResetItem(hooks, { winManager.isGameOver }) {
+        CheckpointHelper.setupResetItem(hooks, { winManager.gameOver }) {
             gameHandle.participants.isParticipating(it)
         }.then(::reset)
 
@@ -215,7 +227,7 @@ class EggventureInstance(
     }
 
     private fun completeAndShowRemaining() {
-        if (winManager.isGameOver) return
+        if (winManager.gameOver) return
 
         winManager.complete()
 
@@ -245,7 +257,7 @@ class EggventureInstance(
     }
 
     private fun onFindEasterEgg(player: ServerPlayer, pos: BlockPos) {
-        if (winManager.isGameOver) return
+        if (winManager.gameOver) return
 
         level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_SUPPRESS_DROPS or Block.UPDATE_KNOWN_SHAPE or Block.UPDATE_CLIENTS)
 

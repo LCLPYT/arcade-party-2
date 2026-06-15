@@ -36,15 +36,13 @@ import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.music.SongWrapper;
 import work.lclpnet.ap2.api.music.WeightedSong;
 import work.lclpnet.ap2.game.MiniGame;
+import work.lclpnet.ap2.game.data.type.PlayerRef;
 import work.lclpnet.ap2.game.player.PlayerManager;
 import work.lclpnet.ap2.impl.activity.ArcadePartyComponents;
 import work.lclpnet.ap2.impl.activity.ScoreboardComponent;
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.music.MusicHelper;
 import work.lclpnet.ap2.impl.util.IconMaker;
-import work.lclpnet.ap2.impl.util.ScoreboardUtil;
-import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.scoreboard.DynamicScoreboardObjective;
 import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout;
 import work.lclpnet.ap2.impl.util.title.AnimatedTitle;
@@ -57,12 +55,14 @@ import work.lclpnet.ap2.mode_default.util.ApBaseArgs;
 import work.lclpnet.ap2.mode_default.util.BaseActivityConfigurator;
 import work.lclpnet.ap2.mode_default.util.OptionChooser;
 import work.lclpnet.ap2.mode_default.util.ScoreManager;
+import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.ap2.util.scoreboard.ScoreboardUtilsKt;
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager;
 import work.lclpnet.gaco.scene.MixedMountContext;
 import work.lclpnet.gaco.scene.Object3d;
 import work.lclpnet.gaco.scene.Scene;
 import work.lclpnet.gaco.scene.object.TranslatedTextDisplayObject;
-import work.lclpnet.game.api.MapOptions;
+import work.lclpnet.game.api.WorldOptions;
 import work.lclpnet.game.map.GameMap;
 import work.lclpnet.game.util.BossBarTimer;
 import work.lclpnet.game.util.ProtectorComponent;
@@ -166,7 +166,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         return miniGameArgs.mapFacade()
                 .findMapIdByPrefix(prefix)
                 .thenApply(mapId -> mapId.orElseThrow(() -> new IllegalStateException("No map found for prefix %s".formatted(prefix))))
-                .thenCompose(mapId -> miniGameArgs.worldFacade().changeMap(mapId, MapOptions.REUSABLE)
+                .thenCompose(mapId -> miniGameArgs.mapFacade().changeMap(mapId, WorldOptions.REUSABLE)
                         .thenCompose(world -> miniGameArgs.mapFacade().getMap(mapId)
                                 .thenApply(map -> new SetupResult(world, map
                                         .orElseThrow(() -> new IllegalStateException("Map %s not found".formatted(mapId)))))));
@@ -258,10 +258,12 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         Identifier gameId = miniGame.getId();
 
-        whenTasksDone = args.miniGameArgs().mapFacade().reloadMaps(gameId).exceptionally(err -> {
-            args.miniGameArgs().logger().error("Failed to reload maps for {}", gameId, err);
-            return null;
-        });
+        if (miniGame.getUsesMaps()) {
+            whenTasksDone = args.miniGameArgs().mapFacade().reloadMaps(gameId).exceptionally(err -> {
+                args.miniGameArgs().logger().error("Failed to reload maps for {}", gameId, err);
+                return null;
+            });
+        }
 
         displayGameQueue();
         startTimer().whenDone(this::onTimerEnded);
@@ -276,7 +278,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         ScoreboardComponent component = component(ArcadePartyComponents.SCORE_BOARD);
         CustomScoreboardManager scoreboard = component.scoreboardManager(args.miniGameArgs()::translations);
 
-        var objective = ScoreboardUtil.setupDynamicSidebar(scoreboard, "game.%s.title".formatted(ApConstants.ID));
+        var objective = ScoreboardUtilsKt.setupDynamicSidebarObjective(scoreboard, "game.%s.title".formatted(ApConstants.ID));
 
         // header
         var round = new FixedFormat(Component.literal(String.valueOf(scoreManager.getRound())).withStyle(YELLOW));

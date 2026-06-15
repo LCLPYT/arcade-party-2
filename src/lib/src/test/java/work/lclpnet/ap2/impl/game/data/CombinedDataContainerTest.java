@@ -2,11 +2,13 @@ package work.lclpnet.ap2.impl.game.data;
 
 import org.junit.jupiter.api.Test;
 import work.lclpnet.ap2.api.game.data.DataEntry;
+import work.lclpnet.ap2.game.data.CombinedDataContainer;
+import work.lclpnet.ap2.game.data.IntScoreDataContainer;
+import work.lclpnet.ap2.game.data.OrderedDataContainer;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class CombinedDataContainerTest {
 
@@ -20,8 +22,8 @@ class CombinedDataContainerTest {
 
         first.add("foo");
 
-        assertTrue(container.getEntry("foo").isPresent());
-        assertTrue(container.getEntry("bar").isPresent());
+        assertNotNull(container.getEntry("foo"));
+        assertNotNull(container.getEntry("bar"));
     }
 
     @Test
@@ -36,7 +38,7 @@ class CombinedDataContainerTest {
         first.add("foo");
 
         var order = container.streamOrderedEntries()
-                .map(DataEntry::subject)
+                .map(DataEntry::getSubject)
                 .map(StringRef::name)
                 .toList();
 
@@ -53,13 +55,13 @@ class CombinedDataContainerTest {
         container.identityIfAbsent("bar");
         container.identityIfAbsent("baz");
 
-        assertTrue(first.getEntry("foo").isEmpty());
-        assertTrue(first.getEntry("bar").isEmpty());
-        assertTrue(first.getEntry("baz").isEmpty());
+        assertNull(first.getEntry("foo"));
+        assertNull(first.getEntry("bar"));
+        assertNull(first.getEntry("baz"));
 
-        assertTrue(second.getEntry("foo").isPresent());
-        assertTrue(second.getEntry("bar").isPresent());
-        assertTrue(second.getEntry("baz").isPresent());
+        assertNotNull(second.getEntry("foo"));
+        assertNotNull(second.getEntry("bar"));
+        assertNotNull(second.getEntry("baz"));
     }
 
     @Test

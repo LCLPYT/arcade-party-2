@@ -18,13 +18,15 @@ import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
-import work.lclpnet.ap2.impl.game.data.OrderedDataContainer
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.data.OrderedDataContainer
+import work.lclpnet.ap2.game.util.useDataContainer
+import work.lclpnet.ap2.game.util.useFFAStats
+import work.lclpnet.ap2.game.util.useTaskDisplay
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.Fireworks
 import work.lclpnet.ap2.impl.util.movement.MovementListener
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
-import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager
+import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.map.MapUtils
@@ -53,13 +55,15 @@ private data class Grade(val player: ServerPlayer, val distance: Double)
 class RedLightGreenLightInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
 
     private val movementBlocker = SimpleMovementBlocker(gameHandle.scheduler)
-    override val data = OrderedDataContainer(PlayerRef::create)
+    override val data = useDataContainer(::OrderedDataContainer)
     private val random = Random()
     private val inGoal = HashSet<UUID>()
     private val moved = HashSet<UUID>()
     private val trafficLights = ArrayList<TrafficLight>()
     private val movementDetector = RLGLMovementDetector()
-    private val stats = createStats(Resets, YellowMovingTime, ClosestStopTime, DistanceReset, AvgYellowTimeUsage)
+    private val stats = useFFAStats(winManager, listOf(
+        Resets, YellowMovingTime, ClosestStopTime, DistanceReset, AvgYellowTimeUsage
+    ))
     private val rlglStats = RedLightGreenLightStats(stats)
     private val lastMovingTick = HashMap<UUID, Int>()
     private val pendingStopTime = HashMap<UUID, Float>()
@@ -214,7 +218,7 @@ class RedLightGreenLightInstance(gameHandle: MiniGameHandle, level: ServerLevel,
     }
 
     private fun onMovedWhileRed(player: ServerPlayer) {
-        if (winManager.isGameOver
+        if (winManager.gameOver
             || !gameHandle.participants.isParticipating(player)
             || inGoal.contains(player.uuid)
             || !moved.add(player.uuid)) return

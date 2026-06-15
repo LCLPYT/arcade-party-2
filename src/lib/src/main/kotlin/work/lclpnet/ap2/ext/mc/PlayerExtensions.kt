@@ -12,8 +12,8 @@ import work.lclpnet.kibu.hook.util.PositionRotation
 
 fun ServerPlayer.setSelectedSlot(slot: Int) = PlayerInventoryAccess.setSelectedSlot(this, slot)
 
-fun ServerPlayer.teleport(pos: BlockPos) = teleportTo(
-    level(),
+fun ServerPlayer.teleport(pos: BlockPos, level: ServerLevel = level()) = teleportTo(
+    level,
     pos.x.toDouble() + 0.5,
     pos.y.toDouble(),
     pos.z + 0.5,
@@ -23,8 +23,8 @@ fun ServerPlayer.teleport(pos: BlockPos) = teleportTo(
     true
 )
 
-fun ServerPlayer.teleport(pos: Position) = teleportTo(
-    level(),
+fun ServerPlayer.teleport(pos: Position, level: ServerLevel = level()) = teleportTo(
+    level,
     pos.x(),
     pos.y(),
     pos.z(),
@@ -45,8 +45,8 @@ fun ServerPlayer.teleport(pos: Position, yaw: Float, level: ServerLevel = level(
     true
 )
 
-fun ServerPlayer.teleport(pos: PositionRotation) = teleportTo(
-    level(),
+fun ServerPlayer.teleport(pos: PositionRotation, level: ServerLevel = level()) = teleportTo(
+    level,
     pos.x(),
     pos.y(),
     pos.z(),

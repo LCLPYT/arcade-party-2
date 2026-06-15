@@ -13,14 +13,15 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.Team
+import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.Stat
+import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
-import work.lclpnet.ap2.game.util.finaleCompatibleScoreContainer
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.util.*
 import work.lclpnet.ap2.impl.util.handler.Visibility
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager
@@ -44,8 +45,10 @@ val Missed = Stat("missed", 0)
 
 class SplashyDropperInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
 
-    override val data = finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
-    private val stats = createStats(data, HitSmall, HitMedium, HitLarge, Missed)
+    override val data = useDataContainer(::finaleCompatibleIntScoreContainer)
+    private val stats = useFFAStats(winManager, data, CommonStats.IntScore, listOf(
+        HitSmall, HitMedium, HitLarge, Missed
+    ))
     private val random = Random()
     private val blocksBelow = ArrayList<BlockPos>()
     private val movementBlocker = SimpleMovementBlocker(gameHandle.rootScheduler).also {
@@ -85,7 +88,7 @@ class SplashyDropperInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
         val translations = gameHandle.translations
         val subject = translations.translateText(gameHandle.gameInfo.taskKey)
 
-        commons().createTimer(subject, DURATION.inWholeSeconds.toInt()).whenDone(winManager::complete)
+        createTimer(subject, DURATION).whenDone(winManager::complete)
 
         runEveryTick {
             tick()
@@ -127,7 +130,7 @@ class SplashyDropperInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
     }
 
     private fun tick() {
-        if (winManager.isGameOver) return
+        if (winManager.gameOver) return
 
         outer@ for (player in gameHandle.participants) {
             if (player.y >= minSpawnY - 1) continue

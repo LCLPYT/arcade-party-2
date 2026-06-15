@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.pvp_tournament.gen
 
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.ap2.game.data.type.PlayerRef
 import java.util.*
 
 data class Tournament(

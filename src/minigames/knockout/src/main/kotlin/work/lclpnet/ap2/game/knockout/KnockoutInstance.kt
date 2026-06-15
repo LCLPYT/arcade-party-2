@@ -16,7 +16,9 @@ import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
 import work.lclpnet.ap2.api.actor.ActorSpawnedCallback
-import work.lclpnet.ap2.api.stats.CommonStats
+import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
+import work.lclpnet.ap2.api.stats.CommonStats.Kills
+import work.lclpnet.ap2.api.stats.CommonStats.TimeSurvived
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.stats.StatUnits
 import work.lclpnet.ap2.ext.gainKill
@@ -27,6 +29,8 @@ import work.lclpnet.ap2.ext.trackDistanceMoved
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.knockout.util.ImpactDetector
+import work.lclpnet.ap2.game.util.useFFAStats
+import work.lclpnet.ap2.game.util.useOldCombat
 import work.lclpnet.ap2.impl.actor.GravityFieldActor
 import work.lclpnet.ap2.impl.util.world.CombatIdleManager
 import work.lclpnet.ap2.impl.util.world.DestroyStageManager
@@ -71,15 +75,9 @@ class KnockoutInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
     private lateinit var impactDetector: ImpactDetector
     private lateinit var destroyStageManager: DestroyStageManager
     private lateinit var killTracker: KnockbackKillTracker
-    private val stats = createStats(
-        CommonStats.Kills,
-        CommonStats.DistanceMoved,
-        CommonStats.TimeSurvived,
-        DamageDealt,
-        DamageReceived,
-        ImpactDamageDone,
-        ImpactDamageCaused
-    )
+    private val stats = useFFAStats(winManager, listOf(
+        Kills, DistanceMoved, TimeSurvived, DamageDealt, DamageReceived, ImpactDamageDone, ImpactDamageCaused
+    ))
 
     init {
         useOldCombat()
@@ -210,7 +208,7 @@ class KnockoutInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
         val participants = gameHandle.participants
 
         return source.isOf(DamageTypes.PLAYER_ATTACK) && entity is ServerPlayer
-                && !winManager.isGameOver
+                && !winManager.gameOver
                 && source.entity is ServerPlayer
                 && participants.isParticipating(entity)
                 && participants.isParticipating(source.entity as ServerPlayer)

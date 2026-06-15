@@ -24,7 +24,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.scores.Team
 import work.lclpnet.ap2.*
-import work.lclpnet.ap2.api.stats.CommonStats
+import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
 import work.lclpnet.ap2.api.util.heads.PlayerHead
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.isIn
@@ -33,6 +33,9 @@ import work.lclpnet.ap2.ext.mc.setAttribute
 import work.lclpnet.ap2.ext.mc.teleport
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
+import work.lclpnet.ap2.game.util.createTimer
+import work.lclpnet.ap2.game.util.useFFAStats
+import work.lclpnet.ap2.game.util.useTaskDisplay
 import work.lclpnet.ap2.impl.util.ApRegistries
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
@@ -55,11 +58,12 @@ import work.lclpnet.kibu.structure.BlockStructure
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar
 import work.lclpnet.kibu.translate.text.FormatWrapper.styled
 import java.util.*
+import kotlin.time.Duration.Companion.seconds
 
 const val DEBUG_VALID_POSITIONS = false
 const val DEBUG_BUTTON_POSITION = false
-const val EJECT_SECONDS = 15
-const val BUTTON_REVEAL_SECONDS = 45
+val EJECT_MAX_TIME = 15.seconds
+val BUTTON_REVEAL_TIME = 45.seconds
 
 val ASTRONAUT_HEAD: ResourceKey<PlayerHead> = ResourceKey.create(
     ApRegistries.PLAYER_HEAD,
@@ -83,7 +87,9 @@ class ButtonMasterInstance(
 
     val validPositions = mutableListOf<BlockPos>()
 
-    private val stats = createStats(ButtonsFound, Escapes, CommonStats.DistanceMoved, ButtonsMissed)
+    private val stats = useFFAStats(winManager, listOf(
+        ButtonsFound, Escapes, DistanceMoved, ButtonsMissed
+    ))
     private val bmStats = ButtonMasterStats(stats)
     private val missDetector = ButtonMissDetector(level, bmStats)
     val movementBlocker = SimpleMovementBlocker(gameHandle.scheduler).also {
@@ -262,9 +268,9 @@ class ButtonMasterInstance(
             it.setAttribute(Attributes.GRAVITY, 0.0)
         }
 
-        val ejectTimer = commons().createTimer(
+        val ejectTimer = createTimer(
             translate("game.ap2.button_master.eject"),
-            EJECT_SECONDS,
+            EJECT_MAX_TIME,
         )
 
         ejectTimer.whenDone {
@@ -273,7 +279,7 @@ class ButtonMasterInstance(
 
         translate(
             "game.ap2.button_master.choose_capsule",
-            styled(EJECT_SECONDS, ChatFormatting.YELLOW)
+            styled(EJECT_MAX_TIME.inWholeSeconds, ChatFormatting.YELLOW)
         ).formatted(ChatFormatting.AQUA).sendTo(player)
 
         this.ejectTimer = ejectTimer
@@ -289,7 +295,7 @@ class ButtonMasterInstance(
 
         eliminate(buttonMaster)
 
-        if (!winManager.isGameOver) {
+        if (!winManager.gameOver) {
             beginNextRound()
         }
     }
@@ -360,9 +366,9 @@ class ButtonMasterInstance(
 
         wallBlocks.undo()
 
-        task = gameHandle.scheduler.timeout(BUTTON_REVEAL_SECONDS * 20, Runnable {
+        task = runAfter(BUTTON_REVEAL_TIME) {
             markButton()
-        })
+        }
     }
 
     private fun markButton() {
@@ -396,7 +402,7 @@ class ButtonMasterInstance(
     override fun onEliminated(player: ServerPlayer) {
         super.onEliminated(player)
 
-        if (winManager.isGameOver || gameState == GameState.SEARCHING_BUTTON) return
+        if (winManager.gameOver || gameState == GameState.SEARCHING_BUTTON) return
 
         beginNextRound()
     }

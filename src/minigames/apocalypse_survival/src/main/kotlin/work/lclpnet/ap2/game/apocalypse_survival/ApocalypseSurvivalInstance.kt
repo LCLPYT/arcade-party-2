@@ -14,7 +14,8 @@ import net.minecraft.world.entity.monster.zombie.Zombie
 import net.minecraft.world.entity.projectile.Projectile
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow
 import net.minecraft.world.level.gamerules.GameRules
-import work.lclpnet.ap2.api.stats.CommonStats
+import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
+import work.lclpnet.ap2.api.stats.CommonStats.TimeSurvived
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.runEveryTick
@@ -24,6 +25,8 @@ import work.lclpnet.ap2.game.apocalypse_survival.util.AsSetup
 import work.lclpnet.ap2.game.apocalypse_survival.util.MonsterSpawner
 import work.lclpnet.ap2.game.apocalypse_survival.util.TargetManager
 import work.lclpnet.ap2.game.base.EliminationGameInstance
+import work.lclpnet.ap2.game.util.useFFAStats
+import work.lclpnet.ap2.game.util.useTaskDisplay
 import work.lclpnet.ap2.impl.util.TimeHelper
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
@@ -37,7 +40,9 @@ class ApocalypseSurvivalInstance(gameHandle: MiniGameHandle, level: ServerLevel,
 
     private val random = Random()
     private val targetManager = TargetManager(players(), map, random)
-    private val stats = createStats(CommonStats.DistanceMoved, CommonStats.TimeSurvived)
+    private val stats = useFFAStats(winManager, listOf(
+        DistanceMoved, TimeSurvived
+    ))
     private lateinit var spawners: List<MonsterSpawner>
     private var time = 0
 

@@ -23,6 +23,7 @@ import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
+import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.FireworkEntityAccess
@@ -49,7 +50,9 @@ class HotPotatoInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
     private lateinit var team: PlayerTeam
     private var task: TaskHandle? = null
     private var markTask: TaskHandle? = null
-    private val stats = createStats(PotatoAssigned, TimesPassed)
+    private val stats = useFFAStats(winManager, listOf(
+        PotatoAssigned, TimesPassed
+    ))
 
     override fun prepare() {
         winManager.addListener(this)
@@ -151,7 +154,7 @@ class HotPotatoInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
             player.removeEffect(MobEffects.GLOWING)
         }
 
-        if (winManager.isGameOver) return
+        if (winManager.gameOver) return
 
         runAfter(3.seconds) {
             nextRound()

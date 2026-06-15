@@ -2,7 +2,9 @@ package work.lclpnet.ap2.api.stats
 
 import net.minecraft.ChatFormatting.*
 import net.minecraft.core.Holder
+import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.HoverEvent
 import net.minecraft.resources.Identifier
 import net.minecraft.server.dialog.*
 import net.minecraft.server.dialog.body.DialogBody
@@ -57,22 +59,55 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
         val title = translations.translateText(player, summary.game.titleKey)
             .formatted(GOLD, BOLD)
 
-        val mapName = summary.map.getName(translations.getLanguage(player))
-        val mapLine = translations.translateText(
-            player,
-            "ap2.view_stats.map",
-            FormatWrapper.styled(mapName, AQUA)
-        ).formatted(GREEN)
+        val mapLine = when {
+            summary.levelInfo.map != null -> {
+                val mapName = summary.levelInfo.map.getName(translations.getLanguage(player))
+
+                translations.translateText(
+                    player,
+                    "ap2.view_stats.map",
+                    FormatWrapper.styled(mapName, AQUA)
+                ).formatted(GREEN)
+            }
+
+            summary.levelInfo.seed != null -> {
+                val seedLine = translations.translateText(
+                    player,
+                    "ap2.view_stats.seed",
+                    FormatWrapper.styled(summary.levelInfo.seed, YELLOW)
+                ).formatted(GREEN)
+                    .append(Component.literal(" 📋").withStyle(AQUA))
+                    .styled { style -> style
+                        .withClickEvent(ClickEvent.CopyToClipboard(summary.levelInfo.seed.toString()))
+                        .withHoverEvent(HoverEvent.ShowText(
+                            translations.translateText(player, "ap2.click_to_copy")
+                        ))
+                    }
+
+                val versionLine = translations.translateText(
+                    player,
+                    "ap2.view_stats.minecraft_version",
+                    FormatWrapper.styled(summary.minecraftVersion, YELLOW)
+                ).formatted(GREEN)
+
+                Component.empty().append(seedLine).append("\n").append(versionLine)
+            }
+
+            else -> null
+        }
 
         val seconds = summary.duration.inWholeSeconds.toInt()
         val durationTime = TimeHelper.formatTime(translations, seconds).formatted(YELLOW)
         val durationLine = translations.translateText(player, "ap2.view_stats.duration", durationTime)
             .formatted(GREEN)
 
-        val text = Component.empty()
-            .append(title)
-            .append(Component.literal("\n")).append(mapLine)
-            .append(Component.literal("\n")).append(durationLine)
+        val text = Component.empty().append(title)
+
+        mapLine?.let {
+            text.append(Component.literal("\n")).append(mapLine)
+        }
+
+        text.append(Component.literal("\n")).append(durationLine)
 
         body.add(PlainMessage(text, sectionWidth))
         body.add(separator())
@@ -140,6 +175,8 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
         if (ranking) body.add(rankingSection(view, player, renderName))
 
         for (stat in view.stats) {
+            if (!stat.display) continue
+
             body.add(statSection(view, stat, gameId, player, ranks, renderName))
         }
     }
@@ -160,6 +197,13 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
             text.append(Component.literal("\n"))
                 .append(Component.literal("#$rank ").withStyle(YELLOW))
                 .append(renderName(ref, rank))
+
+            val detail = view.details[ref]
+
+            if (detail != null) {
+                text.append(Component.literal(" "))
+                    .append(detail.translateFor(player).copy().withColor(positionColor(rank)))
+            }
         }
 
         return PlainMessage(text, sectionWidth)

@@ -21,7 +21,9 @@ import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.mc.setSelectedSlot
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
+import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.game.util.teleportToRandomSpawns
+import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
 import work.lclpnet.ap2.util.SubtitleCountdown
 import work.lclpnet.game.impl.prot.ProtectionTypes
@@ -52,7 +54,9 @@ class WeaponSwapInstance(
     val schema: WeaponSwapSchema,
 ) : EliminationGameInstance(gameHandle, level, map) {
 
-    private val stats: FFAStatsManager = createStats(DamageDealt, WeaponsReceived, Kills)
+    private val stats: FFAStatsManager = useFFAStats(winManager, listOf(
+        DamageDealt, WeaponsReceived, Kills
+    ))
     private val currentHolders = mutableSetOf<UUID>()
     private var previousHolders: Set<UUID> = emptySet()
     private val subtitleCountdown = SubtitleCountdown(gameHandle.server, gameHandle.scheduler, ::swapTimerTick) {
@@ -88,7 +92,7 @@ class WeaponSwapInstance(
         }
 
         ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks) { entity, source, _ ->
-            if (winManager.isGameOver) return@registerWith false
+            if (winManager.gameOver) return@registerWith false
 
             val victim = entity as? ServerPlayer ?: return@registerWith false
             val attacker = source.entity as? ServerPlayer ?: return@registerWith false
@@ -115,7 +119,7 @@ class WeaponSwapInstance(
 
             val subject = gameHandle.translations.translateText("game.ap2.weapon_swap.end")
 
-            commons().createTimer(subject, WARN_BEFORE_END_DELAY.inWholeSeconds.toInt()).whenDone {
+            createTimer(subject, WARN_BEFORE_END_DELAY).whenDone {
                 data.addAll(players())
                 winManager.complete()
             }
@@ -147,7 +151,7 @@ class WeaponSwapInstance(
     }
 
     private fun startCycle() {
-        if (winManager.isGameOver) return
+        if (winManager.gameOver) return
 
         val remaining = players().asSet.toList()
 

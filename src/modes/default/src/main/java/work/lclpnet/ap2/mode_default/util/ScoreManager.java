@@ -4,9 +4,10 @@ import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 import lombok.Getter;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.PlayerList;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.data.DataEntry;
-import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
+import work.lclpnet.ap2.game.data.IntScoreDataContainer;
+import work.lclpnet.ap2.game.data.type.PlayerRef;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
 
@@ -86,7 +87,7 @@ public class ScoreManager {
                 .stream()
                 .flatMap(bestScore -> data.streamOrderedEntries()
                         .filter(entry -> entry.score() == bestScore)
-                        .map(DataEntry::subject));
+                        .map(DataEntry::getSubject));
     }
 
     public Stream<ServerPlayer> getFinalists() {
@@ -145,7 +146,7 @@ public class ScoreManager {
         return onChange;
     }
 
-    public Optional<DataEntry<PlayerRef>> getEntry(PlayerRef ref) {
+    public @Nullable DataEntry<PlayerRef> getEntry(PlayerRef ref) {
         return data.getEntry(ref);
     }
 }
