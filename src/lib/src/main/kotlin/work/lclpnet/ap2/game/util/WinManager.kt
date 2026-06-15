@@ -15,6 +15,7 @@ import work.lclpnet.ap2.game.data.SupremeDataContainer
 import work.lclpnet.game.util.ProtectorUtils
 import work.lclpnet.kibu.hook.Hook
 import work.lclpnet.kibu.hook.HookFactory
+import work.lclpnet.kibu.translate.text.TranslatedText
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import kotlin.concurrent.Volatile
@@ -77,13 +78,13 @@ class WinManager<T, Ref : SubjectRef>(
         )
 
         val result = data.winnersFactory(finalData)
-        val statsId = submitStats(result)
+        val statsId = submitStats(result, finalData)
         val winSequence = WinSequence(gameHandle, finalData, data.playerRefs, result, status, statsId)
 
         return winSequence.start()
     }
 
-    private fun submitStats(result: GenericGameResult<Ref>): CompletableFuture<Optional<UUID>> {
+    private fun submitStats(result: GenericGameResult<Ref>, finalData: DataContainer<T, Ref>): CompletableFuture<Optional<UUID>> {
         val statsManager = this.statsManager ?: return CompletableFuture.completedFuture(Optional.empty())
 
         statsManager.fillDefaults(result)
@@ -102,7 +103,9 @@ class WinManager<T, Ref : SubjectRef>(
             initialParticipants
         )
 
-        val stats = statsManager.getResult(summary, result)
+        val details = buildScoreDetails(result, finalData)
+
+        val stats = statsManager.getResult(summary, result, details)
 
         return gameHandle.submitStats(stats)
             .thenApply { Optional.of(it) }
@@ -110,6 +113,22 @@ class WinManager<T, Ref : SubjectRef>(
                 gameHandle.logger.error("Failed to submit stats", err)
                 Optional.empty<UUID>()
             }
+    }
+
+    private fun buildScoreDetails(
+        result: GenericGameResult<Ref>,
+        finalData: DataContainer<T, Ref>
+    ): Map<Ref, TranslatedText> {
+        val translations = gameHandle.translations
+        val details = HashMap<Ref, TranslatedText>()
+
+        for (rank in result.subjectResults) {
+            val ref = rank.left() ?: continue
+            val detail = finalData.getEntry(ref)?.toText(translations) ?: continue
+            details[ref] = detail
+        }
+
+        return details
     }
 
     fun addListener(listener: GameOverListener) {
