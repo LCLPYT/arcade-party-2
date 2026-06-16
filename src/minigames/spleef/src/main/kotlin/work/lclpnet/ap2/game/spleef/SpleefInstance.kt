@@ -30,6 +30,7 @@ import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.util.teleportToRandomSpawns
 import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.game.util.useSurvivalMode
+import work.lclpnet.ap2.game.util.whenBelowCriticalHeight
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.FallKillTracker
 import work.lclpnet.ap2.impl.util.ParticleHelper
@@ -120,7 +121,7 @@ class SpleefInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMa
             Ticks.seconds(5).toLong()
         ).then(::removeBlocks)
 
-        commons().whenBelowCriticalHeight().then { player ->
+        whenBelowCriticalHeight { player ->
             val source = if (frost) player.damageSources().freeze() else player.damageSources().fellOutOfWorld()
 
             player.hurtServer(level, source, player.health)

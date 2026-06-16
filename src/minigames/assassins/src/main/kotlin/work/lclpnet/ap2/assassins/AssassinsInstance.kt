@@ -3,6 +3,7 @@ package work.lclpnet.ap2.assassins
 import net.minecraft.ChatFormatting
 import net.minecraft.core.BlockPos
 import net.minecraft.core.component.DataComponents
+import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.network.chat.Style
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
@@ -34,8 +35,11 @@ import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.game.util.useOldCombat
+import work.lclpnet.ap2.game.util.whenBelowY
 import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor
+import work.lclpnet.ap2.impl.util.ParticleHelper
+import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
 import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder
 import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate
@@ -110,10 +114,11 @@ class AssassinsInstance(
     }
 
     override fun prepare() {
-        commons().gameRuleBuilder()
-            .set(GameRules.FALL_DAMAGE, false)
-            .set(GameRules.NATURAL_HEALTH_REGENERATION, false)
-            .set(GameRules.ENTITY_DROPS, false)
+        level.gameRules.apply {
+            set(GameRules.FALL_DAMAGE, false, server)
+            set(GameRules.NATURAL_HEALTH_REGENERATION, false, server)
+            set(GameRules.ENTITY_DROPS, false, server)
+        }
 
         wbConfig = runCatching { commons().readWorldBorderConfig() }.getOrNull()
 
@@ -135,6 +140,30 @@ class AssassinsInstance(
         useRemainingPlayersDisplay()
 
         registerSpecialItemUse()
+
+        setupLevitation()
+    }
+
+    private fun setupLevitation() {
+        val floatHeight = map.properties.optNumber("float-height") ?: return
+
+        whenBelowY(floatHeight.toDouble()) { player ->
+            if (player.hasEffect(MobEffects.LEVITATION)) return@whenBelowY
+
+            player.addEffect(
+                MobEffectInstance(
+                    MobEffects.LEVITATION,
+                    35,
+                    15,
+                    false,
+                    false,
+                    false
+                )
+            )
+
+            SoundHelper.playSoundAt(player, SoundEvents.ILLUSIONER_PREPARE_BLINDNESS, SoundSource.PLAYERS, 0.2f, 1f)
+            ParticleHelper.spawnParticleAt(player, ParticleTypes.END_ROD, 50, 0.5, 0.5, 0.5, 0.1)
+        }
     }
 
     override fun go() {

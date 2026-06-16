@@ -31,6 +31,7 @@ import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.knockout.util.ImpactDetector
 import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.game.util.useOldCombat
+import work.lclpnet.ap2.game.util.whenBelowCriticalHeight
 import work.lclpnet.ap2.impl.actor.GravityFieldActor
 import work.lclpnet.ap2.impl.util.world.CombatIdleManager
 import work.lclpnet.ap2.impl.util.world.DestroyStageManager
@@ -107,7 +108,7 @@ class KnockoutInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
         trackSurvivalTime(stats)
         trackDistanceMoved(stats)
 
-        commons().whenBelowCriticalHeight().then { player ->
+        whenBelowCriticalHeight { player ->
             val killer = killTracker.getLastAttacker(player) as? ServerPlayer
 
             if (killer != null && killer != player) {

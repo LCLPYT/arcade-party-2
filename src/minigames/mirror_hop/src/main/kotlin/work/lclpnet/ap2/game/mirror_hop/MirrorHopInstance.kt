@@ -21,6 +21,7 @@ import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.util.useDataContainer
 import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.game.util.useTaskDisplay
+import work.lclpnet.ap2.game.util.whenBelowCriticalHeight
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.effect.ApEffects
 import work.lclpnet.ap2.impl.util.movement.CooldownMovementBlocker
@@ -116,7 +117,7 @@ class MirrorHopInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
 
         movementBlocker.init(gameHandle.hooks)
 
-        commons().whenBelowCriticalHeight().then(::playerFell)
+        whenBelowCriticalHeight(::playerFell)
 
         removeGate(map, level)
     }

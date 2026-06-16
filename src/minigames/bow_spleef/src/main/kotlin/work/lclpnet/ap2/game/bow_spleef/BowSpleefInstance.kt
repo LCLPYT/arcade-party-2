@@ -34,6 +34,7 @@ import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.bow_spleef.item.*
 import work.lclpnet.ap2.game.util.useFFAStats
+import work.lclpnet.ap2.game.util.whenBelowCriticalHeight
 import work.lclpnet.ap2.impl.game.item.SpecialItems
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.FallKillTracker
@@ -133,7 +134,7 @@ class BowSpleefInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
             entity is Chicken
         }
 
-        commons().whenBelowCriticalHeight().then { player ->
+        whenBelowCriticalHeight { player ->
             player.hurtServer(level, player.damageSources().fellOutOfWorld(), player.health)
         }
 
