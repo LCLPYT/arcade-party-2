@@ -1,9 +1,9 @@
 {
-  "game.ap2.snowball_fight": "Snowball Fight",
-  "game.ap2.snowball_fight.description": "Collect snow from the ground. Hit your opponents with the snowballs. Last one standing wins!",
-  "game.ap2.snowball_fight.idle": "You'll freeze if you don't engage in combat soon...",
-  "game.ap2.snowball_fight.max_snowballs": "You cannot pick up more snowballs...",
-  "game.ap2.snowball_fight.stat.snowballs_thrown": "Snowballs thrown",
-  "game.ap2.snowball_fight.stat.accuracy": "Accuracy",
-  "game.ap2.snowball_fight.stat.time_out_of_combat": "Time out of combat"
+  "name": "Snowball Fight",
+  "description": "Collect snow from the ground. Hit your opponents with the snowballs. Last one standing wins!",
+  "idle": "You'll freeze if you don't engage in combat soon...",
+  "max_snowballs": "You cannot pick up more snowballs...",
+  "stat.snowballs_thrown": "Snowballs thrown",
+  "stat.accuracy": "Accuracy",
+  "stat.time_out_of_combat": "Time out of combat"
 }

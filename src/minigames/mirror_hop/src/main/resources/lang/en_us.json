@@ -1,8 +1,8 @@
 {
-  "game.ap2.mirror_hop": "Mirror Hop",
-  "game.ap2.mirror_hop.description": "Make your way over the platforms towards the goal. Only one platform is correct!",
-  "game.ap2.mirror_hop.task": "Reach the finish line",
-  "game.ap2.mirror_hop.stat.falls": "Falls",
-  "game.ap2.mirror_hop.stat.platforms_materialized": "Platforms materialized",
-  "game.ap2.mirror_hop.stat.platforms_broken": "Platforms broken"
+  "name": "Mirror Hop",
+  "description": "Make your way over the platforms towards the goal. Only one platform is correct!",
+  "task": "Reach the finish line",
+  "stat.falls": "Falls",
+  "stat.platforms_materialized": "Platforms materialized",
+  "stat.platforms_broken": "Platforms broken"
 }

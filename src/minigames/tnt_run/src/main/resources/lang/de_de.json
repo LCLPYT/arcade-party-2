@@ -1,4 +1,4 @@
 {
-  "game.ap2.tnt_run": "TNT-Lauf",
-  "game.ap2.tnt_run.description": "Der Boden unter deinen Füßen verschwindet. Bleib nicht stehen und falle nicht herunter!"
+  "name": "TNT-Lauf",
+  "description": "Der Boden unter deinen Füßen verschwindet. Bleib nicht stehen und falle nicht herunter!"
 }

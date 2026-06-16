@@ -1,4 +1,4 @@
 {
-  "game.ap2.quick_sg": "Quick SG",
-  "game.ap2.quick_sg.description": "Sammle Gegenstände aus Kisten und bekämpfe damit die anderen Spieler. Der letzte Überlebende gewinnt!"
+  "name": "Quick SG",
+  "description": "Sammle Gegenstände aus Kisten und bekämpfe damit die anderen Spieler. Der letzte Überlebende gewinnt!"
 }

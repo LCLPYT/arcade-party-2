@@ -1,12 +1,12 @@
 {
-  "game.ap2.assassins": "Attentäter",
-  "game.ap2.assassins.description": "Jede Runde wird dir ein Ziel zugewiesen. Du darfst nur dein eigenes Ziel angreifen. Schalte dein Ziel aus und überlebe!",
-  "game.ap2.assassins.target": "Dein Ziel: %s",
-  "game.ap2.assassins.off_target": "Du darfst nur dein Ziel angreifen!",
-  "game.ap2.assassins.prepare": "Nächste Runde",
-  "game.ap2.assassins.item.invisibility": "Unsichtbarkeit",
-  "game.ap2.assassins.item.jump_boost": "Sprungkraft",
-  "game.ap2.assassins.item.reveal_assassin": "Verfolger aufdecken",
-  "game.ap2.assassins.stat.damage_received": "Erlittener Schaden",
-  "game.ap2.assassins.stat.items_used": "Benutzte Gegenstände"
+  "name": "Attentäter",
+  "description": "Jede Runde wird dir ein Ziel zugewiesen. Du darfst nur dein eigenes Ziel angreifen. Schalte dein Ziel aus und überlebe!",
+  "target": "Dein Ziel: %s",
+  "off_target": "Du darfst nur dein Ziel angreifen!",
+  "prepare": "Nächste Runde",
+  "item.invisibility": "Unsichtbarkeit",
+  "item.jump_boost": "Sprungkraft",
+  "item.reveal_assassin": "Verfolger aufdecken",
+  "stat.damage_received": "Erlittener Schaden",
+  "stat.items_used": "Benutzte Gegenstände"
 }

@@ -1,15 +1,15 @@
 {
-  "game.ap2.red_light_green_light": "Ampelrennen",
-  "game.ap2.red_light_green_light.description": "Erreiche möglichst schnell das Ziel. Du darfst dich nur bewegen, wenn es dir erlaubt wird!",
-  "game.ap2.red_light_green_light.task": "Erreiche das Ziel",
-  "game.ap2.red_light_green_light.goal": "%s hat das Ziel erreicht. Das Spiel endet in %s Sekunden und du wirst dann je nach Distanz zum Ziel eingestuft.",
-  "game.ap2.red_light_green_light.go": "Los!",
-  "game.ap2.red_light_green_light.warn": "Achtung...",
-  "game.ap2.red_light_green_light.stop": "Stopp!",
-  "game.ap2.red_light_green_light.moved": "Du hast dich bewegt! Als Bestrafung wurdest du zurückgesetzt.",
-  "game.ap2.red_light_green_light.stat.resets": "Fehler",
-  "game.ap2.red_light_green_light.stat.yellow_moving_time": "Bewegung bei Gelb",
-  "game.ap2.red_light_green_light.stat.closest_stop_time": "Knappster Stopp",
-  "game.ap2.red_light_green_light.stat.distance_reset": "Zurückgesetzte Distanz",
-  "game.ap2.red_light_green_light.stat.avg_yellow_time_usage": "Durchschn. Gelbphasen-Nutzung"
+  "name": "Ampelrennen",
+  "description": "Erreiche möglichst schnell das Ziel. Du darfst dich nur bewegen, wenn es dir erlaubt wird!",
+  "task": "Erreiche das Ziel",
+  "goal": "%s hat das Ziel erreicht. Das Spiel endet in %s Sekunden und du wirst dann je nach Distanz zum Ziel eingestuft.",
+  "go": "Los!",
+  "warn": "Achtung...",
+  "stop": "Stopp!",
+  "moved": "Du hast dich bewegt! Als Bestrafung wurdest du zurückgesetzt.",
+  "stat.resets": "Fehler",
+  "stat.yellow_moving_time": "Bewegung bei Gelb",
+  "stat.closest_stop_time": "Knappster Stopp",
+  "stat.distance_reset": "Zurückgesetzte Distanz",
+  "stat.avg_yellow_time_usage": "Durchschn. Gelbphasen-Nutzung"
 }

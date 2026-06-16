@@ -1,10 +1,10 @@
 {
-  "game.ap2.eggventure": "Eierjagd",
-  "game.ap2.eggventure.description": "Finde am meisten Ostereier.",
-  "game.ap2.eggventure.task": "Finde Ostereier",
-  "game.ap2.eggventure.find_sample": "Finde diese Ostereier",
-  "game.ap2.eggventure.eggs_left": "Es gab noch %s Ostereier",
-  "game.ap2.eggventure.no_eggs_nearby": "Keine Ostereier in der Nähe",
-  "game.ap2.eggventure.stat.eggs_stolen": "Gestohlene Eier",
-  "game.ap2.eggventure.stat.eggs_lost": "Eier entgangen"
+  "name": "Eierjagd",
+  "description": "Finde am meisten Ostereier.",
+  "task": "Finde Ostereier",
+  "find_sample": "Finde diese Ostereier",
+  "eggs_left": "Es gab noch %s Ostereier",
+  "no_eggs_nearby": "Keine Ostereier in der Nähe",
+  "stat.eggs_stolen": "Gestohlene Eier",
+  "stat.eggs_lost": "Eier entgangen"
 }
