@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.assassins
 
 import net.minecraft.ChatFormatting
-import net.minecraft.core.Direction
+import net.minecraft.core.BlockPos
 import net.minecraft.core.component.DataComponents
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.network.chat.Style
@@ -46,12 +46,15 @@ import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
 import work.lclpnet.ap2.impl.util.world.CardinalAdjacentBlocks
 import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder
 import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate
+import work.lclpnet.gaco.ds.BlockBox
+import work.lclpnet.gaco.ds.StructureMask
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.util.BossBarTimer
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.scheduler.api.TaskHandle
+import work.lclpnet.kibu.util.math.Matrix3i
 import work.lclpnet.pal.PalApi
 import java.util.*
 import kotlin.random.Random
@@ -70,6 +73,7 @@ private const val ITEM_COOLDOWN_TICKS = 20
 private const val WORLD_BORDER_SHRINK_PER_SECOND = 1.5
 const val DEBUG_ALWAYS_GIVE_ITEM = false
 const val DEBUG_SPAWN_POSITIONS = true
+const val DEBUG_SCANNED_POSITIONS = false
 
 val Kills = CommonStats.Kills
 val DamageDealt = CommonStats.DamageDealt
@@ -449,15 +453,19 @@ class AssassinsInstance(
             box.contains(pos) && WalkableBlockPredicate.isPassable(level, pos)
         }
 
-        val reachable = BfsWorldScanner(adjacent).scan(starts.toSet())
+        val scanned = BfsWorldScanner(adjacent).scan(starts.toSet())
+
+        val reachable: Iterator<BlockPos> = if (DEBUG_SCANNED_POSITIONS) {
+            scanned.asSequence().toList()
+                .also { visualizeScannedPositions(box, it) }
+                .iterator()
+        } else {
+            scanned
+        }
 
         val ground = iterator {
             for (pos in reachable) {
                 if (!walkable.test(pos)) continue
-
-                val below = pos.below()
-
-                if (!level.getBlockState(below).isFaceSturdy(level, pos, Direction.UP)) continue
 
                 if (contraptionService.isBoosterPlate(level, pos)) continue
 
@@ -479,5 +487,20 @@ class AssassinsInstance(
                 }
             }
         }
+    }
+
+    private fun visualizeScannedPositions(box: BlockBox, positions: List<BlockPos>) {
+        val mask = StructureMask.createEmpty(box)
+        val min = box.min()
+
+        for (pos in positions) {
+            if (!box.contains(pos)) continue
+
+            mask.setVoxelAt(pos.x - min.x, pos.y - min.y, pos.z - min.z, true)
+        }
+
+        commons().debugController().visualizeStructureMask(
+            mask, min, Matrix3i.IDENTITY, Blocks.LIGHT_BLUE_STAINED_GLASS.defaultBlockState()
+        )
     }
 }
