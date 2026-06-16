@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.assassins
 
+import net.minecraft.core.BlockPos
 import work.lclpnet.ap2.ApConstants
 import work.lclpnet.ap2.impl.map.schema.CommonMapSchema
 import work.lclpnet.ap2.impl.map.schema.MapSchema
@@ -15,4 +16,7 @@ class AssassinsMapSchema : CommonMapSchema() {
 
     @Property(name = "Spawn box")
     val spawnBox: BlockBox? = null
+
+    @Property(name = "Spawn scanner starts")
+    val scanStarts: List<BlockPos> = listOf()
 }

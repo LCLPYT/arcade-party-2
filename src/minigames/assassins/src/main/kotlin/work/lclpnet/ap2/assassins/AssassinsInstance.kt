@@ -42,6 +42,8 @@ import work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor
 import work.lclpnet.ap2.impl.util.ParticleHelper
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
+import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
+import work.lclpnet.ap2.impl.util.world.CardinalAdjacentBlocks
 import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder
 import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate
 import work.lclpnet.game.impl.prot.ProtectionTypes
@@ -67,7 +69,7 @@ private val WORLD_BORDER_SHRINK_START_DELAY = 45.seconds
 private const val ITEM_COOLDOWN_TICKS = 20
 private const val WORLD_BORDER_SHRINK_PER_SECOND = 1.5
 const val DEBUG_ALWAYS_GIVE_ITEM = false
-const val DEBUG_SPAWN_POSITIONS = false
+const val DEBUG_SPAWN_POSITIONS = true
 
 val Kills = CommonStats.Kills
 val DamageDealt = CommonStats.DamageDealt
@@ -431,12 +433,26 @@ class AssassinsInstance(
         val box = schema.spawnBox
             ?: throw IllegalStateException("Map property \"Spawn box\" is not set in the assassins schema")
 
+        val starts = schema.scanStarts
+
+        check(starts.isNotEmpty()) {
+            "Map property \"Spawn scanner starts\" is not set in the assassins schema"
+        }
+
         val contraptionService = PalApi.getInstance().contraptionService
 
         val walkable = WalkableBlockPredicate(level)
 
+        // 3D flood fill from the scan starts through open space (air / slim collision),
+        // bounded by the spawn box -> the reachable play area, excluding sealed cavities.
+        val adjacent = CardinalAdjacentBlocks { pos ->
+            box.contains(pos) && WalkableBlockPredicate.isPassable(level, pos)
+        }
+
+        val reachable = BfsWorldScanner(adjacent).scan(starts.toSet())
+
         val ground = iterator {
-            for (pos in box) {
+            for (pos in reachable) {
                 if (!walkable.test(pos)) continue
 
                 val below = pos.below()
