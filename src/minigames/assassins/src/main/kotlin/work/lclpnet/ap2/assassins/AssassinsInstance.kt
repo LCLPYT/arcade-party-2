@@ -42,10 +42,7 @@ import work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor
 import work.lclpnet.ap2.impl.util.ParticleHelper
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
-import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
-import work.lclpnet.ap2.impl.util.world.CardinalAdjacentBlocks
-import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder
-import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate
+import work.lclpnet.ap2.impl.util.world.*
 import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.gaco.ds.StructureMask
 import work.lclpnet.game.impl.prot.ProtectionTypes
@@ -71,6 +68,7 @@ private val REVEAL_DURATION = 6.seconds
 private val WORLD_BORDER_SHRINK_START_DELAY = 45.seconds
 private const val ITEM_COOLDOWN_TICKS = 20
 private const val WORLD_BORDER_SHRINK_PER_SECOND = 1.5
+private const val SPAWN_SPACING_DEFAULT = 10.0
 const val DEBUG_ALWAYS_GIVE_ITEM = false
 const val DEBUG_SPAWN_POSITIONS = true
 const val DEBUG_SCANNED_POSITIONS = false
@@ -89,6 +87,7 @@ class AssassinsInstance(
 ) : EliminationGameInstance(gameHandle, level, map) {
 
     private val random = Random(Clock.System.now().toEpochMilliseconds())
+    private val spawnSpacing = map.properties.optNumber("spawn-spacing", SPAWN_SPACING_DEFAULT).toDouble()
     private val targets = AssassinTargets()
     private val glow = AssassinGlowHandler(gameHandle.server, gameHandle.scoreboardManager)
     private val movementBlocker = SimpleMovementBlocker(gameHandle.rootScheduler).also {
@@ -114,10 +113,10 @@ class AssassinsInstance(
     override fun teleportPlayers() {
         computeSpawns()
 
+        teleportToSpacedSpawns(allPlayers().filter { isParticipating(it) })
+
         for (player in allPlayers()) {
-            if (isParticipating(player)) {
-                teleportToRandomSpawn(player)
-            } else {
+            if (!isParticipating(player)) {
                 gameHandle.worldFacade.teleport(player)
             }
         }
@@ -198,9 +197,9 @@ class AssassinsInstance(
 
         val alive = players().toList()
 
-        for (player in alive) {
-            if (!initial) teleportToRandomSpawn(player)
+        if (!initial) teleportToSpacedSpawns(alive)
 
+        for (player in alive) {
             movementBlocker.disableMovement(player)
             resetPlayer(player)
             equip(player)
@@ -424,11 +423,19 @@ class AssassinsInstance(
         player.inventory.setItem(4, stack)
     }
 
-    private fun teleportToRandomSpawn(player: ServerPlayer) {
+    private fun teleportToSpacedSpawns(players: List<ServerPlayer>) {
+        if (players.isEmpty()) return
+
         if (spawns.isEmpty()) computeSpawns()
 
-        val pos = spawns[random.nextInt(spawns.size)]
-        player.teleportTo(level, pos.x, pos.y, pos.z, emptySet(), player.yRot, player.xRot, true)
+        // pick a spread-out subset so players keep at least spawnSpacing blocks apart where possible
+        val finder = SpawnFinder(spawnSpacing, commons().debugController())
+        val spaced = finder.generateSpacedSpawns(spawns, players.size, random.asJavaRandom())
+
+        for ((i, player) in players.withIndex()) {
+            val pos = spaced[i]
+            player.teleportTo(level, pos.x, pos.y, pos.z, emptySet(), player.yRot, player.xRot, true)
+        }
     }
 
     private fun computeSpawns() {
