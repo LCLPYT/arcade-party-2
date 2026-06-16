@@ -54,6 +54,7 @@ public class IconMaker {
                 .formatted(GREEN), 32));
 
         icon.set(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT
+                .withHidden(DataComponents.POTION_CONTENTS, true)
                 .withHidden(DataComponents.ATTRIBUTE_MODIFIERS, true)
                 .withHidden(DataComponents.UNBREAKABLE, true)
                 .withHidden(DataComponents.ENCHANTMENTS, true)

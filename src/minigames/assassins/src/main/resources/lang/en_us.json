@@ -1,0 +1,12 @@
+{
+  "game.ap2.assassins": "Assassins",
+  "game.ap2.assassins.description": "Every round you are assigned a target. You may only attack your own target. Eliminate your target and survive!",
+  "game.ap2.assassins.target": "Your target: %s",
+  "game.ap2.assassins.off_target": "You may only attack your target!",
+  "game.ap2.assassins.prepare": "Next round",
+  "game.ap2.assassins.item.invisibility": "Invisibility",
+  "game.ap2.assassins.item.jump_boost": "Jump Boost",
+  "game.ap2.assassins.item.reveal_assassin": "Reveal Assassin",
+  "game.ap2.assassins.stat.damage_received": "Damage received",
+  "game.ap2.assassins.stat.items_used": "Items used"
+}

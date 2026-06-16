@@ -25,6 +25,7 @@ import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.game.util.useOldCombat
+import work.lclpnet.ap2.game.util.whenBelowCriticalHeight
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.world.KnockbackKillTracker
 import work.lclpnet.game.impl.prot.ProtectionTypes
@@ -101,7 +102,7 @@ class BlockDissolveInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
             }
         }
 
-        commons().whenBelowCriticalHeight().then { player ->
+        whenBelowCriticalHeight { player ->
             killTracker.getLastAttacker(player)?.let { it as? ServerPlayer }?.let { killer ->
                 gainKill(killer, stats)
             }

@@ -27,34 +27,24 @@ public class WalkableBlockPredicate implements BlockPredicate {
 
     @Override
     public boolean test(BlockPos pos) {
-        // verify position itself is free
-        BlockState state = world.getBlockState(pos);
-        VoxelShape shape = state.getCollisionShape(world, pos, CollisionContext.empty());
+        // verify position itself is free; in addition to passable blocks, very low collision boxes
+        // (e.g. carpets, pressure plates) can also be stood in
+        VoxelShape selfShape = world.getBlockState(pos).getCollisionShape(world, pos, CollisionContext.empty());
 
-        if (!shape.isEmpty()) {
-            double minX = shape.min(X), maxX = shape.max(X);
-            double minY = shape.min(Y), maxY = shape.max(Y);
-            double minZ = shape.min(Z), maxZ = shape.max(Z);
-
-            // support slim blocks like doors
-            boolean spaceX = maxX - minX <= 0.4 && (isClose(minX, 0) || isClose(maxX, 1));
-            boolean spaceZ = maxZ - minZ <= 0.4 && (isClose(minZ, 0) || isClose(maxZ, 1));
-
-            if (!spaceX && !spaceZ && maxY - minY > 0.5) {
-                return false;
-            }
+        if (!isPassable(selfShape) && selfShape.max(Y) - selfShape.min(Y) > 0.5) {
+            return false;
         }
 
         // verify position below is solid
         var queryPos = new BlockPos.MutableBlockPos(pos.getX(), pos.getY() - 1, pos.getZ());
 
-        state = world.getBlockState(queryPos);
+        BlockState state = world.getBlockState(queryPos);
 
         if (state.is(Blocks.LADDER)) {
             return false;
         }
 
-        shape = state.getCollisionShape(world, queryPos);
+        VoxelShape shape = state.getCollisionShape(world, queryPos);
 
         if (shape.isEmpty()) {
             return false;
@@ -80,6 +70,30 @@ public class WalkableBlockPredicate implements BlockPredicate {
         }
 
         return true;
+    }
+
+    /**
+     * Tests whether a position is open enough to move through, i.e. it is air or has only a slim
+     * collision box along the x or z axis (such as doors). The block height is not considered.
+     * This does not consider the blocks above or below the position.
+     */
+    public static boolean isPassable(BlockGetter world, BlockPos pos) {
+        return isPassable(world.getBlockState(pos).getCollisionShape(world, pos, CollisionContext.empty()));
+    }
+
+    private static boolean isPassable(VoxelShape shape) {
+        if (shape.isEmpty()) {
+            return true;
+        }
+
+        double minX = shape.min(X), maxX = shape.max(X);
+        double minZ = shape.min(Z), maxZ = shape.max(Z);
+
+        // support slim blocks like doors
+        boolean spaceX = maxX - minX <= 0.4 && (isClose(minX, 0) || isClose(maxX, 1));
+        boolean spaceZ = maxZ - minZ <= 0.4 && (isClose(minZ, 0) || isClose(maxZ, 1));
+
+        return spaceX || spaceZ;
     }
 
     private static double length(VoxelShape shape, Direction.Axis axis) {
