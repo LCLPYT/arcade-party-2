@@ -44,8 +44,12 @@ public class SizedSpaceFinder implements SpaceFinder {
         final double minX = pos.getX(), minY = pos.getY(), minZ = pos.getZ();
         final double maxX = minX + 1, maxY = minY + 1, maxZ = minZ + 1;
 
-        for (double x = minX; x <= maxX; x += 0.5)
-            for (double z = minZ; z <= maxZ; z += 0.5)
+        // prefer the block center, then fall back to the edges
+        double[] xs = {minX + 0.5, minX, maxX};
+        double[] zs = {minZ + 0.5, minZ, maxZ};
+
+        for (double x : xs)
+            for (double z : zs)
                 for (double y = minY; y <= maxY; y += 0.5)
                     if (hasSpace(x, y, z)) return new Vec3(x, y, z);
 
