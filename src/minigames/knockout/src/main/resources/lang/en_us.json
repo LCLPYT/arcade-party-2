@@ -1,9 +1,9 @@
 {
-  "game.ap2.knockout": "Knockout",
-  "game.ap2.knockout.description": "Punch your enemies into the void. The knock-back gets increasingly stronger the more a player is hit.",
-  "game.ap2.knockout.idle": "You are now visible to other players, because you were out-of-combat for too long",
-  "game.ap2.knockout.stat.damage_dealt": "Damage dealt",
-  "game.ap2.knockout.stat.damage_received": "Damage received",
-  "game.ap2.knockout.stat.impact_damage_done": "Impact damage done",
-  "game.ap2.knockout.stat.impact_damage_caused": "Impact damage caused"
+  "name": "Knockout",
+  "description": "Punch your enemies into the void. The knock-back gets increasingly stronger the more a player is hit.",
+  "idle": "You are now visible to other players, because you were out-of-combat for too long",
+  "stat.damage_dealt": "Damage dealt",
+  "stat.damage_received": "Damage received",
+  "stat.impact_damage_done": "Impact damage done",
+  "stat.impact_damage_caused": "Impact damage caused"
 }

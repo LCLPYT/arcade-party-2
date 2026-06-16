@@ -1,14 +1,14 @@
 {
-  "game.ap2.dragon_escape": "Dragon Escape",
-  "game.ap2.dragon_escape.description": "Do parkour while running from an ender dragon.",
-  "game.ap2.dragon_escape.task": "Escape the dragon",
-  "game.ap2.dragon_escape.goal": "%s reached the goal.",
-  "game.ap2.dragon_escape.kit.leap": "Leap-Axe",
-  "game.ap2.dragon_escape.kit.leap.description": "Get an axe that leaps you in the current looking direction when used.",
-  "game.ap2.dragon_escape.kit.leap.hint": "Use to leap in the direction you are current looking in.",
-  "game.ap2.dragon_escape.kit.ender_pearl": "Ender Pearl",
-  "game.ap2.dragon_escape.kit.ender_pearl.description": "Get an ender pearl that you can use to teleport. Use at own risk.",
-  "game.ap2.dragon_escape.kit.wind_charge": "Wind Charge",
-  "game.ap2.dragon_escape.kit.wind_charge.description": "Get wind charges that can be used to boost yourself.",
-  "game.ap2.dragon_escape.teleport_too_far": "You cannot teleport that far..."
+  "name": "Dragon Escape",
+  "description": "Do parkour while running from an ender dragon.",
+  "task": "Escape the dragon",
+  "goal": "%s reached the goal.",
+  "kit.leap": "Leap-Axe",
+  "kit.leap.description": "Get an axe that leaps you in the current looking direction when used.",
+  "kit.leap.hint": "Use to leap in the direction you are current looking in.",
+  "kit.ender_pearl": "Ender Pearl",
+  "kit.ender_pearl.description": "Get an ender pearl that you can use to teleport. Use at own risk.",
+  "kit.wind_charge": "Wind Charge",
+  "kit.wind_charge.description": "Get wind charges that can be used to boost yourself.",
+  "teleport_too_far": "You cannot teleport that far..."
 }

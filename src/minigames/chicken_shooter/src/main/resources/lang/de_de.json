@@ -1,10 +1,10 @@
 {
-  "game.ap2.chicken_shooter": "Hühnchen-Schießstand",
-  "game.ap2.chicken_shooter.description": "Schieße so viele Hühnchen wie möglich ab! Küken geben mehr Punkte, TNT-Hühnchen reißen alle Hühnchen um sich mit in den Tod!",
-  "game.ap2.chicken_shooter.task": "Schieße Hühnchen ab",
-  "game.ap2.chicken_shooter.points": "Punkte",
-  "game.ap2.chicken_shooter.bow": "Hühnchen-Bogen",
-  "game.ap2.chicken_shooter.stat.baby_chickens": "Baby Hühner abgeschossen",
-  "game.ap2.chicken_shooter.stat.chickens_exploded": "Hühner gesprengt",
-  "game.ap2.chicken_shooter.stat.tnt_detonated": "TNT hochgejagt"
+  "name": "Hühnchen-Schießstand",
+  "description": "Schieße so viele Hühnchen wie möglich ab! Küken geben mehr Punkte, TNT-Hühnchen reißen alle Hühnchen um sich mit in den Tod!",
+  "task": "Schieße Hühnchen ab",
+  "points": "Punkte",
+  "bow": "Hühnchen-Bogen",
+  "stat.baby_chickens": "Baby Hühner abgeschossen",
+  "stat.chickens_exploded": "Hühner gesprengt",
+  "stat.tnt_detonated": "TNT hochgejagt"
 }

@@ -1,9 +1,9 @@
 {
-  "game.ap2.one_in_the_chamber": "Einen im Lauf",
-  "game.ap2.one_in_the_chamber.description": "Deine Armbrust tötet sofort, aber du hast nur einen Schuss! Du erhältst einen neuen Schuss, wenn du jemanden tötest. Es gewinnt der Spieler, der zuerst %s Kills erreicht!",
-  "game.ap2.one_in_the_chamber.task": "Erreiche %s Kills",
-  "game.ap2.one_in_the_chamber.stat.deaths": "Tode",
-  "game.ap2.one_in_the_chamber.stat.arrows_shot": "Pfeile verschossen",
-  "game.ap2.one_in_the_chamber.stat.arrows_hit": "Pfeile getroffen",
-  "game.ap2.one_in_the_chamber.stat.killstreak": "Killstreak"
+  "name": "Einen im Lauf",
+  "description": "Deine Armbrust tötet sofort, aber du hast nur einen Schuss! Du erhältst einen neuen Schuss, wenn du jemanden tötest. Es gewinnt der Spieler, der zuerst %s Kills erreicht!",
+  "task": "Erreiche %s Kills",
+  "stat.deaths": "Tode",
+  "stat.arrows_shot": "Pfeile verschossen",
+  "stat.arrows_hit": "Pfeile getroffen",
+  "stat.killstreak": "Killstreak"
 }

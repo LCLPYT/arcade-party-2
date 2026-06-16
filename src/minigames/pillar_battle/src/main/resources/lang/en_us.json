@@ -1,7 +1,7 @@
 {
-  "game.ap2.pillar_battle": "Pillar Battle",
-  "game.ap2.pillar_battle.description": "All players are placed on pillars. Everyone receives a random item every %s seconds. Kill other players and be the last one standing!",
-  "game.ap2.pillar_battle.out_of_bounds": "You cannot build there...",
-  "game.ap2.pillar_battle.border_warn": "Careful! You are near the build border",
-  "game.ap2.pillar_battle.border_shrinking": "The border is closing in!"
+  "name": "Pillar Battle",
+  "description": "All players are placed on pillars. Everyone receives a random item every %s seconds. Kill other players and be the last one standing!",
+  "out_of_bounds": "You cannot build there...",
+  "border_warn": "Careful! You are near the build border",
+  "border_shrinking": "The border is closing in!"
 }

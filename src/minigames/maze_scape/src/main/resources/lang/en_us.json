@@ -1,5 +1,5 @@
 {
-  "game.ap2.maze_scape": "MazeScape",
-  "game.ap2.maze_scape.description": "You have to run from monsters inside a labyrinth-like facility. The last survivor wins!",
-  "game.ap2.maze_scape.fell_into_pit": "%s fell into a pit"
+  "name": "MazeScape",
+  "description": "You have to run from monsters inside a labyrinth-like facility. The last survivor wins!",
+  "fell_into_pit": "%s fell into a pit"
 }

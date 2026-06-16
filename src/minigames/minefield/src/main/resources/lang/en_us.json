@@ -1,10 +1,10 @@
 {
-  "game.ap2.minefield": "Minefield",
-  "game.ap2.minefield.description": "Step through a minefield without setting of mines. First one to reach the goal wins!",
-  "game.ap2.minefield.task": "Reach the goal",
-  "game.ap2.minefield.goal": "%s reached the goal. The game will end in %s seconds and you will be ranked depending on your distance to the goal.",
-  "game.ap2.minefield.stepped_on_mine": "You stepped on a mine",
-  "game.ap2.minefield.personal_best": "Personal best - %sm",
-  "game.ap2.minefield.new_personal_best": "New personal best",
-  "game.ap2.minefield.stat.exploded": "Mines exploded"
+  "name": "Minefield",
+  "description": "Step through a minefield without setting of mines. First one to reach the goal wins!",
+  "task": "Reach the goal",
+  "goal": "%s reached the goal. The game will end in %s seconds and you will be ranked depending on your distance to the goal.",
+  "stepped_on_mine": "You stepped on a mine",
+  "personal_best": "Personal best - %sm",
+  "new_personal_best": "New personal best",
+  "stat.exploded": "Mines exploded"
 }

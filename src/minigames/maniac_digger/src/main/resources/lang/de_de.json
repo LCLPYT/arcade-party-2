@@ -1,11 +1,11 @@
 {
-  "game.ap2.maniac_digger": "Verrücktes Graben",
-  "game.ap2.maniac_digger.description": "Grabe dich durch eine Röhre, die mit zufälligen Blöcken gefüllt ist. Nutze die richtigen Werkzeuge, um Blöcke schneller abzubauen.",
-  "game.ap2.maniac_digger.task": "Erreiche den Boden",
-  "game.ap2.maniac_digger.wrong_tool": "❌ falsches Werkzeug ❌",
-  "game.ap2.maniac_digger.stat.blocks_broken": "Blöcke abgebaut",
-  "game.ap2.maniac_digger.stat.tool_switches": "Werkzeugwechsel",
-  "game.ap2.maniac_digger.stat.wrong_tools_selected": "Falsche Werkzeuge gewählt",
-  "game.ap2.maniac_digger.stat.wrong_tools_used": "Falsche Werkzeuge benutzt",
-  "game.ap2.maniac_digger.stat.correct_tool_streak": "Richtige-Werkzeug-Serie"
+  "name": "Verrücktes Graben",
+  "description": "Grabe dich durch eine Röhre, die mit zufälligen Blöcken gefüllt ist. Nutze die richtigen Werkzeuge, um Blöcke schneller abzubauen.",
+  "task": "Erreiche den Boden",
+  "wrong_tool": "❌ falsches Werkzeug ❌",
+  "stat.blocks_broken": "Blöcke abgebaut",
+  "stat.tool_switches": "Werkzeugwechsel",
+  "stat.wrong_tools_selected": "Falsche Werkzeuge gewählt",
+  "stat.wrong_tools_used": "Falsche Werkzeuge benutzt",
+  "stat.correct_tool_streak": "Richtige-Werkzeug-Serie"
 }

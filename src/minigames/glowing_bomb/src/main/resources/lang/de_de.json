@@ -1,12 +1,12 @@
 {
-  "game.ap2.glowing_bomb": "Glühende Bombe",
-  "game.ap2.glowing_bomb.description": "Eine Glowstone-Bombe wird herum gereicht. Wenn sie bei dir explodiert, wird Glowstone in deinen Seelenanker getan. Wenn dein Seelenanker voll ist, fliegst du raus!",
-  "game.ap2.glowing_bomb.task": "Reiche die Bombe herum",
-  "game.ap2.glowing_bomb.pass": "Bombe weitergeben",
-  "game.ap2.glowing_bomb.stat.bomb_assigned": "Bomben erhalten",
-  "game.ap2.glowing_bomb.stat.bomb_passed": "Bomben weitergegeben",
-  "game.ap2.glowing_bomb.stat.bomb_exploded": "Bomben explodiert",
-  "game.ap2.glowing_bomb.stat.max_safe_streak": "Serie",
-  "game.ap2.glowing_bomb.stat.bomb_hold_time": "Gesamte Haltezeit",
-  "game.ap2.glowing_bomb.stat.min_fuse_on_pass": "Knappste Weitergabe"
+  "name": "Glühende Bombe",
+  "description": "Eine Glowstone-Bombe wird herum gereicht. Wenn sie bei dir explodiert, wird Glowstone in deinen Seelenanker getan. Wenn dein Seelenanker voll ist, fliegst du raus!",
+  "task": "Reiche die Bombe herum",
+  "pass": "Bombe weitergeben",
+  "stat.bomb_assigned": "Bomben erhalten",
+  "stat.bomb_passed": "Bomben weitergegeben",
+  "stat.bomb_exploded": "Bomben explodiert",
+  "stat.max_safe_streak": "Serie",
+  "stat.bomb_hold_time": "Gesamte Haltezeit",
+  "stat.min_fuse_on_pass": "Knappste Weitergabe"
 }

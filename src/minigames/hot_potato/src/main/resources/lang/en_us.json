@@ -1,9 +1,9 @@
 {
-  "game.ap2.hot_potato": "Hot Potato",
-  "game.ap2.hot_potato.description": "A random player will receive the hot potato. The potato can be given to other players. After %s seconds, the player with the hot potato is eliminated.",
-  "game.ap2.hot_potato.item": "Hot Potato",
-  "game.ap2.hot_potato.title": "You",
-  "game.ap2.hot_potato.subtitle": "are the hot potato",
-  "game.ap2.hot_potato.stat.potato_assigned": "Potato assigned",
-  "game.ap2.hot_potato.stat.times_passed": "Times passed"
+  "name": "Hot Potato",
+  "description": "A random player will receive the hot potato. The potato can be given to other players. After %s seconds, the player with the hot potato is eliminated.",
+  "item": "Hot Potato",
+  "title": "You",
+  "subtitle": "are the hot potato",
+  "stat.potato_assigned": "Potato assigned",
+  "stat.times_passed": "Times passed"
 }
