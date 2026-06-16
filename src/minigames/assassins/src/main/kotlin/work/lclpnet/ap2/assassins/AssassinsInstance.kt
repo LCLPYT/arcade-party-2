@@ -70,7 +70,7 @@ private val WORLD_BORDER_SHRINK_START_DELAY = 45.seconds
 private const val ITEM_COOLDOWN_TICKS = 20
 private const val WORLD_BORDER_SHRINK_PER_SECOND = 1.5
 private const val SPAWN_SPACING_DEFAULT = 10.0
-const val DEBUG_ALWAYS_GIVE_ITEM = true
+const val DEBUG_ALWAYS_GIVE_ITEM = false
 const val DEBUG_SPAWN_POSITIONS = false
 const val DEBUG_SCANNED_POSITIONS = false
 
