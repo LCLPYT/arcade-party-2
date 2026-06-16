@@ -41,6 +41,7 @@ import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor
 import work.lclpnet.ap2.impl.util.ParticleHelper
 import work.lclpnet.ap2.impl.util.SoundHelper
+import work.lclpnet.ap2.impl.util.VanishManager
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
 import work.lclpnet.ap2.impl.util.world.*
 import work.lclpnet.gaco.ds.BlockBox
@@ -69,8 +70,8 @@ private val WORLD_BORDER_SHRINK_START_DELAY = 45.seconds
 private const val ITEM_COOLDOWN_TICKS = 20
 private const val WORLD_BORDER_SHRINK_PER_SECOND = 1.5
 private const val SPAWN_SPACING_DEFAULT = 10.0
-const val DEBUG_ALWAYS_GIVE_ITEM = false
-const val DEBUG_SPAWN_POSITIONS = true
+const val DEBUG_ALWAYS_GIVE_ITEM = true
+const val DEBUG_SPAWN_POSITIONS = false
 const val DEBUG_SCANNED_POSITIONS = false
 
 val Kills = CommonStats.Kills
@@ -90,6 +91,7 @@ class AssassinsInstance(
     private val spawnSpacing = map.properties.optNumber("spawn-spacing", SPAWN_SPACING_DEFAULT).toDouble()
     private val targets = AssassinTargets()
     private val glow = AssassinGlowHandler(gameHandle.server, gameHandle.scoreboardManager)
+    private val vanishManager = VanishManager.setup(gameHandle)
     private val movementBlocker = SimpleMovementBlocker(gameHandle.rootScheduler).also {
         it.setModifySpeedAttribute(false)
     }
@@ -338,11 +340,16 @@ class AssassinsInstance(
     private fun useSpecialItem(player: ServerPlayer, type: AssassinsSpecialItem) {
         when (type) {
             AssassinsSpecialItem.INVISIBILITY -> {
+                vanishManager.vanish(player)
                 player.addEffect(MobEffectInstance(MobEffects.INVISIBILITY, INVISIBILITY_DURATION.inWholeTicks.toInt(), 0, false, false, true))
                 player.playNotifySound(SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.6f, 1.2f)
+                runAfter(INVISIBILITY_DURATION) {
+                    vanishManager.show(player)
+                    player.playNotifySound(SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.5f, 0.5f)
+                }
             }
             AssassinsSpecialItem.JUMP_BOOST -> {
-                player.addEffect(MobEffectInstance(MobEffects.JUMP_BOOST, JUMP_BOOST_DURATION.inWholeTicks.toInt(), 2, false, false, true))
+                player.addEffect(MobEffectInstance(MobEffects.JUMP_BOOST, JUMP_BOOST_DURATION.inWholeTicks.toInt(), 4, false, false, true))
                 player.playNotifySound(SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.6f, 1.6f)
             }
             AssassinsSpecialItem.REVEAL_ASSASSIN -> revealAssassin(player)
@@ -397,6 +404,7 @@ class AssassinsInstance(
     private fun resetPlayer(player: ServerPlayer) {
         player.inventory.clearContent()
         player.removeAllEffects()
+        vanishManager.show(player)
         player.health = player.maxHealth
         player.foodData.foodLevel = 20
     }
