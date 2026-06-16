@@ -20,6 +20,7 @@ import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.dance_floor.cmd.SetSongCommand
 import work.lclpnet.ap2.game.dance_floor.cmd.SkipSongCommand
 import work.lclpnet.ap2.game.util.useSurvivalMode
+import work.lclpnet.ap2.game.util.whenBelowCriticalHeight
 import work.lclpnet.ap2.impl.game.PlayerUtil
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.music.SongHandler
@@ -103,7 +104,7 @@ class DanceFloorInstance(
     }
 
     override fun go() {
-        commons().whenBelowCriticalHeight().then { player -> softEliminate(player) }
+        whenBelowCriticalHeight(::softEliminate)
         nextCycle()
 
         val particleShape = MapUtil.readShape(map, "particle-shape")

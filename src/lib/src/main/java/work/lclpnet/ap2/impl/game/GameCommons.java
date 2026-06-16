@@ -28,7 +28,6 @@ import work.lclpnet.ap2.api.game.sink.IntDataSink;
 import work.lclpnet.ap2.api.util.action.Action;
 import work.lclpnet.ap2.core.mixin.entity.LivingEntityAccessor;
 import work.lclpnet.ap2.game.MiniGameHandle;
-import work.lclpnet.ap2.game.player.Participants;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.resource.ApResources;
 import work.lclpnet.ap2.impl.util.GameRuleBuilder;
@@ -38,8 +37,6 @@ import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager;
 import work.lclpnet.ap2.impl.util.world.WorldBorderRandomizer;
 import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager;
-import work.lclpnet.gaco.collisions.movement.TickMovementDetector;
-import work.lclpnet.gaco.collisions.util.PlayerAction;
 import work.lclpnet.gaco.math.Vec2i;
 import work.lclpnet.game.map.GameMap;
 import work.lclpnet.game.map.MapUtils;
@@ -54,7 +51,6 @@ import work.lclpnet.kibu.translate.Translations;
 
 import java.util.*;
 import java.util.function.BiConsumer;
-import java.util.function.DoubleSupplier;
 
 import static java.lang.Math.floor;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
@@ -83,39 +79,6 @@ public class GameCommons {
 
     public @NotNull DebugController debugController() {
         return debugController;
-    }
-
-    public Action<PlayerAction> whenBelowCriticalHeight() {
-        Objects.requireNonNull(map);
-
-        Number minY = map.getProperty("critical-height");
-
-        if (minY == null) return Action.noop();
-
-        return whenBelowY(minY.doubleValue());
-    }
-
-    public Action<PlayerAction> whenBelowY(double minY) {
-        return whenBelowY(() -> minY);
-    }
-
-    public Action<PlayerAction> whenBelowY(DoubleSupplier minY) {
-        Participants participants = gameHandle.getParticipants();
-
-        var hook = PlayerAction.createHook();
-        var detector = new TickMovementDetector(() -> participants);
-
-        detector.register(player -> {
-            if (!participants.isParticipating(player)) return;
-
-            if (player.getY() < minY.getAsDouble()) {
-                hook.invoker().act(player);
-            }
-        });
-
-        detector.init(gameHandle.getScheduler(), gameHandle.getHooks());
-
-        return Action.create(hook);
     }
 
     public Action<Runnable> scheduleWorldBorderShrink(long delayTicks, long durationTicks, long finalDelayTicks) {

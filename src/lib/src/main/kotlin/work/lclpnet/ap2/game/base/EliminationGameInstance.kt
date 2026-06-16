@@ -20,6 +20,7 @@ import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.data.EliminationDataContainer
 import work.lclpnet.ap2.game.util.GameStartSequence
 import work.lclpnet.ap2.game.util.useDataContainer
+import work.lclpnet.ap2.game.util.whenBelowCriticalHeight
 import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar
 import work.lclpnet.game.map.GameMap
@@ -132,7 +133,7 @@ abstract class EliminationGameInstance(
     }
 
     protected fun eliminateBelowCriticalHeight() {
-        commons().whenBelowCriticalHeight().then { player ->
+        whenBelowCriticalHeight { player ->
             eliminate(player)
         }
     }

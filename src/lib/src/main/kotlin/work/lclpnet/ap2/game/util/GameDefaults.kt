@@ -12,9 +12,11 @@ import work.lclpnet.ap2.api.stats.LevelInfo
 import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective
 import work.lclpnet.ap2.ext.allPlayers
 import work.lclpnet.ap2.ext.hooks
+import work.lclpnet.ap2.ext.isParticipating
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.game.MiniGameInstance
+import work.lclpnet.ap2.game.base.MapGameInstance
 import work.lclpnet.ap2.game.data.ScoreListenerView
 import work.lclpnet.ap2.game.data.type.FFAGameResult
 import work.lclpnet.ap2.game.data.type.PlayerRef
@@ -23,6 +25,7 @@ import work.lclpnet.ap2.game.data.type.TeamRef
 import work.lclpnet.ap2.game.player.ParticipantListener
 import work.lclpnet.ap2.impl.util.scoreboard.TranslatedScoreboardObjective
 import work.lclpnet.combatctl.impl.CombatStyles
+import work.lclpnet.gaco.collisions.movement.TickMovementDetector
 import work.lclpnet.game.impl.prot.MutableProtectionConfig
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.util.ProtectorUtils
@@ -30,6 +33,7 @@ import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback
 import work.lclpnet.kibu.hook.player.PlayerWaypointCallback
 import work.lclpnet.kibu.translate.text.LocalizedFormat
+import java.util.function.Consumer
 
 
 fun MiniGameInstance.configureDefaults(
@@ -218,4 +222,25 @@ fun MiniGameInstance.useScoreboardStatsSync(
     }
 
     source.dispatchScoreEvents(players())
+}
+
+fun MapGameInstance.whenBelowCriticalHeight(action: Consumer<ServerPlayer>) {
+    val minY = map.properties.optNumber("critical-height") ?: return
+
+    return whenBelowY(minY.toDouble(), action)
+}
+
+fun MiniGameInstance.whenBelowY(minY: Double, action: Consumer<ServerPlayer>) =
+    whenBelowDynamicY({ minY }, action)
+
+fun MiniGameInstance.whenBelowDynamicY(minY: () -> Double, action: Consumer<ServerPlayer>) {
+    val detector = TickMovementDetector(::players)
+
+    detector.register { player: ServerPlayer ->
+        if (isParticipating(player) && player.y < minY()) {
+            action.accept(player)
+        }
+    }
+
+    detector.init(gameHandle.scheduler, gameHandle.hooks)
 }

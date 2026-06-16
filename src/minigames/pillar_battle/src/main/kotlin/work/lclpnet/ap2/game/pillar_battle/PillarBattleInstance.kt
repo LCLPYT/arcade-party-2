@@ -32,6 +32,7 @@ import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.game.util.useOldCombat
 import work.lclpnet.ap2.game.util.useSurvivalMode
+import work.lclpnet.ap2.game.util.whenBelowCriticalHeight
 import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
 import work.lclpnet.ap2.impl.util.world.KnockbackKillTracker
@@ -176,7 +177,7 @@ class PillarBattleInstance(
         trackDistanceMoved(stats)
         trackSurvivalTime(stats)
 
-        commons().whenBelowCriticalHeight().then { player ->
+        whenBelowCriticalHeight { player ->
             when (val killer = killTracker.getLastAttacker(player)) {
                 is ServerPlayer -> player.setLastHurtByPlayer(killer, 100)
                 is LivingEntity -> player.lastHurtByMob = killer

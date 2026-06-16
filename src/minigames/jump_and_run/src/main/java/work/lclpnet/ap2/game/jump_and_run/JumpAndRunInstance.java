@@ -192,8 +192,11 @@ public class JumpAndRunInstance extends FFAGameInstance {
         CheckpointHelper.whenFallingIntoLava(hooks, participants::isParticipating)
                 .then(this::resetPlayerToCheckpoint);
 
-        commons().whenBelowY(() -> jumpAndRun.world().getMinY())
-                .then(this::resetPlayerToCheckpoint);
+        GameDefaultsKt.whenBelowDynamicY(
+                this,
+                () -> (double) jumpAndRun.world().getMinY(),
+                this::resetPlayerToCheckpoint
+        );
 
         // disable drip leaf tilt for players in goal
         DripLeafTiltCallback.HOOK.registerWith(hooks, (entity, _) -> entity instanceof ServerPlayer player
