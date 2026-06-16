@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.assassins
 
 import net.minecraft.ChatFormatting
-import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import net.minecraft.core.component.DataComponents
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.network.chat.Style
@@ -21,6 +21,7 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.DyeColor
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
+import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.border.WorldBorder
 import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.phys.Vec3
@@ -49,6 +50,7 @@ import work.lclpnet.game.util.BossBarTimer
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.scheduler.api.TaskHandle
+import work.lclpnet.pal.PalApi
 import java.util.*
 import kotlin.random.Random
 import kotlin.random.asJavaRandom
@@ -64,6 +66,8 @@ private val REVEAL_DURATION = 6.seconds
 private val WORLD_BORDER_SHRINK_START_DELAY = 45.seconds
 private const val ITEM_COOLDOWN_TICKS = 20
 private const val WORLD_BORDER_SHRINK_PER_SECOND = 1.5
+const val DEBUG_ALWAYS_GIVE_ITEM = false
+const val DEBUG_SPAWN_POSITIONS = false
 
 val Kills = CommonStats.Kills
 val DamageDealt = CommonStats.DamageDealt
@@ -195,7 +199,7 @@ class AssassinsInstance(
             resetPlayer(player)
             equip(player)
 
-            if (player.uuid in rewarded) {
+            if (DEBUG_ALWAYS_GIVE_ITEM || player.uuid in rewarded) {
                 giveSpecialItem(player, AssassinsSpecialItem.random(random))
             }
         }
@@ -427,11 +431,22 @@ class AssassinsInstance(
         val box = schema.spawnBox
             ?: throw IllegalStateException("Map property \"Spawn box\" is not set in the assassins schema")
 
-        val walkable = WalkableBlockPredicate(level)
-        val ground = ArrayList<BlockPos>()
+        val contraptionService = PalApi.getInstance().contraptionService
 
-        for (pos in box) {
-            if (walkable.test(pos)) ground.add(pos.immutable())
+        val walkable = WalkableBlockPredicate(level)
+
+        val ground = iterator {
+            for (pos in box) {
+                if (!walkable.test(pos)) continue
+
+                val below = pos.below()
+
+                if (!level.getBlockState(below).isFaceSturdy(level, pos, Direction.UP)) continue
+
+                if (contraptionService.isBoosterPlate(level, pos)) continue
+
+                yield(pos.immutable())
+            }
         }
 
         val finder = SizedSpaceFinder.create(level, EntityType.PLAYER)
@@ -439,6 +454,14 @@ class AssassinsInstance(
 
         if (spawns.isEmpty()) {
             throw IllegalStateException("No valid floor spawns found within the assassins spawn box")
+        }
+
+        if (DEBUG_SPAWN_POSITIONS) {
+            commons().debugController().renderer().ifPresent { renderer ->
+                for (pos in spawns) {
+                    renderer.marker(pos, Blocks.GREEN_CONCRETE.defaultBlockState(), 0x00ff00)
+                }
+            }
         }
     }
 }
