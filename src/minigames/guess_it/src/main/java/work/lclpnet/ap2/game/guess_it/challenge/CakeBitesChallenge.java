@@ -58,7 +58,7 @@ public class CakeBitesChallenge implements Challenge {
     @Override
     public void begin(InputInterface input, ChallengeMessenger messenger) {
         Translations translations = gameHandle.getTranslations();
-        messenger.task(translations.translateText("game.ap2.guess_it.cake_bites"));
+        messenger.task(translations.translateText("cake_bites"));
 
         input.expectInput().validateInt(translations);
 
@@ -70,7 +70,7 @@ public class CakeBitesChallenge implements Challenge {
 
         addHint(dynamicEntities, world, gameHandle.getTranslations(),
                 new Vec3(origin.getX() + 0.5, origin.getY() + 4.5, origin.getZ() + 0.5),
-                "game.ap2.guess_it.cake_bites.hint");
+                "cake_bites.hint");
     }
 
     private void createCake() {

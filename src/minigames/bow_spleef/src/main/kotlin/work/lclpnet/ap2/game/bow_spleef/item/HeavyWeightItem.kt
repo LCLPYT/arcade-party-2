@@ -62,7 +62,7 @@ class HeavyWeightItem : SpecialItem {
             world.playSound(null, pos.x, pos.y, pos.z, SoundEvents.BLAZE_HURT, SoundSource.HOSTILE, 0.5f, 0.65f)
             world.sendParticles(ParticleTypes.FALLING_NECTAR, pos.x, pos.y + 1, pos.z, 100, 0.25, 0.5, 0.25, 1.0)
 
-            ctx.translations().translateText("game.ap2.bow_spleef.heavy_weighted")
+            ctx.translations().translateText("heavy_weighted")
                 .styled { it.withColor(0xff0000) }
                 .sendTo(player, true)
 

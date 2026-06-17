@@ -107,7 +107,7 @@ class SpeedBuildersInstance(
         }
 
         if (fastMode) {
-            translate("game.ap2.speed_builders.fast_mode")
+            translate("fast_mode")
                 .formatted(ChatFormatting.GOLD)
                 .sendTo(allPlayers())
         }
@@ -157,9 +157,9 @@ class SpeedBuildersInstance(
         manager.setModule(module)
         items.setModule(module)
 
-        announcer.announceSubtitle("game.ap2.speed_builders.look")
+        announcer.announceSubtitle("look")
 
-        val label = translate("game.ap2.speed_builders.prepare_label")
+        val label = translate("prepare_label")
 
         timer = createTimer(label, LOOK_DURATION, BossEvent.BossBarColor.YELLOW)
 
@@ -173,7 +173,7 @@ class SpeedBuildersInstance(
     }
 
     private fun startBuilding() {
-        announcer.announceSubtitle("game.ap2.speed_builders.copy")
+        announcer.announceSubtitle("copy")
 
         val entities = manager.getPreviewEntities()
 
@@ -181,7 +181,7 @@ class SpeedBuildersInstance(
         manager.buildingPhase = true
         items.giveBuildingMaterials(gameHandle.participants, entities)
 
-        val label = translate("game.ap2.speed_builders.label")
+        val label = translate("label")
 
         timer = createTimer(label, manager.getBuildingDuration())
 
@@ -200,7 +200,7 @@ class SpeedBuildersInstance(
             return
         }
 
-        beginJudgement("game.ap2.speed_builders.time_up")
+        beginJudgement("time_up")
     }
 
     private fun beginJudgement(titleKey: String) {
@@ -215,7 +215,7 @@ class SpeedBuildersInstance(
         runAfter(2.seconds) {
             announcer.silent()
                 .withTimes(0, 35, 5)
-                .announce(titleKey, "game.ap2.speed_builders.grade")
+                .announce(titleKey, "grade")
         }
 
         runAfter(JUDGE_DURATION) {
@@ -235,11 +235,11 @@ class SpeedBuildersInstance(
         timerTransaction++
         timer?.stop()
 
-        beginJudgement("game.ap2.speed_builders.round_over")
+        beginJudgement("round_over")
     }
 
     private fun announceJudgementDone() {
-        announcer.announceSubtitle("game.ap2.speed_builders.judgement")
+        announcer.announceSubtitle("judgement")
 
         runAfter(JUDGE_ANNOUNCEMENT_DELAY) {
             announceJudgement()
@@ -253,7 +253,7 @@ class SpeedBuildersInstance(
         }
 
         val title = Component.literal(worst.scoreboardName).withStyle(ChatFormatting.AQUA)
-        val subtitle = translate("game.ap2.speed_builders.will_eliminate")
+        val subtitle = translate("will_eliminate")
             .formatted(ChatFormatting.DARK_GREEN)
 
 
@@ -307,7 +307,7 @@ class SpeedBuildersInstance(
 
     private fun putScoreDetail(player: ServerPlayer, winner: Boolean) {
         val completed = manager.getRoundsCompleted(player, winner)
-        val detail = translate("game.ap2.speed_builders.survived", completed)
+        val detail = translate("survived", completed)
 
         data.add(player, detail)
     }
@@ -402,7 +402,7 @@ class SpeedBuildersInstance(
 
         announcer
             .withSound(SoundEvents.BREEZE_IDLE_AIR, SoundSource.HOSTILE, 1f, 1.2f)
-            .announceSubtitle("game.ap2.speed_builders.impressed")
+            .announceSubtitle("impressed")
 
         runAfter(3.seconds) {
             nextRoundOrGameOver()

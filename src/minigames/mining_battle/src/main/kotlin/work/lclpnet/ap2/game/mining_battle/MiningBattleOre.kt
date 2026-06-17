@@ -141,7 +141,7 @@ class MiningBattleOre(
         player.addEffect(MobEffectInstance(MobEffects.HASTE, remainingTicks + 100, 0))
         ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.BELL_RESONATE, SoundSource.BLOCKS, 0.5f, 2f)
 
-        val msg = gameHandle.translations.translateText(player, "game.ap2.mining_battle.haste")
+        val msg = gameHandle.translations.translateText(player, "haste")
             .formatted(ChatFormatting.GREEN)
 
         player.sendSystemMessage(msg)
@@ -152,13 +152,13 @@ class MiningBattleOre(
 
         val translations = gameHandle.translations
 
-        val playerMsg = translations.translateText(player, "game.ap2.mining_battle.weakened")
+        val playerMsg = translations.translateText(player, "weakened")
             .formatted(ChatFormatting.GREEN)
 
         player.sendSystemMessage(playerMsg)
 
         val otherMsg = translations.translateText(
-            "game.ap2.mining_battle.weakened_by",
+            "weakened_by",
             styled(player.scoreboardName, ChatFormatting.YELLOW)
         ).formatted(ChatFormatting.RED)
 

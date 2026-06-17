@@ -159,7 +159,7 @@ class KnockoutInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
 
         idleManager.onEnterIdle().register { player ->
             gameHandle.translations
-                .translateText("game.ap2.knockout.idle")
+                .translateText("idle")
                 .formatted(YELLOW)
                 .sendTo(player)
 

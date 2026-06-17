@@ -14,7 +14,7 @@ enum class AssassinsSpecialItem(val id: String, val item: Item) {
     JUMP_BOOST("jump_boost", Items.RABBIT_FOOT),
     REVEAL_ASSASSIN("reveal_assassin", Items.ENDER_EYE);
 
-    val translationKey: String get() = "game.ap2.assassins.item.$id"
+    val translationKey: String get() = "item.$id"
 
     companion object {
 

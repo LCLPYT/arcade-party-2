@@ -55,7 +55,7 @@ public class MazeScapeInstance extends EliminationGameInstance {
             MOB_UPDATE_DELAY_TICKS = Ticks.seconds(1),
             MOB_REVEAL_TICKS = Ticks.seconds(8);
 
-    private static final String FELL_INTO_PIT = "game.ap2.maze_scape.fell_into_pit";
+    private static final String FELL_INTO_PIT = "fell_into_pit";
 
     private final Random random = new Random();
     private final @Nullable MSStruct struct;

@@ -416,7 +416,7 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
         completed.add(player, duration)
 
         gameHandle.translations.translateText(
-            "game.ap2.dragon_escape.goal",
+            "goal",
             styled(player.scoreboardName, ChatFormatting.YELLOW)
         ).formatted(ChatFormatting.GREEN)
             .sendTo(PlayerLookup.all(gameHandle.server))

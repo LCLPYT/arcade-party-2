@@ -134,7 +134,7 @@ class PandaFinderInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: G
         val translations = gameHandle.translations
 
         pandaManager.getLocalizedPandaGene()?.let { key ->
-            translations.translateText("game.ap2.panda_finder.find",
+            translations.translateText("find",
                     FormatWrapper.styled(translations.translateText(key), ChatFormatting.YELLOW))
                 .formatted(ChatFormatting.GREEN).sendTo(players)
         }
@@ -197,7 +197,7 @@ class PandaFinderInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: G
     private fun onCooldownReached(player: ServerPlayer) {
         stats.increment(player, Cooldowns)
 
-        player.sendSystemMessage(gameHandle.translations.translateText(player, "game.ap2.panda_finder.cooldown")
+        player.sendSystemMessage(gameHandle.translations.translateText(player, "cooldown")
             .formatted(ChatFormatting.RED))
 
         ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.BLAZE_HURT, SoundSource.HOSTILE, 0.5f, 1.5f)
@@ -233,7 +233,7 @@ class PandaFinderInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: G
         val translations = gameHandle.translations
         val players = PlayerLookup.all(gameHandle.server)
 
-        translations.translateText("game.ap2.panda_finder.panda_found",
+        translations.translateText("panda_found",
                 FormatWrapper.styled(player.scoreboardName, ChatFormatting.YELLOW))
             .formatted(ChatFormatting.GRAY).sendTo(players)
 

@@ -148,7 +148,7 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
         Translations translations = gameHandle.getTranslations();
 
         String name = shape.getClass().getSimpleName().toLowerCase(Locale.ROOT);
-        messenger.task(translations.translateText("game.ap2.guess_it.shape." + name));
+        messenger.task(translations.translateText("shape." + name));
 
         input.expectInput().validateInt(translations);
     }

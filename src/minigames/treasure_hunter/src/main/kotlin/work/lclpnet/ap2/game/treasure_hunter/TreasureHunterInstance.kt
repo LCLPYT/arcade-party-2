@@ -84,7 +84,7 @@ class TreasureHunterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
                 ?.toText(translations)
                 ?: Component.literal("-")
 
-            val detail = translations.translateText("game.ap2.treasure_hunter.found_treasure", scoreEntry)
+            val detail = translations.translateText("found_treasure", scoreEntry)
             foundChest.add(player, detail)
             winManager.complete()
 

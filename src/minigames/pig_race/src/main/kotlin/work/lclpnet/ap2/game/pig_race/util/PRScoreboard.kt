@@ -31,7 +31,7 @@ class PRScoreboard(
 
         if (progress.rounds <= 1) return
 
-        val text = gameHandle.translations.translateText("game.ap2.pig_race.round").formatted(GREEN)
+        val text = gameHandle.translations.translateText("round").formatted(GREEN)
         roundHandle = objective.createDynamicText(text, ScoreboardLayout.TOP)
 
         objective.createNewline(ScoreboardLayout.TOP)

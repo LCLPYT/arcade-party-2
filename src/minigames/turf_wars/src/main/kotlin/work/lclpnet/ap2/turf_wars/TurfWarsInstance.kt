@@ -135,7 +135,7 @@ class TurfWarsInstance(
     override fun go() {
         changePhase(Build)
 
-        translate("game.ap2.turf_wars.phase.build.hint")
+        translate("phase.build.hint")
             .formatted(ChatFormatting.AQUA)
             .sendTo(players())
 
@@ -357,7 +357,7 @@ class TurfWarsInstance(
     private fun advanceBlocksPerKill(blocks: Int) {
         blocksPerKill = blocks
 
-        translate("game.ap2.turf_wars.speed_up", blocks)
+        translate("speed_up", blocks)
             .formatted(ChatFormatting.GOLD)
             .sendTo(players())
 
@@ -369,7 +369,7 @@ class TurfWarsInstance(
 
         for (team in teams) {
             translate(
-                "game.ap2.turf_wars.eliminated_for_camping",
+                "eliminated_for_camping",
                 team.key().getDisplayName(gameHandle.translations),
                 TimeHelper.formatTime(gameHandle.translations, CAMP_ELIMINATION_SECONDS)
             ).formatted(ChatFormatting.GRAY)
@@ -581,20 +581,20 @@ class TurfWarsInstance(
             Build -> {
                 duration = BUILD_PHASE_DURATION
                 nextPhase = Fight
-                titleKey = "game.ap2.turf_wars.phase.build"
+                titleKey = "phase.build"
                 soundPitch = 0.5f
             }
             Fight -> {
                 duration = FIGHT_PHASE_DURATION
                 nextPhase = Build
-                titleKey = "game.ap2.turf_wars.phase.fight.title"
+                titleKey = "phase.fight.title"
                 soundPitch = 2f
             }
             Nothing -> return
         }
 
         createTimer(
-            translate("game.ap2.turf_wars.phase.${phase.name.lowercase()}"),
+            translate("phase.${phase.name.lowercase()}"),
             duration
         ).whenDone { changePhase(nextPhase) }
 

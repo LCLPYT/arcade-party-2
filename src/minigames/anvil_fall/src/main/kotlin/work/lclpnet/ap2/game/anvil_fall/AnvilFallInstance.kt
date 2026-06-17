@@ -109,7 +109,7 @@ class AnvilFallInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
 
     private fun setupBossBar() {
         val id = gameHandle.gameInfo.identifier("status")
-        val key = "game.ap2.anvil_fall.status"
+        val key = "status"
         val args = arrayOf<Any>(FormatWrapper.styled(0, ChatFormatting.YELLOW))
 
         val bossBar: TranslatedBossBar = gameHandle.translations.translateBossBar(id, key, *args)

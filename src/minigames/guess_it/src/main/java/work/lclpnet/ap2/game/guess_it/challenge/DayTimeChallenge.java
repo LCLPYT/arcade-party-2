@@ -82,10 +82,10 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
     @Override
     public void begin(InputInterface input, ChallengeMessenger messenger) {
         Translations translations = gameHandle.getTranslations();
-        messenger.task(translations.translateText("game.ap2.guess_it.daytime.guess"));
+        messenger.task(translations.translateText("daytime.guess"));
 
         input.expectInput().validate((str, _) -> MinecraftDayTime.dayTimeValue(str),
-                str -> translations.translateText("game.ap2.guess_it.input.daytime", styled(str, YELLOW)).formatted(RED));
+                str -> translations.translateText("input.daytime", styled(str, YELLOW)).formatted(RED));
 
         // create compass that points north
         ItemStack stack = new ItemStack(Items.COMPASS);
@@ -107,7 +107,7 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
 
         addHint(dynamicEntities, world, gameHandle.getTranslations(),
                 new Vec3(origin.getX() + 0.5, origin.getY() + 1, origin.getZ() + 0.5),
-                "game.ap2.guess_it.daytime.hint");
+                "daytime.hint");
     }
 
 

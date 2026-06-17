@@ -43,7 +43,7 @@ class PaintballResults(
 
         gameHandle.scheduler.interval(1, ::teleportPlayersToResults)
 
-        announcer.announce("game.ap2.paintball.game_over", null)
+        announcer.announce("game_over", null)
 
         gameHandle.scheduler.timeout(RESULT_DELAY_TICKS) { ->
             showResults()

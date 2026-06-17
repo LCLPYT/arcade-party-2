@@ -169,7 +169,7 @@ public class GuessItInstance extends FFAGameInstance {
         var objective = ScoreboardUtilsKt.setupTranslatedSidebarObjective(scoreboardManager, getGameHandle().getGameInfo().getTitleKey());
 
         // round display
-        roundHandle = objective.createText(translations.translateText("game.ap2.guess_it.round").formatted(GREEN));
+        roundHandle = objective.createText(translations.translateText("round").formatted(GREEN));
         updateRoundDisplay();
 
         objective.createNewline(ScoreboardLayout.TOP);
@@ -212,7 +212,7 @@ public class GuessItInstance extends FFAGameInstance {
         ServerLevel world = getLevel();
         Translations translations = getGameHandle().getTranslations();
 
-        var prepareMsg = translations.translateText("game.ap2.guess_it.prepare." + challenge.getPreparationKey())
+        var prepareMsg = translations.translateText("prepare." + challenge.getPreparationKey())
                 .formatted(DARK_GREEN, BOLD);
 
         challenge.init(challengeInit.init());
@@ -271,7 +271,7 @@ public class GuessItInstance extends FFAGameInstance {
 
         int durationTicks = challenge.getDurationTicks();
 
-        timer = BossBarTimer.builder(translations, translations.translateText("game.ap2.guess_it.answer"))
+        timer = BossBarTimer.builder(translations, translations.translateText("answer"))
                 .withAlertSound(true)
                 .withColor(BossEvent.BossBarColor.RED)
                 .withDurationTicks(durationTicks)
@@ -325,13 +325,13 @@ public class GuessItInstance extends FFAGameInstance {
         TranslatedText solutionMsg = null;
 
         if (correctAnswer != null) {
-            solutionMsg = translations.translateText("game.ap2.guess_it.solution", styled(correctAnswer, YELLOW));
+            solutionMsg = translations.translateText("solution", styled(correctAnswer, YELLOW));
         }
 
         for (ServerPlayer player : getGameHandle().getParticipants()) {
             int points = result.getPointsGained(player);
 
-            var msg = translations.translateText(player, "game.ap2.guess_it.gain_points", styled(points, YELLOW)).formatted(GREEN);
+            var msg = translations.translateText(player, "gain_points", styled(points, YELLOW)).formatted(GREEN);
 
             player.sendOverlayMessage(msg);
 
