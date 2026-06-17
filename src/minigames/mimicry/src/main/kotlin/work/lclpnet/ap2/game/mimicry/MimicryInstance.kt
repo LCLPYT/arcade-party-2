@@ -61,7 +61,7 @@ class MimicryInstance(
         IntScoreDataContainer(
             refs,
             Ordering.DESCENDING,
-            "game.ap2.mimicry.completed"
+            "completed"
         )
     }
     private val stats = useFFAStats(winManager, data, CommonStats.IntScore, listOf(
@@ -113,7 +113,7 @@ class MimicryInstance(
             return InteractionResult.FAIL
         }
 
-        val msg = gameHandle.translations.translateText(player, "game.ap2.mimicry.wrong_button")
+        val msg = gameHandle.translations.translateText(player, "wrong_button")
             .formatted(ChatFormatting.RED)
 
         player.sendSystemMessage(msg)
@@ -145,7 +145,7 @@ class MimicryInstance(
 
         removeTimer()
 
-        announcer.announceSubtitle("game.ap2.mimicry.attention")
+        announcer.announceSubtitle("attention")
 
         runAfter(PREPARE_TIME) { playSequence() }
     }
@@ -177,7 +177,7 @@ class MimicryInstance(
 
         phase = Phase.REPLAY
 
-        announcer.announceSubtitle("game.ap2.mimicry.repeat")
+        announcer.announceSubtitle("repeat")
 
         manager.replay = true
 

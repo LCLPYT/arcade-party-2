@@ -411,7 +411,7 @@ class PvpTournamentInstance(
 
     private fun scheduleSuddenDeath(match: Match, data: MatchInstance) {
         data.tasks.add(runAfter(SUDDEN_DEATH_DELAY) {
-            translate("game.ap2.pvp_tournament.sudden_death")
+            translate("sudden_death")
                 .formatted(ChatFormatting.RED)
                 .acceptEach(data.players) { player, msg ->
                     Title.get(player).title(Component.empty(), msg, 10, 40, 10)
@@ -532,7 +532,7 @@ class PvpTournamentInstance(
 
             Title.get(player).title(
                 title,
-                translate("game.ap2.pvp_tournament.won_match")
+                translate("won_match")
                     .formatted(ChatFormatting.DARK_GREEN)
                     .translateFor(player),
                 5,

@@ -165,7 +165,7 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
             tick()
         }
 
-        val subject = translations.translateText("game.ap2.chicken_shooter.task")
+        val subject = translations.translateText("task")
         createTimer(subject, DURATION).whenDone(winManager::complete)
     }
 
@@ -292,7 +292,7 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
             val stack = unbreakable(ItemStack(Items.BOW))
 
             stack.enchant(infinity, 1)
-            stack.set(DataComponents.CUSTOM_NAME, translations.translateText(player, "game.ap2.chicken_shooter.bow")
+            stack.set(DataComponents.CUSTOM_NAME, translations.translateText(player, "bow")
                 .styled { it.withItalic(false).applyFormat(ChatFormatting.GOLD) })
 
             val inventory = player.inventory

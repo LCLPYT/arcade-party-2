@@ -202,7 +202,7 @@ class BowSpleefInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
     private fun giveBowsToPlayers() {
         val infinity = ItemHelper.getEnchantment(Enchantments.INFINITY, level.registryAccess())
 
-        val bowName = translate("game.ap2.bow_spleef.bow")
+        val bowName = translate("bow")
             .styled { it.withItalic(false).applyFormat(ChatFormatting.GOLD) }
 
         for (player in gameHandle.participants) {

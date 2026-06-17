@@ -56,7 +56,7 @@ public class DistinctMobCountChallenge implements Challenge {
     @Override
     public void begin(InputInterface input, ChallengeMessenger messenger) {
         Translations translations = gameHandle.getTranslations();
-        messenger.task(translations.translateText("game.ap2.guess_it.mob_types.guess"));
+        messenger.task(translations.translateText("mob_types.guess"));
 
         input.expectInput().validateInt(translations);
 

@@ -51,7 +51,7 @@ public class MathsChallenge implements Challenge {
         Expression term = randomTerm();
         correctAnswer = term.evaluate();
 
-        messenger.task(translations.translateText("game.ap2.guess_it.calculate.exercise", styled(term.stringify(), YELLOW)));
+        messenger.task(translations.translateText("calculate.exercise", styled(term.stringify(), YELLOW)));
     }
 
     @Override

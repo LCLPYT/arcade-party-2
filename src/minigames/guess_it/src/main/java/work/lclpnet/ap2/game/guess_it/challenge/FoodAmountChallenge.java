@@ -48,7 +48,7 @@ public class FoodAmountChallenge implements Challenge {
     @Override
     public void begin(InputInterface input, ChallengeMessenger messenger) {
         Translations translations = gameHandle.getTranslations();
-        messenger.task(translations.translateText("game.ap2.guess_it.food_amount"));
+        messenger.task(translations.translateText("food_amount"));
 
         input.expectInput().validateFloat(translations, 1);
 

@@ -171,7 +171,7 @@ class MinefieldInstance(
 
         if (gameEnd == -1) {
             translate(
-                "game.ap2.minefield.goal",
+                "goal",
                 styled(player.scoreboardName, YELLOW),
                 styled(END_TIME, YELLOW)
             ).formatted(GREEN).sendTo(allPlayers())
@@ -207,7 +207,7 @@ class MinefieldInstance(
 
         entry(player).checkUpdateMarker(player)
 
-        translate("game.ap2.minefield.stepped_on_mine").formatted(RED).sendTo(player, true)
+        translate("stepped_on_mine").formatted(RED).sendTo(player, true)
 
         player.setGameMode(GameType.SPECTATOR)
 
@@ -238,7 +238,7 @@ class MinefieldInstance(
 
             if (marker != null) {
                 ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.NEUTRAL, 0.3f, 2f)
-                translate("game.ap2.minefield.new_personal_best").formatted(GREEN).sendTo(player, true)
+                translate("new_personal_best").formatted(GREEN).sendTo(player, true)
             }
 
             removeMarker()
@@ -278,7 +278,7 @@ class MinefieldInstance(
             val dist = max(0.0, goalDistance - bestDist)
 
             label.text = translate(
-                "game.ap2.minefield.personal_best",
+                "personal_best",
                 styled(LocalizedFormat.format("%.2f", dist), YELLOW)
             ).formatted(GREEN).translateFor(player)
 

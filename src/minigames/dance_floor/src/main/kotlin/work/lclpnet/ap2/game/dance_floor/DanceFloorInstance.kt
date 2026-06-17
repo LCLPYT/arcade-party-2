@@ -272,7 +272,7 @@ class DanceFloorInstance(
             removeBlocks(block)
         }
 
-        translate("game.ap2.dance_floor.stand_on", TextUtil.getVanillaName(block))
+        translate("stand_on", TextUtil.getVanillaName(block))
             .withColor(dyeColor.textColor)
             .sendTo(players(), true)
     }

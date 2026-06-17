@@ -22,6 +22,7 @@ import work.lclpnet.ap2.game.MiniGame
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.impl.game.PlayerUtil
+import work.lclpnet.ap2.impl.i18n.GameScopedTranslator
 import work.lclpnet.ap2.impl.util.DeathMessages
 import work.lclpnet.ap2.impl.util.world.SubWorldManager
 import work.lclpnet.ap2.mode_default.activity.MiniGameActivity
@@ -126,8 +127,9 @@ class DefaultMiniGameHandle(
     override val scheduler: SchedulerStack
         get() = args.miniGameArgs.schedulerStack
 
-    override val translations: Translations
-        get() = args.miniGameArgs.translations
+    override val translations: Translations by lazy {
+        GameScopedTranslator.scope(args.miniGameArgs.translations, game.titleKey)
+    }
 
     override val participants: Participants
         get() = args.playerManager

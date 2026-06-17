@@ -57,7 +57,7 @@ class RapidRunnerInstance(
     private fun giveCompass(player: ServerPlayer) {
         player.inventory.setItem(8, ItemStack(Items.COMPASS).apply {
             set(
-                DataComponents.ITEM_NAME, translate("game.ap2.rapid_runner.compass_name")
+                DataComponents.ITEM_NAME, translate("compass_name")
                     .formatted(ChatFormatting.GOLD)
                     .translateFor(player)
             )

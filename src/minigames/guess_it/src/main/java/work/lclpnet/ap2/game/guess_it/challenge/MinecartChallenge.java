@@ -81,7 +81,7 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
     @Override
     public void begin(InputInterface input, ChallengeMessenger messenger) {
         Translations translations = gameHandle.getTranslations();
-        messenger.task(translations.translateText("game.ap2.guess_it.minecart"));
+        messenger.task(translations.translateText("minecart"));
 
         input.expectInput().validateFloat(translations, 3);
 

@@ -110,7 +110,7 @@ class ApocalypseSurvivalInstance(gameHandle: MiniGameHandle, level: ServerLevel,
         val translations = gameHandle.translations
         val timeSurvived = time / 20
         val duration = TimeHelper.formatTime(translations, timeSurvived)
-        val detail = translations.translateText("game.ap2.apocalypse_survival.survived", duration)
+        val detail = translations.translateText("survived", duration)
         data.add(player, detail)
 
         super.participantRemoved(player)

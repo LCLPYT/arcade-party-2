@@ -32,7 +32,7 @@ public class OptionValue {
             char from = 'A';
             char to = (char) ('A' + options - 1);
 
-            var err = translations.translateText("game.ap2.guess_it.input.option",
+            var err = translations.translateText("input.option",
                             styled(input, YELLOW), styled(from, YELLOW), styled(to, YELLOW))
                     .formatted(RED);
 
