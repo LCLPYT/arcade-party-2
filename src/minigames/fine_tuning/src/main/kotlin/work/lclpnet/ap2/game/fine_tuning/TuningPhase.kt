@@ -166,14 +166,14 @@ class TuningPhase(
 
         completed.add(player.uuid)
         player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.5f, 1f)
-        gameHandle.translations.translateText("game.ap2.fine_tuning.completed").formatted(GREEN).sendTo(player)
+        gameHandle.translations.translateText("completed").formatted(GREEN).sendTo(player)
 
         if (completed.size < gameHandle.participants.count()) return
         timer.stop()
     }
 
     fun beginListen() {
-        announcer.announceSubtitle("game.ap2.fine_tuning.listen")
+        announcer.announceSubtitle("listen")
         gameHandle.scheduler.timeout(::playNextMelody, 40)
     }
 
@@ -202,7 +202,7 @@ class TuningPhase(
     private fun listenAgain() {
         announcer
             .withSound(SoundEvents.CHICKEN_EGG, SoundSource.RECORDS, 0.5f, 0f)
-            .announceSubtitle("game.ap2.fine_tuning.listen_again")
+            .announceSubtitle("listen_again")
 
         gameHandle.scheduler.timeout(40) { ->
             playMelody(::beginTune)
@@ -216,7 +216,7 @@ class TuningPhase(
         val bossBarProvider = gameHandle.bossBarProvider
         val players = PlayerLookup.all(server)
 
-        translations.translateText("game.ap2.fine_tuning.repeat").formatted(GREEN)
+        translations.translateText("repeat").formatted(GREEN)
             .acceptEach(players) { player, text -> Title.get(player).title(Component.empty(), text, 5, 30, 5) }
 
         val shuffled = baseMelody()
@@ -225,7 +225,7 @@ class TuningPhase(
         playersCanInteract = true
         giveReplayItems()
 
-        timer = BossBarTimer.builder(translations, translations.translateText("game.ap2.fine_tuning.tune", melodyNumber + 1, MELODY_COUNT))
+        timer = BossBarTimer.builder(translations, translations.translateText("tune", melodyNumber + 1, MELODY_COUNT))
             .withAlertSound(false)
             .withColor(BossEvent.BossBarColor.RED)
             .withDurationTicks(Ticks.seconds(TUNING_TIME_SECONDS))
@@ -308,7 +308,7 @@ class TuningPhase(
 
         for (player in participants) {
             val stack = head.createStack()
-            stack.set(DataComponents.CUSTOM_NAME, translations.translateText(player, "game.ap2.fine_tuning.replay")
+            stack.set(DataComponents.CUSTOM_NAME, translations.translateText(player, "replay")
                 .styled { it.withItalic(false).applyFormat(YELLOW) })
             player.inventory.setItem(4, stack)
         }
@@ -402,18 +402,18 @@ class TuningPhase(
 
         for (player in participants) {
             val stack = ItemStack(Items.WRITTEN_BOOK)
-            val controls = translations.translate(player, "game.ap2.fine_tuning.controls.title")
+            val controls = translations.translate(player, "controls.title")
 
             BookUtil.builder(controls, ApConstants.PERSON_LCLP)
                 .addPage(
-                    translations.translateText(player, "game.ap2.fine_tuning.controls.note_up")
+                    translations.translateText(player, "controls.note_up")
                         .formatted(DARK_BLUE, BOLD).append(":\n"),
                     Component.keybind("key.use").withStyle(DARK_GREEN).append("\n\n"),
-                    translations.translateText(player, "game.ap2.fine_tuning.controls.note_down")
+                    translations.translateText(player, "controls.note_down")
                         .formatted(DARK_BLUE, BOLD).append(":\n"),
                     Component.keybind("key.sneak").withStyle(DARK_GREEN).append(" + ")
                         .append(Component.keybind("key.use").append("\n\n")),
-                    translations.translateText(player, "game.ap2.fine_tuning.controls.test")
+                    translations.translateText(player, "controls.test")
                         .formatted(DARK_BLUE, BOLD).append(":\n"),
                     Component.keybind("key.attack").withStyle(DARK_GREEN)
                 )

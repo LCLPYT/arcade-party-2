@@ -1,12 +1,12 @@
 {
-  "game.ap2.mimicry": "Mimicry",
-  "game.ap2.mimicry.description": "Repeat a sequence of button presses in the correct order. If you make a mistake, you are eliminated.",
-  "game.ap2.mimicry.task": "Repeat the sequence",
-  "game.ap2.mimicry.attention": "Attention...",
-  "game.ap2.mimicry.repeat": "Now repeat",
-  "game.ap2.mimicry.wrong_button": "Your sequence is incorrect.",
-  "game.ap2.mimicry.correct": "Your sequence is correct!",
-  "game.ap2.mimicry.completed": "%s mimic(s)",
-  "game.ap2.mimicry.stat.avg_time_usage": "Avg. time used",
-  "game.ap2.mimicry.stat.avg_click_time": "Avg. click time"
+  "name": "Mimicry",
+  "description": "Repeat a sequence of button presses in the correct order. If you make a mistake, you are eliminated.",
+  "task": "Repeat the sequence",
+  "attention": "Attention...",
+  "repeat": "Now repeat",
+  "wrong_button": "Your sequence is incorrect.",
+  "correct": "Your sequence is correct!",
+  "completed": "%s mimic(s)",
+  "stat.avg_time_usage": "Avg. time used",
+  "stat.avg_click_time": "Avg. click time"
 }

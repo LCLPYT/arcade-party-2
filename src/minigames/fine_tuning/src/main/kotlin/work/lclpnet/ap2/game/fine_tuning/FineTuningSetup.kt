@@ -47,7 +47,7 @@ class FineTuningSetup(
     private fun setupRooms() {
         val testSignRelPos = MapUtil.readBlockPos(map.requireProperty("test-sign"))
         val participants = gameHandle.participants
-        val testMsg = gameHandle.translations.translateText("game.ap2.fine_tuning.test")
+        val testMsg = gameHandle.translations.translateText("test")
 
         for ((uuid, room) in rooms) {
             val player: ServerPlayer = participants.getParticipant(uuid).orElse(null) ?: continue

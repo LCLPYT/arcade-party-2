@@ -1,12 +1,12 @@
 {
-  "game.ap2.cozy_campfire": "Knisterndes Lagerfeuer",
-  "game.ap2.cozy_campfire.description": "Dein Team hat ein Lagerfeuer welches nicht ausbrennen darf. Lege immer weiter Brennmaterial nach, um nicht zu verlieren!",
-  "game.ap2.cozy_campfire.task": "Brennstoff-Vorrat %s",
-  "game.ap2.cozy_campfire.base_of": "Basis von %s",
-  "game.ap2.cozy_campfire.time": "%d:%02d",
-  "game.ap2.cozy_campfire.fuel_added": "+ %s Sekunden",
-  "game.ap2.cozy_campfire.survived": "%s überlebt",
-  "game.ap2.cozy_campfire.remaining": "%s übrig",
-  "game.ap2.cozy_campfire.stat.fuel_added": "Brennstoff hinzugefügt",
-  "game.ap2.cozy_campfire.stat.fuel_remaining": "Brennstoff übrig"
+  "name": "Knisterndes Lagerfeuer",
+  "description": "Dein Team hat ein Lagerfeuer welches nicht ausbrennen darf. Lege immer weiter Brennmaterial nach, um nicht zu verlieren!",
+  "task": "Brennstoff-Vorrat %s",
+  "base_of": "Basis von %s",
+  "time": "%d:%02d",
+  "fuel_added": "+ %s Sekunden",
+  "survived": "%s überlebt",
+  "remaining": "%s übrig",
+  "stat.fuel_added": "Brennstoff hinzugefügt",
+  "stat.fuel_remaining": "Brennstoff übrig"
 }

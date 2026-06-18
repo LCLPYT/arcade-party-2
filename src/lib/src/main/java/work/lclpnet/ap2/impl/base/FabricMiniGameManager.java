@@ -63,7 +63,7 @@ public class FabricMiniGameManager implements MiniGameManager {
         return FabricLoader.getInstance()
                 .getEntrypointContainers(MINIGAME_ENTRYPOINT, MiniGame.class)
                 .stream()
-                .map(container -> new MiniGameSource(container.getProvider().getRootPaths()))
+                .map(container -> new MiniGameSource(container.getEntrypoint(), container.getProvider().getRootPaths()))
                 .toList();
     }
 
@@ -84,5 +84,5 @@ public class FabricMiniGameManager implements MiniGameManager {
                 .orElseGet(() -> DataResult.error(() -> "Unknown game with id " + id)), GameInfo::getId);
     }
 
-    public record MiniGameSource(List<Path> rootPaths) {}
+    public record MiniGameSource(MiniGame game, List<Path> rootPaths) {}
 }

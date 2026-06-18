@@ -153,7 +153,7 @@ class MimicryManager(
     }
 
     private fun onCompleteSequence(player: ServerPlayer) {
-        val msg = gameHandle.translations.translateText(player, "game.ap2.mimicry.correct")
+        val msg = gameHandle.translations.translateText(player, "correct")
             .formatted(ChatFormatting.GREEN)
 
         player.sendSystemMessage(msg)

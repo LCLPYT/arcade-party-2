@@ -1,9 +1,9 @@
 {
-  "game.ap2.knockout": "Knockout",
-  "game.ap2.knockout.description": "Schlage deine Gegner von der Map. Je mehr ein Spieler geschlagen wurde, desto mehr Rückstoß bekommt er.",
-  "game.ap2.knockout.idle": "Du bist nun für andere Spieler sichtbar, weil du zu lange nicht gekämpft hast",
-  "game.ap2.knockout.stat.damage_dealt": "Schaden ausgeteilt",
-  "game.ap2.knockout.stat.damage_received": "Schaden erhalten",
-  "game.ap2.knockout.stat.impact_damage_done": "Aufprallschaden verursacht",
-  "game.ap2.knockout.stat.impact_damage_caused": "Aufprallschaden erlitten"
+  "name": "Knockout",
+  "description": "Schlage deine Gegner von der Map. Je mehr ein Spieler geschlagen wurde, desto mehr Rückstoß bekommt er.",
+  "idle": "Du bist nun für andere Spieler sichtbar, weil du zu lange nicht gekämpft hast",
+  "stat.damage_dealt": "Schaden ausgeteilt",
+  "stat.damage_received": "Schaden erhalten",
+  "stat.impact_damage_done": "Aufprallschaden verursacht",
+  "stat.impact_damage_caused": "Aufprallschaden erlitten"
 }

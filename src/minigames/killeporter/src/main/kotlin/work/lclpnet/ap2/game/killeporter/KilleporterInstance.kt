@@ -149,7 +149,7 @@ class KilleporterInstance(
 
         gameHandle.scheduler.interval(20*60*3, 20*60*3, Runnable {
             SoundHelper.playSound(level, SoundEvents.CHEST_OPEN, SoundSource.BLOCKS, 0.8f, 0.5f)
-            translate("game.ap2.killeporter.chest_refill").formatted(ChatFormatting.AQUA).sendTo(allPlayers())
+            translate("chest_refill").formatted(ChatFormatting.AQUA).sendTo(allPlayers())
             lootContainerManager.reset()
         })
 
@@ -165,7 +165,7 @@ class KilleporterInstance(
         val messageTime = Random.nextInt(Ticks.seconds(1), Ticks.seconds(maxDelaySeconds)+1)
 
         timeout(switchTime - messageTime) {
-            translate("game.ap2.killeporter.switch_announcement", FormatWrapper.styled(maxDelaySeconds, ChatFormatting.YELLOW))
+            translate("switch_announcement", FormatWrapper.styled(maxDelaySeconds, ChatFormatting.YELLOW))
             .formatted(ChatFormatting.GREEN)
             .sendTo(players(), true)}
 
@@ -191,7 +191,7 @@ class KilleporterInstance(
         for (p in (0 ..< playerCount)) {
             val previousIndex = floorMod(p-1, playerCount)
             shuffledPlayers[p].teleport(positionRotations[previousIndex])
-            translate("game.ap2.killeporter.switch_message", shuffledPlayers[previousIndex].scoreboardName)
+            translate("switch_message", shuffledPlayers[previousIndex].scoreboardName)
                 .formatted(ChatFormatting.GREEN)
                 .sendTo(shuffledPlayers[p], true)
         }

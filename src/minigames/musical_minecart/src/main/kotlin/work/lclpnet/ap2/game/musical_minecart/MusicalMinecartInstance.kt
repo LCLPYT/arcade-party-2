@@ -226,7 +226,7 @@ class MusicalMinecartInstance(
         for (player in participants) {
             val msg = Component.literal("⚠ ")
                 .append(
-                    translations.translateText(player, "game.ap2.musical_minecart.deadline")
+                    translations.translateText(player, "deadline")
                         .styled { s -> s.withColor(0xff0000).withBold(true) }
                 )
                 .append(" ⚠").withColor(0xffff00)

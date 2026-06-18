@@ -1,12 +1,12 @@
 {
-  "game.ap2.glowing_bomb": "Glowing Bomb",
-  "game.ap2.glowing_bomb.description": "A glowstone bomb is passed between the players. If it explodes while you have it, glowstone will be put into your respawn anchor. You are eliminated if your respawn anchor is full!",
-  "game.ap2.glowing_bomb.task": "Pass the bomb around",
-  "game.ap2.glowing_bomb.pass": "Pass the bomb",
-  "game.ap2.glowing_bomb.stat.bomb_assigned": "Bombs assigned",
-  "game.ap2.glowing_bomb.stat.bomb_passed": "Bombs passed",
-  "game.ap2.glowing_bomb.stat.bomb_exploded": "Bombs exploded",
-  "game.ap2.glowing_bomb.stat.max_safe_streak": "Safe streak",
-  "game.ap2.glowing_bomb.stat.bomb_hold_time": "Total hold time",
-  "game.ap2.glowing_bomb.stat.min_fuse_on_pass": "Closest pass"
+  "name": "Glowing Bomb",
+  "description": "A glowstone bomb is passed between the players. If it explodes while you have it, glowstone will be put into your respawn anchor. You are eliminated if your respawn anchor is full!",
+  "task": "Pass the bomb around",
+  "pass": "Pass the bomb",
+  "stat.bomb_assigned": "Bombs assigned",
+  "stat.bomb_passed": "Bombs passed",
+  "stat.bomb_exploded": "Bombs exploded",
+  "stat.max_safe_streak": "Safe streak",
+  "stat.bomb_hold_time": "Total hold time",
+  "stat.min_fuse_on_pass": "Closest pass"
 }

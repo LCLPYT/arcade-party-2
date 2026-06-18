@@ -58,7 +58,7 @@ public class PotionTypeChallenge implements Challenge {
     @Override
     public void begin(InputInterface input, ChallengeMessenger messenger) {
         Translations translations = gameHandle.getTranslations();
-        messenger.task(translations.translateText("game.ap2.guess_it.potion_type"));
+        messenger.task(translations.translateText("potion_type"));
 
         var potions = getPotions();
 

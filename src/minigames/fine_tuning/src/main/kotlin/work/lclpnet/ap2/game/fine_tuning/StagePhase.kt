@@ -89,7 +89,7 @@ class StagePhase(
 
         SoundHelper.playSound(server, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.RECORDS, 0.5f, 0f)
 
-        translations.translateText("game.ap2.fine_tuning.presentation")
+        translations.translateText("presentation")
             .formatted(ChatFormatting.DARK_GREEN)
             .acceptEach(PlayerLookup.all(server)) { player, text ->
                 Title.get(player).title(text, Component.empty(), 5, 30, 5)
@@ -105,7 +105,7 @@ class StagePhase(
         SoundHelper.playSound(server, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.RECORDS, 0.5f, 0f)
 
         translations.translateText(
-            "game.ap2.fine_tuning.present_melody",
+            "present_melody",
             work.lclpnet.kibu.translate.text.FormatWrapper.styled("#${melodyNumber + 1}", ChatFormatting.YELLOW)
         ).formatted(ChatFormatting.AQUA)
             .acceptEach(PlayerLookup.all(server)) { player, text ->
@@ -187,7 +187,7 @@ class StagePhase(
 
         SoundHelper.playSound(server, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.RECORDS, 0.5f, 0f)
 
-        translations.translateText("game.ap2.fine_tuning.best_was")
+        translations.translateText("best_was")
             .formatted(ChatFormatting.GREEN)
             .acceptEach(PlayerLookup.all(server)) { player, text ->
                 Title.get(player).title(Component.empty(), text, 5, 50, 0)
@@ -224,7 +224,7 @@ class StagePhase(
 
         SoundHelper.playSound(server, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.RECORDS, 0.5f, 0f)
 
-        translations.translateText("game.ap2.fine_tuning.worst_was")
+        translations.translateText("worst_was")
             .formatted(ChatFormatting.RED)
             .acceptEach(PlayerLookup.all(server)) { player, text ->
                 Title.get(player).title(Component.empty(), text, 5, 30, 5)

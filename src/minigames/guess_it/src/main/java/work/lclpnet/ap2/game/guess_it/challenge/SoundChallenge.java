@@ -60,7 +60,7 @@ public class SoundChallenge implements Challenge {
     @Override
     public void begin(InputInterface input, ChallengeMessenger messenger) {
         Translations translations = gameHandle.getTranslations();
-        messenger.task(translations.translateText("game.ap2.guess_it.sound.guess"));
+        messenger.task(translations.translateText("sound.guess"));
 
         var soundEvents = soundSubtitles.getSoundEvents();
         var soundOptions = OptionMaker.createOptions(soundEvents, 4, random);
@@ -95,7 +95,7 @@ public class SoundChallenge implements Challenge {
     private void prepareSecond() {
         stopSound();
 
-        var msg = gameHandle.getTranslations().translateText("game.ap2.guess_it.again")
+        var msg = gameHandle.getTranslations().translateText("again")
                 .formatted(DARK_GREEN, BOLD);
 
         for (ServerPlayer player : PlayerLookup.level(world)) {

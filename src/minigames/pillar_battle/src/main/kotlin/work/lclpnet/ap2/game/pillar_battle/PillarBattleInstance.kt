@@ -139,7 +139,7 @@ class PillarBattleInstance(
             for (type in listOf(ProtectionTypes.PLACE_BLOCKS, ProtectionTypes.PLACE_FLUID)) {
                 type.disallow(config) { entity, block ->
                     if (entity is ServerPlayer && outOfBounds(block)) {
-                        val msg = translations.translateText(entity, "game.ap2.pillar_battle.out_of_bounds")
+                        val msg = translations.translateText(entity, "out_of_bounds")
                             .formatted(ChatFormatting.RED)
                         entity.sendOverlayMessage(msg)
                         ServerPlayerAccess.playSoundToPlayer(entity, SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.BLOCKS, 0f, 0.5f)
@@ -272,7 +272,7 @@ class PillarBattleInstance(
             WorldBorderUtil.init(player, worldBorder)
         }
 
-        translate("game.ap2.pillar_battle.border_shrinking")
+        translate("border_shrinking")
             .formatted(ChatFormatting.RED)
             .sendTo(players())
     }
@@ -365,7 +365,7 @@ class PillarBattleInstance(
 
             warning.lastWarning = timestamp
 
-            val msg = translations.translateText(player, "game.ap2.pillar_battle.border_warn")
+            val msg = translations.translateText(player, "border_warn")
                 .styled { it.withColor(0xff0000).withBold(true) }
 
             player.sendOverlayMessage(msg)

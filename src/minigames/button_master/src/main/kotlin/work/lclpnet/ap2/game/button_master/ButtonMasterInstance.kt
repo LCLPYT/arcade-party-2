@@ -269,7 +269,7 @@ class ButtonMasterInstance(
         }
 
         val ejectTimer = createTimer(
-            translate("game.ap2.button_master.eject"),
+            translate("eject"),
             EJECT_MAX_TIME,
         )
 
@@ -278,7 +278,7 @@ class ButtonMasterInstance(
         }
 
         translate(
-            "game.ap2.button_master.choose_capsule",
+            "choose_capsule",
             styled(EJECT_MAX_TIME.inWholeSeconds, ChatFormatting.YELLOW)
         ).formatted(ChatFormatting.AQUA).sendTo(player)
 
@@ -379,7 +379,7 @@ class ButtonMasterInstance(
 
         SoundHelper.playSound(level, SoundEvents.BELL_BLOCK, SoundSource.BLOCKS, 1f, 1.7f)
 
-        translate("game.ap2.button_master.revealed").formatted(ChatFormatting.AQUA).sendTo(allPlayers())
+        translate("revealed").formatted(ChatFormatting.AQUA).sendTo(allPlayers())
     }
 
     private fun checkButtonVisibility() {

@@ -185,7 +185,7 @@ class SbManager(
 
         ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.75f, 1.1f)
 
-        val msg = gameHandle.translations.translateText(player, "game.ap2.speed_builders.completed")
+        val msg = gameHandle.translations.translateText(player, "completed")
             .formatted(ChatFormatting.GREEN)
         player.sendSystemMessage(msg)
 

@@ -79,7 +79,7 @@ class TripWireItem(
         )
 
         if (opposingHit.type != HitResult.Type.BLOCK) {
-            translations.translateText("game.ap2.paintball.item.tripwire.too_long")
+            translations.translateText("item.tripwire.too_long")
                 .formatted(ChatFormatting.RED)
                 .sendTo(player)
 

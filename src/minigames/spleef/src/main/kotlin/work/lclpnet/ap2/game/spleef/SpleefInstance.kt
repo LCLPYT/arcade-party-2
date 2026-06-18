@@ -205,7 +205,7 @@ class SpleefInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMa
         for (player in gameHandle.participants) {
             val stack = ItemStack(Items.IRON_SHOVEL).unbreakable()
 
-            stack.set(DataComponents.CUSTOM_NAME, translations.translateText(player, "game.ap2.spleef.shovel")
+            stack.set(DataComponents.CUSTOM_NAME, translations.translateText(player, "shovel")
                 .styled { it.withItalic(false).applyFormat(ChatFormatting.GOLD) })
 
             player.inventory.setItem(4, stack)

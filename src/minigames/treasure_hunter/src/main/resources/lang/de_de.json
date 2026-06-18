@@ -1,6 +1,6 @@
 {
-  "game.ap2.treasure_hunter": "Schatzsuche",
-  "game.ap2.treasure_hunter.description": "Suche einen Schatz in einer riesigen Sandgrube. Der erste, der die Kiste findet, gewinnt!",
-  "game.ap2.treasure_hunter.task": "Finde den Schatz",
-  "game.ap2.treasure_hunter.found_treasure": "Schatz gefunden (%s)"
+  "name": "Schatzsuche",
+  "description": "Suche einen Schatz in einer riesigen Sandgrube. Der erste, der die Kiste findet, gewinnt!",
+  "task": "Finde den Schatz",
+  "found_treasure": "Schatz gefunden (%s)"
 }

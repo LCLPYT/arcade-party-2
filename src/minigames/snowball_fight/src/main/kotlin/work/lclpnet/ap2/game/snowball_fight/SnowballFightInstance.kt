@@ -25,13 +25,9 @@ import work.lclpnet.ap2.api.stats.CommonStats.TimeSurvived
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.stats.StatUnits
 import work.lclpnet.ap2.core.hook.ProjectileShootCallback
-import work.lclpnet.ap2.ext.hooks
-import work.lclpnet.ap2.ext.isParticipating
+import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.setAttribute
-import work.lclpnet.ap2.ext.players
-import work.lclpnet.ap2.ext.trackDistanceMoved
-import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.util.useFFAStats
@@ -271,7 +267,7 @@ class SnowballFightInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
             return
         }
 
-        translate("game.ap2.snowball_fight.max_snowballs")
+        translate("max_snowballs")
             .formatted(ChatFormatting.RED)
             .sendTo(player, true)
     }

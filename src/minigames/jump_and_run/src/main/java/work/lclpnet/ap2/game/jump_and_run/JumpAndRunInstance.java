@@ -283,7 +283,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
         for (ServerPlayer player : PlayerLookup.level(world)) {
             ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.BELL_BLOCK, SoundSource.BLOCKS, 1f, 1.7f);
 
-            var msg = translations.translateText(player, "game.ap2.jump_and_run.assistance")
+            var msg = translations.translateText(player, "assistance")
                     .formatted(ChatFormatting.GRAY);
 
             player.sendSystemMessage(msg);
@@ -343,7 +343,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
 
         int room = jumpAndRun.moduleIndex() + 1;
 
-        String key = reached ? "game.ap2.jump_and_run.completed_room" : "game.ap2.jump_and_run.last_not_completed";
+        String key = reached ? "completed_room" : "last_not_completed";
 
         player.sendSystemMessage(getGameHandle().getTranslations().translateText(player, key, styled("#" + room, ChatFormatting.YELLOW))
                 .formatted(ChatFormatting.GREEN));
@@ -389,7 +389,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
 
         ServerLevel world = jumpAndRun.world();
 
-        getGameHandle().getTranslations().translateText("game.ap2.jump_and_run.next_segment_wait").formatted(GRAY)
+        getGameHandle().getTranslations().translateText("next_segment_wait").formatted(GRAY)
                 .sendTo(PlayerLookup.level(world));
 
         SoundHelper.playSound(world, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.5f, 2f);

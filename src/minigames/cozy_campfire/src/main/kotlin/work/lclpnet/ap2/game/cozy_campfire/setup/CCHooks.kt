@@ -222,7 +222,7 @@ class CCHooks(
         val name = team.key().getDisplayName(translations)
 
         val msg = Component.literal("⚠")
-            .append(translations.translateText(player, "game.ap2.cozy_campfire.base_of", name))
+            .append(translations.translateText(player, "base_of", name))
             .append("⚠").withStyle { it.withColor(0xff0000) }
 
         player.sendOverlayMessage(msg)
