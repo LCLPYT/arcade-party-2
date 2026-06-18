@@ -1,5 +1,5 @@
 {
-  "game.ap2.maze_scape": "Labyrinthflucht",
-  "game.ap2.maze_scape.description": "Du musst vor Monstern in einem Labyrinth wegrennen. Der letzte Überlebende gewinnt!",
-  "game.ap2.maze_scape.fell_into_pit": "%s ist in den Abgrund gestürzt"
+  "name": "Labyrinthflucht",
+  "description": "Du musst vor Monstern in einem Labyrinth wegrennen. Der letzte Überlebende gewinnt!",
+  "fell_into_pit": "%s ist in den Abgrund gestürzt"
 }

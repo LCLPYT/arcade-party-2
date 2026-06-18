@@ -1,5 +1,5 @@
 {
-  "game.ap2.spleef": "Spleef",
-  "game.ap2.spleef.description": "Baue den Boden unter deinen Gegnern ab, damit sie herunterfallen. Fall aber nicht selber herunter!",
-  "game.ap2.spleef.shovel": "Spleef-Schaufel"
+  "name": "Spleef",
+  "description": "Baue den Boden unter deinen Gegnern ab, damit sie herunterfallen. Fall aber nicht selber herunter!",
+  "shovel": "Spleef-Schaufel"
 }

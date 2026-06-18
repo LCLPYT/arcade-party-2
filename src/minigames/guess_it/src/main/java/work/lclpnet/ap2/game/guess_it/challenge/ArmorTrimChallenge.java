@@ -69,7 +69,7 @@ public class ArmorTrimChallenge implements Challenge {
     @Override
     public void begin(InputInterface input, ChallengeMessenger messenger) {
         Translations translations = gameHandle.getTranslations();
-        messenger.task(translations.translateText("game.ap2.guess_it.armor_trim"));
+        messenger.task(translations.translateText("armor_trim"));
 
         var patterns = getTrimPatterns();
         var opts = OptionMaker.createOptions(patterns, 4, random);

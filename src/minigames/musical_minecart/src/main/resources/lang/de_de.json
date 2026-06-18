@@ -1,5 +1,5 @@
 {
-  "game.ap2.musical_minecart": "Musiklore",
-  "game.ap2.musical_minecart.description": "Setze dich in eine Lore, sobald die Musik aufhört zu spielen. Spieler die nicht in einer Lore sitzen, fliegen raus!",
-  "game.ap2.musical_minecart.deadline": "Setz dich in eine Lore!"
+  "name": "Musiklore",
+  "description": "Setze dich in eine Lore, sobald die Musik aufhört zu spielen. Spieler die nicht in einer Lore sitzen, fliegen raus!",
+  "deadline": "Setz dich in eine Lore!"
 }

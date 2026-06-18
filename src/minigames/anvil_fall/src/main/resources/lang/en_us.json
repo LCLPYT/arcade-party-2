@@ -1,5 +1,5 @@
 {
-  "game.ap2.anvil_fall": "Anvil Fall",
-  "game.ap2.anvil_fall.description": "Dodge the anvils falling from the sky.\nBe the last one remaining!",
-  "game.ap2.anvil_fall.status": "%s anvils per second"
+  "name": "Anvil Fall",
+  "description": "Dodge the anvils falling from the sky.\nBe the last one remaining!",
+  "status": "%s anvils per second"
 }

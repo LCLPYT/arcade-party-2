@@ -59,7 +59,7 @@ class EnderPearlKit(
 
                 enderPearl.discard()
 
-                handle.translations.translateText("game.ap2.dragon_escape.teleport_too_far")
+                handle.translations.translateText("teleport_too_far")
                     .formatted(RED)
                     .sendTo(owner)
 

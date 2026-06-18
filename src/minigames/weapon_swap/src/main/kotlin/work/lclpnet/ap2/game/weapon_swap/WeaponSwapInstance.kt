@@ -117,7 +117,7 @@ class WeaponSwapInstance(
         runAfter(DRAW_DELAY - WARN_BEFORE_END_DELAY) {
             playSound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 0.5f, 0.5f)
 
-            val subject = gameHandle.translations.translateText("game.ap2.weapon_swap.end")
+            val subject = gameHandle.translations.translateText("end")
 
             createTimer(subject, WARN_BEFORE_END_DELAY).whenDone {
                 data.addAll(players())
@@ -203,7 +203,7 @@ class WeaponSwapInstance(
             gameHandle.scoreboardManager.joinTeam(player, holderTeam)
         }
 
-        translate("game.ap2.weapon_swap.received")
+        translate("received")
             .formatted(ChatFormatting.AQUA)
             .sendTo(newHolders)
     }
@@ -211,7 +211,7 @@ class WeaponSwapInstance(
     private fun endCycle() {
         previousHolders = currentHolders.toSet()
 
-        translate("game.ap2.weapon_swap.swap")
+        translate("swap")
             .formatted(ChatFormatting.GREEN)
             .sendTo(allPlayers(), true)
     }
@@ -221,7 +221,7 @@ class WeaponSwapInstance(
 
         stack.set(
             DataComponents.ITEM_NAME,
-            gameHandle.translations.translateText(player, "game.ap2.weapon_swap.weapon")
+            gameHandle.translations.translateText(player, "weapon")
                 .styled { it.withItalic(false).applyFormat(ChatFormatting.GOLD) }
         )
 

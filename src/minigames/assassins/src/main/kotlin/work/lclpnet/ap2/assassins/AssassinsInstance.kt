@@ -224,7 +224,7 @@ class AssassinsInstance(
         if (initial) {
             beginCombat()
         } else {
-            val label = translate("game.ap2.assassins.prepare")
+            val label = translate("prepare")
             prepTimer = createTimer(label, PREPARE_DURATION, BossEvent.BossBarColor.YELLOW)
             prepTimer!!.whenDone { beginCombat() }
         }
@@ -375,7 +375,7 @@ class AssassinsInstance(
     }
 
     private fun sendOffTargetFeedback(attacker: ServerPlayer) {
-        val text = translate( "game.ap2.assassins.off_target")
+        val text = translate( "off_target")
             .formatted(ChatFormatting.RED)
             .translateFor(attacker)
 
@@ -384,7 +384,7 @@ class AssassinsInstance(
     }
 
     private fun sendTargetMessage(player: ServerPlayer, target: ServerPlayer) {
-        val text = translate("game.ap2.assassins.target", target.name)
+        val text = translate("target", target.name)
             .formatted(ChatFormatting.RED)
             .translateFor(player)
 

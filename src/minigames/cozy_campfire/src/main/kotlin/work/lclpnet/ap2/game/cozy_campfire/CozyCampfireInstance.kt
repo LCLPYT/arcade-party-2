@@ -148,7 +148,7 @@ class CozyCampfireInstance(
             val remainingSeconds = getRemainingTime(fuel.count, lastTeam.playerCount)
 
             val duration = TimeHelper.formatTime(translations, remainingSeconds)
-            val detail = translations.translateText("game.ap2.cozy_campfire.remaining", duration)
+            val detail = translations.translateText("remaining", duration)
 
             stats.setRemainingFuel(lastTeam, remainingSeconds.toFloat())
 
@@ -211,7 +211,7 @@ class CozyCampfireInstance(
         val minutes = totalSeconds / 60
         val seconds = totalSeconds % 60
 
-        return gameHandle.translations.translateText("game.ap2.cozy_campfire.time", minutes, seconds)
+        return gameHandle.translations.translateText("time", minutes, seconds)
             .formatted(ChatFormatting.YELLOW)
     }
 
@@ -241,7 +241,7 @@ class CozyCampfireInstance(
         val translations = gameHandle.translations
         val timeSurvived = time / 20
         val duration = TimeHelper.formatTime(translations, timeSurvived)
-        val detail = translations.translateText("game.ap2.cozy_campfire.survived", duration)
+        val detail = translations.translateText("survived", duration)
 
         eliminateAll(toEliminate, detail)
     }
@@ -283,7 +283,7 @@ class CozyCampfireInstance(
         val added = LocalizedFormat.format("%.2f", value.toFloat() / (fuelPerSecond * playersFactor(team)))
 
         val msg = translations.translateText(
-            "game.ap2.cozy_campfire.fuel_added",
+            "fuel_added",
             styled(added, ChatFormatting.YELLOW)
         ).formatted(ChatFormatting.GREEN)
 

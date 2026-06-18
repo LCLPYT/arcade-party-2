@@ -100,7 +100,7 @@ class PaintballInstance(
     override val data = IntScoreDataContainer(
         ::createReference,
         Ordering.DESCENDING,
-        "game.ap2.paintball.blocks_painted"
+        "blocks_painted"
     )
 
     private val stats = PaintballStats(useTeamStats(

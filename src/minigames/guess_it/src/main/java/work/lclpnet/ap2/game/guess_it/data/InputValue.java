@@ -32,12 +32,12 @@ public class InputValue {
 
     public InputValue validateInt(Translations translations) {
         return validate(InputValue::intValue, input ->
-                translations.translateText("game.ap2.guess_it.input.int", styled(input, YELLOW)).formatted(RED));
+                translations.translateText("input.int", styled(input, YELLOW)).formatted(RED));
     }
 
     public InputValue validateFloat(Translations translations, int precision) {
         return validate((input, player) -> floatValue(input, player, translations, precision), input ->
-                translations.translateText("game.ap2.guess_it.input.float", styled(input, YELLOW)).formatted(RED));
+                translations.translateText("input.float", styled(input, YELLOW)).formatted(RED));
     }
 
     public InputValue onlyOnce() {

@@ -70,7 +70,7 @@ class KingOfTheHillInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
             level.setBlock(pos, Blocks.AIR)
         }
 
-        val name = translate("game.ap2.king_of_the_hill.knockback_stick").formatted(ChatFormatting.GOLD)
+        val name = translate("knockback_stick").formatted(ChatFormatting.GOLD)
         val knockback = ItemHelper.getEnchantment(Enchantments.KNOCKBACK, level.registryAccess())
 
         for (player in players()) {

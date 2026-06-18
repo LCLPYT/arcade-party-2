@@ -63,7 +63,7 @@ public class AreaChallenge implements Challenge {
     @Override
     public void begin(InputInterface input, ChallengeMessenger messenger) {
         Translations translations = gameHandle.getTranslations();
-        messenger.task(translations.translateText("game.ap2.guess_it.area"));
+        messenger.task(translations.translateText("area"));
 
         var opts = OptionMaker.createOptions(Set.of(DyeColor.values()), 4, random);
 

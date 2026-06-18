@@ -85,7 +85,7 @@ public class MobCountSingleChallenge implements Challenge {
 
         var entityName = TextUtil.getVanillaName(type).withStyle(YELLOW);
 
-        messenger.task(translations.translateText("game.ap2.guess_it.mob.guess", entityName, YELLOW));
+        messenger.task(translations.translateText("mob.guess", entityName, YELLOW));
     }
 
     @Override

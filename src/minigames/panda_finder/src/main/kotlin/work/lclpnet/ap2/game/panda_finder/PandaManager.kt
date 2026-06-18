@@ -98,7 +98,7 @@ class PandaManager(
     fun isSearchedPanda(panda: Panda): Boolean = panda.mainGene == current
 
     fun getLocalizedPandaGene(): String? =
-        current?.let { "game.ap2.panda_finder.find.".plus(it.serializedName) }
+        current?.let { "find.".plus(it.serializedName) }
 
     @Synchronized
     fun setFound() {

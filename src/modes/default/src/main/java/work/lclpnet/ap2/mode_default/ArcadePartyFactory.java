@@ -13,6 +13,7 @@ import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.config.Ap2Config;
 import work.lclpnet.ap2.game.MiniGame;
 import work.lclpnet.ap2.impl.base.FabricMiniGameManager;
+import work.lclpnet.ap2.impl.i18n.PrefixTranslationLoader;
 import work.lclpnet.ap2.impl.i18n.VanillaTranslations;
 import work.lclpnet.ap2.impl.util.IconMaker;
 import work.lclpnet.ap2.mode_default.activity.ArcadePartyStartingActivity;
@@ -80,7 +81,9 @@ public class ArcadePartyFactory implements GameFactory {
 
             var miniGameTranslations = UrlArchiveTranslationLoader.ofJson(urls, List.of("lang/"), logger);
 
-            loader.addLoader(miniGameTranslations);
+            // the lang files omit the common prefix; re-add it programmatically
+            var prefix = source.game().getTitleKey();
+            loader.addLoader(new PrefixTranslationLoader(miniGameTranslations, prefix));
         }
 
         return loader;

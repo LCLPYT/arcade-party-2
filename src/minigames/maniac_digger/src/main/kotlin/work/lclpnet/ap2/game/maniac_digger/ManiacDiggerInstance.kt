@@ -208,7 +208,7 @@ class ManiacDiggerInstance(
         stats.increment(player, WrongToolsSelected)
         correctToolStreak.removeInt(player.uuid)
 
-        val msg = gameHandle.translations.translateText(player, "game.ap2.maniac_digger.wrong_tool")
+        val msg = gameHandle.translations.translateText(player, "wrong_tool")
             .styled { style -> style.withColor(0xff0000) }
 
         player.sendOverlayMessage(msg)

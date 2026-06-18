@@ -51,7 +51,7 @@ class FreezingManager(
         val idleManager = CombatIdleManager(participants, freezingStartTicks)
 
         idleManager.onEnterIdle().register { player ->
-            translations.translateText("game.ap2.snowball_fight.idle")
+            translations.translateText("idle")
                 .formatted(ChatFormatting.YELLOW)
                 .sendTo(player)
 

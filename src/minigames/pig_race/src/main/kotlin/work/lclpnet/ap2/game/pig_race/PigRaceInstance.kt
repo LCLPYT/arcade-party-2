@@ -151,7 +151,7 @@ class PigRaceInstance(
         if (rounds > 1) usePlayerDynamicTaskDisplay(
             styled(1, YELLOW),
             styled(rounds, YELLOW),
-            key = "game.ap2.pig_race.task_rounds",
+            key = "task_rounds",
         )
         else usePlayerDynamicTaskDisplay()
 
@@ -370,7 +370,7 @@ class PigRaceInstance(
         }
 
         val text = gameHandle.translations
-            .translateText("game.ap2.pig_race.round_title", Component.literal("#${round + 1}").withStyle(YELLOW))
+            .translateText("round_title", Component.literal("#${round + 1}").withStyle(YELLOW))
             .formatted(AQUA)
             .translateFor(player)
 
@@ -428,7 +428,7 @@ class PigRaceInstance(
         val stick = unbreakable(ItemStack(item))
         stick.set(
             DataComponents.CUSTOM_NAME,
-            translations.translateText(player, "game.ap2.pig_race.boost")
+            translations.translateText(player, "boost")
                 .styled { it.withItalic(false).applyFormat(GOLD) }
         )
 

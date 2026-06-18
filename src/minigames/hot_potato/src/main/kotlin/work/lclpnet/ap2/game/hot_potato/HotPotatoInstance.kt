@@ -228,7 +228,7 @@ class HotPotatoInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
         val translations = gameHandle.translations
         val stack = ItemStack(Items.BAKED_POTATO)
 
-        stack.set(DataComponents.CUSTOM_NAME, translations.translateText(player, "game.ap2.hot_potato.item")
+        stack.set(DataComponents.CUSTOM_NAME, translations.translateText(player, "item")
             .styled { it.withColor(0xff0000).withItalic(false) })
 
         player.inventory.setItem(4, stack)
@@ -241,10 +241,10 @@ class HotPotatoInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
 
         glow(player, DURATION_SECONDS * 20)
 
-        val title = translations.translateText(player, "game.ap2.hot_potato.title")
+        val title = translations.translateText(player, "title")
             .styled { it.withColor(0xff0000).withBold(true) }
 
-        val subtitle = translations.translateText(player, "game.ap2.hot_potato.subtitle")
+        val subtitle = translations.translateText(player, "subtitle")
             .formatted(ChatFormatting.RED)
 
         Title.get(player).title(title, subtitle, 2, 10, 2)

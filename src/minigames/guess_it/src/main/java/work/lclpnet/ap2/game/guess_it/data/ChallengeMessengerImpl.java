@@ -73,7 +73,7 @@ public class ChallengeMessengerImpl implements ChallengeMessenger {
             ClickEvent clickEvent = new ClickEvent.Custom(answerId, Optional.of(payload));
 
             for (ServerPlayer player : players) {
-                var hoverMsg = translations.translateText(player, "game.ap2.guess_it.hover_option", styled(letter, YELLOW))
+                var hoverMsg = translations.translateText(player, "hover_option", styled(letter, YELLOW))
                         .formatted(GREEN);
 
                 HoverEvent hoverEvent = new HoverEvent.ShowText(hoverMsg);

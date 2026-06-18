@@ -1,7 +1,7 @@
 {
-  "game.ap2.rapid_runner": "Rapid Runner",
-  "game.ap2.rapid_runner.description": "Run away from spawn as far as you can! Furthest player wins!",
-  "game.ap2.rapid_runner.task": "Run far away",
-  "game.ap2.rapid_runner.distance": "Distance",
-  "game.ap2.rapid_runner.compass_name": "Direction towards spawn"
+  "name": "Rapid Runner",
+  "description": "Run away from spawn as far as you can! Furthest player wins!",
+  "task": "Run far away",
+  "distance": "Distance",
+  "compass_name": "Direction towards spawn"
 }

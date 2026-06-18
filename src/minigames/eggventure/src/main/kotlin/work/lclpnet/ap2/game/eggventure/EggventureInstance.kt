@@ -220,7 +220,7 @@ class EggventureInstance(
                 player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) < checkDistSq
             }) continue
 
-            gameHandle.translations.translateText("game.ap2.eggventure.no_eggs_nearby")
+            gameHandle.translations.translateText("no_eggs_nearby")
                 .formatted(ChatFormatting.RED)
                 .sendTo(player, true)
         }
@@ -251,7 +251,7 @@ class EggventureInstance(
             level.addFreshEntity(display)
         }
 
-        gameHandle.translations.translateText("game.ap2.eggventure.eggs_left", styled(remainingPositions.size, ChatFormatting.YELLOW))
+        gameHandle.translations.translateText("eggs_left", styled(remainingPositions.size, ChatFormatting.YELLOW))
             .formatted(ChatFormatting.GREEN)
             .sendTo(gameHandle.participants, true)
     }

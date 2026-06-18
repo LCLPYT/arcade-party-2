@@ -63,7 +63,7 @@ public class RecordChallenge implements Challenge {
     @Override
     public void begin(InputInterface input, ChallengeMessenger messenger) {
         Translations translations = gameHandle.getTranslations();
-        messenger.task(translations.translateText("game.ap2.guess_it.music_disc"));
+        messenger.task(translations.translateText("music_disc"));
 
         List<Item> discs = getMusicDiscs();
         var opts = OptionMaker.createOptions(discs, 4, random);
