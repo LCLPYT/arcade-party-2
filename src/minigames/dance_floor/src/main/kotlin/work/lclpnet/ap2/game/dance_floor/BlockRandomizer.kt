@@ -3,11 +3,11 @@ package work.lclpnet.ap2.game.dance_floor
 import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.item.DyeColor
+import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.Vec3
-import work.lclpnet.ap2.impl.util.BlockHelper
+import work.lclpnet.ap2.ext.mc.setBlock
 import work.lclpnet.ap2.impl.util.math.MathUtil
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
-import work.lclpnet.ap2.ext.mc.setBlock
 import work.lclpnet.gaco.ds.WeightedList
 import java.util.Objects.hash
 import kotlin.math.*
@@ -111,7 +111,7 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerLevel) {
             existingColors.add(color)
 
             for (pos in positions) {
-                world.setBlock(pos, BlockHelper.getWool(color))
+                world.setBlock(pos, Blocks.WOOL.pick(color))
             }
         }
     }
@@ -146,7 +146,7 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerLevel) {
 
     inner class Parabola(override val minColors: Int = 10, override val maxColors: Int = 12) : Pattern {
         override fun group(pos: BlockPos): Int {
-            val c = floorShape.center().center
+            val c = Vec3.atCenterOf(floorShape.center())
             return pos.distToCenterSqr(c.x, c.y, c.z).roundToInt()
         }
     }
@@ -165,7 +165,7 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerLevel) {
         }
 
         override fun group(pos: BlockPos): Int {
-            val dir = pos.center.subtract(Vec3.atCenterOf(floorShape.center())).normalize()
+            val dir = Vec3.atCenterOf(pos).subtract(Vec3.atCenterOf(floorShape.center())).normalize()
             val angleY = MathUtil.angleY(dir.x, dir.z)
             val angle = (angleY + refAngle + 2 * PI) % (2 * PI)
 

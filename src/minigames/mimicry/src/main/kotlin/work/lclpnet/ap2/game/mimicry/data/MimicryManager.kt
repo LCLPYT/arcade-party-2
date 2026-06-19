@@ -154,7 +154,7 @@ class MimicryManager(
 
     private fun onCompleteSequence(player: ServerPlayer) {
         val msg = gameHandle.translations.translateText(player, "correct")
-            .formatted(ChatFormatting.GREEN)
+            .withStyle(ChatFormatting.GREEN)
 
         player.sendSystemMessage(msg)
         ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.5f, 1.5f)

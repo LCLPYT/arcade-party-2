@@ -6,7 +6,7 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.entity.Display
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.Vec3
 import work.lclpnet.ap2.game.player.Participants
@@ -53,7 +53,7 @@ class GbManager(
                 cz + cos(angle) * radius
             )
 
-            val display = Display.BlockDisplay(EntityType.BLOCK_DISPLAY, world)
+            val display = Display.BlockDisplay(EntityTypes.BLOCK_DISPLAY, world)
             display.setPos(pos)
             DisplayEntityAccess.setBlockState(display, state)
             world.addFreshEntity(display)

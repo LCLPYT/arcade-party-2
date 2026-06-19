@@ -168,7 +168,7 @@ class SnowballFightInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
             val y = player.y + 1
             val z = player.z
 
-            val effect = BlockParticleOption(ParticleTypes.FALLING_DUST, Blocks.LIGHT_BLUE_CONCRETE.defaultBlockState())
+            val effect = BlockParticleOption(ParticleTypes.FALLING_DUST, Blocks.CONCRETE.lightBlue.defaultBlockState())
             world.sendParticles(effect, x, y, z, 50, 0.2, 1.0, 0.2, 1.0)
             world.sendParticles(ParticleTypes.SNOWFLAKE, x, y, z, 50, 0.2, 1.0, 0.2, 0.05)
         }
@@ -268,7 +268,7 @@ class SnowballFightInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
         }
 
         translate("max_snowballs")
-            .formatted(ChatFormatting.RED)
+            .withStyle(ChatFormatting.RED)
             .sendTo(player, true)
     }
 }

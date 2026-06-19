@@ -80,7 +80,7 @@ class TripWireItem(
 
         if (opposingHit.type != HitResult.Type.BLOCK) {
             translations.translateText("item.tripwire.too_long")
-                .formatted(ChatFormatting.RED)
+                .withStyle(ChatFormatting.RED)
                 .sendTo(player)
 
             player.playNotifySound(SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.BLOCKS, 0.2f, 1f)

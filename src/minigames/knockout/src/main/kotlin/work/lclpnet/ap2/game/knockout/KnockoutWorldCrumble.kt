@@ -113,7 +113,7 @@ class KnockoutWorldCrumble(private val world: ServerLevel, private val map: Game
     }
 
     private fun markBlocks() {
-        val markerState = Blocks.RED_TERRACOTTA.defaultBlockState()
+        val markerState = Blocks.DYED_TERRACOTTA.red.defaultBlockState()
 
         for (pos in iterateBlocks(currentDistance.toInt())) {
             val state = world.getBlockState(pos)

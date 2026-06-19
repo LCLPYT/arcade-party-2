@@ -6,7 +6,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Display;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Fallable;
@@ -94,7 +94,7 @@ public record MSPieceDebugger(ServerLevel world, BlockStructure struct, String n
     }
 
     private void addText(BlockPos origin, String detail) {
-        var display = new Display.TextDisplay(EntityType.TEXT_DISPLAY, world);
+        var display = new Display.TextDisplay(EntityTypes.TEXT_DISPLAY, world);
 
         display.setPosRaw(origin.getX(), origin.getY() + struct.getHeight() + 1, origin.getZ());
         display.setText(Component.literal(name + " - " + detail));

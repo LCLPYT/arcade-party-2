@@ -14,7 +14,7 @@ fun setupTranslatedSidebarObjective(
     titleTranslationKey: String,
 ): TranslatedScoreboardObjective {
     val objective = scoreboardManager.translateObjective("score", titleTranslationKey)
-        .formatted(ChatFormatting.AQUA, ChatFormatting.BOLD)
+        .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD)
 
     objective.setSlot(DisplaySlot.SIDEBAR)
 
@@ -36,7 +36,7 @@ fun setupTranslatedSidebarObjective(
 
 fun setupDynamicSidebarObjective(scoreboardManager: CustomScoreboardManager, titleTranslationKey: String): DynamicScoreboardObjective {
     val title = scoreboardManager.translations.translateText(titleTranslationKey)
-        .formatted(ChatFormatting.AQUA, ChatFormatting.BOLD)
+        .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD)
 
     val objective = scoreboardManager.createDynamicObjective("score") { player ->
         title.translateFor(player)

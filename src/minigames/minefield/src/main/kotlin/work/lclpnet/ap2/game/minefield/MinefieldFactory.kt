@@ -76,7 +76,7 @@ class MinefieldFactory : MiniGameFactory {
                 boxes,
                 minPos,
                 Matrix3i.IDENTITY,
-                Blocks.BLUE_STAINED_GLASS.defaultBlockState()
+                Blocks.STAINED_GLASS.blue.defaultBlockState()
             )
         }
 

@@ -165,24 +165,24 @@ public class SongHandler {
             if (hasAuthor && hasOrigAuthor) {
                 // Song "X" from "Y" by "Z" (original by "W")
                 return translations.translateText("ap2.music.format.from_by_original",
-                        styled(name, YELLOW), styled(from, AQUA), styled(author, AQUA), styled(originalAuthor, DARK_AQUA)).formatted(GREEN);
+                        styled(name, YELLOW), styled(from, AQUA), styled(author, AQUA), styled(originalAuthor, DARK_AQUA)).withStyle(GREEN);
             }
 
             if (!hasAuthor && !hasOrigAuthor) {
                 // Song "X" from "Y"
                 return translations.translateText("ap2.music.format.from",
-                        styled(name, YELLOW), styled(from, AQUA)).formatted(GREEN);
+                        styled(name, YELLOW), styled(from, AQUA)).withStyle(GREEN);
             }
 
             // Song "X" from "Y" by "Z"
             return translations.translateText("ap2.music.format.from_by",
-                    styled(name, YELLOW), styled(from, AQUA), styled(hasAuthor ? author : originalAuthor, AQUA)).formatted(GREEN);
+                    styled(name, YELLOW), styled(from, AQUA), styled(hasAuthor ? author : originalAuthor, AQUA)).withStyle(GREEN);
         }
 
         if (hasAuthor && hasOrigAuthor) {
             // Song "X" by "Y" (original by "Z")
             return translations.translateText("ap2.music.format.by_original",
-                    styled(name, YELLOW), styled(author, AQUA), styled(originalAuthor, DARK_AQUA)).formatted(GREEN);
+                    styled(name, YELLOW), styled(author, AQUA), styled(originalAuthor, DARK_AQUA)).withStyle(GREEN);
         }
 
         if (!hasAuthor && !hasOrigAuthor) {
@@ -194,7 +194,7 @@ public class SongHandler {
 
         // Song "X" by "Y"
         return translations.translateText("ap2.music.format.by",
-                styled(name, YELLOW), styled(hasAuthor ? author : originalAuthor, AQUA)).formatted(GREEN);
+                styled(name, YELLOW), styled(hasAuthor ? author : originalAuthor, AQUA)).withStyle(GREEN);
     }
 
     public @Nullable TranslatedText nowPlayingText(ConfiguredSong configuredSong) {

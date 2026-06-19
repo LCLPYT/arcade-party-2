@@ -4,7 +4,7 @@ import com.mojang.math.Transformation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Display;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CakeBlock;
 import net.minecraft.world.phys.Vec3;
@@ -74,7 +74,7 @@ public class CakeBitesChallenge implements Challenge {
     }
 
     private void createCake() {
-        var display = new Display.BlockDisplay(EntityType.BLOCK_DISPLAY, world);
+        var display = new Display.BlockDisplay(EntityTypes.BLOCK_DISPLAY, world);
         DisplayEntityAccess.setBlockState(display, Blocks.CAKE.defaultBlockState().setValue(CakeBlock.BITES, amount));
 
         float scale = 7;

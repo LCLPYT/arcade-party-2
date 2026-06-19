@@ -1,7 +1,7 @@
 name = "mg-api"
-filename = "mg-api-0.8.0+26.1.2.jar"
+filename = "mg-api-0.8.0+26.2.jar"
 
 [download]
-url = "https://github.com/LCLPYT/mg-lobby/releases/download/mg-api-0.8.0%2B26.1.2/mg-api-0.8.0+26.1.2.jar"
+url = "https://github.com/LCLPYT/mg-lobby/releases/download/mg-api-0.8.0%2B26.2/mg-api-0.8.0+26.2.jar"
 hash-format = "sha256"
-hash = "e3c4c5c898646eb119364ec08f35425488725ec9b4a3daa0462283256bd5c89c"
+hash = "7809f8e7dd2ad66d180fe7b00e142b3479153da37f824edba685f7af9b8edc8e"

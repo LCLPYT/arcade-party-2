@@ -8,6 +8,7 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
+import net.minecraft.world.phys.Vec3
 import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.isOf
@@ -58,7 +59,7 @@ class RapidRunnerInstance(
         player.inventory.setItem(8, ItemStack(Items.COMPASS).apply {
             set(
                 DataComponents.ITEM_NAME, translate("compass_name")
-                    .formatted(ChatFormatting.GOLD)
+                    .withStyle(ChatFormatting.GOLD)
                     .translateFor(player)
             )
         })
@@ -127,7 +128,7 @@ class RapidRunnerInstance(
     }
 
     private fun updateScore() {
-        val spawn = level.respawnData.pos().center
+        val spawn = Vec3.atCenterOf(level.respawnData.pos())
 
         for (player in players()) {
             val dist = player.position().subtract(spawn).horizontalDistance()

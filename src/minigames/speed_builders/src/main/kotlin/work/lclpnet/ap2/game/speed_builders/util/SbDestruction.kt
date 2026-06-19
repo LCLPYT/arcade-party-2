@@ -6,7 +6,7 @@ import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.item.FallingBlockEntity
 import net.minecraft.world.entity.monster.breeze.Breeze
 import net.minecraft.world.entity.projectile.hurtingprojectile.windcharge.BreezeWindCharge
@@ -89,7 +89,7 @@ class SbDestruction(
 
             if (random.nextFloat() >= LAUNCHED_PERCENTAGE) continue
 
-            val fallingBlock = FallingBlockEntity(EntityType.FALLING_BLOCK, world)
+            val fallingBlock = FallingBlockEntity(EntityTypes.FALLING_BLOCK, world)
             fallingBlock.setPosRaw(pos.x + 0.5, pos.y.toDouble(), pos.z + 0.5)
             fallingBlock.time = 1
             FallingBlockAccess.setDropItem(fallingBlock, false)

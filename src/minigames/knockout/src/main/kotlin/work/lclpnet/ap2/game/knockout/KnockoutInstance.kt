@@ -160,7 +160,7 @@ class KnockoutInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
         idleManager.onEnterIdle().register { player ->
             gameHandle.translations
                 .translateText("idle")
-                .formatted(YELLOW)
+                .withStyle(YELLOW)
                 .sendTo(player)
 
             player.level().sendParticles(ParticleTypes.WITCH, player.x, player.y, player.z, 50, 0.5, 1.0, 0.5, 0.1)

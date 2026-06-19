@@ -57,7 +57,7 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
         body: MutableList<DialogBody>
     ) {
         val title = translations.translateText(player, summary.game.titleKey)
-            .formatted(GOLD, BOLD)
+            .withStyle(GOLD, BOLD)
 
         val mapLine = when {
             summary.levelInfo.map != null -> {
@@ -67,7 +67,7 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
                     player,
                     "ap2.view_stats.map",
                     FormatWrapper.styled(mapName, AQUA)
-                ).formatted(GREEN)
+                ).withStyle(GREEN)
             }
 
             summary.levelInfo.seed != null -> {
@@ -75,9 +75,9 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
                     player,
                     "ap2.view_stats.seed",
                     FormatWrapper.styled(summary.levelInfo.seed, AQUA)
-                ).formatted(GREEN)
+                ).withStyle(GREEN)
                     .append(Component.literal(" 📋").withStyle(AQUA))
-                    .styled { style -> style
+                    .withStyle { style -> style
                         .withClickEvent(ClickEvent.CopyToClipboard(summary.levelInfo.seed.toString()))
                         .withHoverEvent(HoverEvent.ShowText(
                             translations.translateText(player, "ap2.click_to_copy")
@@ -88,7 +88,7 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
                     player,
                     "ap2.view_stats.minecraft_version",
                     FormatWrapper.styled(summary.minecraftVersion, YELLOW)
-                ).formatted(GREEN)
+                ).withStyle(GREEN)
 
                 Component.empty().append(seedLine).append("\n").append(versionLine)
             }
@@ -97,9 +97,9 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
         }
 
         val seconds = summary.duration.inWholeSeconds.toInt()
-        val durationTime = TimeHelper.formatTime(translations, seconds).formatted(YELLOW)
+        val durationTime = TimeHelper.formatTime(translations, seconds).withStyle(YELLOW)
         val durationLine = translations.translateText(player, "ap2.view_stats.duration", durationTime)
-            .formatted(GREEN)
+            .withStyle(GREEN)
 
         val text = Component.empty().append(title)
 
@@ -260,7 +260,7 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
     }
 
     private fun showDialog(player: ServerPlayer, body: List<DialogBody>) {
-        val title = translations.translateText("ap2.stats").formatted(GOLD).translateFor(player)
+        val title = translations.translateText("ap2.stats").withStyle(GOLD).translateFor(player)
 
         val commonData = CommonDialogData(
             title, Optional.empty(), true, false, DialogAction.CLOSE, body, listOf()
@@ -299,7 +299,7 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
     }
 
     fun unavailable(player: ServerPlayer) {
-        translations.translateText("ap2.view_stats.unavailable").formatted(RED).sendTo(player)
+        translations.translateText("ap2.view_stats.unavailable").withStyle(RED).sendTo(player)
         ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.PLAYERS, 0.5f, 0.5f)
     }
 }

@@ -4,7 +4,7 @@ import com.mojang.math.Transformation
 import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.entity.Display
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.item.DyeColor
 import net.minecraft.world.level.block.Blocks
 import org.joml.Matrix4f
@@ -29,12 +29,12 @@ fun createMarkers(world: ServerLevel, map: GameMap) {
             else -> continue
         }
 
-        val marker = Display.BlockDisplay(EntityType.BLOCK_DISPLAY, world)
+        val marker = Display.BlockDisplay(EntityTypes.BLOCK_DISPLAY, world)
         val margin = 0.015f
 
         when (contraption) {
             Contraption.JUMP_PAD -> {
-                marker.blockState = Blocks.LIME_CONCRETE.defaultBlockState()
+                marker.blockState = Blocks.CONCRETE.lime.defaultBlockState()
                 marker.setPosRaw(pos.x - 1.0 + margin, pos.y.toDouble() + margin, pos.z - 1.0 + margin)
                 marker.setTransformation(
                     Transformation(Matrix4f()
@@ -43,14 +43,14 @@ fun createMarkers(world: ServerLevel, map: GameMap) {
                 marker.setGlowingTag(true)
             }
             Contraption.BOOSTER_PLATE -> {
-                marker.blockState = Blocks.ORANGE_TERRACOTTA.defaultBlockState()
+                marker.blockState = Blocks.DYED_TERRACOTTA.orange.defaultBlockState()
                 marker.setPosRaw(pos.x.toDouble() + margin, pos.y - 1.0 + margin, pos.z.toDouble() + margin)
                 marker.setTransformation(Transformation(Matrix4f().scale(1f - 2 * margin)))
                 marker.glowColorOverride = DyeColor.ORANGE.textureDiffuseColor
                 marker.setGlowingTag(true)
             }
             Contraption.ELEVATOR -> {
-                marker.blockState = Blocks.LIGHT_BLUE_CONCRETE.defaultBlockState()
+                marker.blockState = Blocks.CONCRETE.lightBlue.defaultBlockState()
                 marker.setPosRaw(pos.x - 1.0 + margin, pos.y.toDouble() + margin, pos.z - 1.0 + margin)
                 marker.setTransformation(
                     Transformation(Matrix4f()

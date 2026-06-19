@@ -80,9 +80,9 @@ class KitHandler(
 
         kitHandle.translations.translateText(
             "ap2.kit_selector.selected",
-            kitHandle.kitName(kit).formatted(ChatFormatting.AQUA)
+            kitHandle.kitName(kit).withStyle(ChatFormatting.AQUA)
         )
-            .formatted(ChatFormatting.GREEN)
+            .withStyle(ChatFormatting.GREEN)
             .sendTo(player)
 
         player.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.NEUTRAL, 0.5f, 2f)
@@ -111,7 +111,7 @@ class KitHandler(
         stack.set(
             DataComponents.ITEM_NAME,
             kitHandle.translations.translateText(player, "ap2.kit_selector")
-                .formatted(ChatFormatting.AQUA)
+                .withStyle(ChatFormatting.AQUA)
         )
 
         CustomNbt.set(stack, KIT_SELECTOR_CODEC, true)

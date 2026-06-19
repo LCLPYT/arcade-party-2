@@ -4,10 +4,10 @@ import net.minecraft.core.RegistryAccess
 import net.minecraft.network.chat.Component
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.level.block.Blocks
 import work.lclpnet.ap2.api.game.data.SubjectRef
 import work.lclpnet.ap2.api.game.team.TeamKey
 import work.lclpnet.ap2.api.game.team.TeamKeyable
-import work.lclpnet.ap2.impl.util.BlockHelper
 import work.lclpnet.ap2.impl.util.ColorUtil
 import work.lclpnet.kibu.translate.Translations
 import java.util.*
@@ -22,7 +22,7 @@ class TeamRef(
     }
 
     override fun getIconStackFor(registryManager: RegistryAccess, viewer: ServerPlayer): ItemStack {
-        return ItemStack(BlockHelper.getWool(ColorUtil.closestEntityDyeColor(key.color())))
+        return ItemStack(Blocks.WOOL.pick(ColorUtil.closestEntityDyeColor(key.color())))
     }
 
     override fun equals(other: Any?): Boolean {

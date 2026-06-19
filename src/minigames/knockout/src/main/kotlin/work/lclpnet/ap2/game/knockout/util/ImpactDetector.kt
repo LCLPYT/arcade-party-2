@@ -102,11 +102,11 @@ class ImpactDetector(
         if (DEBUG_IMPACT) {
             debugController.exclusive("box_" + player.scoreboardName) { controller ->
                 controller.renderer().ifPresent { r ->
-                    r.marker(pos, Blocks.LIME_TERRACOTTA.defaultBlockState(), 0x06cc34)
-                    r.box(futureBox1, Blocks.LIME_STAINED_GLASS.defaultBlockState())
-                    r.box(futureBox2, Blocks.LIME_STAINED_GLASS.defaultBlockState())
+                    r.marker(pos, Blocks.DYED_TERRACOTTA.lime.defaultBlockState(), 0x06cc34)
+                    r.box(futureBox1, Blocks.STAINED_GLASS.lime.defaultBlockState())
+                    r.box(futureBox2, Blocks.STAINED_GLASS.lime.defaultBlockState())
                     r.text(pos.add(0.0, 0.25, 0.0), Component.literal(String.format("%.3f", speed)))
-                    r.arrow(pos, dir, Blocks.BLUE_CONCRETE.defaultBlockState())
+                    r.arrow(pos, dir, Blocks.CONCRETE.blue.defaultBlockState())
                 }
             }
         }

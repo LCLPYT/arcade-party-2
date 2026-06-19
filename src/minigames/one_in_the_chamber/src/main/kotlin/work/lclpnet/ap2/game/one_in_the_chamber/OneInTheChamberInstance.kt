@@ -173,7 +173,7 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle, level: ServerLevel, ma
             else -> deathMessages.eliminated(player)
         }
 
-        text.formatted(ChatFormatting.GRAY).sendTo(PlayerLookup.all(gameHandle.server))
+        text.withStyle(ChatFormatting.GRAY).sendTo(PlayerLookup.all(gameHandle.server))
 
         level.playSound(null, player.blockPosition(), SoundEvents.PLAYER_DEATH, SoundSource.PLAYERS, 0.8f, 0.8f)
 

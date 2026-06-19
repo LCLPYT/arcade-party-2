@@ -12,6 +12,7 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.gamerules.GameRules
+import net.minecraft.world.scores.TeamColor
 import work.lclpnet.ap2.api.stats.CommonStats.DamageDealt
 import work.lclpnet.ap2.api.stats.CommonStats.Kills
 import work.lclpnet.ap2.api.stats.FFAStatsManager
@@ -63,7 +64,7 @@ class WeaponSwapInstance(
         allPlayers()
     }
     private val holderTeam = gameHandle.scoreboardManager.createTeam("holders").also {
-        it.color = ChatFormatting.DARK_RED
+        it.color = Optional.of(TeamColor.DARK_RED)
     }
 
     override fun prepare() {
@@ -204,7 +205,7 @@ class WeaponSwapInstance(
         }
 
         translate("received")
-            .formatted(ChatFormatting.AQUA)
+            .withStyle(ChatFormatting.AQUA)
             .sendTo(newHolders)
     }
 
@@ -212,7 +213,7 @@ class WeaponSwapInstance(
         previousHolders = currentHolders.toSet()
 
         translate("swap")
-            .formatted(ChatFormatting.GREEN)
+            .withStyle(ChatFormatting.GREEN)
             .sendTo(allPlayers(), true)
     }
 
@@ -222,7 +223,7 @@ class WeaponSwapInstance(
         stack.set(
             DataComponents.ITEM_NAME,
             gameHandle.translations.translateText(player, "weapon")
-                .styled { it.withItalic(false).applyFormat(ChatFormatting.GOLD) }
+                .withStyle { it.withItalic(false).applyFormat(ChatFormatting.GOLD) }
         )
 
         player.inventory.setItem(0, stack)

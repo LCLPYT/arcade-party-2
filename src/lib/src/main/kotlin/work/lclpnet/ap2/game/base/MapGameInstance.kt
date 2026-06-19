@@ -92,7 +92,7 @@ abstract class MapGameInstance(
         }).withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD)
 
         translate("ap2.map.by", name, authors)
-            .formatted(ChatFormatting.GREEN, ChatFormatting.BOLD)
+            .withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD)
             .sendTo(level.players())
     }
 

@@ -14,6 +14,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 import work.lclpnet.ap2.api.util.action.Action;
@@ -40,7 +41,7 @@ public class CheckpointHelper {
 
     public static void notifyWhenReached(CheckpointManager manager, Translations translations) {
         manager.whenCheckpointReached((player, _) -> {
-            var msg = translations.translateText(player, "game.ap2.reached_checkpoint").formatted(ChatFormatting.GREEN);
+            var msg = translations.translateText(player, "game.ap2.reached_checkpoint").withStyle(ChatFormatting.GREEN);
 
             player.sendOverlayMessage(msg);
             ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.RESPAWN_ANCHOR_SET_SPAWN, SoundSource.BLOCKS, 0.4f, 1f);
@@ -96,7 +97,7 @@ public class CheckpointHelper {
         float yaw = json.has("yaw") ? MapUtil.readAngle(json.getNumber("yaw")) : 0f;
         BlockBox box = MapUtil.readBox(json.getJSONArray("bounds"));
 
-        return new Checkpoint(pos.getBottomCenter(), yaw, 0f, box);
+        return new Checkpoint(Vec3.atBottomCenterOf(pos), yaw, 0f, box);
     }
 
     public static void giveResetItem(Iterable<? extends ServerPlayer> players, ServerLevel world, Translations translations, int slot) {
@@ -113,8 +114,8 @@ public class CheckpointHelper {
 
         ItemStack reset = head.createStack();
 
-        reset.set(DataComponents.CUSTOM_NAME, translations.translateText(player, "ap2.game.reset").formatted(ChatFormatting.RED)
-                .styled(style -> style.withItalic(false)));
+        reset.set(DataComponents.CUSTOM_NAME, translations.translateText(player, "ap2.game.reset").withStyle(ChatFormatting.RED)
+                .withStyle(style -> style.withItalic(false)));
 
         player.getInventory().setItem(slot, reset);
     }

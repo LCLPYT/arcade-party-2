@@ -114,7 +114,7 @@ class MimicryInstance(
         }
 
         val msg = gameHandle.translations.translateText(player, "wrong_button")
-            .formatted(ChatFormatting.RED)
+            .withStyle(ChatFormatting.RED)
 
         player.sendSystemMessage(msg)
 

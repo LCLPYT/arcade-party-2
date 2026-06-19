@@ -5,6 +5,7 @@ import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.entity.EntitySpawnReason
 import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.Mob
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.ai.goal.*
@@ -43,17 +44,17 @@ class MonsterSpawner(
     private val stageWithRadius = stage as BlockShape.WithRadius
 
     private val zombieTypes = WeightedList<EntityType<out Zombie>>().also {
-        it.add(EntityType.ZOMBIE, 0.8f)
-        it.add(EntityType.ZOMBIE_VILLAGER, 0.07f)
-        it.add(EntityType.HUSK, 0.05f)
-        it.add(EntityType.ZOMBIFIED_PIGLIN, 0.03f)
-        it.add(EntityType.DROWNED, 0.05f)
+        it.add(EntityTypes.ZOMBIE, 0.8f)
+        it.add(EntityTypes.ZOMBIE_VILLAGER, 0.07f)
+        it.add(EntityTypes.HUSK, 0.05f)
+        it.add(EntityTypes.ZOMBIFIED_PIGLIN, 0.03f)
+        it.add(EntityTypes.DROWNED, 0.05f)
     }
     private val skeletonTypes = WeightedList<EntityType<out AbstractSkeleton>>().also {
-        it.add(EntityType.SKELETON, 0.8f)
-        it.add(EntityType.WITHER_SKELETON, 0.05f)
-        it.add(EntityType.BOGGED, 0.05f)
-        it.add(EntityType.STRAY, 0.08f)
+        it.add(EntityTypes.SKELETON, 0.8f)
+        it.add(EntityTypes.WITHER_SKELETON, 0.05f)
+        it.add(EntityTypes.BOGGED, 0.05f)
+        it.add(EntityTypes.STRAY, 0.08f)
     }
     private val spawnTypes = WeightedList<SpawnType>()
     private var timeTicks = 0
@@ -199,7 +200,7 @@ class MonsterSpawner(
     }
 
     private fun spawnPhantom() {
-        val phantom = createMob(EntityType.PHANTOM) ?: return
+        val phantom = createMob(EntityTypes.PHANTOM) ?: return
 
         phantom.phantomSize = 0
 
@@ -214,7 +215,7 @@ class MonsterSpawner(
     }
 
     private fun spawnGhast() {
-        val ghast = createMob(EntityType.GHAST) ?: return
+        val ghast = createMob(EntityTypes.GHAST) ?: return
 
         EntityUtil.setAttribute(ghast, Attributes.SCALE, random.nextFloat(0.2f, 1.0f).toDouble())
 
@@ -222,7 +223,7 @@ class MonsterSpawner(
     }
 
     private fun spawnVindicator() {
-        val vindicator = createMob(EntityType.VINDICATOR) ?: return
+        val vindicator = createMob(EntityTypes.VINDICATOR) ?: return
 
         var baseSpeed = vindicator.getAttributeBaseValue(Attributes.MOVEMENT_SPEED)
 
@@ -238,7 +239,7 @@ class MonsterSpawner(
     }
 
     private fun spawnEvoker() {
-        val evoker = createMob(EntityType.EVOKER) ?: return
+        val evoker = createMob(EntityTypes.EVOKER) ?: return
         spawnMobInWorld(evoker)
     }
 

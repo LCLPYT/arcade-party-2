@@ -74,7 +74,7 @@ class ButtonPositions(
         }
 
         commons.debugController().exclusive("positions") {
-            it.visualizeStructureMask(mask, minPos, Matrix3i.IDENTITY, Blocks.GREEN_STAINED_GLASS.defaultBlockState())
+            it.visualizeStructureMask(mask, minPos, Matrix3i.IDENTITY, Blocks.STAINED_GLASS.green.defaultBlockState())
         }
     }
 
@@ -152,7 +152,7 @@ class ButtonPositions(
         pos: BlockPos,
         cameraPos: Vec3
     ): Boolean {
-        return !checker.isBoxVisible(cameraPos, AABB.unitCubeFromLowerCorner(Vec3(pos)), pos.center)
+        return !checker.isBoxVisible(cameraPos, AABB.unitCubeFromLowerCorner(Vec3(pos)), Vec3.atCenterOf(pos))
     }
 
     /**

@@ -14,7 +14,7 @@ import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.animal.chicken.Chicken
 import net.minecraft.world.entity.animal.chicken.ChickenVariant
 import net.minecraft.world.entity.item.PrimedTnt
@@ -115,7 +115,7 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
         val scoreboardManager = gameHandle.scoreboardManager
 
         val objective = scoreboardManager.translateObjective("score", "game.ap2.chicken_shooter.points")
-            .formatted(ChatFormatting.YELLOW, ChatFormatting.BOLD)
+            .withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD)
 
         useScoreboardStatsSync(data, objective)
         objective.setSlot(DisplaySlot.LIST)
@@ -178,7 +178,7 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
         }
 
         val scanner = BfsWorldScanner(adjacentBlocks).scan(chickenScanStart)
-        val finder = SizedSpaceFinder.create(level, EntityType.CHICKEN)
+        val finder = SizedSpaceFinder.create(level, EntityTypes.CHICKEN)
         val spawns = finder.findSpaces(scanner)
 
         chickenSpawns = spawns.shuffled().subList(0, MAX_CHICKEN_SPAWNS.coerceAtMost(spawns.size))
@@ -190,7 +190,7 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
         if (DEBUG_CHICKEN_SPAWNS) {
             commons().debugController().renderer().ifPresent { renderer ->
                 for (pos in chickenSpawns) {
-                    renderer.marker(pos, Blocks.GREEN_CONCRETE.defaultBlockState(), 0x00ff00)
+                    renderer.marker(pos, Blocks.CONCRETE.green.defaultBlockState(), 0x00ff00)
                 }
             }
         }
@@ -198,7 +198,7 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
 
     @Suppress("UNCHECKED_CAST")
     private fun spawnChicken() {
-        val chicken = Chicken(EntityType.CHICKEN, level)
+        val chicken = Chicken(EntityTypes.CHICKEN, level)
 
         val variants = level.registryAccess().lookupOrThrow(Registries.CHICKEN_VARIANT).asHolderIdMap()
 
@@ -222,7 +222,7 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
     }
 
     private fun spawnTNT(chicken: Chicken, world: ServerLevel) {
-        val tnt = PrimedTnt(EntityType.TNT, world)
+        val tnt = PrimedTnt(EntityTypes.TNT, world)
         tnt.fuse = Int.MAX_VALUE
         tnt.startRiding(chicken, true, false)
         world.addFreshEntity(tnt)
@@ -293,7 +293,7 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
 
             stack.enchant(infinity, 1)
             stack.set(DataComponents.CUSTOM_NAME, translations.translateText(player, "bow")
-                .styled { it.withItalic(false).applyFormat(ChatFormatting.GOLD) })
+                .withStyle { it.withItalic(false).applyFormat(ChatFormatting.GOLD) })
 
             val inventory = player.inventory
             inventory.setItem(4, stack)

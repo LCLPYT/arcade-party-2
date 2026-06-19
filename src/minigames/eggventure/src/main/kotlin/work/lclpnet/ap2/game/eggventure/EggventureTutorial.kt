@@ -83,7 +83,7 @@ class EggventureTutorial(
 
     private fun startTutorial(player: ServerPlayer, variant: work.lclpnet.ap2.api.util.heads.PlayerHead) {
         val uuid = player.uuid
-        val text = translations.translateText(player, "find_sample").formatted(ChatFormatting.GREEN)
+        val text = translations.translateText(player, "find_sample").withStyle(ChatFormatting.GREEN)
 
         val egg = TutorialEgg(scene, variant) { world.server.playerList.getPlayer(uuid) }
         val label = PlayerTextDisplayObject(scene, text, player)

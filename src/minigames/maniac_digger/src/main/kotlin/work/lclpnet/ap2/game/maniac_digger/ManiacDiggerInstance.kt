@@ -13,6 +13,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.StainedGlassBlock
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.phys.Vec3
 import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.hooks
@@ -98,7 +99,7 @@ class ManiacDiggerInstance(
             for (pipe in pipes.values) {
                 val waypoints = pipe.path.waypoints
                 for (i in 0 until waypoints.size - 1) {
-                    renderer.line(waypoints[i], waypoints[i + 1], 0.1, Blocks.LIME_CONCRETE.defaultBlockState())
+                    renderer.line(waypoints[i], waypoints[i + 1], 0.1, Blocks.CONCRETE.lime.defaultBlockState())
                 }
 
                 val seen = HashSet<BlockPos>()
@@ -107,7 +108,7 @@ class ManiacDiggerInstance(
                     for (pos in box) {
                         if (!seen.add(pos.immutable())) continue
 
-                        val center = pos.center
+                        val center = Vec3.atCenterOf(pos)
                         val score = pipe.path.progressToGoal(center).roundToInt()
                         renderer.text(center, Component.literal(score.toString()))
                     }
@@ -209,7 +210,7 @@ class ManiacDiggerInstance(
         correctToolStreak.removeInt(player.uuid)
 
         val msg = gameHandle.translations.translateText(player, "wrong_tool")
-            .styled { style -> style.withColor(0xff0000) }
+            .withStyle { style -> style.withColor(0xff0000) }
 
         player.sendOverlayMessage(msg)
         WorldBorderUtil.setWarning(player)

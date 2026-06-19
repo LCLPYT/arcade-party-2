@@ -6,7 +6,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.monster.Giant;
 import net.minecraft.world.item.ItemStack;
@@ -114,7 +114,7 @@ public class ArmorTrimChallenge implements Challenge {
     }
 
     private void spawnGiant(Vec3 pos, float yaw) {
-        Giant giant = new Giant(EntityType.GIANT, world);
+        Giant giant = new Giant(EntityTypes.GIANT, world);
         giant.setPersistenceRequired();
         giant.setNoAi(true);
         giant.setYHeadRot(yaw);

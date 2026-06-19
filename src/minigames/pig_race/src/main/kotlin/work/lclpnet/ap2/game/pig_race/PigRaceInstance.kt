@@ -10,7 +10,7 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.tags.BlockTags
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.ai.attributes.AttributeModifier
@@ -371,7 +371,7 @@ class PigRaceInstance(
 
         val text = gameHandle.translations
             .translateText("round_title", Component.literal("#${round + 1}").withStyle(YELLOW))
-            .formatted(AQUA)
+            .withStyle(AQUA)
             .translateFor(player)
 
         Title.get(player).title(Component.empty(), text, 10, 30, 10)
@@ -411,8 +411,8 @@ class PigRaceInstance(
 
     private fun createPending(x: Double, y: Double, z: Double, yaw: Float): PendingEntity<*> {
         val factory: (ServerLevel) -> LivingEntity = when (variant) {
-            Variant.PIG -> { level -> Pig(EntityType.PIG, level) }
-            Variant.STRIDER -> { level -> Strider(EntityType.STRIDER, level) }
+            Variant.PIG -> { level -> Pig(EntityTypes.PIG, level) }
+            Variant.STRIDER -> { level -> Strider(EntityTypes.STRIDER, level) }
         }
         return PendingEntity(x, y, z, yaw, factory)
     }
@@ -429,7 +429,7 @@ class PigRaceInstance(
         stick.set(
             DataComponents.CUSTOM_NAME,
             translations.translateText(player, "boost")
-                .styled { it.withItalic(false).applyFormat(GOLD) }
+                .withStyle { it.withItalic(false).applyFormat(GOLD) }
         )
 
         player.inventory.setItem(STICK_SLOT, stick)
@@ -447,8 +447,8 @@ class PigRaceInstance(
         val reset = head.createStack()
         reset.set(
             DataComponents.CUSTOM_NAME,
-            translations.translateText(player, "ap2.game.reset").formatted(RED)
-                .styled { it.withItalic(false) }
+            translations.translateText(player, "ap2.game.reset").withStyle(RED)
+                .withStyle { it.withItalic(false) }
         )
 
         player.inventory.setItem(8, reset)

@@ -169,13 +169,13 @@ public class GuessItInstance extends FFAGameInstance {
         var objective = ScoreboardUtilsKt.setupTranslatedSidebarObjective(scoreboardManager, getGameHandle().getGameInfo().getTitleKey());
 
         // round display
-        roundHandle = objective.createText(translations.translateText("round").formatted(GREEN));
+        roundHandle = objective.createText(translations.translateText("round").withStyle(GREEN));
         updateRoundDisplay();
 
         objective.createNewline(ScoreboardLayout.TOP);
 
         // score heading
-        objective.createText(translations.translateText("ap2.score").formatted(YELLOW, BOLD));
+        objective.createText(translations.translateText("ap2.score").withStyle(YELLOW, BOLD));
 
         var separator = Component.literal(ApConstants.SCOREBOARD_SEPARATOR_SM).withStyle(DARK_GREEN, STRIKETHROUGH);
         objective.createText(separator);
@@ -213,7 +213,7 @@ public class GuessItInstance extends FFAGameInstance {
         Translations translations = getGameHandle().getTranslations();
 
         var prepareMsg = translations.translateText("prepare." + challenge.getPreparationKey())
-                .formatted(DARK_GREEN, BOLD);
+                .withStyle(DARK_GREEN, BOLD);
 
         challenge.init(challengeInit.init());
 
@@ -331,7 +331,7 @@ public class GuessItInstance extends FFAGameInstance {
         for (ServerPlayer player : getGameHandle().getParticipants()) {
             int points = result.getPointsGained(player);
 
-            var msg = translations.translateText(player, "gain_points", styled(points, YELLOW)).formatted(GREEN);
+            var msg = translations.translateText(player, "gain_points", styled(points, YELLOW)).withStyle(GREEN);
 
             player.sendOverlayMessage(msg);
 
@@ -341,7 +341,7 @@ public class GuessItInstance extends FFAGameInstance {
                 ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.5f, 1.5f);
 
                 if (solutionMsg != null) {
-                    player.sendSystemMessage(solutionMsg.translateFor(player).formatted(GREEN));
+                    player.sendSystemMessage(solutionMsg.translateFor(player).withStyle(GREEN));
                 }
 
                 continue;
@@ -350,7 +350,7 @@ public class GuessItInstance extends FFAGameInstance {
             ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.WITHER_HURT, SoundSource.PLAYERS, 0.3f, 1.3f);
 
             if (solutionMsg != null) {
-                player.sendSystemMessage(solutionMsg.translateFor(player).formatted(RED));
+                player.sendSystemMessage(solutionMsg.translateFor(player).withStyle(RED));
             }
         }
 

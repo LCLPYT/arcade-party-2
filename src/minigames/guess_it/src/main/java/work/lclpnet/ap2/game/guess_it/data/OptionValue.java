@@ -34,7 +34,7 @@ public class OptionValue {
 
             var err = translations.translateText("input.option",
                             styled(input, YELLOW), styled(from, YELLOW), styled(to, YELLOW))
-                    .formatted(RED);
+                    .withStyle(RED);
 
             return Pair.of(null, err);
         }

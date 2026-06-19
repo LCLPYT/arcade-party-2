@@ -12,7 +12,7 @@ import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.Display
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.item.DyeColor
 import net.minecraft.world.level.GameType
 import net.minecraft.world.level.block.Blocks
@@ -174,7 +174,7 @@ class MinefieldInstance(
                 "goal",
                 styled(player.scoreboardName, YELLOW),
                 styled(END_TIME, YELLOW)
-            ).formatted(GREEN).sendTo(allPlayers())
+            ).withStyle(GREEN).sendTo(allPlayers())
 
             gameEnd = END_TIME.inWholeSeconds.toInt()
 
@@ -207,7 +207,7 @@ class MinefieldInstance(
 
         entry(player).checkUpdateMarker(player)
 
-        translate("stepped_on_mine").formatted(RED).sendTo(player, true)
+        translate("stepped_on_mine").withStyle(RED).sendTo(player, true)
 
         player.setGameMode(GameType.SPECTATOR)
 
@@ -238,7 +238,7 @@ class MinefieldInstance(
 
             if (marker != null) {
                 ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.NEUTRAL, 0.3f, 2f)
-                translate("new_personal_best").formatted(GREEN).sendTo(player, true)
+                translate("new_personal_best").withStyle(GREEN).sendTo(player, true)
             }
 
             removeMarker()
@@ -264,13 +264,13 @@ class MinefieldInstance(
         }
 
         fun createMarker(player: ServerPlayer) {
-            val marker = Display.BlockDisplay(EntityType.BLOCK_DISPLAY, level)
+            val marker = Display.BlockDisplay(EntityTypes.BLOCK_DISPLAY, level)
             marker.setTransformation(Transformation(Matrix4f().scale(0.5f).translate(-0.5f, 0f, -0.5f)))
             marker.setGlowingTag(true)
             marker.glowColorOverride = DyeColor.LIME.textureDiffuseColor
-            marker.blockState = Blocks.LIME_TERRACOTTA.defaultBlockState()
+            marker.blockState = Blocks.DYED_TERRACOTTA.lime.defaultBlockState()
 
-            val label = Display.TextDisplay(EntityType.TEXT_DISPLAY, level)
+            val label = Display.TextDisplay(EntityTypes.TEXT_DISPLAY, level)
             label.setTransformation(Transformation(Matrix4f().scale(0.5f)))
             label.billboardConstraints = Display.BillboardConstraints.CENTER
             label.backgroundColor = 0
@@ -280,7 +280,7 @@ class MinefieldInstance(
             label.text = translate(
                 "personal_best",
                 styled(LocalizedFormat.format("%.2f", dist), YELLOW)
-            ).formatted(GREEN).translateFor(player)
+            ).withStyle(GREEN).translateFor(player)
 
             this.marker = PlayerSpecificDynamicEntity(marker, player.uuid)
             this.label = PlayerSpecificDynamicEntity(label, player.uuid)

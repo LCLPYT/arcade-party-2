@@ -209,7 +209,7 @@ class GlowingBombInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: G
     private fun onAcquiredBomb(player: ServerPlayer) {
         val stack = ItemStack(Items.GLOWSTONE, bomb?.glowStoneAmount ?: 1)
         stack.set(DataComponents.CUSTOM_NAME, gameHandle.translations.translateText(player, "pass")
-            .styled { it.withItalic(false).applyFormat(ChatFormatting.GOLD) })
+            .withStyle { it.withItalic(false).applyFormat(ChatFormatting.GOLD) })
 
         player.inventory.setItem(4, stack)
         PlayerInventoryAccess.setSelectedSlot(player, 4)

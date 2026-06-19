@@ -80,7 +80,7 @@ abstract class TeamEliminationGameInstance(
             val displayName = key.getDisplayName(gameHandle.translations)
 
             translate("ap2.game.team_eliminated", displayName)
-                .formatted(ChatFormatting.GRAY)
+                .withStyle(ChatFormatting.GRAY)
                 .sendTo(allPlayers())
 
             toEliminate.add(team)

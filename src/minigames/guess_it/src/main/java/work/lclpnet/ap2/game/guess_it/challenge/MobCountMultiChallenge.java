@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game.guess_it.challenge;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.phys.Vec3;
 import work.lclpnet.ap2.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
@@ -116,20 +117,20 @@ public class MobCountMultiChallenge implements Challenge {
     }
 
     static int getCost(EntityType<?> type) {
-        if (type == EntityType.GIANT) {
+        if (type == EntityTypes.GIANT) {
             return 10;
         }
 
-        if (type == EntityType.WARDEN || type == EntityType.ELDER_GUARDIAN || type == EntityType.RAVAGER
-                || type == EntityType.WITHER || type == EntityType.GHAST || type == EntityType.HAPPY_GHAST) {
+        if (type == EntityTypes.WARDEN || type == EntityTypes.ELDER_GUARDIAN || type == EntityTypes.RAVAGER
+                || type == EntityTypes.WITHER || type == EntityTypes.GHAST || type == EntityTypes.HAPPY_GHAST) {
             return 5;
         }
 
-        if (type == EntityType.CAMEL || type == EntityType.IRON_GOLEM || type == EntityType.SNIFFER) {
+        if (type == EntityTypes.CAMEL || type == EntityTypes.IRON_GOLEM || type == EntityTypes.SNIFFER) {
             return 3;
         }
 
-        if (type == EntityType.GUARDIAN || type == EntityType.HOGLIN || type == EntityType.ZOGLIN) {
+        if (type == EntityTypes.GUARDIAN || type == EntityTypes.HOGLIN || type == EntityTypes.ZOGLIN) {
             return 2;
         }
 

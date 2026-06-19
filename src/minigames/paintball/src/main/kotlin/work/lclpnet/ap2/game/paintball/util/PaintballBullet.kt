@@ -137,7 +137,7 @@ class PaintballBullet(
         if (DEBUG_SPLITTING) {
             debugController.renderer().ifPresent { renderer ->
                 renderer.marker(start, Blocks.DIAMOND_BLOCK.defaultBlockState(), 0x5555ff)
-                renderer.arrow(start, dir, Blocks.BLACK_CONCRETE.defaultBlockState())
+                renderer.arrow(start, dir, Blocks.CONCRETE.black.defaultBlockState())
             }
         }
 

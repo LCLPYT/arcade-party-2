@@ -16,6 +16,7 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.level.material.Fluids
+import net.minecraft.world.phys.Vec3
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.setDayTime
@@ -133,7 +134,7 @@ class KilleporterInstance(
         BlockModificationHooks.PLACE_FLUID.registerWith(hooks) { _, pos, entity, fluid ->
             val minDistSq = 6.0 * 6.0
             entity is ServerPlayer && fluid.isSame(Fluids.LAVA) && players().any {
-                it != entity && it.distanceToSqr(pos.center) < minDistSq
+                it != entity && it.distanceToSqr(Vec3.atCenterOf(pos)) < minDistSq
             }
         }
 
@@ -149,7 +150,7 @@ class KilleporterInstance(
 
         gameHandle.scheduler.interval(20*60*3, 20*60*3, Runnable {
             SoundHelper.playSound(level, SoundEvents.CHEST_OPEN, SoundSource.BLOCKS, 0.8f, 0.5f)
-            translate("chest_refill").formatted(ChatFormatting.AQUA).sendTo(allPlayers())
+            translate("chest_refill").withStyle(ChatFormatting.AQUA).sendTo(allPlayers())
             lootContainerManager.reset()
         })
 
@@ -166,7 +167,7 @@ class KilleporterInstance(
 
         timeout(switchTime - messageTime) {
             translate("switch_announcement", FormatWrapper.styled(maxDelaySeconds, ChatFormatting.YELLOW))
-            .formatted(ChatFormatting.GREEN)
+            .withStyle(ChatFormatting.GREEN)
             .sendTo(players(), true)}
 
         timeout(switchTime) {
@@ -192,7 +193,7 @@ class KilleporterInstance(
             val previousIndex = floorMod(p-1, playerCount)
             shuffledPlayers[p].teleport(positionRotations[previousIndex])
             translate("switch_message", shuffledPlayers[previousIndex].scoreboardName)
-                .formatted(ChatFormatting.GREEN)
+                .withStyle(ChatFormatting.GREEN)
                 .sendTo(shuffledPlayers[p], true)
         }
     }

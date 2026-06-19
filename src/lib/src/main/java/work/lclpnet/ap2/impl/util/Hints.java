@@ -49,11 +49,11 @@ public class Hints {
                             .withClickEvent(new ClickEvent.OpenUrl(mod.link())));
 
             var sub = translations.translateText(player, "ap2.hint.mod", modLabel)
-                    .formatted(YELLOW)
-                    .styled(style -> style.withBold(false));
+                    .withStyle(YELLOW)
+                    .withStyle(style -> style.withBold(false));
 
             var hint = translations.translateText(player, "ap2.hint", sub)
-                    .formatted(RED, BOLD);
+                    .withStyle(RED, BOLD);
 
             player.sendSystemMessage(hint);
             ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.CHICKEN_EGG, SoundSource.PLAYERS, 0.5f, 0.5f);

@@ -6,7 +6,7 @@ import net.minecraft.core.Vec3i
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.entity.Display
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument
 import org.joml.Matrix4f
@@ -172,14 +172,14 @@ class FineTuningRoom(val pos: BlockPos, private val spawn: BlockPos, private val
         val pos = noteBlocks[note]
         val margin = 0.015f
 
-        val display = Display.BlockDisplay(EntityType.BLOCK_DISPLAY, viewer.level())
+        val display = Display.BlockDisplay(EntityTypes.BLOCK_DISPLAY, viewer.level())
         display.setPosRaw(pos.x + margin.toDouble(), pos.y + margin.toDouble(), pos.z + margin.toDouble())
-        display.setBlockState(Blocks.NOTE_BLOCK.defaultBlockState())
+        display.blockState = Blocks.NOTE_BLOCK.defaultBlockState()
         display.setTransformation(Transformation(Matrix4f().scale(1 - margin * 2)))
         display.setGlowingTag(true)
 
         val color = ColorUtil.lerpRgb(0xefe409, 0x890404, error)
-        display.setGlowColorOverride(color)
+        display.glowColorOverride = color
 
         val dynamic = PlayerSpecificDynamicEntity(display, viewer.uuid)
         displays[note] = dynamic

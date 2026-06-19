@@ -67,7 +67,7 @@ public class InputManager implements InputInterface {
 
         if (inputValue != null) {
             if (inputValue.isOnce() && hasAnswered(player)) {
-                var msg = translations.translateText(player, "already_answered").formatted(RED);
+                var msg = translations.translateText(player, "already_answered").withStyle(RED);
                 player.sendSystemMessage(msg);
                 ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.BLAZE_HURT, SoundSource.PLAYERS, 0.5f, 0f);
                 return;
@@ -94,7 +94,7 @@ public class InputManager implements InputInterface {
     private void onAnswer(ServerPlayer player, String input) {
         choices.set(player, input);
 
-        var msg = translations.translateText(player, "guessed", styled(input, YELLOW)).formatted(GREEN);
+        var msg = translations.translateText(player, "guessed", styled(input, YELLOW)).withStyle(GREEN);
         ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 0.75f, 1.5f);
 
         player.sendSystemMessage(msg);

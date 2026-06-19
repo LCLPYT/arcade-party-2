@@ -101,11 +101,11 @@ public class ScoreCommand implements KibuCommand {
         if (players.size() == 1) {
            ctx.getSource().sendSystemMessage(translations.translateText(ctx.getSource(), "ap2.command.score.set.single",
                    styled(players.iterator().next().getScoreboardName(), YELLOW),
-                   styled(amount, YELLOW)).formatted(GREEN));
+                   styled(amount, YELLOW)).withStyle(GREEN));
         } else {
             ctx.getSource().sendSystemMessage(translations.translateText(ctx.getSource(), "ap2.command.score.set.multiple",
                     styled(amount, YELLOW),
-                    styled(players.size(), YELLOW)).formatted(GREEN));
+                    styled(players.size(), YELLOW)).withStyle(GREEN));
         }
 
         return players.size();
@@ -119,11 +119,11 @@ public class ScoreCommand implements KibuCommand {
         if (players.size() == 1) {
             ctx.getSource().sendSystemMessage(translations.translateText(ctx.getSource(), "ap2.command.score.add.single",
                     styled(amount, YELLOW),
-                    styled(players.iterator().next().getScoreboardName(), YELLOW)).formatted(GREEN));
+                    styled(players.iterator().next().getScoreboardName(), YELLOW)).withStyle(GREEN));
         } else {
             ctx.getSource().sendSystemMessage(translations.translateText(ctx.getSource(), "ap2.command.score.add.multiple",
                     styled(amount, YELLOW),
-                    styled(players.size(), YELLOW)).formatted(GREEN));
+                    styled(players.size(), YELLOW)).withStyle(GREEN));
         }
 
         return players.size();
@@ -138,19 +138,19 @@ public class ScoreCommand implements KibuCommand {
 
             src.sendSystemMessage(translations.translateText(src, "ap2.command.score.get.single",
                     styled(ref.name(), YELLOW),
-                    styled(score, YELLOW)).formatted(GREEN));
+                    styled(score, YELLOW)).withStyle(GREEN));
 
             return 1;
         }
 
-        src.sendSystemMessage(translations.translateText(src, "ap2.command.score.get.multiple_header").formatted(GREEN));
+        src.sendSystemMessage(translations.translateText(src, "ap2.command.score.get.multiple_header").withStyle(GREEN));
 
         for (ServerPlayer player : players) {
             PlayerRef ref = PlayerRef.create(player);
 
             src.sendSystemMessage(translations.translateText(src, "ap2.command.score.get.row",
                     styled(ref.name(), YELLOW),
-                    styled(scoreManager.getScore(ref), YELLOW)).formatted(GREEN));
+                    styled(scoreManager.getScore(ref), YELLOW)).withStyle(GREEN));
         }
 
         return players.size();

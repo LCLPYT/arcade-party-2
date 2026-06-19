@@ -74,7 +74,7 @@ public class EndermanEscape {
             }
 
             for (Passage passage : struct.passagesOf(node)) {
-                Path path = escapePath(passage.pos().getBottomCenter(), mob);
+                Path path = escapePath(Vec3.atBottomCenterOf(passage.pos()), mob);
 
                 if (path != null) {
                     if (leadingToAny(mobPos, path)) continue;
@@ -93,8 +93,8 @@ public class EndermanEscape {
         if (DEBUG_FLEE_POSITIONS) {
             debugController.parent().renderer().ifPresent(renderer -> debugController.parent().exclusive("flee_positions", _ -> paths.stream()
                     .map(Path::getTarget)
-                    .map(BlockPos::getBottomCenter)
-                    .forEach(pos -> renderer.marker(pos, Blocks.MAGENTA_TERRACOTTA.defaultBlockState(), 0xd808db))));
+                    .map(Vec3::atBottomCenterOf)
+                    .forEach(pos -> renderer.marker(pos, Blocks.DYED_TERRACOTTA.magenta().defaultBlockState(), 0xd808db))));
         }
 
         return paths.stream().min(Comparator.comparingInt(Path::getNodeCount));
@@ -153,7 +153,7 @@ public class EndermanEscape {
 
             if (DEBUG_FLEE_PATHS) {
                 debugController.parent().renderer().ifPresent(renderer ->
-                        renderer.marker(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, Blocks.BLACK_CONCRETE.defaultBlockState(), 0));
+                        renderer.marker(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, Blocks.CONCRETE.black().defaultBlockState(), 0));
             }
 
             x += (pos.getX() - sx);

@@ -16,7 +16,7 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.entity.Avatar
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.decoration.Mannequin
@@ -306,7 +306,7 @@ class PvpTournamentInstance(
 
             data.playerUuids += player.uuid
         } else {
-            val npc = Mannequin(EntityType.MANNEQUIN, level)
+            val npc = Mannequin(EntityTypes.MANNEQUIN, level)
             npc.uuid = ref.uuid
             npc.customName = Component.literal(ref.name)
             npc.isCustomNameVisible = true
@@ -412,7 +412,7 @@ class PvpTournamentInstance(
     private fun scheduleSuddenDeath(match: Match, data: MatchInstance) {
         data.tasks.add(runAfter(SUDDEN_DEATH_DELAY) {
             translate("sudden_death")
-                .formatted(ChatFormatting.RED)
+                .withStyle(ChatFormatting.RED)
                 .acceptEach(data.players) { player, msg ->
                     Title.get(player).title(Component.empty(), msg, 10, 40, 10)
                     player.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 0.5f, 0.5f)
@@ -526,14 +526,14 @@ class PvpTournamentInstance(
                 winner.getNameFor(player).copy().withStyle(ChatFormatting.AQUA)
             } else {
                 translate("ap2.nobody")
-                    .formatted(ChatFormatting.AQUA)
+                    .withStyle(ChatFormatting.AQUA)
                     .translateFor(player)
             }
 
             Title.get(player).title(
                 title,
                 translate("won_match")
-                    .formatted(ChatFormatting.DARK_GREEN)
+                    .withStyle(ChatFormatting.DARK_GREEN)
                     .translateFor(player),
                 5,
                 100,

@@ -3,7 +3,8 @@ package work.lclpnet.ap2.game.eggventure
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.level.block.entity.BlockEntityTypes
+import net.minecraft.world.phys.Vec3
 import work.lclpnet.ap2.ApConstants
 import work.lclpnet.ap2.game.MiniGameFactory
 import work.lclpnet.ap2.game.MiniGameHandle
@@ -14,6 +15,7 @@ import work.lclpnet.ap2.impl.map.MapUtil
 import java.util.*
 
 class EggventureFactory : MiniGameFactory {
+
     override suspend fun createInstance(handle: MiniGameHandle): MiniGameInstance {
         val (level, map) = handle.openRandomMap()
 
@@ -52,12 +54,12 @@ class EggventureFactory : MiniGameFactory {
 
             if (DEBUG_EGG_POSITIONS) {
                 debugController.renderer().ifPresent { renderer ->
-                    renderer.marker(pos.center, Blocks.GREEN_TERRACOTTA.defaultBlockState(), 0x00ff00)
+                    renderer.marker(Vec3.atCenterOf(pos), Blocks.DYED_TERRACOTTA.green.defaultBlockState(), 0x00ff00)
                 }
             }
 
             val variant = variants[random.nextInt(variants.size)]
-            level.getBlockEntity(pos, BlockEntityType.SKULL).ifPresent { variant.apply(it) }
+            level.getBlockEntity(pos, BlockEntityTypes.SKULL).ifPresent { variant.apply(it) }
             remainingPositions.add(pos)
         }
 
@@ -66,7 +68,7 @@ class EggventureFactory : MiniGameFactory {
 
             if (DEBUG_EGG_POSITIONS) {
                 debugController.renderer().ifPresent { renderer ->
-                    renderer.marker(pos.center, Blocks.BLUE_TERRACOTTA.defaultBlockState(), 0x0000ff)
+                    renderer.marker(Vec3.atCenterOf(pos), Blocks.DYED_TERRACOTTA.blue.defaultBlockState(), 0x0000ff)
                 }
             }
         }

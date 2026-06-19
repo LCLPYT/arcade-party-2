@@ -11,7 +11,7 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.entity.Display
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.level.GameType
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument
 import net.minecraft.world.phys.Vec3
@@ -90,7 +90,7 @@ class StagePhase(
         SoundHelper.playSound(server, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.RECORDS, 0.5f, 0f)
 
         translations.translateText("presentation")
-            .formatted(ChatFormatting.DARK_GREEN)
+            .withStyle(ChatFormatting.DARK_GREEN)
             .acceptEach(PlayerLookup.all(server)) { player, text ->
                 Title.get(player).title(text, Component.empty(), 5, 30, 5)
             }
@@ -107,7 +107,7 @@ class StagePhase(
         translations.translateText(
             "present_melody",
             work.lclpnet.kibu.translate.text.FormatWrapper.styled("#${melodyNumber + 1}", ChatFormatting.YELLOW)
-        ).formatted(ChatFormatting.AQUA)
+        ).withStyle(ChatFormatting.AQUA)
             .acceptEach(PlayerLookup.all(server)) { player, text ->
                 Title.get(player).title(text, Component.empty(), 5, 30, 5)
             }
@@ -132,8 +132,8 @@ class StagePhase(
             if (note < 0 || note >= offsets.size) return@PlayMelodyTask
 
             val noteOffset = offsets[note]
-            val pos = nbPlayer.getNoteBlock(note).center
-            val dir = snapToAxis(presenterPos.center.subtract(pos))
+            val pos = Vec3.atCenterOf(nbPlayer.getNoteBlock(note))
+            val dir = snapToAxis(Vec3.atCenterOf(presenterPos).subtract(pos))
 
             val label: Component = if (noteOffset == 0) {
                 Component.literal("✅").withStyle(ChatFormatting.GREEN)
@@ -143,10 +143,10 @@ class StagePhase(
                 Component.literal("${if (noteOffset > 0) "+" else ""}$noteOffset").withColor(color)
             }
 
-            val display = Display.TextDisplay(EntityType.TEXT_DISPLAY, world)
+            val display = Display.TextDisplay(EntityTypes.TEXT_DISPLAY, world)
             display.setPos(pos.add(dir.scale(0.6)))
-            display.setText(label)
-            display.setBackgroundColor(0)
+            display.text = label
+            display.backgroundColor = 0
             display.setTransformation(Transformation(Matrix4f()
                 .scale(2f)
                 .rotateTowards(dir.x().toFloat(), dir.y().toFloat(), dir.z().toFloat(), 0f, 1f, 0f)
@@ -188,7 +188,7 @@ class StagePhase(
         SoundHelper.playSound(server, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.RECORDS, 0.5f, 0f)
 
         translations.translateText("best_was")
-            .formatted(ChatFormatting.GREEN)
+            .withStyle(ChatFormatting.GREEN)
             .acceptEach(PlayerLookup.all(server)) { player, text ->
                 Title.get(player).title(Component.empty(), text, 5, 50, 0)
             }
@@ -225,7 +225,7 @@ class StagePhase(
         SoundHelper.playSound(server, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.RECORDS, 0.5f, 0f)
 
         translations.translateText("worst_was")
-            .formatted(ChatFormatting.RED)
+            .withStyle(ChatFormatting.RED)
             .acceptEach(PlayerLookup.all(server)) { player, text ->
                 Title.get(player).title(Component.empty(), text, 5, 30, 5)
             }

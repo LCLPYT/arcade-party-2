@@ -2,6 +2,7 @@ package work.lclpnet.ap2.api.util;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
 
 import java.util.function.UnaryOperator;
 
@@ -20,7 +21,7 @@ public interface StyleTransformer<Self extends StyleTransformer<Self>> {
      *
      * @param styleUpdater the style updater
      */
-    default Self styled(UnaryOperator<Style> styleUpdater) {
+    default Self withStyle(UnaryOperator<Style> styleUpdater) {
         this.setStyle(styleUpdater.apply(this.getStyle()));
         return (Self) this;
     }
@@ -32,7 +33,7 @@ public interface StyleTransformer<Self extends StyleTransformer<Self>> {
      *
      * @param styleOverride the style that provides definitions for absent definitions in the title text's style
      */
-    default Self fillStyle(Style styleOverride) {
+    default Self withStyle(Style styleOverride) {
         this.setStyle(styleOverride.applyTo(this.getStyle()));
         return (Self) this;
     }
@@ -42,7 +43,7 @@ public interface StyleTransformer<Self extends StyleTransformer<Self>> {
      *
      * @param formattings an array of formattings
      */
-    default Self formatted(ChatFormatting... formattings) {
+    default Self withStyle(ChatFormatting... formattings) {
         this.setStyle(this.getStyle().applyFormats(formattings));
         return (Self) this;
     }
@@ -52,8 +53,28 @@ public interface StyleTransformer<Self extends StyleTransformer<Self>> {
      *
      * @param formatting a formatting
      */
-    default Self formatted(ChatFormatting formatting) {
+    default Self withStyle(ChatFormatting formatting) {
         this.setStyle(this.getStyle().applyFormat(formatting));
+        return (Self) this;
+    }
+
+    /**
+     * Set the color of the style.
+     *
+     * @param color The packed color int.
+     */
+    default Self withColor(int color) {
+        this.setStyle(this.getStyle().withColor(color));
+        return (Self) this;
+    }
+
+    /**
+     * Set the color of the style.
+     *
+     * @param color The text color.
+     */
+    default Self withColor(TextColor color) {
+        this.setStyle(this.getStyle().withColor(color));
         return (Self) this;
     }
 }

@@ -46,7 +46,7 @@ public interface Challenge {
         controller.setBillboardMode(Display.BillboardConstraints.CENTER);
         controller.setTransformation(new Transformation(new Matrix4f().scale(3)));
         controller.setPosition(pos);
-        controller.setText(translations.translateText(key).formatted(ChatFormatting.GREEN));
+        controller.setText(translations.translateText(key).withStyle(ChatFormatting.GREEN));
         controller.setBrightness(new Brightness(15, 15));
 
         dynamicEntities.spawn(label);

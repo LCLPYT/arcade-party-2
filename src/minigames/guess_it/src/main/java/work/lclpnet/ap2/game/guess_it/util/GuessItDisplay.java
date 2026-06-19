@@ -4,7 +4,7 @@ import com.mojang.math.Transformation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Display;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.item.ItemStack;
 import org.joml.Matrix4f;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
@@ -24,7 +24,7 @@ public class GuessItDisplay {
     }
 
     public void displayItem(ItemStack stack) {
-        var display = new Display.ItemDisplay(EntityType.ITEM_DISPLAY, world);
+        var display = new Display.ItemDisplay(EntityTypes.ITEM_DISPLAY, world);
 
         DisplayEntityAccess.setItemStack(display, stack);
         DisplayEntityAccess.setBillboardMode(display, Display.BillboardConstraints.CENTER);

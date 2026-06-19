@@ -50,9 +50,9 @@ class WinSequence<T, Ref : SubjectRef>(
         for (player in PlayerLookup.all(server)) {
             val msg = translations.translateText(player, "ap2.game.winner_is")
 
-            Title.get(player).title(Component.empty(), msg.formatted(ChatFormatting.DARK_GREEN), 5, 100, 5)
+            Title.get(player).title(Component.empty(), msg.withStyle(ChatFormatting.DARK_GREEN), 5, 100, 5)
 
-            player.sendSystemMessage(msg.formatted(ChatFormatting.GRAY))
+            player.sendSystemMessage(msg.withStyle(ChatFormatting.GRAY))
         }
 
         val hook = HookFactory.createArrayBacked(Runnable::class.java) { actions ->
@@ -126,7 +126,7 @@ class WinSequence<T, Ref : SubjectRef>(
 
     private fun announceWinner(winner: Ref) {
         val translations = gameHandle.translations
-        val won = translations.translateText("ap2.won").formatted(ChatFormatting.DARK_GREEN)
+        val won = translations.translateText("ap2.won").withStyle(ChatFormatting.DARK_GREEN)
 
         for (player in PlayerLookup.all(gameHandle.server)) {
             val ref = refs.create(player)
@@ -153,9 +153,9 @@ class WinSequence<T, Ref : SubjectRef>(
 
     private fun announceDraw() {
         val translations = gameHandle.translations
-        val won = translations.translateText("ap2.won").formatted(ChatFormatting.DARK_GREEN)
+        val won = translations.translateText("ap2.won").withStyle(ChatFormatting.DARK_GREEN)
 
-        val nobody = translations.translateText("ap2.nobody").formatted(ChatFormatting.AQUA)
+        val nobody = translations.translateText("ap2.nobody").withStyle(ChatFormatting.AQUA)
 
         for (player in PlayerLookup.all(gameHandle.server)) {
             playLoseSound(player)
@@ -168,11 +168,11 @@ class WinSequence<T, Ref : SubjectRef>(
 
         val teams = winners.winningSubjects.iterator().next() is TeamRef
 
-        val gameOver = translations.translateText("ap2.game_over").formatted(ChatFormatting.AQUA)
-        val youWon = translations.translateText(if (teams) "ap2.your_team_won" else "ap2.you_won").formatted(
+        val gameOver = translations.translateText("ap2.game_over").withStyle(ChatFormatting.AQUA)
+        val youWon = translations.translateText(if (teams) "ap2.your_team_won" else "ap2.you_won").withStyle(
             ChatFormatting.DARK_GREEN
         )
-        val youLost = translations.translateText(if (teams) "ap2.your_team_lost" else "ap2.you_lost").formatted(
+        val youLost = translations.translateText(if (teams) "ap2.your_team_lost" else "ap2.you_lost").withStyle(
             ChatFormatting.DARK_RED
         )
 
@@ -229,7 +229,7 @@ class WinSequence<T, Ref : SubjectRef>(
 
         return translations.translateText(player, "ap2.view_stats")
             .append(" ↗")
-            .styled { style -> style
+            .withStyle { style -> style
                 .applyFormat(ChatFormatting.AQUA)
                 .withHoverEvent(HoverEvent.ShowText(translations.translateText(player, "ap2.view_stats.click")))
                 .withClickEvent(ClickEvent.Custom(SessionStatsRecorder.SHOW_SUMMARY, Optional.of(nbt)))

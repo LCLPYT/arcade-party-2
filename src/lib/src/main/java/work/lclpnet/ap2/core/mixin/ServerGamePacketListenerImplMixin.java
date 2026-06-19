@@ -13,7 +13,7 @@ import work.lclpnet.ap2.core.hook.SpectatePlayerCallback;
 public class ServerGamePacketListenerImplMixin {
 
     @WrapOperation(
-            method = "handleSpectateEntity",
+            method = "handleSpectatorAction",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/server/level/ServerPlayer;setCamera(Lnet/minecraft/world/entity/Entity;)V"

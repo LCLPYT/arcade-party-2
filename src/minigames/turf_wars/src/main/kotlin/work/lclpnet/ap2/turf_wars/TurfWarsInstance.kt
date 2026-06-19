@@ -36,7 +36,7 @@ import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.TeamEliminationGameInstance
 import work.lclpnet.ap2.game.kit.KitHandler
 import work.lclpnet.ap2.game.kit.hasKitEquipped
-import work.lclpnet.ap2.game.team.getWoolBlock
+import work.lclpnet.ap2.game.team.woolBlock
 import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.game.util.useOldCombat
 import work.lclpnet.ap2.game.util.useSurvivalMode
@@ -136,7 +136,7 @@ class TurfWarsInstance(
         changePhase(Build)
 
         translate("phase.build.hint")
-            .formatted(ChatFormatting.AQUA)
+            .withStyle(ChatFormatting.AQUA)
             .sendTo(players())
 
         registerProtection()
@@ -358,7 +358,7 @@ class TurfWarsInstance(
         blocksPerKill = blocks
 
         translate("speed_up", blocks)
-            .formatted(ChatFormatting.GOLD)
+            .withStyle(ChatFormatting.GOLD)
             .sendTo(players())
 
         playSound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 0.5f, 1.5f)
@@ -372,7 +372,7 @@ class TurfWarsInstance(
                 "eliminated_for_camping",
                 team.key().getDisplayName(gameHandle.translations),
                 TimeHelper.formatTime(gameHandle.translations, CAMP_ELIMINATION_SECONDS)
-            ).formatted(ChatFormatting.GRAY)
+            ).withStyle(ChatFormatting.GRAY)
                 .sendTo(allPlayers())
         }
 
@@ -539,7 +539,7 @@ class TurfWarsInstance(
 
         if (key !is DyeTeamKey) return null
 
-        return key.getWoolBlock()
+        return key.woolBlock()
     }
 
     fun placeBlock(player: ServerPlayer, pos: BlockPos): Boolean {
@@ -598,7 +598,7 @@ class TurfWarsInstance(
             duration
         ).whenDone { changePhase(nextPhase) }
 
-        translate(titleKey).formatted(ChatFormatting.GREEN).acceptEach(players()) { player, text ->
+        translate(titleKey).withStyle(ChatFormatting.GREEN).acceptEach(players()) { player, text ->
             Title.get(player).title(Component.empty(), text)
         }
 

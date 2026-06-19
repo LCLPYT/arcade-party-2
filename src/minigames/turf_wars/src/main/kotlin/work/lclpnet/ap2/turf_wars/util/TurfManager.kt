@@ -8,7 +8,7 @@ import work.lclpnet.ap2.api.game.team.DyeTeamKey
 import work.lclpnet.ap2.api.game.team.TeamKey
 import work.lclpnet.ap2.ext.mc.setBlocks
 import work.lclpnet.ap2.game.team.DyeBlockManager
-import work.lclpnet.ap2.game.team.getStainedGlassBlock
+import work.lclpnet.ap2.game.team.stainedGlassBlock
 import work.lclpnet.ap2.impl.util.debug.DebugController
 import work.lclpnet.ap2.turf_wars.DEBUG_TURF
 import work.lclpnet.gaco.ds.BlockBox
@@ -122,7 +122,7 @@ class TurfManager(
                 val box = turfs[index].bounds ?: return@forEachIndexed
 
                 controller.renderer().ifPresent { renderer ->
-                    renderer.box(box, teamKey.getStainedGlassBlock().defaultBlockState())
+                    renderer.box(box, teamKey.stainedGlassBlock().defaultBlockState())
                 }
             }
         }

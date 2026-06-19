@@ -17,6 +17,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.border.WorldBorder
 import net.minecraft.world.level.dimension.end.EnderDragonFight
 import net.minecraft.world.level.gamerules.GameRules
+import net.minecraft.world.phys.Vec3
 import work.lclpnet.ap2.api.stats.CommonStats.BlocksPlaced
 import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
 import work.lclpnet.ap2.api.stats.CommonStats.Kills
@@ -140,7 +141,7 @@ class PillarBattleInstance(
                 type.disallow(config) { entity, block ->
                     if (entity is ServerPlayer && outOfBounds(block)) {
                         val msg = translations.translateText(entity, "out_of_bounds")
-                            .formatted(ChatFormatting.RED)
+                            .withStyle(ChatFormatting.RED)
                         entity.sendOverlayMessage(msg)
                         ServerPlayerAccess.playSoundToPlayer(entity, SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.BLOCKS, 0f, 0.5f)
                         return@disallow true
@@ -273,14 +274,14 @@ class PillarBattleInstance(
         }
 
         translate("border_shrinking")
-            .formatted(ChatFormatting.RED)
+            .withStyle(ChatFormatting.RED)
             .sendTo(players())
     }
 
     private fun removeBlocks() {
         val pillars = pillars ?: return
 
-        val center = pillars.center.center
+        val center = Vec3.atCenterOf(pillars.center)
         val radius = BORDER_MIN_SIZE / 2f + 2
 
         val min = BlockPos.containing(center.x - radius, level.minY.toDouble(), center.z - radius)
@@ -366,7 +367,7 @@ class PillarBattleInstance(
             warning.lastWarning = timestamp
 
             val msg = translations.translateText(player, "border_warn")
-                .styled { it.withColor(0xff0000).withBold(true) }
+                .withStyle { it.withColor(0xff0000).withBold(true) }
 
             player.sendOverlayMessage(msg)
             ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.HOSTILE, 0.3f, 0.5f)

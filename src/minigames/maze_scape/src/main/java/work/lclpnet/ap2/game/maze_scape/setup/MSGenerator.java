@@ -178,7 +178,7 @@ public class MSGenerator {
         }
 
         if (DEBUG_PITS) {
-            debugger.parent().visualizeStructureMask(oriented.piece().pit(), oriented.pos(), oriented.transformation(), Blocks.RED_STAINED_GLASS.defaultBlockState());
+            debugger.parent().visualizeStructureMask(oriented.piece().pit(), oriented.pos(), oriented.transformation(), Blocks.STAINED_GLASS.red().defaultBlockState());
         }
 
         return true;

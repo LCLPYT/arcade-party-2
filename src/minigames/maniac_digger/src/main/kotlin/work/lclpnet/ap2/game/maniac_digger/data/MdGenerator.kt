@@ -11,7 +11,6 @@ import net.minecraft.world.phys.Vec3
 import org.json.JSONArray
 import org.slf4j.Logger
 import work.lclpnet.ap2.impl.map.MapUtil
-import work.lclpnet.ap2.impl.util.BlockHelper
 import work.lclpnet.ap2.impl.util.structure.StructureUtil
 import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.gaco.ds.WeightedList
@@ -68,7 +67,7 @@ class MdGenerator(
                 GLASS.defaultBlockState()
             } else {
                 val color = colors.removeAt(random.nextInt(colors.size))
-                BlockHelper.getStainedGlass(color).defaultBlockState()
+                STAINED_GLASS.pick(color).defaultBlockState()
             }
 
             StructureUtil.placeStructureFast(StructureUtil.replace(structure, MdPipePlan.WALL_MATERIAL, wallMaterial), world, offset)
@@ -272,9 +271,9 @@ class MdGenerator(
         add(RED_SAND.defaultBlockState(), common)
         add(PRISMARINE.defaultBlockState(), common)
         add(SMOOTH_BASALT.defaultBlockState(), common)
-        add(MAGENTA_CONCRETE_POWDER.defaultBlockState(), common)
-        add(WHITE_CONCRETE_POWDER.defaultBlockState(), common)
-        add(LIME_CONCRETE_POWDER.defaultBlockState(), common)
+        add(CONCRETE_POWDER.magenta.defaultBlockState(), common)
+        add(CONCRETE_POWDER.white.defaultBlockState(), common)
+        add(CONCRETE_POWDER.lime.defaultBlockState(), common)
         add(COARSE_DIRT.defaultBlockState(), common)
         add(CLAY.defaultBlockState(), common)
         add(GRAVEL.defaultBlockState(), common)
@@ -298,8 +297,8 @@ class MdGenerator(
         add(BAMBOO_MOSAIC.defaultBlockState(), uncommon)
         add(CHISELED_RED_SANDSTONE.defaultBlockState(), uncommon)
         add(PRISMARINE_BRICKS.defaultBlockState(), uncommon)
-        add(WAXED_COPPER_GRATE.defaultBlockState(), uncommon)
-        add(WEATHERED_CUT_COPPER.defaultBlockState(), uncommon)
+        add(COPPER_GRATE.waxed.unaffected.defaultBlockState(), uncommon)
+        add(CUT_COPPER.weathering.weathered.defaultBlockState(), uncommon)
         add(PURPUR_BLOCK.defaultBlockState(), uncommon)
         add(CHISELED_BOOKSHELF.defaultBlockState(), uncommon)
         add(SLIME_BLOCK.defaultBlockState(), uncommon)

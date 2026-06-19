@@ -1,52 +1,49 @@
 package work.lclpnet.ap2.api.game.team;
 
-import net.minecraft.ChatFormatting;
+import net.minecraft.world.scores.TeamColor;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.impl.util.ColorUtil;
 
 import java.util.Locale;
-import java.util.Optional;
 
 public enum DyeTeamKey implements TeamKey {
 
-    WHITE(ChatFormatting.WHITE),
-    LIGHT_GRAY(ChatFormatting.GRAY),
-    DARK_GRAY(ChatFormatting.DARK_GRAY),
-    BLACK(ChatFormatting.BLACK),
+    WHITE(TeamColor.WHITE),
+    LIGHT_GRAY(TeamColor.GRAY),
+    DARK_GRAY(TeamColor.DARK_GRAY),
+    BLACK(TeamColor.BLACK),
     BROWN(0x603b1f),
-    RED(ChatFormatting.RED),
+    RED(TeamColor.RED),
     ORANGE(0xe16100),
-    YELLOW(ChatFormatting.YELLOW),
-    LIME(ChatFormatting.GREEN),
-    DARK_GREEN(ChatFormatting.DARK_GREEN),
+    YELLOW(TeamColor.YELLOW),
+    LIME(TeamColor.GREEN),
+    DARK_GREEN(TeamColor.DARK_GREEN),
     CYAN(0x157788),
     LIGHT_BLUE(0x2389c7),
-    BLUE(ChatFormatting.BLUE),
+    BLUE(TeamColor.BLUE),
     PURPLE(0x65209d),
     MAGENTA(0xaa31a0),
     PINK(0xd6658f);
 
     private final int color;
-    private final ChatFormatting formatting;
+    private final TeamColor teamColor;
 
-    DyeTeamKey(ChatFormatting formatting) {
-        this.color = Optional.ofNullable(formatting.getColor()).orElse(0x000000);
-        this.formatting = formatting;
+    DyeTeamKey(TeamColor color) {
+        this.color = color.rgb();
+        this.teamColor = color;
     }
 
     DyeTeamKey(int color) {
         this.color = color;
-        this.formatting = closestFormatting(color);
+        this.teamColor = closestTeamColor(color);
     }
 
-    private ChatFormatting closestFormatting(int color) {
+    private TeamColor closestTeamColor(int color) {
         double minDist = Double.POSITIVE_INFINITY;
-        ChatFormatting closest = null;
+        TeamColor closest = null;
 
-        for (ChatFormatting formatting : ChatFormatting.values()) {
-            Integer colorValue = formatting.getColor();
-
-            if (colorValue == null) continue;
+        for (TeamColor formatting : TeamColor.values()) {
+            int colorValue = teamColor.rgb();
 
             double dist = ColorUtil.squaredDistance(color, colorValue);
 
@@ -74,8 +71,8 @@ public enum DyeTeamKey implements TeamKey {
     }
 
     @Override
-    public ChatFormatting formatting() {
-        return formatting;
+    public TeamColor teamColor() {
+        return teamColor;
     }
 
     public static @Nullable DyeTeamKey byId(String id) {

@@ -11,7 +11,7 @@ import work.lclpnet.kibu.title.Title
 
 fun MiniGameHandle.sendGo(player: ServerPlayer) {
     val text = translations.translateText("ap2.go")
-        .formatted(ChatFormatting.RED)
+        .withStyle(ChatFormatting.RED)
         .translateFor(player)
 
     Title.get(player).title(text, Component.empty(), 5, 20, 5)

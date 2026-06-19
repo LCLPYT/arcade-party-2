@@ -11,7 +11,7 @@ import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.BossEvent
 import net.minecraft.world.damagesource.DamageTypes
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.item.FallingBlockEntity
 import net.minecraft.world.level.block.AnvilBlock
 import net.minecraft.world.level.block.Blocks
@@ -204,7 +204,7 @@ class AnvilFallInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
         val randomDirection = directions[random.nextInt(directions.size)]
         val state = Blocks.ANVIL.defaultBlockState().setValue(AnvilBlock.FACING, randomDirection)
 
-        val anvil = FallingBlockEntity(EntityType.FALLING_BLOCK, level)
+        val anvil = FallingBlockEntity(EntityTypes.FALLING_BLOCK, level)
         anvil.setPosRaw(pos.x + 0.5, pos.y.toDouble(), pos.z + 0.5)
         anvil.isSilent = true
         anvil.time = 1

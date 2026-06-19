@@ -103,7 +103,7 @@ public class ArcadePartyFactory implements GameFactory {
                 new OptionVoting<>(
                         player -> {
                             var stack = new ItemStack(Items.PAPER);
-                            stack.set(DataComponents.ITEM_NAME, gameVotingName.translateFor(player).formatted(AQUA));
+                            stack.set(DataComponents.ITEM_NAME, gameVotingName.translateFor(player).withStyle(AQUA));
                             return stack;
                         },
                         gameVotingName::translateFor,

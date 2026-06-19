@@ -30,8 +30,8 @@ public class BlockCountShapeManager<S extends BlockShape & BlockShape.WithHeight
     private void registerShapes() {
         final int maxRadius = min(stage.height() / 2, stage.radius());
         final int maxSquareRadius = (int) floor(sin(PI * 0.25) * stage.radius());
-        final Vec3 center = stage.center().getCenter();
-        final Vec3 origin = stage.origin().getCenter();
+        final Vec3 center = Vec3.atCenterOf(stage.center());
+        final Vec3 origin = Vec3.atCenterOf(stage.origin());
 
         register("cuboid", () -> {
             final int minRadius = 4;

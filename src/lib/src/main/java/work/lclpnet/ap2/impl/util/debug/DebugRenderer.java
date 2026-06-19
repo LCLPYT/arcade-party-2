@@ -100,12 +100,12 @@ public class DebugRenderer {
 
     private Model crossModel(BlockState state) {
         Model baseModel = modelManager.getModel(Models.CROSS).orElseThrow();
-        return TemplateModel.replace(baseModel, Blocks.RED_CONCRETE.defaultBlockState(), state);
+        return TemplateModel.replace(baseModel, Blocks.CONCRETE.red().defaultBlockState(), state);
     }
 
     private Model arrowModel(BlockState state) {
         Model baseModel = modelManager.getModel(Models.ARROW).orElseThrow();
-        return TemplateModel.replace(baseModel, Blocks.LIME_CONCRETE.defaultBlockState(), state);
+        return TemplateModel.replace(baseModel, Blocks.CONCRETE.lime().defaultBlockState(), state);
     }
 
     public Object3d arrow(double x, double y, double z, double angleYRad, double scale, BlockState state) {
@@ -133,7 +133,7 @@ public class DebugRenderer {
     }
 
     public void arrow(double x, double y, double z, double dx, double dy, double dz, double scale, BlockState state) {
-        var model = TemplateModel.replace(arrowModel(state), Blocks.LIME_CONCRETE.defaultBlockState(), state);
+        var model = TemplateModel.replace(arrowModel(state), Blocks.CONCRETE.lime().defaultBlockState(), state);
 
         Object3d marker = model.createInstance(scene);
         marker.position.set(0, 0, 0.5);

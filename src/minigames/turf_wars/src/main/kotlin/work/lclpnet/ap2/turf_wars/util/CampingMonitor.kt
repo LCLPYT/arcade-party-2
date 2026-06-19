@@ -75,7 +75,7 @@ class CampingMonitor(
 
     private fun warn(team: Team, remaining: Int) {
         gameHandle.translations.translateText("camp_warning", remaining)
-            .formatted(ChatFormatting.RED)
+            .withStyle(ChatFormatting.RED)
             .sendTo(team.players)
 
         for (player in team.players) {

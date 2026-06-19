@@ -228,7 +228,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
         List<BlockBox> gate = jumpAndRun.startGates();
         ServerLevel world = jumpAndRun.world();
 
-        BlockState state = Blocks.WHITE_STAINED_GLASS.defaultBlockState();
+        BlockState state = Blocks.STAINED_GLASS.white().defaultBlockState();
 
         for (BlockBox box : gate) {
             for (BlockPos pos : box) {
@@ -284,7 +284,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
             ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.BELL_BLOCK, SoundSource.BLOCKS, 1f, 1.7f);
 
             var msg = translations.translateText(player, "assistance")
-                    .formatted(ChatFormatting.GRAY);
+                    .withStyle(ChatFormatting.GRAY);
 
             player.sendSystemMessage(msg);
         }
@@ -346,7 +346,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
         String key = reached ? "completed_room" : "last_not_completed";
 
         player.sendSystemMessage(getGameHandle().getTranslations().translateText(player, key, styled("#" + room, ChatFormatting.YELLOW))
-                .formatted(ChatFormatting.GREEN));
+                .withStyle(ChatFormatting.GREEN));
 
         bossBar.setArgument(player, 0, styled(room, YELLOW));
 
@@ -389,7 +389,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
 
         ServerLevel world = jumpAndRun.world();
 
-        getGameHandle().getTranslations().translateText("next_segment_wait").formatted(GRAY)
+        getGameHandle().getTranslations().translateText("next_segment_wait").withStyle(GRAY)
                 .sendTo(PlayerLookup.level(world));
 
         SoundHelper.playSound(world, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.5f, 2f);
@@ -438,7 +438,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
     }
 
     private void nextSegment() {
-        getGameHandle().getTranslations().translateText("ap2.go").formatted(RED).acceptEach(PlayerLookup.level(jumpAndRun.world()), (player, text) -> {
+        getGameHandle().getTranslations().translateText("ap2.go").withStyle(RED).acceptEach(PlayerLookup.level(jumpAndRun.world()), (player, text) -> {
             Title.get(player).title(text, Component.empty(), 5, 20, 5);
             ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.CHICKEN_EGG, SoundSource.PLAYERS, 1, 0);
         });

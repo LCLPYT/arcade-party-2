@@ -37,7 +37,7 @@ class ButtonMissDetector(
 
     /** Updates the find/miss state of every given player against the current button. */
     fun update(buttonPos: BlockPos, players: Iterable<ServerPlayer>) {
-        val buttonCenter = buttonPos.center
+        val buttonCenter = Vec3.atCenterOf(buttonPos)
 
         for (player in players) {
             val distance = player.eyePosition.distanceTo(buttonCenter)

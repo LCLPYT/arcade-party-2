@@ -5,7 +5,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.DyeColor
-import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.Blocks.CONCRETE
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import org.slf4j.Logger
@@ -103,8 +103,14 @@ class SegmentedPath(private val segments: List<Segment>) {
 
     private fun debugSegments(participants: Participants, scheduler: TaskScheduler, debugController: DebugController) {
         val colors = arrayOf(
-            Blocks.YELLOW_CONCRETE, Blocks.LIME_CONCRETE, Blocks.LIGHT_BLUE_CONCRETE, Blocks.RED_CONCRETE,
-            Blocks.ORANGE_CONCRETE, Blocks.GREEN_CONCRETE, Blocks.MAGENTA_CONCRETE, Blocks.CYAN_CONCRETE
+            CONCRETE.yellow,
+            CONCRETE.lime,
+            CONCRETE.lightBlue,
+            CONCRETE.red,
+            CONCRETE.orange,
+            CONCRETE.green,
+            CONCRETE.magenta,
+            CONCRETE.cyan
         )
 
         for (segment in segments) {

@@ -1,12 +1,12 @@
 package work.lclpnet.ap2.game.maze_scape.setup;
 
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.network.chat.Component;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.phys.Vec3;
 import net.minecraft.core.Vec3i;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.model.Model;
 import work.lclpnet.ap2.api.util.model.ModelManager;
@@ -40,7 +40,7 @@ public class MSDebugController {
         spawnMarker = modelManager.getModel(Models.CROSS).orElseThrow();
         Model arrow = modelManager.getModel(Models.ARROW).orElseThrow();
         childMarker = arrow;
-        passageMarker = TemplateModel.replace(arrow, Blocks.LIME_CONCRETE.defaultBlockState(), Blocks.LIGHT_BLUE_CONCRETE.defaultBlockState());
+        passageMarker = TemplateModel.replace(arrow, Blocks.CONCRETE.lime().defaultBlockState(), Blocks.CONCRETE.lightBlue().defaultBlockState());
     }
 
     public void visualizeSpawn(OrientedStructurePiece oriented) {
@@ -157,7 +157,7 @@ public class MSDebugController {
 
         struct.passagesOf(struct.graph().root()).forEach(queue::offer);
 
-        BlockState material = Blocks.BLUE_CONCRETE.defaultBlockState();
+        BlockState material = Blocks.CONCRETE.blue().defaultBlockState();
 
         while (!queue.isEmpty()) {
             Passage passage = queue.poll();
@@ -174,7 +174,7 @@ public class MSDebugController {
     @Nullable
     public Object3d visualizePassage(Passage from, Passage to, BlockState material) {
         return parent.renderer()
-                .map(renderer -> renderer.line(to.pos().getBottomCenter(), from.pos().getBottomCenter(), 0.03125, material))
+                .map(renderer -> renderer.line(Vec3.atBottomCenterOf(to.pos()), Vec3.atBottomCenterOf(from.pos()), 0.03125, material))
                 .orElse(null);
     }
 }

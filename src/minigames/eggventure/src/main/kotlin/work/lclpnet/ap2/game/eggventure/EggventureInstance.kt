@@ -16,7 +16,7 @@ import net.minecraft.sounds.SoundSource
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.Display
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.item.Items
@@ -24,8 +24,9 @@ import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.SkullBlock
-import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.level.block.entity.BlockEntityTypes
 import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.criteria.ObjectiveCriteria
@@ -84,7 +85,7 @@ fun isEasterEgg(world: ServerLevel, pos: BlockPos): Boolean {
 
     if (!state.isOf(Blocks.PLAYER_HEAD) && !state.isOf(Blocks.PLAYER_WALL_HEAD)) return false
 
-    val skull = world.getBlockEntity(pos, BlockEntityType.SKULL).orElse(null) ?: return false
+    val skull = world.getBlockEntity(pos, BlockEntityTypes.SKULL).orElse(null) ?: return false
 
     return CustomNbt.get(skull.components(), NBT_CODEC).orElse(false) ?: false
 }
@@ -221,7 +222,7 @@ class EggventureInstance(
             }) continue
 
             gameHandle.translations.translateText("no_eggs_nearby")
-                .formatted(ChatFormatting.RED)
+                .withStyle(ChatFormatting.RED)
                 .sendTo(player, true)
         }
     }
@@ -242,9 +243,9 @@ class EggventureInstance(
 
             val rotation = state.getValueOrElse(SkullBlock.ROTATION, 0)
 
-            val display = Display.ItemDisplay(EntityType.ITEM_DISPLAY, level)
+            val display = Display.ItemDisplay(EntityTypes.ITEM_DISPLAY, level)
             display.itemStack = stack
-            display.setPos(pos.center)
+            display.setPos(Vec3.atCenterOf(pos))
             display.setTransformation(Transformation(Matrix4f().rotateY((rotation / -8f * PI).toFloat())))
             display.setGlowingTag(true)
 
@@ -252,7 +253,7 @@ class EggventureInstance(
         }
 
         gameHandle.translations.translateText("eggs_left", styled(remainingPositions.size, ChatFormatting.YELLOW))
-            .formatted(ChatFormatting.GREEN)
+            .withStyle(ChatFormatting.GREEN)
             .sendTo(gameHandle.participants, true)
     }
 

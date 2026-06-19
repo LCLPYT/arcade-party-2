@@ -116,7 +116,7 @@ public class VisibilityHandler {
             case INVISIBLE -> RED;
         };
 
-        var status = translations.translateText(player, "ap2.game.visibility.%s".formatted(name)).formatted(formatting);
+        var status = translations.translateText(player, "ap2.game.visibility.%s".formatted(name)).withStyle(formatting);
 
         return translations.translateText(player, "ap2.game.visibility", status)
                 .setStyle(Style.EMPTY.withItalic(false).withColor(DARK_GREEN));

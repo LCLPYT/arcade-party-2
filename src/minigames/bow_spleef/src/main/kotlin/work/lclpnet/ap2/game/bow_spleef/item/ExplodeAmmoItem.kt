@@ -12,6 +12,7 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.ExplosionDamageCalculator
 import net.minecraft.world.level.Level
+import net.minecraft.world.phys.Vec3
 import work.lclpnet.ap2.core.hook.ProjectileShootCallback
 import work.lclpnet.ap2.game.bow_spleef.Impact
 import work.lclpnet.ap2.impl.game.item.SpecialItem
@@ -48,7 +49,7 @@ class ExplodeAmmoItem(private val impactHook: Hook<Impact>) : SpecialItem {
                 override fun getKnockbackMultiplier(entity: Entity) = 2f
             }
 
-            val pos = blockPos.above().center
+            val pos = Vec3.atCenterOf(blockPos.above())
 
             world.explode(
                 projectile,

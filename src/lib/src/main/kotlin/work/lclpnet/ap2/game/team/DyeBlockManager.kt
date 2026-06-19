@@ -18,20 +18,20 @@ class DyeBlockManager(val level: ServerLevel) {
 
     fun init(teams: Iterable<DyeTeamKey>) {
         val paintables: List<Paintable> = listOf(
-            Paintable(DyeTeamKey::getWoolBlock),
-            Paintable(DyeTeamKey::getCarpetBlock),
-            Paintable(DyeTeamKey::getConcreteBlock),
-            Paintable(DyeTeamKey::getConcretePowderBlock),
-            Paintable(DyeTeamKey::getTerracottaBlock),
-            Paintable(DyeTeamKey::getGlazedTerracottaBlock),
-            Paintable(DyeTeamKey::getStainedGlassBlock),
-            Paintable(DyeTeamKey::getStainedGlassPaneBlock),
-            Paintable(DyeTeamKey::getBedBlock),
-            Paintable(DyeTeamKey::getShulkerBoxBlock),
-            Paintable(DyeTeamKey::getCandleBlock),
-            Paintable(DyeTeamKey::getCandleCakeBlock),
-            Paintable(DyeTeamKey::getBannerBlock),
-            Paintable(DyeTeamKey::getWallBannerBlock),
+            Paintable(DyeTeamKey::woolBlock),
+            Paintable(DyeTeamKey::carpetBlock),
+            Paintable(DyeTeamKey::concreteBlock),
+            Paintable(DyeTeamKey::concretePowderBlock),
+            Paintable(DyeTeamKey::terracottaBlock),
+            Paintable(DyeTeamKey::glazedTerracottaBlock),
+            Paintable(DyeTeamKey::stainedGlassBlock),
+            Paintable(DyeTeamKey::stainedGlassPaneBlock),
+            Paintable(DyeTeamKey::bedBlock),
+            Paintable(DyeTeamKey::shulkerBoxBlock),
+            Paintable(DyeTeamKey::candleBlock),
+            Paintable(DyeTeamKey::candleCakeBlock),
+            Paintable(DyeTeamKey::bannerBlock),
+            Paintable(DyeTeamKey::wallBannerBlock),
         )
 
         for (paintable in paintables) {
