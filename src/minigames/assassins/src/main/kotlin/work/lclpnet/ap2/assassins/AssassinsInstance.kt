@@ -108,6 +108,7 @@ class AssassinsInstance(
     private var roundActive = false
     private var prepTimer: BossBarTimer? = null
     private var nextRoundTask: TaskHandle? = null
+    private var worldBorderDelayTask: TaskHandle? = null
 
     init {
         useOldCombat()
@@ -257,7 +258,7 @@ class AssassinsInstance(
         }
 
         wbConfig?.let { config ->
-            runAfter(WORLD_BORDER_SHRINK_START_DELAY) {
+            worldBorderDelayTask = runAfter(WORLD_BORDER_SHRINK_START_DELAY) {
                 val durationTicks = (config.maxRadius() / WORLD_BORDER_SHRINK_PER_SECOND * 20).toLong()
                 commons().startWorldBorderShrink(config, durationTicks, random.asJavaRandom())
             }
@@ -284,6 +285,9 @@ class AssassinsInstance(
 
         nextRoundTask?.cancel()
         nextRoundTask = null
+
+        worldBorderDelayTask?.cancel()
+        worldBorderDelayTask = null
 
         if (!winManager.gameOver) {
             startRound(initial = false)
