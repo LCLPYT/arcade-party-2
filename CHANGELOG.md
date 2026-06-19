@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.6.0](https://github.com/LCLPYT/arcade-party-2/compare/v0.5.0...v0.6.0) (2026-06-19)
+
+
+### Features
+
+* add Assassins minigame ([#281](https://github.com/LCLPYT/arcade-party-2/issues/281)) ([1b1b467](https://github.com/LCLPYT/arcade-party-2/commit/1b1b46740ae929625f84453465adf9746c815292))
+* add c2me and scalablelux to vastly speed up world gen ([ed537cd](https://github.com/LCLPYT/arcade-party-2/commit/ed537cdfe9d394766dbb4c0bf48f19c1f056e0de))
+* upgrade to Minecraft 26.2 ([43b78fc](https://github.com/LCLPYT/arcade-party-2/commit/43b78fc2e152a8a06b886ea70e97a5c2fa4f239e))
+
 ## [0.5.0](https://github.com/LCLPYT/arcade-party-2/compare/v0.4.0...v0.5.0) (2026-06-15)
 
 
