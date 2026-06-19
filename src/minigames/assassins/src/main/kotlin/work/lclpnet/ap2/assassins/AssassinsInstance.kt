@@ -71,7 +71,7 @@ private const val ITEM_COOLDOWN_TICKS = 20
 private const val WORLD_BORDER_SHRINK_PER_SECOND = 1.0
 private const val SPAWN_SPACING_DEFAULT = 10.0
 private val ARMOR_SLOTS = listOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)
-const val DEBUG_ALWAYS_GIVE_ITEM = true
+const val DEBUG_ALWAYS_GIVE_ITEM = false
 const val DEBUG_SPAWN_POSITIONS = false
 const val DEBUG_SCANNED_POSITIONS = false
 
