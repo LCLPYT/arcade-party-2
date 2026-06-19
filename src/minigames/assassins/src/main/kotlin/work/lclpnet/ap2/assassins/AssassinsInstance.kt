@@ -335,6 +335,8 @@ class AssassinsInstance(
             val stack = player.getItemInHand(hand)
             val type = AssassinsSpecialItem.byStack(stack) ?: return@registerWith InteractionResult.PASS
 
+            if (!type.customUseLogic) return@registerWith InteractionResult.PASS
+
             val cooldowns = player.cooldowns
 
             if (cooldowns.isOnCooldown(stack)) {
@@ -380,11 +382,15 @@ class AssassinsInstance(
                     player.playNotifySound(SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.5f, 0.5f)
                 })
             }
+
             AssassinsSpecialItem.JUMP_BOOST -> {
                 player.addEffect(MobEffectInstance(MobEffects.JUMP_BOOST, JUMP_BOOST_DURATION.inWholeTicks.toInt(), 4, false, false, true))
                 player.playNotifySound(SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.6f, 1.6f)
             }
+
             AssassinsSpecialItem.REVEAL_ASSASSIN -> revealAssassin(player)
+
+            else -> {}
         }
     }
 
@@ -454,8 +460,10 @@ class AssassinsInstance(
     private fun giveSpecialItem(player: ServerPlayer, type: AssassinsSpecialItem) {
         val stack = ItemStack(type.item)
 
-        stack.set(DataComponents.CUSTOM_NAME, gameHandle.translations.translateText(player, type.translationKey)
-            .setStyle(Style.EMPTY.withItalic(false).withColor(ChatFormatting.LIGHT_PURPLE)))
+        type.translationKey?.let { key ->
+            stack.set(DataComponents.ITEM_NAME, gameHandle.translations.translateText(player, key)
+                .setStyle(Style.EMPTY.withItalic(false).withColor(ChatFormatting.LIGHT_PURPLE)))
+        }
 
         player.inventory.setItem(4, stack)
     }

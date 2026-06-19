@@ -9,12 +9,17 @@ import kotlin.random.Random
 /**
  * A one-use reward item handed out at the start of the round after a player killed their target.
  */
-enum class AssassinsSpecialItem(val id: String, val item: Item) {
+enum class AssassinsSpecialItem(
+    val id: String?,
+    val item: Item,
+    val customUseLogic: Boolean = true,
+) {
     INVISIBILITY("invisibility", Items.FERMENTED_SPIDER_EYE),
     JUMP_BOOST("jump_boost", Items.RABBIT_FOOT),
-    REVEAL_ASSASSIN("reveal_assassin", Items.ENDER_EYE);
+    REVEAL_ASSASSIN("reveal_assassin", Items.ENDER_EYE),
+    ENDER_PEARL(null, Items.ENDER_PEARL, customUseLogic = false);
 
-    val translationKey: String get() = "item.$id"
+    val translationKey: String? get() = if (id != null) "item.$id" else null
 
     companion object {
 
