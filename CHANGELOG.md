@@ -1,5 +1,56 @@
 # Changelog
 
+## [0.5.0](https://github.com/LCLPYT/arcade-party-2/compare/v0.4.0...v0.5.0) (2026-06-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* add WinManager as required property of MiniGameInstance
+* introduce win manager composables
+* use kotlin duration instead of explicit unit primitives
+* add extension functions for timers, tasks and announcer
+
+* add extension functions for timers, tasks and announcer ([2c1ce9f](https://github.com/LCLPYT/arcade-party-2/commit/2c1ce9f3044f9f3a0111de6edd21d3337a06ab7c))
+* add WinManager as required property of MiniGameInstance ([f535b2d](https://github.com/LCLPYT/arcade-party-2/commit/f535b2d23fcb7724c2e4dadd522ddb3ae0ef1f96))
+* introduce win manager composables ([f67b874](https://github.com/LCLPYT/arcade-party-2/commit/f67b87417f0a6abf7fcd83e6e56d412d56eb6abc))
+* use kotlin duration instead of explicit unit primitives ([e5efd5d](https://github.com/LCLPYT/arcade-party-2/commit/e5efd5d47c4732799eb577d118a2485ebd019768))
+
+
+### Features
+
+* add mirror hop stats ([697bd0a](https://github.com/LCLPYT/arcade-party-2/commit/697bd0ac636214db1b7cd0d5e3aeb53748563766))
+* add mirror hop stats ([0925a72](https://github.com/LCLPYT/arcade-party-2/commit/0925a7261f46145bf3408906c4314d5a9c87dafe))
+* add rapid runner minigame ([4ad57cb](https://github.com/LCLPYT/arcade-party-2/commit/4ad57cb045cd61cc308f5437d3b8aabf6078e603))
+* add RapidRunner setup ([91f0e06](https://github.com/LCLPYT/arcade-party-2/commit/91f0e060672a0a36c5a9e453c7f24c375d81c463))
+* add seed display for generated maps ([37961d0](https://github.com/LCLPYT/arcade-party-2/commit/37961d0f9123beefedae85d7360ec1b51bc50089))
+* add snowball fight stats ([3babc15](https://github.com/LCLPYT/arcade-party-2/commit/3babc15f41bc34d13584491d73b6f7006175dd43))
+* add snowball fight stats ([da07940](https://github.com/LCLPYT/arcade-party-2/commit/da079406eaf2288d2186adeb4d97fe8cf85faeae))
+* implement scoreboard data sync for fractional numbers ([c27cad6](https://github.com/LCLPYT/arcade-party-2/commit/c27cad6d0a87ab490fa441fbe599f4af8c78fd88))
+* implement spawn finder for random levels ([562b11b](https://github.com/LCLPYT/arcade-party-2/commit/562b11b4632b0eeb8475409bf8217317ad97164f))
+* make the weapon holder in weapon swap a bit faster than other players ([0615710](https://github.com/LCLPYT/arcade-party-2/commit/0615710e8bf9267a71f793d432025376a6e316a6))
+* make the weapon holder in weapon swap a bit faster than other players ([469ef3e](https://github.com/LCLPYT/arcade-party-2/commit/469ef3eabe203fa52b234fd32ec754f452c6f93a))
+* mark the weapon holder red in weapon swap ([01c2fa6](https://github.com/LCLPYT/arcade-party-2/commit/01c2fa6206205144b89da50f41d0bccadf8c50ec))
+* mark the weapon holder red in weapon swap ([93c93ed](https://github.com/LCLPYT/arcade-party-2/commit/93c93ed202ad0a08a8a970b3f7e352b526f52f2e))
+* merge data result into ranking section in stats display ([e706fdc](https://github.com/LCLPYT/arcade-party-2/commit/e706fdc96e4820492721de174396c22dfdc77b32))
+* temporary overworld level generation ([9a8030c](https://github.com/LCLPYT/arcade-party-2/commit/9a8030c33d716bffc342380381d49b09c74404ea))
+
+
+### Bug Fixes
+
+* always apply visibility of vehicle entities affected by the visibility handler ([6581371](https://github.com/LCLPYT/arcade-party-2/commit/6581371ef37cc392cae98f6b7e367763a340ba3d))
+* correct mimicry stats ordering and remove button click type distinction ([810470e](https://github.com/LCLPYT/arcade-party-2/commit/810470e705b449b8cd8de9edcb339c0fd0842ee1))
+* correct mimicry stats ordering and remove button click type distinction ([ce4322d](https://github.com/LCLPYT/arcade-party-2/commit/ce4322dd48d98d355eed1a449d1e3f647869020f))
+* dispatch initial score events for scoreboard stat sync again ([80ec65e](https://github.com/LCLPYT/arcade-party-2/commit/80ec65e75519685ead013bc1ec9af28023d22c09))
+* game end in weapon swap now lets the actually remaining players win ([42d7b83](https://github.com/LCLPYT/arcade-party-2/commit/42d7b8328e992674f215de7ddb0167d475baccbe))
+* game end in weapon swap now lets the actually remaining players win ([7ad87be](https://github.com/LCLPYT/arcade-party-2/commit/7ad87be50fa6da54279b2340e6b2dcf997e6c6e7))
+* locator bar not being disabled ([5205313](https://github.com/LCLPYT/arcade-party-2/commit/5205313d4a7ab657daff4ec6293dc2c959354af4))
+* paintball factory setup ([12f23a1](https://github.com/LCLPYT/arcade-party-2/commit/12f23a1947f6c1d6505997c0c3a6453dc7f61ade))
+* player stuck in loading screen when respawning immediately ([6e27509](https://github.com/LCLPYT/arcade-party-2/commit/6e27509688a887b5c21dd53f610d1f893d03ae21))
+* pvp tournament match start ([6daae45](https://github.com/LCLPYT/arcade-party-2/commit/6daae450d8584d9cadada5c376f1be7388245d36))
+* rapid runner translation keys ([27faea2](https://github.com/LCLPYT/arcade-party-2/commit/27faea29168430233ac2d36523675a74fb456f02))
+* visibility toggle sometimes still showing players ([c69c298](https://github.com/LCLPYT/arcade-party-2/commit/c69c2989b0e58f6acb000aead2d268e254efd16e))
+* win manager data container init order ([0a6cabf](https://github.com/LCLPYT/arcade-party-2/commit/0a6cabfa105b5e25950daa41cd765d5f70ca3f04))
+
 ## [0.4.0](https://github.com/LCLPYT/arcade-party-2/compare/v0.3.0...v0.4.0) (2026-06-07)
 
 
