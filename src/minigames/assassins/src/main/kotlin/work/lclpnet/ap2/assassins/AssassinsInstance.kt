@@ -68,7 +68,7 @@ private val JUMP_BOOST_DURATION = 8.seconds
 private val REVEAL_DURATION = 6.seconds
 private val WORLD_BORDER_SHRINK_START_DELAY = 45.seconds
 private const val ITEM_COOLDOWN_TICKS = 20
-private const val WORLD_BORDER_SHRINK_PER_SECOND = 1.5
+private const val WORLD_BORDER_SHRINK_PER_SECOND = 1.0
 private const val SPAWN_SPACING_DEFAULT = 10.0
 private val ARMOR_SLOTS = listOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)
 const val DEBUG_ALWAYS_GIVE_ITEM = true
@@ -364,10 +364,18 @@ class AssassinsInstance(
                     player.setItemSlot(slot, ItemStack.EMPTY)
                 }
 
+                // the red target outline would still expose the invisible player to their hunter, so hide it.
+                // a reveal-assassin glow is set on a different viewer (the player's own target), so it stays unaffected.
+                val hunter = targets.hunterOf(player)
+                hunter?.let { glow.clearGlow(it, player) }
+
                 roundTasks.add(runAfter(INVISIBILITY_DURATION) {
                     for ((slot, stack) in storedArmor) {
                         player.setItemSlot(slot, stack)
                     }
+
+                    // restore the target outline for the hunter once the invisibility wore off
+                    hunter?.let { glow.setGlow(it, player, TARGET_COLOR) }
 
                     player.playNotifySound(SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.5f, 0.5f)
                 })
