@@ -1,13 +1,8 @@
-package work.lclpnet.ap2.api.game.team;
+package work.lclpnet.ap2.game.team
 
-import net.minecraft.server.level.ServerPlayer;
-import org.jetbrains.annotations.NotNull;
+import net.minecraft.server.level.ServerPlayer
 
-import java.util.Map;
-import java.util.Set;
+fun interface TeamPartitioner {
 
-public interface TeamPartitioner {
-
-    @NotNull
-    Map<ServerPlayer, Team> splitIntoTeams(Set<ServerPlayer> players, Set<Team> teams);
+    fun splitIntoTeams(players: Set<ServerPlayer>, teams: Set<Team>): Map<ServerPlayer, Team>
 }

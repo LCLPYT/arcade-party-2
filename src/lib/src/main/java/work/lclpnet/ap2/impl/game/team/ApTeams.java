@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.impl.game.team;
 
-import work.lclpnet.ap2.api.game.team.TeamKey;
+import work.lclpnet.ap2.game.team.TeamKey;
 import work.lclpnet.gaco.ds.IndexedSet;
 
 import java.util.*;
@@ -37,7 +37,7 @@ public class ApTeams {
         while (selected.size() < amount) {
             T next = available.stream()
                     .max(Comparator.comparingDouble(candidate -> selected.stream()
-                            .mapToDouble(sel -> squaredDistance(candidate.color(), sel.color()))
+                            .mapToDouble(sel -> squaredDistance(candidate.getColor(), sel.getColor()))
                             .min()
                             .orElse(0)
                     ))

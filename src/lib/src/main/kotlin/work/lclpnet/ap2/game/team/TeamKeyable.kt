@@ -1,6 +1,5 @@
-package work.lclpnet.ap2.api.game.team;
+package work.lclpnet.ap2.game.team
 
-public interface TeamKeyable {
-
-    TeamKey key();
+interface TeamKeyable {
+    val key: TeamKey
 }

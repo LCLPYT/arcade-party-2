@@ -6,7 +6,8 @@ import net.minecraft.server.level.ServerPlayer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
-import work.lclpnet.ap2.api.game.team.Team;
+import work.lclpnet.ap2.game.team.Team;
+import work.lclpnet.ap2.game.team.UniformTeamPartitioner;
 
 import java.util.Map;
 import java.util.Random;

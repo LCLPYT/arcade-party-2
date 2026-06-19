@@ -1,10 +1,8 @@
-package work.lclpnet.ap2.api.game.team;
+package work.lclpnet.ap2.game.team
 
-import org.jetbrains.annotations.Nullable;
-import work.lclpnet.kibu.hook.util.PositionRotation;
+import work.lclpnet.kibu.hook.util.PositionRotation
 
-public interface TeamSpawnAccess {
+fun interface TeamSpawnAccess {
 
-    @Nullable
-    PositionRotation getSpawn(Team team);
+    fun getSpawn(team: Team): PositionRotation?
 }

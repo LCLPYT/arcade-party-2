@@ -18,12 +18,12 @@ import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
-import work.lclpnet.ap2.api.game.team.Team
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.game.paintball.util.PaintManager
 import work.lclpnet.ap2.game.paintball.util.PaintballTeam
 import work.lclpnet.ap2.game.paintball.util.PaintballTeams
 import work.lclpnet.ap2.game.player.Participants
+import work.lclpnet.ap2.game.team.Team
 import work.lclpnet.ap2.impl.game.item.SpecialItem
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext
 import work.lclpnet.ap2.impl.util.ParticleHelper.spawnParticleFor
@@ -101,16 +101,15 @@ class TripWireItem(
         val placeVolume = 0.5f
         val placePitch = 1.3f
 
-        teams.teamManager.getTeam(player).ifPresentOrElse(
-            { team ->
-                playSoundFor(SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, pos, activateVolume, activatePitch, team.players)
-                playSoundFor(SoundEvents.IRON_PLACE, SoundSource.PLAYERS, pos, placeVolume, placePitch, team.players)
-            },
-            {
-                playSound(player, SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, pos, activateVolume, activatePitch)
-                playSound(player, SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, pos, placeVolume, placePitch)
-            }
-        )
+        val team = teams.teamManager.getTeam(player)
+
+        if (team != null) {
+            playSoundFor(SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, pos, activateVolume, activatePitch, team.players)
+            playSoundFor(SoundEvents.IRON_PLACE, SoundSource.PLAYERS, pos, placeVolume, placePitch, team.players)
+        } else {
+            playSound(player, SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, pos, activateVolume, activatePitch)
+            playSound(player, SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, pos, placeVolume, placePitch)
+        }
 
         return InteractionResult.SUCCESS_SERVER
     }
@@ -134,9 +133,9 @@ class TripWireItem(
         fun tick(): Boolean {
             val player = participants.getParticipant(ownerUuid).orElse(null) ?: return true
 
-            val team: Team = teams.teamManager.getTeam(player).orElse(null) ?: return true
+            val team: Team = teams.teamManager.getTeam(player) ?: return true
 
-            val paintballTeam: PaintballTeam = teams.teamOf(player).orElse(null) ?: return true
+            val paintballTeam: PaintballTeam = teams.teamOf(player) ?: return true
 
             if (timer++ % DISPLAY_LASER_TICKS == 0) {
                 showTo(team)
@@ -149,7 +148,7 @@ class TripWireItem(
             var d = 0.0
 
             while (d <= length) {
-                val effect = DustParticleOptions(team.key().color(), DISPLAY_LASER_SIZE)
+                val effect = DustParticleOptions(team.key.color, DISPLAY_LASER_SIZE)
 
                 spawnParticleFor(effect, pos.x + dir.x * d, pos.y + dir.y * d, pos.z + dir.z * d,
                     1, 0.0, 0.0, 0.0, 0.0, team.players)
@@ -162,7 +161,7 @@ class TripWireItem(
             val hit = raycastEntities(world, pos.add(dir.scale(TRIPWIRE_MARGIN)), dir, length) { entity ->
                 entity is ServerPlayer
                     && participants.isParticipating(entity)
-                    && teams.teamOf(entity).map { it.key() != ownerTeam.key() }.orElse(false) ?: false
+                    && teams.teamOf(entity)?.let { it.key != ownerTeam.key } ?: false
             }
 
             if (hit.type != HitResult.Type.ENTITY || hit !is EntityHitResult) return false

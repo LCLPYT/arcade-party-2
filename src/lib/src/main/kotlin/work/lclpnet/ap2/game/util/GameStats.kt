@@ -1,7 +1,6 @@
 package work.lclpnet.ap2.game.util
 
 import net.minecraft.server.level.ServerPlayer
-import work.lclpnet.ap2.api.game.team.Team
 import work.lclpnet.ap2.api.stats.FFAStatsManager
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.stats.TeamStatsManager
@@ -9,6 +8,7 @@ import work.lclpnet.ap2.game.MiniGameInstance
 import work.lclpnet.ap2.game.data.ScoreListenerView
 import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.data.type.TeamRef
+import work.lclpnet.ap2.game.team.Team
 
 /**
  * Creates a [work.lclpnet.ap2.api.stats.StatsManager] that tracks the score given by the game int score data container and additional stats.
@@ -87,7 +87,7 @@ fun MiniGameInstance.useTeamStats(
         teamStats.distinctBy { it.id }.toSet(),
         playerStats.distinctBy { it.id }.toSet()
     ) { team ->
-        TeamRef(team.key(), gameHandle.translations)
+        TeamRef(team.key, gameHandle.translations)
     }
 
     winManager.setStatsManager(manager)

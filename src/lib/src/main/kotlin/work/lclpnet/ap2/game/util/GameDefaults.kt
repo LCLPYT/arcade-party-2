@@ -6,8 +6,6 @@ import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.level.GameType
 import net.minecraft.world.scores.Objective
 import work.lclpnet.ap2.api.game.data.DataContainer
-import work.lclpnet.ap2.api.game.team.Team
-import work.lclpnet.ap2.api.game.team.TeamManager
 import work.lclpnet.ap2.api.stats.LevelInfo
 import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective
 import work.lclpnet.ap2.ext.allPlayers
@@ -23,6 +21,8 @@ import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.data.type.TeamGameResult
 import work.lclpnet.ap2.game.data.type.TeamRef
 import work.lclpnet.ap2.game.player.ParticipantListener
+import work.lclpnet.ap2.game.team.Team
+import work.lclpnet.ap2.game.team.TeamManager
 import work.lclpnet.ap2.impl.util.scoreboard.TranslatedScoreboardObjective
 import work.lclpnet.combatctl.impl.CombatStyles
 import work.lclpnet.gaco.collisions.movement.TickMovementDetector
@@ -117,16 +117,16 @@ fun MiniGameInstance.useTeamWinManager(
 ): WinManager<Team, TeamRef> {
     val winData: WinManager.Data<Team, TeamRef> = WinManager.Data(
         data,
-        { player: ServerPlayer -> teamManager.getTeam(player).orElse(null) },
-        { team: Team -> TeamRef(team.key(), gameHandle.translations) },
-        { player: ServerPlayer ->
-            teamManager.getTeam(player).map { team ->
-                TeamRef(team.key(), gameHandle.translations)
-            }.orElse(null)
+        { player -> teamManager.getTeam(player) },
+        { team -> TeamRef(team.key, gameHandle.translations) },
+        { player ->
+            teamManager.getTeam(player)?.let { team ->
+                TeamRef(team.key, gameHandle.translations)
+            }
         },
         { dataContainer ->
             TeamGameResult(dataContainer) { ref ->
-                teamManager.getTeam(ref).orElse(null)
+                teamManager.getTeam(ref)
             }
         }
     )

@@ -1,12 +1,9 @@
-package work.lclpnet.ap2.api.game.team;
+package work.lclpnet.ap2.game.team
 
-import net.minecraft.world.scores.TeamColor;
-import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.impl.util.ColorUtil;
+import net.minecraft.world.scores.TeamColor
+import work.lclpnet.ap2.impl.util.ColorUtil
 
-import java.util.Locale;
-
-public enum DyeTeamKey implements TeamKey {
+enum class DyeTeamKey : TeamKey {
 
     WHITE(TeamColor.WHITE),
     LIGHT_GRAY(TeamColor.GRAY),
@@ -25,61 +22,45 @@ public enum DyeTeamKey implements TeamKey {
     MAGENTA(0xaa31a0),
     PINK(0xd6658f);
 
-    private final int color;
-    private final TeamColor teamColor;
+    override val color: Int
+    override val teamColor: TeamColor
 
-    DyeTeamKey(TeamColor color) {
-        this.color = color.rgb();
-        this.teamColor = color;
+    constructor(color: TeamColor) {
+        this.color = color.rgb()
+        this.teamColor = color
     }
 
-    DyeTeamKey(int color) {
-        this.color = color;
-        this.teamColor = closestTeamColor(color);
+    constructor(color: Int) {
+        this.color = color
+        this.teamColor = closestTeamColor(color)
     }
 
-    private TeamColor closestTeamColor(int color) {
-        double minDist = Double.POSITIVE_INFINITY;
-        TeamColor closest = null;
+    private fun closestTeamColor(color: Int): TeamColor {
+        var minDist = Double.POSITIVE_INFINITY
+        var closest: TeamColor? = null
 
-        for (TeamColor formatting : TeamColor.values()) {
-            int colorValue = formatting.rgb();
+        for (formatting in TeamColor.entries) {
+            val colorValue = formatting.rgb()
 
-            double dist = ColorUtil.squaredDistance(color, colorValue);
+            val dist = ColorUtil.squaredDistance(color, colorValue)
 
             if (dist < minDist) {
-                minDist = dist;
-                closest = formatting;
+                minDist = dist
+                closest = formatting
             }
         }
 
-        if (closest == null) {
-            throw new IllegalStateException("No matching color found");
-        }
-
-        return closest;
+        return checkNotNull(closest) { "No matching color found" }
     }
 
-    @Override
-    public String id() {
-        return name().toLowerCase(Locale.ROOT);
-    }
+    override val id: String = name.lowercase()
 
-    @Override
-    public int color() {
-        return color;
-    }
+    companion object {
 
-    @Override
-    public TeamColor teamColor() {
-        return teamColor;
-    }
-
-    public static @Nullable DyeTeamKey byId(String id) {
-        try {
-            return DyeTeamKey.valueOf(id.toUpperCase(Locale.ROOT));
-        } catch (IllegalArgumentException _) {
-            return null;
+        fun byId(id: String): DyeTeamKey? = try {
+            valueOf(id.uppercase())
+        } catch (_: IllegalArgumentException) {
+            null
         }
     }
 }

@@ -1,39 +1,35 @@
-package work.lclpnet.ap2.api.game.team;
+package work.lclpnet.ap2.game.team
 
-import net.minecraft.server.level.ServerPlayer;
-import work.lclpnet.ap2.game.player.Participants;
+import net.minecraft.server.level.ServerPlayer
+import work.lclpnet.ap2.game.player.Participants
 
-import java.util.Set;
-import java.util.stream.Collectors;
-
-public interface Team extends TeamKeyable {
-
+interface Team : TeamKeyable {
     /**
      * Get all online players in this team.
      * Those players may or may not be participating.
      * @return A set of players in this team. Modifications on the set do not affect the actual team members.
      */
-    Set<ServerPlayer> getPlayers();
+    val players: Set<ServerPlayer>
 
-    void addPlayer(ServerPlayer player);
+    fun addPlayer(player: ServerPlayer)
 
-    void removePlayer(ServerPlayer player);
+    fun removePlayer(player: ServerPlayer)
 
     /**
      * Get the total amount of players in this team.
-     * This is not necessarily equal to <code>getPlayers().size()</code>, as offline players are also counted.
+     * This is not necessarily equal to `getPlayers().size()`, as offline players are also counted.
      * @return The total amount of players, online or offline, in this team.
      */
-    int getPlayerCount();
+    val playerCount: Int
 
     /**
      * Get all participating players in this team.
-     * @param participants The {@link Participants} manager.
+     * @param participants The [Participants] manager.
      * @return A set of participants of this team. Modifications on the set do not affect the actual team participants.
      */
-    default Set<ServerPlayer> getParticipatingPlayers(Participants participants) {
-        return getPlayers().stream()
-                .filter(participants::isParticipating)
-                .collect(Collectors.toUnmodifiableSet());
+    fun getParticipatingPlayers(participants: Participants): Set<ServerPlayer> {
+        return players
+            .filter { participants.isParticipating(it) }
+            .toSet()
     }
 }

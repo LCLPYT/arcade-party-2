@@ -1,23 +1,21 @@
-package work.lclpnet.ap2.api.game.team;
+package work.lclpnet.ap2.game.team
 
-import net.minecraft.world.scores.TeamColor;
-import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.kibu.translate.text.TranslatedText;
+import net.minecraft.world.scores.TeamColor
+import work.lclpnet.kibu.translate.Translations
+import work.lclpnet.kibu.translate.text.TranslatedText
 
-public sealed interface TeamKey permits DyeTeamKey {
+interface TeamKey {
 
-    String id();
+    val id: String
 
-    int color();
+    val color: Int
 
-    TeamColor teamColor();
+    val teamColor: TeamColor
 
-    default String getTranslationKey() {
-        return "ap2.team." + id();
-    }
+    val translationKey: String
+        get() = "ap2.team.$id"
 
-    default TranslatedText getDisplayName(Translations translations) {
-        return translations.translateText(getTranslationKey())
-                .withStyle(style -> style.withColor(color()));
-    }
+    fun getDisplayName(translations: Translations): TranslatedText =
+        translations.translateText(this.translationKey)
+            .withColor(color)
 }

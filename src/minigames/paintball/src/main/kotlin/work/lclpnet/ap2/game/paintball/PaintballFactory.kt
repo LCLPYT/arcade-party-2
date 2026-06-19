@@ -4,13 +4,13 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
-import work.lclpnet.ap2.api.game.team.DyeTeamKey
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.game.MiniGameFactory
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.MiniGameInstance
 import work.lclpnet.ap2.game.paintball.util.PaintManager
 import work.lclpnet.ap2.game.paintball.util.PaintballTeams
+import work.lclpnet.ap2.game.team.DyeTeamKey
 import work.lclpnet.ap2.game.util.createTeamManager
 import work.lclpnet.ap2.game.util.openRandomMap
 import work.lclpnet.ap2.impl.map.MapUtil
@@ -64,7 +64,7 @@ class PaintballFactory : MiniGameFactory {
 
                 if (!state.isOf(paintable.blockFor(color))) continue
 
-                paintManager.replace(pos, state, paintable, team.key())
+                paintManager.replace(pos, state, paintable, team.key)
             }
         }
     }

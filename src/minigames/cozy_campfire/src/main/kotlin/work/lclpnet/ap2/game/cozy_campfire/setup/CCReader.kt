@@ -6,7 +6,7 @@ import net.minecraft.server.level.ServerLevel
 import org.json.JSONArray
 import org.json.JSONObject
 import org.slf4j.Logger
-import work.lclpnet.ap2.api.game.team.Team
+import work.lclpnet.ap2.game.team.Team
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.game.map.GameMap
@@ -16,7 +16,7 @@ import work.lclpnet.kibu.structure.BlockStructure
 import work.lclpnet.kibu.world.mixin.MinecraftServerAccessor
 import java.io.IOException
 import java.nio.file.Files
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.CompletableFuture
 
 class CCReader(
@@ -38,7 +38,7 @@ class CCReader(
         val bases = mutableMapOf<Team, CCBase>()
 
         for (team in teams) {
-            val id = team.key().id()
+            val id = team.key.id
             val mapId: Identifier = map.descriptor.identifier
 
             if (!basesJson.has(id)) {

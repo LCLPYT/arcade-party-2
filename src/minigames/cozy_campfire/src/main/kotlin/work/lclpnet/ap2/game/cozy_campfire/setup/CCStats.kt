@@ -1,8 +1,6 @@
 package work.lclpnet.ap2.game.cozy_campfire.setup
 
 import net.minecraft.server.level.ServerPlayer
-import work.lclpnet.ap2.api.game.team.Team
-import work.lclpnet.ap2.api.game.team.TeamManager
 import work.lclpnet.ap2.api.stats.CommonStats.DamageDealt
 import work.lclpnet.ap2.api.stats.CommonStats.Deaths
 import work.lclpnet.ap2.api.stats.CommonStats.KillDeathRatio
@@ -11,6 +9,8 @@ import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.stats.StatUnits
 import work.lclpnet.ap2.api.stats.TeamStatsManager
 import work.lclpnet.ap2.ext.gainKill
+import work.lclpnet.ap2.game.team.Team
+import work.lclpnet.ap2.game.team.TeamManager
 import work.lclpnet.kibu.translate.Translations
 
 val FuelAdded = Stat("fuel_added", 0f, unit = StatUnits.Seconds)
@@ -34,13 +34,13 @@ class CCStats(
     fun addDamage(attacker: ServerPlayer, amount: Float) {
         stats.players.modify(attacker, DamageDealt) { it + amount }
 
-        teamManager.getTeam(attacker).ifPresent { team ->
+        teamManager.getTeam(attacker)?.let { team ->
             stats.teams.modify(team, DamageDealt) { it + amount }
         }
     }
 
     fun onKillGained(killer: ServerPlayer) {
-        val killerTeam = teamManager.getTeam(killer).orElse(null) ?: return
+        val killerTeam = teamManager.getTeam(killer) ?: return
 
         gainKill(killer, stats.players, translations)
         stats.teams.increment(killerTeam, Kills)
@@ -49,7 +49,7 @@ class CCStats(
     }
 
     fun onDeath(victim: ServerPlayer) {
-        val victimTeam = teamManager.getTeam(victim).orElse(null) ?: return
+        val victimTeam = teamManager.getTeam(victim) ?: return
 
         stats.players.increment(victim, Deaths)
         stats.teams.increment(victimTeam, Deaths)

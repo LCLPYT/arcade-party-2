@@ -1,6 +1,5 @@
-package work.lclpnet.ap2.api.game.team;
+package work.lclpnet.ap2.game.team
 
-public interface TeamEliminatedListener {
-
-    void teamEliminated(Team team);
+fun interface TeamEliminatedListener {
+    fun teamEliminated(team: Team)
 }

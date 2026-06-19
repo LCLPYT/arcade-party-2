@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.impl.util;
 
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.api.game.team.Team;
+import work.lclpnet.ap2.game.team.Team;
 
 import java.util.HashMap;
 import java.util.Map;

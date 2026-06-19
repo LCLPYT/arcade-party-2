@@ -1,33 +1,18 @@
-package work.lclpnet.ap2.api.game.team;
+package work.lclpnet.ap2.game.team
 
-import net.minecraft.server.level.ServerPlayer;
-import org.jetbrains.annotations.NotNull;
-import work.lclpnet.ap2.impl.game.team.UniformTeamPartitioner;
+import net.minecraft.server.level.ServerPlayer
+import java.util.*
 
-import java.util.Map;
-import java.util.Random;
+interface TeamConfig {
 
-public interface TeamConfig {
+    val partitioner: TeamPartitioner
 
-    @NotNull
-    TeamPartitioner getPartitioner();
+    val mapping: Map<ServerPlayer, TeamKey>
 
-    @NotNull
-    Map<ServerPlayer, TeamKey> getMapping();
-
-    static TeamConfig defaultConfig() {
-        UniformTeamPartitioner partitioner = new UniformTeamPartitioner(new Random());
-
-        return new TeamConfig() {
-            @Override
-            public @NotNull TeamPartitioner getPartitioner() {
-                return partitioner;
-            }
-
-            @Override
-            public @NotNull Map<ServerPlayer, TeamKey> getMapping() {
-                return Map.of();
-            }
-        };
+    companion object {
+        val DEFAULT_CONFIG = object : TeamConfig {
+            override val partitioner = UniformTeamPartitioner(Random())
+            override val mapping = emptyMap<ServerPlayer, TeamKey>()
+        }
     }
 }
