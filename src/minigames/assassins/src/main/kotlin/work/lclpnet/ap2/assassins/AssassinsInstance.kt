@@ -42,7 +42,6 @@ import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor
 import work.lclpnet.ap2.impl.util.ParticleHelper
 import work.lclpnet.ap2.impl.util.SoundHelper
-import work.lclpnet.ap2.impl.util.VanishManager
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
 import work.lclpnet.ap2.impl.util.world.*
 import work.lclpnet.gaco.ds.BlockBox
@@ -71,7 +70,8 @@ private val WORLD_BORDER_SHRINK_START_DELAY = 45.seconds
 private const val ITEM_COOLDOWN_TICKS = 20
 private const val WORLD_BORDER_SHRINK_PER_SECOND = 1.5
 private const val SPAWN_SPACING_DEFAULT = 10.0
-const val DEBUG_ALWAYS_GIVE_ITEM = false
+private val ARMOR_SLOTS = listOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)
+const val DEBUG_ALWAYS_GIVE_ITEM = true
 const val DEBUG_SPAWN_POSITIONS = false
 const val DEBUG_SCANNED_POSITIONS = false
 
@@ -92,13 +92,11 @@ class AssassinsInstance(
     private val spawnSpacing = map.properties.optNumber("spawn-spacing", SPAWN_SPACING_DEFAULT).toDouble()
     private val targets = AssassinTargets()
     private val glow = AssassinGlowHandler(gameHandle.server, gameHandle.scoreboardManager)
-    private val vanishManager = VanishManager.setup(gameHandle)
     private val movementBlocker = SimpleMovementBlocker(gameHandle.rootScheduler).also {
         it.setModifySpeedAttribute(false)
     }
     private val colors = HashMap<UUID, DyeColor>()
     private val rewarded = HashSet<UUID>()
-    private val revealTasks = mutableListOf<TaskHandle>()
     private val stats = useFFAStats(winManager, listOf(
         Kills, DamageDealt, DamageReceived, ItemsUsed, DistanceMoved
     ))
@@ -107,8 +105,7 @@ class AssassinsInstance(
     private var wbConfig: GameCommons.WorldBorderConfig? = null
     private var roundActive = false
     private var prepTimer: BossBarTimer? = null
-    private var nextRoundTask: TaskHandle? = null
-    private var worldBorderDelayTask: TaskHandle? = null
+    private val roundTasks = mutableListOf<TaskHandle>()
 
     init {
         useOldCombat()
@@ -193,8 +190,6 @@ class AssassinsInstance(
         roundActive = false
         prepTimer?.stop()
         prepTimer = null
-        revealTasks.forEach(TaskHandle::cancel)
-        revealTasks.clear()
         glow.clearAll()
 
         resetWorldBorder()
@@ -258,10 +253,10 @@ class AssassinsInstance(
         }
 
         wbConfig?.let { config ->
-            worldBorderDelayTask = runAfter(WORLD_BORDER_SHRINK_START_DELAY) {
+            roundTasks.add(runAfter(WORLD_BORDER_SHRINK_START_DELAY) {
                 val durationTicks = (config.maxRadius() / WORLD_BORDER_SHRINK_PER_SECOND * 20).toLong()
                 commons().startWorldBorderShrink(config, durationTicks, random.asJavaRandom())
-            }
+            })
         }
     }
 
@@ -287,11 +282,11 @@ class AssassinsInstance(
         targets.remove(player)
         glow.removePlayer(player)
 
-        nextRoundTask?.cancel()
-        nextRoundTask = null
+        for (task in roundTasks) {
+            task.cancel()
+        }
 
-        worldBorderDelayTask?.cancel()
-        worldBorderDelayTask = null
+        roundTasks.clear()
 
         if (!winManager.gameOver) {
             startRound(initial = false)
@@ -359,13 +354,23 @@ class AssassinsInstance(
     private fun useSpecialItem(player: ServerPlayer, type: AssassinsSpecialItem) {
         when (type) {
             AssassinsSpecialItem.INVISIBILITY -> {
-                vanishManager.vanish(player)
                 player.addEffect(MobEffectInstance(MobEffects.INVISIBILITY, INVISIBILITY_DURATION.inWholeTicks.toInt(), 0, false, false, true))
                 player.playNotifySound(SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.6f, 1.2f)
-                runAfter(INVISIBILITY_DURATION) {
-                    vanishManager.show(player)
-                    player.playNotifySound(SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.5f, 0.5f)
+
+                // armor stays visible despite the invisibility effect, so temporarily unequip it
+                val storedArmor = ARMOR_SLOTS.associateWith { player.getItemBySlot(it).copy() }
+
+                for (slot in ARMOR_SLOTS) {
+                    player.setItemSlot(slot, ItemStack.EMPTY)
                 }
+
+                roundTasks.add(runAfter(INVISIBILITY_DURATION) {
+                    for ((slot, stack) in storedArmor) {
+                        player.setItemSlot(slot, stack)
+                    }
+
+                    player.playNotifySound(SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.5f, 0.5f)
+                })
             }
             AssassinsSpecialItem.JUMP_BOOST -> {
                 player.addEffect(MobEffectInstance(MobEffects.JUMP_BOOST, JUMP_BOOST_DURATION.inWholeTicks.toInt(), 4, false, false, true))
@@ -381,16 +386,14 @@ class AssassinsInstance(
         glow.setGlow(viewer, hunter, ASSASSIN_COLOR)
         viewer.playNotifySound(SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.6f, 0.8f)
 
-        val task = runAfter(REVEAL_DURATION) {
+        roundTasks.add(runAfter(REVEAL_DURATION) {
             // restore the target glow if the hunter also happens to be this viewer's target (two players left)
             if (targets.targetOf(viewer) === hunter) {
                 glow.setGlow(viewer, hunter, TARGET_COLOR)
             } else {
                 glow.clearGlow(viewer, hunter)
             }
-        }
-
-        revealTasks.add(task)
+        })
     }
 
     private fun sendOffTargetFeedback(attacker: ServerPlayer) {
@@ -423,7 +426,6 @@ class AssassinsInstance(
     private fun resetPlayer(player: ServerPlayer) {
         player.inventory.clearContent()
         player.removeAllEffects()
-        vanishManager.show(player)
         player.health = player.maxHealth
         player.foodData.foodLevel = 20
     }
