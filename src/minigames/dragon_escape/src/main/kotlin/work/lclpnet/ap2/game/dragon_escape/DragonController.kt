@@ -3,19 +3,19 @@ package work.lclpnet.ap2.game.dragon_escape
 import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.LevelEvent
-import net.minecraft.world.phys.Vec3
 import work.lclpnet.ap2.core.type.ApEnderDragon
 import work.lclpnet.ap2.impl.util.math.MathUtil
 import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.gaco.math.SplinePath
 import work.lclpnet.kibu.scheduler.api.TaskScheduler
-import java.util.Random
-import kotlin.math.*
+import java.util.*
+import kotlin.math.max
+import kotlin.math.min
 
 private const val MIN_SPEED_BPS = 1.6
 private const val MAX_SPEED_BPS = 16.0
@@ -35,7 +35,7 @@ class DragonController(
     private var speedBps: Double = 0.0
 
     fun spawnDragon() {
-        val dragon = EnderDragon(EntityType.ENDER_DRAGON, world)
+        val dragon = EnderDragon(EntityTypes.ENDER_DRAGON, world)
 
         @Suppress("KotlinConstantConditions")
         (dragon as ApEnderDragon).`ap2$setManuallyManaged`()

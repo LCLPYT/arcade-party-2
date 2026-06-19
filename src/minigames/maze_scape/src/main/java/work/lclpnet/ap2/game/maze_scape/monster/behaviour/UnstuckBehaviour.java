@@ -51,7 +51,7 @@ public class UnstuckBehaviour implements MonsterBehaviour {
             Vec3 pos = mob != null ? mob.position() : Vec3.ZERO;
 
             avgPosMarker = manager.debugController().parent().renderer()
-                    .map(renderer -> renderer.marker(pos.x, pos.y, pos.z, Blocks.GREEN_CONCRETE.defaultBlockState(), 0x00ff00))
+                    .map(renderer -> renderer.marker(pos.x, pos.y, pos.z, Blocks.CONCRETE.green().defaultBlockState(), 0x00ff00))
                     .orElse(null);
         }
     }
@@ -117,7 +117,7 @@ public class UnstuckBehaviour implements MonsterBehaviour {
 
         lastUnstuck = next;
 
-        teleport(mob, next.pos().getBottomCenter());
+        teleport(mob, Vec3.atBottomCenterOf(next.pos()));
     }
 
     static void teleport(Entity entity, Vec3 pos) {

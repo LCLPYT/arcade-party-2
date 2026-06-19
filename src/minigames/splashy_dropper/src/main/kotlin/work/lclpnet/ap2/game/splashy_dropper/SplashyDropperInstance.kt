@@ -118,7 +118,7 @@ class SplashyDropperInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
     private fun setupObjective() {
         val objective = gameHandle.scoreboardManager
             .translateObjective("score", "game.ap2.chicken_shooter.points")
-            .formatted(ChatFormatting.YELLOW, ChatFormatting.BOLD)
+            .withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD)
 
         useScoreboardStatsSync(data, objective)
         objective.setSlot(DisplaySlot.LIST)

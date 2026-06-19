@@ -63,7 +63,7 @@ class HeavyWeightItem : SpecialItem {
             world.sendParticles(ParticleTypes.FALLING_NECTAR, pos.x, pos.y + 1, pos.z, 100, 0.25, 0.5, 0.25, 1.0)
 
             ctx.translations().translateText("heavy_weighted")
-                .styled { it.withColor(0xff0000) }
+                .withColor(0xff0000)
                 .sendTo(player, true)
 
             ctx.scheduler().timeout(DURATION_TICKS) { ->

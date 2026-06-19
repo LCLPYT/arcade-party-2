@@ -10,7 +10,7 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.animal.frog.Frog
 import net.minecraft.world.entity.animal.frog.FrogVariant
 import net.minecraft.world.entity.vehicle.minecart.Minecart
@@ -227,7 +227,7 @@ class MusicalMinecartInstance(
             val msg = Component.literal("⚠ ")
                 .append(
                     translations.translateText(player, "deadline")
-                        .styled { s -> s.withColor(0xff0000).withBold(true) }
+                        .withStyle { s -> s.withColor(0xff0000).withBold(true) }
                 )
                 .append(" ⚠").withColor(0xffff00)
 
@@ -263,7 +263,7 @@ class MusicalMinecartInstance(
         for (i in 0 until total) {
             bounds.randomBlockPos(pos, random)
 
-            val minecart = Minecart(EntityType.MINECART, world)
+            val minecart = Minecart(EntityTypes.MINECART, world)
             minecart.setPosRaw(pos.x + 0.5, pos.y.toDouble(), pos.z + 0.5)
             minecart.isInvulnerable = true
 
@@ -277,7 +277,7 @@ class MusicalMinecartInstance(
     }
 
     private fun createDecoyEntity(world: ServerLevel, minecart: Minecart) {
-        val frog = Frog(EntityType.FROG, world)
+        val frog = Frog(EntityTypes.FROG, world)
         frog.setPos(minecart.position())
 
         val frogTypes = world.registryAccess().lookupOrThrow(Registries.FROG_VARIANT).asHolderIdMap()

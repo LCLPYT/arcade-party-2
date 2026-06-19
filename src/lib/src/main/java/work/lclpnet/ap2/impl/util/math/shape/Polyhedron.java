@@ -63,20 +63,20 @@ public interface Polyhedron extends Shape {
         if (renderer == null) return;
 
         for (Vec3 vertex : vertices()) {
-            renderer.marker(vertex, Blocks.RED_CONCRETE.defaultBlockState(), 0xff0000);
+            renderer.marker(vertex, Blocks.CONCRETE.red().defaultBlockState(), 0xff0000);
         }
 
         for (Face face : faces()) {
-            renderer.arrow(face.center(), face.normal(), Blocks.ORANGE_TERRACOTTA.defaultBlockState());
+            renderer.arrow(face.center(), face.normal(), Blocks.DYED_TERRACOTTA.orange().defaultBlockState());
 
             Vec3[] vertices = face.vertices();
 
             for (int i = 0; i < vertices.length; i++) {
-                renderer.line(vertices[i], vertices[(i + 1) % vertices.length], 0.1, Blocks.YELLOW_CONCRETE.defaultBlockState());
+                renderer.line(vertices[i], vertices[(i + 1) % vertices.length], 0.1, Blocks.CONCRETE.yellow().defaultBlockState());
             }
         }
 
-        renderer.box(bounds(), Blocks.RED_STAINED_GLASS.defaultBlockState());
+        renderer.box(bounds(), Blocks.STAINED_GLASS.red().defaultBlockState());
     }
 
     default Vec3[] normalize(Vec3[] vertices) {

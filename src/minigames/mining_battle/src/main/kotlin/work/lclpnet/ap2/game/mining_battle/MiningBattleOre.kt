@@ -142,7 +142,7 @@ class MiningBattleOre(
         ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.BELL_RESONATE, SoundSource.BLOCKS, 0.5f, 2f)
 
         val msg = gameHandle.translations.translateText(player, "haste")
-            .formatted(ChatFormatting.GREEN)
+            .withStyle(ChatFormatting.GREEN)
 
         player.sendSystemMessage(msg)
     }
@@ -153,14 +153,14 @@ class MiningBattleOre(
         val translations = gameHandle.translations
 
         val playerMsg = translations.translateText(player, "weakened")
-            .formatted(ChatFormatting.GREEN)
+            .withStyle(ChatFormatting.GREEN)
 
         player.sendSystemMessage(playerMsg)
 
         val otherMsg = translations.translateText(
             "weakened_by",
             styled(player.scoreboardName, ChatFormatting.YELLOW)
-        ).formatted(ChatFormatting.RED)
+        ).withStyle(ChatFormatting.RED)
 
         for (other in gameHandle.participants) {
             if (other === player || other.hasEffect(MobEffects.HASTE)) continue

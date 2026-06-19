@@ -46,7 +46,7 @@ fun MiniGameInstance.usePlayerDynamicTaskDisplay(
     val provider = gameHandle.bossBarProvider
 
     val bossBar = DynamicTranslatedPlayerBossBar(id, key, args, translations, provider)
-        .formatted(ChatFormatting.GREEN)
+        .withStyle(ChatFormatting.GREEN)
 
     bossBar.setColor(BossEvent.BossBarColor.GREEN)
     bossBar.setPercent(1f)

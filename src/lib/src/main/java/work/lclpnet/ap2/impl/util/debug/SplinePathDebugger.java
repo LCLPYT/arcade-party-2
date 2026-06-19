@@ -34,7 +34,7 @@ public class SplinePathDebugger {
     }
 
     public void renderPath(int samples) {
-        renderPath(samples, Blocks.YELLOW_CONCRETE.defaultBlockState());
+        renderPath(samples, Blocks.CONCRETE.yellow().defaultBlockState());
     }
 
     public void renderPath(int samples, BlockState pathColor) {
@@ -47,7 +47,7 @@ public class SplinePathDebugger {
         List<Vec3> keypoints = path.getKeypoints();
 
         for (Vec3 keypoint : keypoints) {
-            renderer.marker(keypoint, Blocks.ORANGE_CONCRETE.defaultBlockState(), 0xeeff00, 0.5f);
+            renderer.marker(keypoint, Blocks.CONCRETE.orange().defaultBlockState(), 0xeeff00, 0.5f);
         }
 
         Vec3 start = keypoints.getFirst();
@@ -81,7 +81,7 @@ public class SplinePathDebugger {
                 Vec3 right = dir.cross(Direction.UP.getUnitVec3());
                 Vec3 up = right.cross(dir);
 
-                renderer.arrow(start, dir, Blocks.LIME_TERRACOTTA.defaultBlockState());
+                renderer.arrow(start, dir, Blocks.DYED_TERRACOTTA.lime().defaultBlockState());
 
                 var label = Component.literal("(%.2f, %.2f)".formatted(MathUtil.yaw(dir), MathUtil.pitch(dir)));
                 renderer.text(start.add(up.scale(0.25)), label);
@@ -104,7 +104,7 @@ public class SplinePathDebugger {
 
         record Marker(Object3d obj, MutableInt color) {
             void changeColor(int color) {
-                if (this.color.getValue() == color) return;
+                if (this.color.get().intValue() == color) return;
 
                 this.color.setValue(color);
 
@@ -129,7 +129,7 @@ public class SplinePathDebugger {
                 color = ColorUtil.getRandomHsvColor(random, random.nextFloat(110, 360));
             }
 
-            Object3d obj = renderer.marker(pos, Blocks.RED_CONCRETE.defaultBlockState(), color);
+            Object3d obj = renderer.marker(pos, Blocks.CONCRETE.red().defaultBlockState(), color);
 
             for (Object3d o : obj.traverse()) {
                 if (o instanceof DisplayEntityObject<?> deo) {

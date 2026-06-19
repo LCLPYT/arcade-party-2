@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.assassins
 
-import net.minecraft.ChatFormatting
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket
 import net.minecraft.network.protocol.game.ClientboundSetPlayerTeamPacket
@@ -10,6 +9,7 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.server.network.ServerCommonPacketListenerImpl
 import net.minecraft.server.network.ServerGamePacketListenerImpl
 import net.minecraft.world.scores.PlayerTeam
+import net.minecraft.world.scores.TeamColor
 import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.kibu.access.entity.EntityAccess
 import work.lclpnet.kibu.access.network.packet.TeamS2CPacketAccess
@@ -39,7 +39,7 @@ class AssassinGlowHandler(
     private val teams = HashMap<UUID, PlayerTeam>()
 
     // viewer uuid -> (glowing entity id -> glow color)
-    private val glowFor = HashMap<UUID, MutableMap<Int, ChatFormatting>>()
+    private val glowFor = HashMap<UUID, MutableMap<Int, TeamColor>>()
 
     fun init(hooks: HookRegistrar, participants: Iterable<ServerPlayer>) {
         var index = 0
@@ -53,7 +53,7 @@ class AssassinGlowHandler(
         ServerSendPacketCallback.HOOK.registerWith(hooks, ::overridePacket)
     }
 
-    fun setGlow(viewer: ServerPlayer, target: ServerPlayer, color: ChatFormatting) {
+    fun setGlow(viewer: ServerPlayer, target: ServerPlayer, color: TeamColor) {
         val team = teams[target.uuid] ?: return
 
         glowFor.getOrPut(viewer.uuid) { HashMap() }[target.id] = color

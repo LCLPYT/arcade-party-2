@@ -1,15 +1,15 @@
 name = "mcserver-api-fabric"
-filename = "mcserver-api-fabric-0.9.3+26.1.2.jar"
+filename = "mcserver-api-fabric-0.9.3+26.2.jar"
 side = "both"
 
 [download]
-url = "https://github.com/LCLPYT/mcserver-api-fabric/releases/download/0.9.3%2B26.1.2/mcserver-api-fabric-0.9.3%2B26.1.2.jar"
+url = "https://github.com/LCLPYT/mcserver-api-fabric/releases/download/0.9.3%2B26.2/mcserver-api-fabric-0.9.3%2B26.2.jar"
 hash-format = "sha256"
-hash = "6d316f02345c1f873aa2e181ed1cdda7b858c5c8d125a566c95d2c9a4d915b32"
+hash = "9e5fe21ccdd5f9352f159490c30962c2bfe8e4e1b27311161afaf935921093d0"
 
 [update]
 [update.github]
-branch = "26.1"
+branch = "26.2"
 regex = "^.+(?<!-api|-dev|-dev-preshadow|-sources)\\.jar$"
 slug = "LCLPYT/mcserver-api-fabric"
-tag = "0.9.3+26.1.2"
+tag = "0.9.3+26.2"

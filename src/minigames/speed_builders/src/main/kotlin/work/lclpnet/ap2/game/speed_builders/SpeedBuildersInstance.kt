@@ -108,7 +108,7 @@ class SpeedBuildersInstance(
 
         if (fastMode) {
             translate("fast_mode")
-                .formatted(ChatFormatting.GOLD)
+                .withStyle(ChatFormatting.GOLD)
                 .sendTo(allPlayers())
         }
 
@@ -254,7 +254,7 @@ class SpeedBuildersInstance(
 
         val title = Component.literal(worst.scoreboardName).withStyle(ChatFormatting.AQUA)
         val subtitle = translate("will_eliminate")
-            .formatted(ChatFormatting.DARK_GREEN)
+            .withStyle(ChatFormatting.DARK_GREEN)
 
 
         for (player in PlayerLookup.all(server)) {

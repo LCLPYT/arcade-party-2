@@ -81,7 +81,7 @@ public class DebugPathCommand implements KibuCommand {
 
         // display new path
         int len = path.size() - 1;
-        BlockState material = Blocks.LIME_CONCRETE.defaultBlockState();
+        BlockState material = Blocks.CONCRETE.lime().defaultBlockState();
 
         for (int i = 0; i < len; i++) {
             Passage from = path.get(i);

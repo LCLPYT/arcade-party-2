@@ -12,6 +12,7 @@ import net.minecraft.world.entity.monster.EnderMan;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.ApConstants;
@@ -177,7 +178,7 @@ public class EndermanData implements MonsterData<EnderMan> {
         setScreaming(true);
         scaredTimer = SCARED_TICKS;
 
-        if (fleeTargetPos == null || visibilityChecker.isAnyoneLookingAt(mob, fleeTargetPos.getBottomCenter(), args.manager().participants())) {
+        if (fleeTargetPos == null || visibilityChecker.isAnyoneLookingAt(mob, Vec3.atBottomCenterOf(fleeTargetPos), args.manager().participants())) {
             var optPath = escape.findEscapePath(mob);
 
             if (DEBUG_TARGET_FLEE_POS) {
@@ -186,7 +187,7 @@ public class EndermanData implements MonsterData<EnderMan> {
                     if (optPath.isEmpty()) return;
 
                     BlockPos pos = optPath.get().getTarget();
-                    renderer.marker(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, Blocks.CYAN_CONCRETE.defaultBlockState(), 0x03b2fe, 0.5);
+                    renderer.marker(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, Blocks.CONCRETE.cyan().defaultBlockState(), 0x03b2fe, 0.5);
                 }));
             }
 

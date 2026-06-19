@@ -44,7 +44,7 @@ public class ChallengeMessengerImpl implements ChallengeMessenger {
     public void send() {
         if (task == null) return;
 
-        var msg = task.formatted(ChatFormatting.DARK_GREEN, BOLD);
+        var msg = task.withStyle(ChatFormatting.DARK_GREEN, BOLD);
 
         for (ServerPlayer player : PlayerLookup.level(world)) {
             for (int i = 0; i < 20; i++) {
@@ -74,7 +74,7 @@ public class ChallengeMessengerImpl implements ChallengeMessenger {
 
             for (ServerPlayer player : players) {
                 var hoverMsg = translations.translateText(player, "hover_option", styled(letter, YELLOW))
-                        .formatted(GREEN);
+                        .withStyle(GREEN);
 
                 HoverEvent hoverEvent = new HoverEvent.ShowText(hoverMsg);
 

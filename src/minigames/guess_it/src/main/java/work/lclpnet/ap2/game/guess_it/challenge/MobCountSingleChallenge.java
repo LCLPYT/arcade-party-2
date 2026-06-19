@@ -3,6 +3,7 @@ package work.lclpnet.ap2.game.guess_it.challenge;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.phys.Vec3;
 import work.lclpnet.ap2.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
@@ -96,15 +97,15 @@ public class MobCountSingleChallenge implements Challenge {
     }
 
     private int getRandomAmount(EntityType<?> type) {
-        if (type == EntityType.WARDEN || type == EntityType.ELDER_GUARDIAN || type == EntityType.RAVAGER || type == EntityType.WITHER) {
+        if (type == EntityTypes.WARDEN || type == EntityTypes.ELDER_GUARDIAN || type == EntityTypes.RAVAGER || type == EntityTypes.WITHER) {
             return 12 + random.nextInt(20);
         }
 
-        if (type == EntityType.CAMEL || type == EntityType.IRON_GOLEM || type == EntityType.SNIFFER) {
+        if (type == EntityTypes.CAMEL || type == EntityTypes.IRON_GOLEM || type == EntityTypes.SNIFFER) {
             return 22 + random.nextInt(54);
         }
 
-        if (type == EntityType.GUARDIAN || type == EntityType.HOGLIN || type == EntityType.ZOGLIN) {
+        if (type == EntityTypes.GUARDIAN || type == EntityTypes.HOGLIN || type == EntityTypes.ZOGLIN) {
             return 27 + random.nextInt(78);
         }
 

@@ -7,12 +7,12 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import work.lclpnet.ap2.api.util.world.AdjacentBlocks;
 import work.lclpnet.ap2.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.OptionMaker;
-import work.lclpnet.ap2.impl.util.BlockHelper;
 import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
@@ -68,9 +68,9 @@ public class AreaChallenge implements Challenge {
         var opts = OptionMaker.createOptions(Set.of(DyeColor.values()), 4, random);
 
         Function<DyeColor, Block> blockFunction = switch (random.nextInt(3)) {
-            case 0 -> BlockHelper::getWool;
-            case 1 -> BlockHelper::getConcrete;
-            case 2 -> BlockHelper::getConcretePowder;
+            case 0 -> Blocks.WOOL::pick;
+            case 1 -> Blocks.CONCRETE::pick;
+            case 2 -> Blocks.CONCRETE_POWDER::pick;
             default -> throw new IllegalStateException();
         };
 

@@ -18,6 +18,7 @@ import net.minecraft.world.item.component.FireworkExplosion
 import net.minecraft.world.item.component.Fireworks
 import net.minecraft.world.level.GameType
 import net.minecraft.world.scores.PlayerTeam
+import net.minecraft.world.scores.TeamColor
 import work.lclpnet.ap2.api.game.GameOverListener
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.runAfter
@@ -59,7 +60,7 @@ class HotPotatoInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
         dynamicBossBar = useRemainingPlayersDisplay()
         val scoreboardManager = gameHandle.scoreboardManager
         team = scoreboardManager.createTeam("team")
-        team.color = ChatFormatting.DARK_RED
+        team.color = Optional.of(TeamColor.DARK_RED)
     }
 
     override fun go() {
@@ -229,23 +230,23 @@ class HotPotatoInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
         val stack = ItemStack(Items.BAKED_POTATO)
 
         stack.set(DataComponents.CUSTOM_NAME, translations.translateText(player, "item")
-            .styled { it.withColor(0xff0000).withItalic(false) })
+            .withStyle { it.withColor(0xff0000).withItalic(false) })
 
         player.inventory.setItem(4, stack)
 
         PlayerInventoryAccess.setSelectedSlot(player, 4)
 
-        player.setItemSlot(EquipmentSlot.HEAD, ItemStack(Items.RED_WOOL))
+        player.setItemSlot(EquipmentSlot.HEAD, ItemStack(Items.WOOL.red))
 
         player.addEffect(MobEffectInstance(MobEffects.SPEED, DURATION_SECONDS * 20, 1, false, false, false))
 
         glow(player, DURATION_SECONDS * 20)
 
         val title = translations.translateText(player, "title")
-            .styled { it.withColor(0xff0000).withBold(true) }
+            .withStyle { it.withColor(0xff0000).withBold(true) }
 
         val subtitle = translations.translateText(player, "subtitle")
-            .formatted(ChatFormatting.RED)
+            .withStyle(ChatFormatting.RED)
 
         Title.get(player).title(title, subtitle, 2, 10, 2)
 

@@ -5,7 +5,7 @@ import net.minecraft.core.component.DataComponents
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.InteractionHand
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.animal.panda.Panda
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
@@ -68,7 +68,7 @@ class PandaManager(
 
         for (i in 0 until PANDA_COUNT) {
             val pos = randomPosition()
-            val panda = Panda(EntityType.PANDA, world)
+            val panda = Panda(EntityTypes.PANDA, world)
             pandas.add(panda)
 
             val searched = i > PANDA_COUNT - remain - 1 || (remain > 0 && random.nextFloat() < chance)

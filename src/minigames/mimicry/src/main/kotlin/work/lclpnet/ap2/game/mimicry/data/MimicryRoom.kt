@@ -41,7 +41,7 @@ data class MimicryRoom(
         activeButtonPos = base
         prevButtonBase = world.getBlockState(base)
 
-        world.setBlockAndUpdate(base, Blocks.LIME_CONCRETE.defaultBlockState())
+        world.setBlockAndUpdate(base, Blocks.CONCRETE.lime.defaultBlockState())
     }
 
     fun buttonPos(i: Int): BlockPos = buttons.indexToPosYZX(i)

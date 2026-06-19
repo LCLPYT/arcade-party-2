@@ -60,7 +60,7 @@ class EnderPearlKit(
                 enderPearl.discard()
 
                 handle.translations.translateText("teleport_too_far")
-                    .formatted(RED)
+                    .withStyle(RED)
                     .sendTo(owner)
 
                 refund(owner.connection, options)

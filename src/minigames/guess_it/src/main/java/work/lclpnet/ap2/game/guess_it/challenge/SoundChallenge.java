@@ -96,7 +96,7 @@ public class SoundChallenge implements Challenge {
         stopSound();
 
         var msg = gameHandle.getTranslations().translateText("again")
-                .formatted(DARK_GREEN, BOLD);
+                .withStyle(DARK_GREEN, BOLD);
 
         for (ServerPlayer player : PlayerLookup.level(world)) {
             Title.get(player).title(Component.empty(), msg.translateFor(player));

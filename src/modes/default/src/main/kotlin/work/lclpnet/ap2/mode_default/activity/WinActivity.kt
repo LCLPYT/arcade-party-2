@@ -123,7 +123,7 @@ class WinActivity(
             for (player in players()) {
                 Title.get(player).title(
                     winner.getNameFor(player).copy().withStyle(ChatFormatting.AQUA),
-                    translations.translateText(player, "ap2.awards.won_party").formatted(ChatFormatting.DARK_GREEN),
+                    translations.translateText(player, "ap2.awards.won_party").withStyle(ChatFormatting.DARK_GREEN),
                     0, 100, 5
                 )
             }
@@ -169,7 +169,7 @@ class WinActivity(
     }
 
     private fun onFireworksOver() {
-        translations.translateText("ap2.awards.thanks").formatted(ChatFormatting.GRAY).sendTo(players())
+        translations.translateText("ap2.awards.thanks").withStyle(ChatFormatting.GRAY).sendTo(players())
 
         scheduler.timeout(FINAL_DELAY_TICKS) { ->
             endGame()

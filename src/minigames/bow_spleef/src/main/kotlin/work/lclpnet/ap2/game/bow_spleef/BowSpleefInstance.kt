@@ -203,7 +203,7 @@ class BowSpleefInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
         val infinity = ItemHelper.getEnchantment(Enchantments.INFINITY, level.registryAccess())
 
         val bowName = translate("bow")
-            .styled { it.withItalic(false).applyFormat(ChatFormatting.GOLD) }
+            .withStyle { it.withItalic(false).applyFormat(ChatFormatting.GOLD) }
 
         for (player in gameHandle.participants) {
             val stack = unbreakable(ItemStack(Items.BOW))

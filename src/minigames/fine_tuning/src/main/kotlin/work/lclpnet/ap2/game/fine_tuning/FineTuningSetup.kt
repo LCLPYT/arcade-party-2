@@ -8,7 +8,7 @@ import net.minecraft.network.chat.Component
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.DyeColor
-import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.level.block.entity.BlockEntityTypes
 import net.minecraft.world.level.block.entity.SignText
 import org.json.JSONArray
 import org.slf4j.Logger
@@ -52,7 +52,7 @@ class FineTuningSetup(
         for ((uuid, room) in rooms) {
             val player: ServerPlayer = participants.getParticipant(uuid).orElse(null) ?: continue
             val testSignPos = room.pos.offset(testSignRelPos)
-            val sign = world.getBlockEntity(testSignPos, BlockEntityType.SIGN).orElse(null) ?: continue
+            val sign = world.getBlockEntity(testSignPos, BlockEntityTypes.SIGN).orElse(null) ?: continue
 
             val lines = arrayOf(Component.empty(), testMsg.translateFor(player), Component.literal("▶"), Component.empty())
             sign.setText(SignText(lines, lines, DyeColor.BLUE, false), true)

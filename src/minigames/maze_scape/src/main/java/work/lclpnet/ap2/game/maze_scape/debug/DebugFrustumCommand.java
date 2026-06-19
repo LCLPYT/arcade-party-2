@@ -75,7 +75,7 @@ public class DebugFrustumCommand implements KibuCommand {
         }
 
         double thickness = 0.005;
-        BlockState state = Blocks.BLACK_CONCRETE.defaultBlockState();
+        BlockState state = Blocks.CONCRETE.black().defaultBlockState();
 
         for (int i = 0; i < 4; i++) {
             lines.add(renderer.line(frustum[i], frustum[(i + 1) % 4], thickness, state));

@@ -22,6 +22,7 @@ import net.minecraft.world.item.equipment.trim.TrimMaterials
 import net.minecraft.world.item.equipment.trim.TrimPatterns
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.Team
 import work.lclpnet.ap2.*
 import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
@@ -126,7 +127,7 @@ class ButtonMasterInstance(
 
     private fun closeWall() {
         val world = this.level
-        val wallState = Blocks.WHITE_STAINED_GLASS.defaultBlockState()
+        val wallState = Blocks.STAINED_GLASS.white.defaultBlockState()
 
         for (box in mapSchema.startWalls) {
             for (pos in box) {
@@ -280,7 +281,7 @@ class ButtonMasterInstance(
         translate(
             "choose_capsule",
             styled(EJECT_MAX_TIME.inWholeSeconds, ChatFormatting.YELLOW)
-        ).formatted(ChatFormatting.AQUA).sendTo(player)
+        ).withStyle(ChatFormatting.AQUA).sendTo(player)
 
         this.ejectTimer = ejectTimer
 
@@ -360,7 +361,7 @@ class ButtonMasterInstance(
             currentButtonMarker?.detach()
 
             commons().debugController().renderer().ifPresent {
-                currentButtonMarker = it.marker(pos.center, Blocks.BLUE_STAINED_GLASS.defaultBlockState(), DyeColor.BLUE.textureDiffuseColor)
+                currentButtonMarker = it.marker(Vec3.atCenterOf(pos), Blocks.STAINED_GLASS.blue.defaultBlockState(), DyeColor.BLUE.textureDiffuseColor)
             }
         }
 
@@ -379,7 +380,7 @@ class ButtonMasterInstance(
 
         SoundHelper.playSound(level, SoundEvents.BELL_BLOCK, SoundSource.BLOCKS, 1f, 1.7f)
 
-        translate("revealed").formatted(ChatFormatting.AQUA).sendTo(allPlayers())
+        translate("revealed").withStyle(ChatFormatting.AQUA).sendTo(allPlayers())
     }
 
     private fun checkButtonVisibility() {

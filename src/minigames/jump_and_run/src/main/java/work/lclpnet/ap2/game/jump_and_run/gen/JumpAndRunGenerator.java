@@ -7,6 +7,7 @@ import net.minecraft.core.Vec3i;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -92,7 +93,7 @@ public class JumpAndRunGenerator {
         BlockPos spawn = requireNonNull(part.spawn(), "Spawn position must be non-null");
         float yaw = MathUtil.yaw(connector.face().getOpposite().getUnitVec3());
 
-        var checkpoint = new Checkpoint(spawn.getBottomCenter(), yaw, 0f, bridge.bounds());
+        var checkpoint = new Checkpoint(Vec3.atBottomCenterOf(spawn), yaw, 0f, bridge.bounds());
 
         return new JumpStructure(List.of(part, bridge), checkpoint);
     }
@@ -105,7 +106,7 @@ public class JumpAndRunGenerator {
 
         float yaw = MathUtil.yaw(connector.face().getUnitVec3());
 
-        var checkpoint = new Checkpoint(bridge.spawn().getBottomCenter(), yaw, 0f, part.bounds());
+        var checkpoint = new Checkpoint(Vec3.atBottomCenterOf(bridge.spawn()), yaw, 0f, part.bounds());
 
         return new JumpStructure(List.of(part, bridge), checkpoint);
     }
@@ -138,7 +139,7 @@ public class JumpAndRunGenerator {
         Vec3i up = Direction.UP.getUnitVec3i();
         Vec3i side = vec.cross(up);  // up and vec are orthogonal and unit, thus right is a unit vector
 
-        BlockState base = Blocks.MAGENTA_GLAZED_TERRACOTTA.defaultBlockState();
+        BlockState base = Blocks.GLAZED_TERRACOTTA.magenta().defaultBlockState();
         BlockState upState = base.setValue(FACING, dir);
         BlockState downState = base.setValue(FACING, dir.getOpposite());
         BlockState sideState = base.setValue(FACING, dir.getCounterClockWise());

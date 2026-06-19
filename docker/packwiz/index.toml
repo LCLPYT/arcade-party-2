@@ -7,77 +7,72 @@ metafile = true
 
 [[files]]
 file = "mods/c2me-fabric.pw.toml"
-hash = "f603986589b293de0361698efa8fd4bcfefca2306a8ec9d7f6de3293feb0c650"
+hash = "b6b5cb7c9403a6c4a925e683fb2468b3f50756cecd5fc7f82491c080ed8bab08"
 metafile = true
 
 [[files]]
 file = "mods/combat-control.pw.toml"
-hash = "068e8ccd7c907e7c1a1426592d298da8496449b67a8d639600fec31e9887c2f2"
+hash = "49bb085ef86249fa61ce6b88384de7fa4f67e6352a302810b395fc0b4f06175d"
 metafile = true
 
 [[files]]
 file = "mods/fabric-api.pw.toml"
-hash = "42eac2c5f04724698fef548d0eec80151572b147149b0760cbc4322fc3020328"
+hash = "91cbd0f5accaeb5ba27077286c6f4d149d1ac348626623b47ca5392e39625972"
 metafile = true
 
 [[files]]
 file = "mods/fabric-language-kotlin.pw.toml"
-hash = "337d97b990f76c91584b12600651ae7bd47a0824e45070b3d9330b0922149fc0"
+hash = "9d37d326d9557fdd25c97d72ac1bbd1e74c524aa5dca437a91d0de645dff6545"
 metafile = true
 
 [[files]]
 file = "mods/fantasy.pw.toml"
-hash = "756811323fb2c400311b9c348c295f5112032eddab13ddf427bcb9ef96666923"
+hash = "7d84a10ef158a733cce314deee8012ad1e4f80b47ad104f2e8a8bdf73534e7d1"
 metafile = true
 
 [[files]]
 file = "mods/gaco.pw.toml"
-hash = "b9f495d908074cfc6b38a24c0434f942f25e9eca9f324e713666d73149d87256"
+hash = "08aa3b0e73cfb60ab90f0e8d92d5065923653551079e4f540a13eb33fbbdde45"
 metafile = true
 
 [[files]]
 file = "mods/kibu-physics.pw.toml"
-hash = "87bcd2c876b2de5a97d161e3a62fe952b1dd9d53e814e2d0c2f04aa2c8c54907"
+hash = "62824f001d2e363421a3bfd80c93494a379d97617be80224c1162e21728b42fa"
 metafile = true
 
 [[files]]
 file = "mods/kibu-world-api.pw.toml"
-hash = "187f8995c9876662975f2e06d871b211bb5ea097356594e236915c90ee41cb46"
+hash = "494b19ae2f6cdfeba7b306c4928e073fe9d406625a9226a2f63fc8ba0d3ea42f"
 metafile = true
 
 [[files]]
 file = "mods/kibu.pw.toml"
-hash = "bad5a1c6a4fd67a5c8509fc09425a79ddf89c4b2b440c22ac1d133b2cc235282"
-metafile = true
-
-[[files]]
-file = "mods/krypton.pw.toml"
-hash = "d5060b22fa47d5d56e0f4617904731e9d397d1ba104320b7ec8e59f7ca0700a7"
+hash = "7bb05015af6434902165407fa527f8af7332fb48517d47b1aa39ca78d812c431"
 metafile = true
 
 [[files]]
 file = "mods/lithium.pw.toml"
-hash = "90d5603faf196b9c30274831dd042935311202a58baaa7c7e2e50df6198d85e3"
+hash = "40f3c3ed0be22a65ad52e0f89c905e59b57d4ec0941c3d6a2c702af4713213ad"
 metafile = true
 
 [[files]]
 file = "mods/map-canvas-api.pw.toml"
-hash = "d5b2467ddcf69da0953131d25189d59efdc38bbcf34701d45de6544086ee5bbf"
+hash = "3131d452911d1cd63fafa7070a0159919427756bccf7c56f5c091c1b54b7ea07"
 metafile = true
 
 [[files]]
 file = "mods/mcserver-api-fabric.pw.toml"
-hash = "f6054dc93385e19920a189d7f32272083962b01a66569366a6cd6c18f3204197"
+hash = "cc64e77c03b0a7ac9b069e78d3903b50760e58ad8722b27cc22af3bb09e4008f"
 metafile = true
 
 [[files]]
 file = "mods/mg-api.pw.toml"
-hash = "69220aae6861e0bcebafa11630519de00266df0c9293c73bcf6917cda3135065"
+hash = "6e482e9bb483f7b20f1a136ad2d6434691ccef9ae341e7402f60128799b9bc70"
 metafile = true
 
 [[files]]
 file = "mods/mg-lobby.pw.toml"
-hash = "62ae0eeeec70541726616aa573d84a851e9efa2a756be61fc17b59a5ab2374b7"
+hash = "fc751d6c25c12f37687f3fe5d996c67d4c5df88f024ab373db4d3fb511187c38"
 metafile = true
 
 [[files]]
@@ -87,25 +82,25 @@ metafile = true
 
 [[files]]
 file = "mods/notica.pw.toml"
-hash = "9d10f701c2128d5a55e24880e5f1e265c1141cba132fc6f031244026bd61e82a"
+hash = "40afb5bd6bc1c5e5b1cb5bb4afb2480a77fca39b8ea07491b8afe3e9ce3b52f8"
 metafile = true
 
 [[files]]
 file = "mods/pal.pw.toml"
-hash = "b26726961e6d34c7025fac7aa668c857129282c2e73652954938e525685426c6"
+hash = "5d902b2dfebf762b1c63256b7cfe3b5875ca3f54e02d46d6705957739f514da1"
 metafile = true
 
 [[files]]
 file = "mods/ruler.pw.toml"
-hash = "2b41c3dca471523df720e9fe69d88481e623e322187f39a8770fd39eebf74a40"
+hash = "82e8177c197be69230b1c26944e59cd30838e2e97a2b30a0df3f0124d8781bea"
 metafile = true
 
 [[files]]
 file = "mods/scalablelux.pw.toml"
-hash = "645be5d20d755e83c986014b768abbf473d3bf31da5dcd197af63c8b200cc141"
+hash = "8635a6f88d0f0e9487299a0da5507bb9f1685969a8b02772efdba6df3d9c0afa"
 metafile = true
 
 [[files]]
 file = "mods/simple-ac.pw.toml"
-hash = "0f913b77860e2fe426f082481c0d9433244d31724e56ff1f41532414b57c78bd"
+hash = "9797cfc6ade9ccc79ebc5a376abc8b6cf49c7b586bbd3b1eb26f39af225790ad"
 metafile = true

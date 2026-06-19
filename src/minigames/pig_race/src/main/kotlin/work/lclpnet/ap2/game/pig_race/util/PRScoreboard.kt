@@ -31,14 +31,14 @@ class PRScoreboard(
 
         if (progress.rounds <= 1) return
 
-        val text = gameHandle.translations.translateText("round").formatted(GREEN)
+        val text = gameHandle.translations.translateText("round").withStyle(GREEN)
         roundHandle = objective.createDynamicText(text, ScoreboardLayout.TOP)
 
         objective.createNewline(ScoreboardLayout.TOP)
     }
 
     fun addScoreboardRanking() {
-        objective.createText(gameHandle.translations.translateText("ap2.ranking").formatted(YELLOW, BOLD))
+        objective.createText(gameHandle.translations.translateText("ap2.ranking").withStyle(YELLOW, BOLD))
 
         val separator = Component.literal(ApConstants.SCOREBOARD_SEPARATOR_SM).withStyle(DARK_GREEN, STRIKETHROUGH)
         objective.createText(separator)

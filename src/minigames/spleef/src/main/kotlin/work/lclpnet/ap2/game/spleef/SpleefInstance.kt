@@ -206,7 +206,7 @@ class SpleefInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMa
             val stack = ItemStack(Items.IRON_SHOVEL).unbreakable()
 
             stack.set(DataComponents.CUSTOM_NAME, translations.translateText(player, "shovel")
-                .styled { it.withItalic(false).applyFormat(ChatFormatting.GOLD) })
+                .withStyle { it.withItalic(false).applyFormat(ChatFormatting.GOLD) })
 
             player.inventory.setItem(4, stack)
             PlayerInventoryAccess.setSelectedSlot(player, 4)

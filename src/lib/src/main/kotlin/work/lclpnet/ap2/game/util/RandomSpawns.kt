@@ -34,7 +34,7 @@ fun MapGameInstance.teleportToRandomSpawns(scanBox: BlockBox, scanStarts: Iterab
     if (DEBUG_SPAWNS) {
         commons().debugController().renderer().ifPresent {
             for (pos in spawns) {
-                it.marker(pos, Blocks.BLUE_STAINED_GLASS.defaultBlockState(), 0x0000ff)
+                it.marker(pos, Blocks.STAINED_GLASS.blue.defaultBlockState(), 0x0000ff)
             }
         }
     }

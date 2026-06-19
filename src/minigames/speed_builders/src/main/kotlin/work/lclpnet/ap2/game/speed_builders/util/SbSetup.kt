@@ -3,7 +3,7 @@ package work.lclpnet.ap2.game.speed_builders.util
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Vec3i
 import net.minecraft.server.level.ServerLevel
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.monster.breeze.Breeze
 import org.json.JSONArray
@@ -126,7 +126,7 @@ class SbSetup(private val random: Random, private val logger: Logger) {
             pos.z - origin.z
         )
 
-        val breeze = Breeze(EntityType.BREEZE, world)
+        val breeze = Breeze(EntityTypes.BREEZE, world)
         breeze.setPosRaw(spawn.x + 0.5, spawn.y.toDouble(), spawn.z + 0.5)
         breeze.isNoAi = true
         breeze.setPersistenceRequired()

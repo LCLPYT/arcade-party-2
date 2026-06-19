@@ -16,7 +16,7 @@ import work.lclpnet.gaco.collisions.util.GroundDetector
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.level.BlockBreakParticleCallback
 
-private val MARKED_STATE = Blocks.RED_TERRACOTTA.defaultBlockState()
+private val MARKED_STATE = Blocks.DYED_TERRACOTTA.red.defaultBlockState()
 private const val BLOCK_MARGIN = 0.35
 private const val BREAK_TICKS = 10
 

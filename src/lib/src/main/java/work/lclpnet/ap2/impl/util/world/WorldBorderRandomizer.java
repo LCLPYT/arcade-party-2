@@ -62,16 +62,16 @@ public class WorldBorderRandomizer {
         debugController.renderer().ifPresent(renderer -> {
             renderer.quadStroke(oldX - range, oldZ - range,
                     oldX + range, oldZ + range,
-                    y, 0.1, Blocks.BLUE_CONCRETE.defaultBlockState());
+                    y, 0.1, Blocks.CONCRETE.blue().defaultBlockState());
 
             renderer.quadStroke(oldX - range - newRadius, oldZ - range - newRadius,
                     oldX + range + newRadius, oldZ + range + newRadius,
-                    y, 0.1, Blocks.GREEN_CONCRETE.defaultBlockState());
+                    y, 0.1, Blocks.CONCRETE.green().defaultBlockState());
 
-            renderer.labeledCross(oldX, y, oldZ, Blocks.GRAY_CONCRETE.defaultBlockState(), Component.literal("original center"));
-            renderer.labeledCross(newX, y, newZ, Blocks.RED_CONCRETE.defaultBlockState(), Component.literal("random center"));
+            renderer.labeledCross(oldX, y, oldZ, Blocks.CONCRETE.gray().defaultBlockState(), Component.literal("original center"));
+            renderer.labeledCross(newX, y, newZ, Blocks.CONCRETE.red().defaultBlockState(), Component.literal("random center"));
 
-            renderer.arrow(oldX, y, oldZ, MathUtil.angleY(dx, dz), 0.5, Blocks.YELLOW_CONCRETE.defaultBlockState());
+            renderer.arrow(oldX, y, oldZ, MathUtil.angleY(dx, dz), 0.5, Blocks.CONCRETE.yellow().defaultBlockState());
             renderer.text(oldX + dx * 0.5, y + 0.2, oldZ + dz * 0.5, Component.literal("(%.2f, %.2f)".formatted(dx, dz)));
         });
     }

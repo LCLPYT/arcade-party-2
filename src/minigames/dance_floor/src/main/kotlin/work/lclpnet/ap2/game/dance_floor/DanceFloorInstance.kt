@@ -24,7 +24,10 @@ import work.lclpnet.ap2.game.util.whenBelowCriticalHeight
 import work.lclpnet.ap2.impl.game.PlayerUtil
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.music.SongHandler
-import work.lclpnet.ap2.impl.util.*
+import work.lclpnet.ap2.impl.util.Hints
+import work.lclpnet.ap2.impl.util.ParticleHelper
+import work.lclpnet.ap2.impl.util.SoundHelper
+import work.lclpnet.ap2.impl.util.TextUtil
 import work.lclpnet.ap2.impl.util.handler.Visibility
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager
@@ -252,7 +255,7 @@ class DanceFloorInstance(
 
         // give players the correct wool to compare with the floor
         val dyeColor = blockRandomizer!!.existingColors.random()
-        val block = BlockHelper.getWool(dyeColor)
+        val block = Blocks.WOOL.pick(dyeColor)
 
         for (player in players()) {
             player.inventory.setItem(4, ItemStack(block))

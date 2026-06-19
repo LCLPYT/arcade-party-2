@@ -4,7 +4,7 @@ import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
@@ -59,7 +59,7 @@ public class SpawnFinder {
             debugScanner(scanner, starts);
         }
 
-        SizedSpaceFinder spaceFinder = SizedSpaceFinder.create(world, EntityType.PLAYER);
+        SizedSpaceFinder spaceFinder = SizedSpaceFinder.create(world, EntityTypes.PLAYER);
 
         return spaceFinder.findSpaces(scanner.scan(starts));
     }
@@ -97,7 +97,7 @@ public class SpawnFinder {
             mask.setVoxelAt(pos.getX() - minPos.getX(), pos.getY() - minPos.getY(), pos.getZ() - minPos.getZ(), true);
         }
 
-        debugController.visualizeStructureMask(mask, minPos, Matrix3i.IDENTITY, Blocks.GREEN_STAINED_GLASS.defaultBlockState());
+        debugController.visualizeStructureMask(mask, minPos, Matrix3i.IDENTITY, Blocks.STAINED_GLASS.green().defaultBlockState());
     }
 
     public List<Vec3> generateSpacedSpawns(List<Vec3> spawns, int count, Random random) {

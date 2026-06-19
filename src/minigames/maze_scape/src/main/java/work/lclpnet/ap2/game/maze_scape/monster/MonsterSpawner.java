@@ -2,7 +2,7 @@ package work.lclpnet.ap2.game.maze_scape.monster;
 
 import com.google.common.collect.ImmutableList;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.ActivityData;
 import net.minecraft.world.entity.ai.goal.*;
@@ -88,7 +88,7 @@ public class MonsterSpawner {
     }
 
     private void spawnWarden(Vec3 pos, Partial<MonsterArgs, UUID> args, Registrar registrar) {
-        var warden = new Warden(EntityType.WARDEN, world);
+        var warden = new Warden(EntityTypes.WARDEN, world);
 
         configureMobCommon(pos, warden);
 
@@ -109,7 +109,7 @@ public class MonsterSpawner {
 
     @SuppressWarnings("DataFlowIssue")
     private void spawnSpider(Vec3 pos, Partial<MonsterArgs, UUID> args, Registrar registrar) {
-        var spider = new Spider(EntityType.SPIDER, world);
+        var spider = new Spider(EntityTypes.SPIDER, world);
 
         configureMobCommon(pos, spider);
 
@@ -135,7 +135,7 @@ public class MonsterSpawner {
     }
 
     private void spawnEnderman(Vec3 pos, Partial<MonsterArgs, UUID> args, Registrar registrar) {
-        var enderman = new EnderMan(EntityType.ENDERMAN, world);
+        var enderman = new EnderMan(EntityTypes.ENDERMAN, world);
 
         configureMobCommon(pos, enderman);
 
@@ -158,7 +158,7 @@ public class MonsterSpawner {
     }
 
     private void spawnCreaking(Vec3 pos, Partial<MonsterArgs, UUID> args, Registrar registrar) {
-        var creaking = new Creaking(EntityType.CREAKING, world);
+        var creaking = new Creaking(EntityTypes.CREAKING, world);
 
         configureMobCommon(pos, creaking);
 

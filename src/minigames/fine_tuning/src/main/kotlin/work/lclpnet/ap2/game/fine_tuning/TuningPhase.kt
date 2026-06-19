@@ -166,7 +166,7 @@ class TuningPhase(
 
         completed.add(player.uuid)
         player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.5f, 1f)
-        gameHandle.translations.translateText("completed").formatted(GREEN).sendTo(player)
+        gameHandle.translations.translateText("completed").withStyle(GREEN).sendTo(player)
 
         if (completed.size < gameHandle.participants.count()) return
         timer.stop()
@@ -216,7 +216,7 @@ class TuningPhase(
         val bossBarProvider = gameHandle.bossBarProvider
         val players = PlayerLookup.all(server)
 
-        translations.translateText("repeat").formatted(GREEN)
+        translations.translateText("repeat").withStyle(GREEN)
             .acceptEach(players) { player, text -> Title.get(player).title(Component.empty(), text, 5, 30, 5) }
 
         val shuffled = baseMelody()
@@ -309,7 +309,7 @@ class TuningPhase(
         for (player in participants) {
             val stack = head.createStack()
             stack.set(DataComponents.CUSTOM_NAME, translations.translateText(player, "replay")
-                .styled { it.withItalic(false).applyFormat(YELLOW) })
+                .withStyle { it.withItalic(false).applyFormat(YELLOW) })
             player.inventory.setItem(4, stack)
         }
     }
@@ -407,14 +407,14 @@ class TuningPhase(
             BookUtil.builder(controls, ApConstants.PERSON_LCLP)
                 .addPage(
                     translations.translateText(player, "controls.note_up")
-                        .formatted(DARK_BLUE, BOLD).append(":\n"),
+                        .withStyle(DARK_BLUE, BOLD).append(":\n"),
                     Component.keybind("key.use").withStyle(DARK_GREEN).append("\n\n"),
                     translations.translateText(player, "controls.note_down")
-                        .formatted(DARK_BLUE, BOLD).append(":\n"),
+                        .withStyle(DARK_BLUE, BOLD).append(":\n"),
                     Component.keybind("key.sneak").withStyle(DARK_GREEN).append(" + ")
                         .append(Component.keybind("key.use").append("\n\n")),
                     translations.translateText(player, "controls.test")
-                        .formatted(DARK_BLUE, BOLD).append(":\n"),
+                        .withStyle(DARK_BLUE, BOLD).append(":\n"),
                     Component.keybind("key.attack").withStyle(DARK_GREEN)
                 )
                 .applyTo(stack)

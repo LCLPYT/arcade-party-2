@@ -30,7 +30,7 @@ class TablistManager(
         val footer = mutableListOf<Component>()
 
         header.add(translations.translateText("game.ap2.title")
-            .formatted(GOLD, BOLD)
+            .withStyle(GOLD, BOLD)
             .translateFor(player))
 
         header.add(Component.literal(ApConstants.TABLIST_SEPARATOR).withStyle(DARK_GREEN, BOLD, STRIKETHROUGH))
@@ -52,7 +52,7 @@ class TablistManager(
         footer.add(translations.translateText(
             "ap2.playing_on",
             Component.literal(BRANDING).withStyle(YELLOW, BOLD)
-        ).formatted(AQUA).translateFor(player))
+        ).withStyle(AQUA).translateFor(player))
 
         val mergedHeader = header.reduceOrNull { x, y -> Component.empty().append(x).append("\n").append(y) }
         val mergedFooter = footer.reduceOrNull { x, y -> Component.empty().append(x).append("\n").append(y) }

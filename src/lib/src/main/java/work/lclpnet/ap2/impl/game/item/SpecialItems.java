@@ -266,7 +266,7 @@ public class SpecialItems implements SpecialItemContext {
         String key = join(".", "game", gameId.getNamespace(), gameId.getPath(), "item", item.id());
 
         return gameHandle.getTranslations().translateText(key)
-                .styled(style -> style.withItalic(false).applyFormat(Rarity.UNCOMMON.color()));
+                .withStyle(style -> style.withItalic(false).applyFormat(Rarity.UNCOMMON.color()));
     }
 
     private Optional<Component> itemDescription(ServerPlayer player, SpecialItem item) {
@@ -278,7 +278,7 @@ public class SpecialItems implements SpecialItemContext {
         }
 
         return Optional.of(gameHandle.getTranslations().translateText(player, key)
-                .styled(style -> style.withItalic(false).applyFormat(ChatFormatting.GREEN)));
+                .withStyle(style -> style.withItalic(false).applyFormat(ChatFormatting.GREEN)));
     }
 
     public boolean hasAnySpecialItem(ServerPlayer player) {
@@ -354,7 +354,7 @@ public class SpecialItems implements SpecialItemContext {
             if (blockPos == null) return;
         } while (++i < 16 && !worldBorder.isWithinBounds(blockPos));
 
-        Vec3 pos = blockPos.getBottomCenter();
+        Vec3 pos = Vec3.atBottomCenterOf(blockPos);
 
         if (!worldBorder.isWithinBounds(pos)) return;
 

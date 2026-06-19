@@ -14,7 +14,7 @@ class RedLightGreenLightMiniGame : MiniGame {
     override val id = ApConstants.identifier("red_light_green_light")
     override val type = GameType.FFA
     override val author = ApConstants.PERSON_LCLP
-    override fun getIcon(manager: RegistryAccess): ItemStack = ItemStack(Items.LIME_WOOL)
+    override fun getIcon(manager: RegistryAccess): ItemStack = ItemStack(Items.WOOL.lime)
     override fun canBeFinale(context: GameStartContext): Boolean = true
     override fun canBePlayed(context: GameStartContext): Boolean = true
     override fun createFactory(): MiniGameFactory = MapLevelGameFactory(::RedLightGreenLightInstance)

@@ -85,7 +85,7 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
         messenger.task(translations.translateText("daytime.guess"));
 
         input.expectInput().validate((str, _) -> MinecraftDayTime.dayTimeValue(str),
-                str -> translations.translateText("input.daytime", styled(str, YELLOW)).formatted(RED));
+                str -> translations.translateText("input.daytime", styled(str, YELLOW)).withStyle(RED));
 
         // create compass that points north
         ItemStack stack = new ItemStack(Items.COMPASS);

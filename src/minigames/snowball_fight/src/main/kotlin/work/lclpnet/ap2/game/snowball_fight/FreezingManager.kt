@@ -52,7 +52,7 @@ class FreezingManager(
 
         idleManager.onEnterIdle().register { player ->
             translations.translateText("idle")
-                .formatted(ChatFormatting.YELLOW)
+                .withStyle(ChatFormatting.YELLOW)
                 .sendTo(player)
 
             player.level().sendParticles(ParticleTypes.SNOWFLAKE, player.x, player.y + 1, player.z, 50, 0.5, 1.0, 0.5, 0.1)

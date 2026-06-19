@@ -34,7 +34,7 @@ public class IconMaker {
         if (!authors.isEmpty()) {
             setLore(icon, wrapText(translations.translateText(player, "ap2.built_by",
                             styled(String.join(", ", authors), YELLOW))
-                    .formatted(GREEN), 32));
+                    .withStyle(GREEN), 32));
         }
 
         return icon;
@@ -45,13 +45,13 @@ public class IconMaker {
         ItemStack icon = game.getIcon(registryManager);
 
         icon.set(DataComponents.CUSTOM_NAME, translations.translateText(player, game.getTitleKey())
-                .styled(style -> style.withItalic(false).applyFormat(AQUA)));
+                .withStyle(style -> style.withItalic(false).applyFormat(AQUA)));
 
         String descriptionKey = game.getDescriptionKey();
         Object[] descArgs = game.getDescriptionArguments();
 
         setLore(icon, wrapText(translations.translateText(player, descriptionKey, descArgs)
-                .formatted(GREEN), 32));
+                .withStyle(GREEN), 32));
 
         icon.set(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT
                 .withHidden(DataComponents.POTION_CONTENTS, true)

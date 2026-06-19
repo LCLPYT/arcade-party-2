@@ -114,7 +114,7 @@ public class MSManager {
         if (DEBUG_MOB_SPAWNS) {
             debugController.parent().renderer().ifPresent(renderer -> {
                 for (Vec3 pos : spawns.source()) {
-                    renderer.marker(pos.x, pos.y + 0.5, pos.z, Blocks.YELLOW_CONCRETE.defaultBlockState(), 0xffff00);
+                    renderer.marker(pos.x, pos.y + 0.5, pos.z, Blocks.CONCRETE.yellow().defaultBlockState(), 0xffff00);
                 }
             });
         }
@@ -269,7 +269,7 @@ public class MSManager {
     }
 
     private @Nullable Path findPartialPath(Entity entity, BlockPos target, Function<BlockPos, Path> pathFinder) {
-        var navPath = struct.findPath(entity.position(), target.getBottomCenter());
+        var navPath = struct.findPath(entity.position(), Vec3.atBottomCenterOf(target));
 
         if (navPath.isEmpty()) {
             return null;

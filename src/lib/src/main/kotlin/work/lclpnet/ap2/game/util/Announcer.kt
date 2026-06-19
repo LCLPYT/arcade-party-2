@@ -54,11 +54,11 @@ data class Announcer(
 
     fun announce(titleKey: String?, subtitleKey: String?) {
         val title = if (titleKey != null) {
-            translations.translateText(titleKey).formatted(ChatFormatting.AQUA)
+            translations.translateText(titleKey).withStyle(ChatFormatting.AQUA)
         } else null
 
         val subtitle = if (subtitleKey != null) {
-            translations.translateText(subtitleKey).formatted(ChatFormatting.DARK_GREEN)
+            translations.translateText(subtitleKey).withStyle(ChatFormatting.DARK_GREEN)
         } else null
 
         announce(title, subtitle)

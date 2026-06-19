@@ -170,7 +170,7 @@ class RedLightGreenLightInstance(gameHandle: MiniGameHandle, level: ServerLevel,
             TrafficLight.Status.GREEN -> "go"
         }
 
-        val msg = gameHandle.translations.translateText(key).formatted(ChatFormatting.BOLD, when (status) {
+        val msg = gameHandle.translations.translateText(key).withStyle(ChatFormatting.BOLD, when (status) {
             TrafficLight.Status.RED -> ChatFormatting.RED
             TrafficLight.Status.YELLOW -> ChatFormatting.YELLOW
             TrafficLight.Status.GREEN -> ChatFormatting.GREEN
@@ -257,7 +257,7 @@ class RedLightGreenLightInstance(gameHandle: MiniGameHandle, level: ServerLevel,
         movementBlocker.disableMovement(player)
 
         translate("moved")
-            .formatted(ChatFormatting.RED)
+            .withStyle(ChatFormatting.RED)
             .sendTo(player)
     }
 
@@ -284,7 +284,7 @@ class RedLightGreenLightInstance(gameHandle: MiniGameHandle, level: ServerLevel,
                 styled(player.scoreboardName, ChatFormatting.YELLOW),
                 styled(END_TIME_SECONDS, ChatFormatting.YELLOW)
             )
-                .formatted(ChatFormatting.GREEN)
+                .withStyle(ChatFormatting.GREEN)
                 .sendTo(PlayerLookup.level(world))
 
             gameEnd = Ticks.seconds(END_TIME_SECONDS)

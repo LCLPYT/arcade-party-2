@@ -49,7 +49,7 @@ public class DeathMessages {
     }
 
     public TranslatedText root(TranslatedText text) {
-        return text.formatted(GRAY);
+        return text.withStyle(GRAY);
     }
 
     public Object wrap(Player player) {

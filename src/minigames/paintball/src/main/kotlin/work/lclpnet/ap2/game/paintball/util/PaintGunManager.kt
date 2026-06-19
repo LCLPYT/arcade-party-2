@@ -214,7 +214,7 @@ class PaintGunManager(
         if (!shootingEnabled || player.cooldowns.isOnCooldown(stack) || isReloading(player)) return
 
         if (stack.damageValue >= stack.maxDamage) {
-            translations.translateText("no_ink").formatted(RED).sendTo(player, true)
+            translations.translateText("no_ink").withStyle(RED).sendTo(player, true)
             player.playNotifySound(SoundEvents.NOTE_BLOCK_HAT.value(), SoundSource.PLAYERS, 0.2f, 2f)
             return
         }

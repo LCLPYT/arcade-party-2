@@ -418,7 +418,7 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
         gameHandle.translations.translateText(
             "goal",
             styled(player.scoreboardName, ChatFormatting.YELLOW)
-        ).formatted(ChatFormatting.GREEN)
+        ).withStyle(ChatFormatting.GREEN)
             .sendTo(PlayerLookup.all(gameHandle.server))
 
         Fireworks.spawnGoalFirework(player)

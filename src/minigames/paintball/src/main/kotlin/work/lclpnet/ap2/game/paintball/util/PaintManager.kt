@@ -20,7 +20,7 @@ import work.lclpnet.ap2.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.game.data.type.TeamRef
 import work.lclpnet.ap2.game.team.DyeBlockManager
 import work.lclpnet.ap2.game.team.Paintable
-import work.lclpnet.ap2.game.team.getConcreteBlock
+import work.lclpnet.ap2.game.team.concreteBlock
 import work.lclpnet.ap2.impl.util.world.ExplosionUtil
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
 import java.util.*
@@ -45,7 +45,7 @@ class PaintManager(
         dyeManager.init(teams.map { it.key() })
     }
 
-    fun getPaintBulletState(team: DyeTeamKey): BlockState = team.getConcreteBlock().defaultBlockState()
+    fun getPaintBulletState(team: DyeTeamKey): BlockState = team.concreteBlock().defaultBlockState()
 
     fun replace(pos: BlockPos, target: DyeTeamKey, painter: ServerPlayer? = null): Boolean {
         val current = leve.getBlockState(pos)

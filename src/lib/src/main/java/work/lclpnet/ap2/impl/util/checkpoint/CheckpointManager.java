@@ -74,12 +74,12 @@ public class CheckpointManager {
 
         debugController.renderer().ifPresent(renderer -> {
             for (Checkpoint checkpoint : checkpoints) {
-                renderer.box(checkpoint.bounds(), Blocks.GREEN_STAINED_GLASS.defaultBlockState());
+                renderer.box(checkpoint.bounds(), Blocks.STAINED_GLASS.green().defaultBlockState());
 
                 Vec3 pos = checkpoint.pos();
 
-                renderer.marker(pos, Blocks.GREEN_CONCRETE.defaultBlockState(), 0x00ff00);
-                renderer.arrow(pos, MathUtil.yaw2vec(checkpoint.yaw()), 0.25, Blocks.GREEN_WOOL.defaultBlockState());
+                renderer.marker(pos, Blocks.CONCRETE.green().defaultBlockState(), 0x00ff00);
+                renderer.arrow(pos, MathUtil.yaw2vec(checkpoint.yaw()), 0.25, Blocks.WOOL.green().defaultBlockState());
             }
         });
     }

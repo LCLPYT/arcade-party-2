@@ -9,7 +9,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.CombatEntry;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.decoration.ArmorStand;
@@ -198,7 +198,7 @@ public class GameCommons {
         var msg = gameHandle.getTranslations().translateText(player, key,
                         styled(score, ChatFormatting.YELLOW),
                         styled(data.getScore(player), ChatFormatting.AQUA))
-                .formatted(ChatFormatting.GREEN);
+                .withStyle(ChatFormatting.GREEN);
 
         player.sendOverlayMessage(msg);
     }
@@ -273,7 +273,7 @@ public class GameCommons {
     }
 
     public void addWaypoint(Vec3 pos, int color, ResourceKey<WaypointStyleAsset> style) {
-        var marker = new ArmorStand(EntityType.ARMOR_STAND, world);
+        var marker = new ArmorStand(EntityTypes.ARMOR_STAND, world);
         marker.setPos(pos);
         ArmorStandAccess.setSmall(marker, true);
         ArmorStandAccess.setMarker(marker, true);

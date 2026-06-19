@@ -212,7 +212,7 @@ class CozyCampfireInstance(
         val seconds = totalSeconds % 60
 
         return gameHandle.translations.translateText("time", minutes, seconds)
-            .formatted(ChatFormatting.YELLOW)
+            .withStyle(ChatFormatting.YELLOW)
     }
 
     private fun getRemainingTime(fuel: Int, playerCount: Int): Int {
@@ -285,7 +285,7 @@ class CozyCampfireInstance(
         val msg = translations.translateText(
             "fuel_added",
             styled(added, ChatFormatting.YELLOW)
-        ).formatted(ChatFormatting.GREEN)
+        ).withStyle(ChatFormatting.GREEN)
 
         for (player in team.players) {
             player.sendOverlayMessage(msg.translateFor(player))

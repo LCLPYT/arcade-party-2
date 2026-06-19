@@ -15,7 +15,7 @@ import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.DyeColor
@@ -25,6 +25,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.border.WorldBorder
 import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.phys.Vec3
+import net.minecraft.world.scores.TeamColor
 import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.*
@@ -60,8 +61,8 @@ import kotlin.random.asJavaRandom
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 
-private val TARGET_COLOR = ChatFormatting.RED
-private val ASSASSIN_COLOR = ChatFormatting.BLUE
+private val TARGET_COLOR = TeamColor.RED
+private val ASSASSIN_COLOR = TeamColor.BLUE
 private val PREPARE_DURATION = 10.seconds
 private val INVISIBILITY_DURATION = 6.seconds
 private val JUMP_BOOST_DURATION = 8.seconds
@@ -376,7 +377,7 @@ class AssassinsInstance(
 
     private fun sendOffTargetFeedback(attacker: ServerPlayer) {
         val text = translate( "off_target")
-            .formatted(ChatFormatting.RED)
+            .withStyle(ChatFormatting.RED)
             .translateFor(attacker)
 
         attacker.sendOverlayMessage(text)
@@ -385,7 +386,7 @@ class AssassinsInstance(
 
     private fun sendTargetMessage(player: ServerPlayer, target: ServerPlayer) {
         val text = translate("target", target.name)
-            .formatted(ChatFormatting.RED)
+            .withStyle(ChatFormatting.RED)
             .translateFor(player)
 
         player.sendSystemMessage(text)
@@ -488,7 +489,7 @@ class AssassinsInstance(
             }
         }
 
-        val finder = SizedSpaceFinder.create(level, EntityType.PLAYER)
+        val finder = SizedSpaceFinder.create(level, EntityTypes.PLAYER)
         spawns = finder.findSpaces(ground.iterator())
 
         if (spawns.isEmpty()) {
@@ -498,7 +499,7 @@ class AssassinsInstance(
         if (DEBUG_SPAWN_POSITIONS) {
             commons().debugController().renderer().ifPresent { renderer ->
                 for (pos in spawns) {
-                    renderer.marker(pos, Blocks.GREEN_CONCRETE.defaultBlockState(), 0x00ff00)
+                    renderer.marker(pos, Blocks.CONCRETE.green.defaultBlockState(), 0x00ff00)
                 }
             }
         }
@@ -515,7 +516,7 @@ class AssassinsInstance(
         }
 
         commons().debugController().visualizeStructureMask(
-            mask, min, Matrix3i.IDENTITY, Blocks.LIGHT_BLUE_STAINED_GLASS.defaultBlockState()
+            mask, min, Matrix3i.IDENTITY, Blocks.STAINED_GLASS.lightBlue.defaultBlockState()
         )
     }
 }

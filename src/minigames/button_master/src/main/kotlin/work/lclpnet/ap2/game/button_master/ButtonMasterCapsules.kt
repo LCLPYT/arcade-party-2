@@ -7,11 +7,11 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector3d
 import work.lclpnet.ap2.ext.asVec3d
-import work.lclpnet.ap2.impl.game.GameCommons
-import work.lclpnet.ap2.impl.util.math.MathUtil
 import work.lclpnet.ap2.ext.mc.setBlocks
 import work.lclpnet.ap2.ext.mc.teleport
 import work.lclpnet.ap2.ext.toMinecraft
+import work.lclpnet.ap2.impl.game.GameCommons
+import work.lclpnet.ap2.impl.util.math.MathUtil
 import work.lclpnet.ap2.util.scene.ApSceneRenderer
 import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.gaco.math.BlockFace
@@ -40,7 +40,7 @@ class ButtonMasterCapsules(
                 val capsuleBounds = getCapsuleBounds(capsule)
 
                 commons.debugController().renderer().ifPresent {
-                    it.box(capsuleBounds, Blocks.YELLOW_STAINED_GLASS.defaultBlockState())
+                    it.box(capsuleBounds, Blocks.STAINED_GLASS.yellow.defaultBlockState())
                 }
             }
 
@@ -48,7 +48,7 @@ class ButtonMasterCapsules(
                 val capsuleSpawn = getCapsuleSpawn(capsule)
 
                 commons.debugController().renderer().ifPresent {
-                    it.arrow(capsuleSpawn.asVec3d(), MathUtil.yaw2vec(capsuleSpawn.yaw), Blocks.LIME_TERRACOTTA.defaultBlockState())
+                    it.arrow(capsuleSpawn.asVec3d(), MathUtil.yaw2vec(capsuleSpawn.yaw), Blocks.DYED_TERRACOTTA.lime.defaultBlockState())
                 }
             }
         }
@@ -72,9 +72,9 @@ class ButtonMasterCapsules(
     fun getCapsuleSpawn(capsule: BlockFace): PositionRotation {
         val referenceSpawn = schema.capsuleSpawn!!.asVec3d()
         val referenceButton = schema.capsuleButton!!
-        val schematicOffset = requireNotNull(capsuleSchematic).origin.toMinecraft()
+        val schematicOffset = capsuleSchematic.origin.toMinecraft()
         val buttonToOriginOffset = referenceButton.pos.subtract(schematicOffset)
-        val localSpawn = referenceSpawn.subtract(referenceButton.pos.center)
+        val localSpawn = referenceSpawn.subtract(Vec3.atCenterOf(referenceButton.pos))
 
         val rotation = Matrix3i.makeRotationY(
             capsule.face.get2DDataValue() - referenceButton.face.get2DDataValue()
@@ -83,7 +83,7 @@ class ButtonMasterCapsules(
         val localOffset = capsule.pos.subtract(referenceButton.pos)
 
         val capsuleSpawn = rotation.transform(localSpawn)
-            .add(localOffset.center)
+            .add(Vec3.atCenterOf(localOffset))
             .add(Vec3.atLowerCornerOf(buttonToOriginOffset))
             .add(Vec3.atLowerCornerOf(schematicOffset))
 

@@ -6,7 +6,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.projectile.FireworkRocketEntity;
 import net.minecraft.world.entity.vehicle.minecart.Minecart;
@@ -200,10 +200,10 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
         double y = firstTrack.pos.getY();
         double z = firstTrack.pos.getZ() + 0.5;
 
-        Minecart minecart = new Minecart(EntityType.MINECART, world);
+        Minecart minecart = new Minecart(EntityTypes.MINECART, world);
         minecart.setPosRaw(x, y, z);
 
-        Villager villager = new Villager(EntityType.VILLAGER, world);
+        Villager villager = new Villager(EntityTypes.VILLAGER, world);
         new MobSpawner(world, random, new IndexedSet<>()).randomizeEntity(villager);
         villager.setPosRaw(x, y, z);
 

@@ -2,6 +2,7 @@ package work.lclpnet.ap2.impl.util.bossbar;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.bossevents.CustomBossEvent;
 import net.minecraft.server.level.ServerBossEvent;
@@ -175,7 +176,7 @@ public class DynamicTranslatedPlayerBossBar implements PlayerBossBar {
      *
      * @param styleUpdater the style updater
      */
-    public DynamicTranslatedPlayerBossBar styled(UnaryOperator<Style> styleUpdater) {
+    public DynamicTranslatedPlayerBossBar withStyle(UnaryOperator<Style> styleUpdater) {
         this.setTitleStyle(styleUpdater.apply(this.getTitleStyle()));
         return this;
     }
@@ -187,7 +188,7 @@ public class DynamicTranslatedPlayerBossBar implements PlayerBossBar {
      *
      * @param styleOverride the style that provides definitions for absent definitions in the title text's style
      */
-    public DynamicTranslatedPlayerBossBar fillStyle(Style styleOverride) {
+    public DynamicTranslatedPlayerBossBar withStyle(Style styleOverride) {
         this.setTitleStyle(styleOverride.applyTo(this.getTitleStyle()));
         return this;
     }
@@ -197,7 +198,7 @@ public class DynamicTranslatedPlayerBossBar implements PlayerBossBar {
      *
      * @param formattings an array of formattings
      */
-    public DynamicTranslatedPlayerBossBar formatted(ChatFormatting... formattings) {
+    public DynamicTranslatedPlayerBossBar withStyle(ChatFormatting... formattings) {
         this.setTitleStyle(this.getTitleStyle().applyFormats(formattings));
         return this;
     }
@@ -207,8 +208,28 @@ public class DynamicTranslatedPlayerBossBar implements PlayerBossBar {
      *
      * @param formatting a formatting
      */
-    public DynamicTranslatedPlayerBossBar formatted(ChatFormatting formatting) {
+    public DynamicTranslatedPlayerBossBar withStyle(ChatFormatting formatting) {
         this.setTitleStyle(this.getTitleStyle().applyFormat(formatting));
+        return this;
+    }
+
+    /**
+     * Set the color of the title text's style.
+     *
+     * @param color The packed color int.
+     */
+    public DynamicTranslatedPlayerBossBar withColor(int color) {
+        this.setTitleStyle(this.getTitleStyle().withColor(color));
+        return this;
+    }
+
+    /**
+     * Set the color of the title text's style.
+     *
+     * @param color The text color.
+     */
+    public DynamicTranslatedPlayerBossBar withColor(TextColor color) {
+        this.setTitleStyle(this.getTitleStyle().withColor(color));
         return this;
     }
 

@@ -286,7 +286,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         // header
         var round = new FixedFormat(Component.literal(String.valueOf(scoreManager.getRound())).withStyle(YELLOW));
-        objective.createText(translations.translateText("ap2.prepare.round").formatted(GREEN)).setNumberFormat(round);
+        objective.createText(translations.translateText("ap2.prepare.round").withStyle(GREEN)).setNumberFormat(round);
 
         if (args.playerManager().isFinale()) {
             addFinalistsToScoreboard(objective);
@@ -301,12 +301,12 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
                         ? "ap2.prepare.win_finale"
                         : "ap2.prepare.spectating";
 
-                return translations.translateText(player, translation).formatted(AQUA);
+                return translations.translateText(player, translation).withStyle(AQUA);
             }, ScoreboardLayout.BOTTOM);
         } else {
             var requiredScore = styled(scoreManager.getTargetScore()).formatted(YELLOW);
             TranslatedText taskMsg = translations.translateText("ap2.prepare.score_required", requiredScore);
-            objective.createText(taskMsg.formatted(AQUA), ScoreboardLayout.BOTTOM);
+            objective.createText(taskMsg.withStyle(AQUA), ScoreboardLayout.BOTTOM);
         }
 
         objective.createNewline(ScoreboardLayout.BOTTOM);
@@ -323,7 +323,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         objective.createNewline(ScoreboardLayout.TOP);
 
-        objective.createText(translations.translateText("ap2.finale").formatted(YELLOW, BOLD));
+        objective.createText(translations.translateText("ap2.finale").withStyle(YELLOW, BOLD));
 
         var separator = Component.literal(ApConstants.SCOREBOARD_SEPARATOR_SM).withStyle(DARK_GREEN, STRIKETHROUGH);
         objective.createText(separator);
@@ -340,7 +340,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         if (scoreManager.hasScores()) {
             objective.createNewline(ScoreboardLayout.TOP);
 
-            objective.createText(translations.translateText("ap2.score").formatted(YELLOW, BOLD));
+            objective.createText(translations.translateText("ap2.score").withStyle(YELLOW, BOLD));
 
             var separator = Component.literal(ApConstants.SCOREBOARD_SEPARATOR_SM).withStyle(DARK_GREEN, STRIKETHROUGH);
             objective.createText(separator);
@@ -391,7 +391,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         if (miniGame != null) {
             var obj = new TranslatedTextDisplayObject(scene, translations);
-            var currentTitle = translations.translateText(miniGame.getTitleKey()).formatted(AQUA);
+            var currentTitle = translations.translateText(miniGame.getTitleKey()).withStyle(AQUA);
 
             obj.controller().configure(controller -> {
                 controller.setText(lang -> Component.literal("→ ").withStyle(YELLOW)
@@ -409,7 +409,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         var title = new TranslatedTextDisplayObject(scene, translations);
 
         title.controller().configure(controller -> {
-            controller.setText(translations.translateText("ap2.prepare.game_queue").formatted(YELLOW, UNDERLINE, BOLD));
+            controller.setText(translations.translateText("ap2.prepare.game_queue").withStyle(YELLOW, UNDERLINE, BOLD));
             controller.setDisplayFlags(Display.TextDisplay.FLAG_USE_DEFAULT_BACKGROUND);
         });
 
@@ -447,11 +447,11 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             boolean mayPossiblyNotBePlayed = !entry.game().canBePlayed(this);
 
             obj.controller().configure(controller -> {
-                TranslatedText text = translations.translateText(entry.game().getTitleKey()).formatted(color);
+                TranslatedText text = translations.translateText(entry.game().getTitleKey()).withStyle(color);
 
                 if (mayPossiblyNotBePlayed) {
                     controller.setText(lang -> Component.literal("⏳ ").withStyle(WHITE)
-                            .append(text.translateTo(lang).formatted(ITALIC)));
+                            .append(text.translateTo(lang).withStyle(ITALIC)));
                 } else {
                     controller.setText(text);
                 }
@@ -491,7 +491,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         } else {
             if (t == GAME_ANNOUNCE_DELAY - 40) {
                 // "The next game will be %s"
-                args.miniGameArgs().translations().translateText("ap2.prepare.next_game").formatted(GRAY)
+                args.miniGameArgs().translations().translateText("ap2.prepare.next_game").withStyle(GRAY)
                         .sendTo(PlayerLookup.all(getServer()));
             } else if (t == GAME_ANNOUNCE_DELAY) {
                 announceNextGame();
@@ -639,7 +639,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         animatedTitle = new AnimatedTitle();
 
-        var playedNextMsg = translations.translateText("ap2.prepare.will_be_played_next").formatted(GREEN);
+        var playedNextMsg = translations.translateText("ap2.prepare.will_be_played_next").withStyle(GREEN);
         var separator = Component.literal(ApConstants.SEPARATOR).withStyle(DARK_GREEN, STRIKETHROUGH, BOLD);
         String author = dataManager.string(miniGame.getAuthor());
 
@@ -648,18 +648,18 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         for (ServerPlayer player : players) {
             player.sendSystemMessage(separator);
 
-            var gameTitle = translations.translateText(player, miniGame.getTitleKey()).formatted(AQUA, BOLD);
+            var gameTitle = translations.translateText(player, miniGame.getTitleKey()).withStyle(AQUA, BOLD);
             player.sendSystemMessage(gameTitle);
 
             String descriptionKey = miniGame.getDescriptionKey();
             Object[] descArgs = miniGame.getDescriptionArguments();
 
-            var description = translations.translateText(player, descriptionKey, descArgs).formatted(GREEN);
+            var description = translations.translateText(player, descriptionKey, descArgs).withStyle(GREEN);
 
             player.sendSystemMessage(description);
 
             var createdBy = translations.translateText(player, "ap2.prepare.created_by",
-                    styled(author, YELLOW)).formatted(GRAY, ITALIC);
+                    styled(author, YELLOW)).withStyle(GRAY, ITALIC);
 
             player.sendSystemMessage(Component.literal(""));
             player.sendSystemMessage(createdBy);
@@ -699,8 +699,8 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     private void announceInvalidGame() {
         Translations translations = args.miniGameArgs().translations();
 
-        var gameTitle = translations.translateText(miniGame.getTitleKey()).formatted(YELLOW);
-        var msg = translations.translateText("ap2.prepare.game_cannot_be_played", gameTitle).formatted(RED);
+        var gameTitle = translations.translateText(miniGame.getTitleKey()).withStyle(YELLOW);
+        var msg = translations.translateText("ap2.prepare.game_cannot_be_played", gameTitle).withStyle(RED);
 
         msg.acceptEach(PlayerLookup.all(getServer()), (player, text) -> {
             player.sendSystemMessage(text);

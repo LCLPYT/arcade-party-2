@@ -162,7 +162,7 @@ class MirrorHopInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
 
         level.playSound(null, x, y + 1, z, SoundEvents.WITHER_BREAK_BLOCK, SoundSource.BLOCKS, 0.3f, 0f)
 
-        val particleEffect = BlockParticleOption(ParticleTypes.BLOCK, Blocks.WHITE_CONCRETE_POWDER.defaultBlockState())
+        val particleEffect = BlockParticleOption(ParticleTypes.BLOCK, Blocks.CONCRETE_POWDER.white.defaultBlockState())
         level.sendParticles(particleEffect, x, y, z, 10, 0.8, 0.5, 0.8, 0.5)
     }
 }

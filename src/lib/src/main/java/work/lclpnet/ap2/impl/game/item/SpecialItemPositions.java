@@ -60,7 +60,7 @@ public class SpecialItemPositions {
 
         if (DEBUG_SPAWNS) {
             debugController.exclusive("spawn_boxes", controller ->
-                    controller.visualizeBoxes(boxes, minPos, Matrix3i.IDENTITY, Blocks.LIME_STAINED_GLASS.defaultBlockState()));
+                    controller.visualizeBoxes(boxes, minPos, Matrix3i.IDENTITY, Blocks.STAINED_GLASS.lime().defaultBlockState()));
         }
     }
 

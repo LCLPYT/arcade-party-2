@@ -128,7 +128,7 @@ public class SimpleTeamManager implements TeamManager {
         var mcTeam = scoreboard.createTeam(key.id());
 
         if (useColorCodes) {
-            mcTeam.setColor(key.formatting());
+            mcTeam.setColor(Optional.of(key.teamColor()));
         }
 
         mcTeams.put(key, mcTeam);

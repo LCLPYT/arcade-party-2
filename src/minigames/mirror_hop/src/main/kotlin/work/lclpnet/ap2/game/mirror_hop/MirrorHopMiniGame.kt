@@ -14,7 +14,7 @@ class MirrorHopMiniGame : MiniGame {
     override val id = ApConstants.identifier("mirror_hop")
     override val type = GameType.FFA
     override val author = ApConstants.PERSON_LCLP
-    override fun getIcon(manager: RegistryAccess): ItemStack = ItemStack(Items.WHITE_STAINED_GLASS)
+    override fun getIcon(manager: RegistryAccess): ItemStack = ItemStack(Items.STAINED_GLASS.white)
     override fun canBeFinale(context: GameStartContext): Boolean = true
     override fun canBePlayed(context: GameStartContext): Boolean = true
     override fun createFactory(): MiniGameFactory = MapLevelGameFactory(::MirrorHopInstance)

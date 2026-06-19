@@ -15,6 +15,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.gamerules.GameRules
+import net.minecraft.world.phys.Vec3
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.playNotifySound
@@ -60,7 +61,7 @@ class KingOfTheHillInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
             .set(GameRules.FALL_DAMAGE, false)
             .set(GameRules.SHOW_ADVANCEMENT_MESSAGES, false)
 
-        commons().addWaypoint(goalShape!!.center().center, 0xffd700)
+        commons().addWaypoint(Vec3.atCenterOf(goalShape!!.center()), 0xffd700)
     }
 
     override fun go() {
@@ -70,7 +71,7 @@ class KingOfTheHillInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
             level.setBlock(pos, Blocks.AIR)
         }
 
-        val name = translate("knockback_stick").formatted(ChatFormatting.GOLD)
+        val name = translate("knockback_stick").withStyle(ChatFormatting.GOLD)
         val knockback = ItemHelper.getEnchantment(Enchantments.KNOCKBACK, level.registryAccess())
 
         for (player in players()) {

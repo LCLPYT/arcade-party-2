@@ -67,6 +67,6 @@ fun gainKill(player: ServerPlayer, stats: BaseStatsManager<ServerPlayer, PlayerR
     player.playNotifySound(SoundEvents.ARROW_HIT_PLAYER, SoundSource.BLOCKS, 0.7f, 1.55f)
 
     translations.translateText("ap2.gain_kill", FormatWrapper.styled(1, ChatFormatting.YELLOW))
-        .formatted(ChatFormatting.GREEN)
+        .withStyle(ChatFormatting.GREEN)
         .sendTo(player, true)
 }

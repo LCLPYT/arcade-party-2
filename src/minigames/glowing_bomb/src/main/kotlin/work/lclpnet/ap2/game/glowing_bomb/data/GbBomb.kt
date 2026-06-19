@@ -69,7 +69,7 @@ class GbBomb(scene: Scene, private val onYielded: Runnable) : Object3d(scene), A
     }
 
     private fun frame(px: Double, py: Double, pz: Double, sx: Double, sy: Double, sz: Double) {
-        val frame = BlockDisplayObject(scene, Blocks.RED_CONCRETE.defaultBlockState())
+        val frame = BlockDisplayObject(scene, Blocks.CONCRETE.red.defaultBlockState())
         frame.position.set(-0.5, -0.5, -0.5)  // cube center to origin
         frame.scale.set(sx, sy, sz)
 

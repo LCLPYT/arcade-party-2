@@ -46,8 +46,8 @@ interface KitHandle {
 
     fun decorateItemStack(stack: ItemStack, kit: Kit, player: ServerPlayer, forIcon: Boolean) {
         stack.set(
-            DataComponents.CUSTOM_NAME, kitName(kit).translateFor(player).formatted(ChatFormatting.AQUA)
-                .styled { style -> style.withItalic(false) }
+            DataComponents.CUSTOM_NAME, kitName(kit).translateFor(player).withStyle(ChatFormatting.AQUA)
+                .withStyle { style -> style.withItalic(false) }
         )
 
         stack.set(
@@ -63,7 +63,7 @@ interface KitHandle {
 
         if (!translations.translator.hasTranslation(translations.getLanguage(player), descriptionKey)) return
 
-        val description = translations.translateText(player, descriptionKey).formatted(ChatFormatting.GREEN)
+        val description = translations.translateText(player, descriptionKey).withStyle(ChatFormatting.GREEN)
 
         val currentLore = stack.getOrDefault(
             DataComponents.LORE,

@@ -58,7 +58,7 @@ class ResultAnnouncement<Ref : SubjectRef>(
 
         if (order.isEmpty()) {
             player.sendSystemMessage(
-                translations.translateText(player, "ap2.no_results").formatted(ChatFormatting.GRAY)
+                translations.translateText(player, "ap2.no_results").withStyle(ChatFormatting.GRAY)
             )
         } else {
             sendRankList(amount, player)
@@ -155,7 +155,7 @@ class ResultAnnouncement<Ref : SubjectRef>(
                 translations.translateText(
                     player, "ap2.you_placed",
                     FormatWrapper.styled("#$ranking", ChatFormatting.YELLOW)
-                ).formatted(ChatFormatting.GRAY)
+                ).withStyle(ChatFormatting.GRAY)
             )
             return
         }
@@ -166,8 +166,8 @@ class ResultAnnouncement<Ref : SubjectRef>(
             translations.translateText(
                 player, "ap2.you_placed_value",
                 FormatWrapper.styled("#$ranking", ChatFormatting.YELLOW),
-                translatedExtra.formatted(ChatFormatting.YELLOW)
-            ).formatted(ChatFormatting.GRAY)
+                translatedExtra.withStyle(ChatFormatting.YELLOW)
+            ).withStyle(ChatFormatting.GRAY)
         )
     }
 }

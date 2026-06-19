@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.api.game.team;
 
-import net.minecraft.ChatFormatting;
+import net.minecraft.world.scores.TeamColor;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
@@ -10,7 +10,7 @@ public sealed interface TeamKey permits DyeTeamKey {
 
     int color();
 
-    ChatFormatting formatting();
+    TeamColor teamColor();
 
     default String getTranslationKey() {
         return "ap2.team." + id();
@@ -18,6 +18,6 @@ public sealed interface TeamKey permits DyeTeamKey {
 
     default TranslatedText getDisplayName(Translations translations) {
         return translations.translateText(getTranslationKey())
-                .styled(style -> style.withColor(color()));
+                .withStyle(style -> style.withColor(color()));
     }
 }

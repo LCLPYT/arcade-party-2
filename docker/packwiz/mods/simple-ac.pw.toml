@@ -1,15 +1,15 @@
 name = "simple-ac"
-filename = "simple-ac-0.2.0+26.1.2.jar"
+filename = "simple-ac-0.2.0+26.2.jar"
 side = "both"
 
 [download]
-url = "https://github.com/LCLPYT/simple-ac/releases/download/0.2.0%2B26.1.2/simple-ac-0.2.0%2B26.1.2.jar"
+url = "https://github.com/LCLPYT/simple-ac/releases/download/0.2.0%2B26.2/simple-ac-0.2.0%2B26.2.jar"
 hash-format = "sha256"
-hash = "d084fc6eb6922c176041c88313464d1388b763db1508630cc36dadd37f52bdec"
+hash = "5c36f0d1eb9ceb8b81f8f538d7b2c3c68e27554c165bfb77ce65a7769468861c"
 
 [update]
 [update.github]
-branch = "26.1"
+branch = "26.2"
 regex = "^.+(?<!-api|-dev|-dev-preshadow|-sources)\\.jar$"
 slug = "LCLPYT/simple-ac"
-tag = "0.2.0+26.1.2"
+tag = "0.2.0+26.2"

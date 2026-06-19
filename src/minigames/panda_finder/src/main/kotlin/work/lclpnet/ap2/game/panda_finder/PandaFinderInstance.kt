@@ -13,7 +13,7 @@ import net.minecraft.world.InteractionResult
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.animal.panda.Panda
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.projectile.FireworkRocketEntity
@@ -102,7 +102,7 @@ class PandaFinderInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: G
 
         val objective = scoreboardManager.translateObjective("score",
                 ObjectiveCriteria.RenderType.INTEGER, "ap2.score")
-            .formatted(ChatFormatting.YELLOW, ChatFormatting.BOLD)
+            .withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD)
 
         objective.setSlot(DisplaySlot.SIDEBAR)
 
@@ -136,7 +136,7 @@ class PandaFinderInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: G
         pandaManager.getLocalizedPandaGene()?.let { key ->
             translations.translateText("find",
                     FormatWrapper.styled(translations.translateText(key), ChatFormatting.YELLOW))
-                .formatted(ChatFormatting.GREEN).sendTo(players)
+                .withStyle(ChatFormatting.GREEN).sendTo(players)
         }
     }
 
@@ -168,7 +168,7 @@ class PandaFinderInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: G
         val adjacent = SimpleAdjacentBlocks(predicate, 1)
         val scanner = BfsWorldScanner(adjacent)
 
-        val spaceFinder = SizedSpaceFinder.create(world, EntityType.PANDA)
+        val spaceFinder = SizedSpaceFinder.create(world, EntityTypes.PANDA)
         val spaces = spaceFinder.findSpaces(scanner.scan(start))
 
         pandaManager = PandaManager(gameHandle.logger, spaces, random, world, gameHandle.participants)
@@ -198,7 +198,7 @@ class PandaFinderInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: G
         stats.increment(player, Cooldowns)
 
         player.sendSystemMessage(gameHandle.translations.translateText(player, "cooldown")
-            .formatted(ChatFormatting.RED))
+            .withStyle(ChatFormatting.RED))
 
         ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.BLAZE_HURT, SoundSource.HOSTILE, 0.5f, 1.5f)
         player.addEffect(MobEffectInstance(MobEffects.BLINDNESS, Ticks.seconds(3), 1, false, false))
@@ -235,7 +235,7 @@ class PandaFinderInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: G
 
         translations.translateText("panda_found",
                 FormatWrapper.styled(player.scoreboardName, ChatFormatting.YELLOW))
-            .formatted(ChatFormatting.GRAY).sendTo(players)
+            .withStyle(ChatFormatting.GRAY).sendTo(players)
 
         val participants = gameHandle.participants
 

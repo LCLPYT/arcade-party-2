@@ -136,7 +136,7 @@ class InkGrenadeItem(
             if (blinkTimer >= BLINK_SECONDS) {
                 blinkTimer -= BLINK_SECONDS
 
-                val newState: BlockState = if (flash) Blocks.TNT.defaultBlockState() else Blocks.WHITE_CONCRETE.defaultBlockState()
+                val newState: BlockState = if (flash) Blocks.TNT.defaultBlockState() else Blocks.CONCRETE.white.defaultBlockState()
                 flash = !flash
 
                 setBlockState(newState)
