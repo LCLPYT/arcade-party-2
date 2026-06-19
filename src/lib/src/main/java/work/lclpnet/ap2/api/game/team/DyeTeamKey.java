@@ -43,7 +43,7 @@ public enum DyeTeamKey implements TeamKey {
         TeamColor closest = null;
 
         for (TeamColor formatting : TeamColor.values()) {
-            int colorValue = teamColor.rgb();
+            int colorValue = formatting.rgb();
 
             double dist = ColorUtil.squaredDistance(color, colorValue);
 
