@@ -208,7 +208,7 @@ class AssassinsInstance(
             equip(player)
 
             if (DEBUG_ALWAYS_GIVE_ITEM || player.uuid in rewarded) {
-                giveSpecialItem(player, AssassinsSpecialItem.random(random))
+                giveSpecialItem(player, chooseRandomItem())
             }
         }
 
@@ -228,6 +228,16 @@ class AssassinsInstance(
             val label = translate("prepare")
             prepTimer = createTimer(label, PREPARE_DURATION, BossEvent.BossBarColor.YELLOW)
             prepTimer!!.whenDone { beginCombat() }
+        }
+    }
+
+    private fun chooseRandomItem(): AssassinsSpecialItem {
+        return if (players().count() >= 3) {
+            AssassinsSpecialItem.random(random)
+        } else {
+            AssassinsSpecialItem.entries.toMutableList().also {
+                it.remove(AssassinsSpecialItem.REVEAL_ASSASSIN)
+            }.random()
         }
     }
 
