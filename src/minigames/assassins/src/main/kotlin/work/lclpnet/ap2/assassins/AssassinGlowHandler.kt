@@ -80,6 +80,16 @@ class AssassinGlowHandler(
         restore(viewer, target)
     }
 
+    fun clearViewer(viewer: ServerPlayer) {
+        val map = glowFor.remove(viewer.uuid) ?: return
+
+        for (entityId in map.keys) {
+            val target = viewer.level().getEntity(entityId) as? ServerPlayer ?: continue
+
+            restore(viewer, target)
+        }
+    }
+
     fun clearAll() {
         val snapshot = glowFor.entries.map {
             it.key to it.value.keys.toList()

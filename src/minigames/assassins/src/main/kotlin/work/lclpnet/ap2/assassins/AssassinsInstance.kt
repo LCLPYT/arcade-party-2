@@ -269,6 +269,10 @@ class AssassinsInstance(
         // the round ends as soon as a player dies
         roundActive = false
 
+        // reset the glow and team color of the entities this player saw (e.g. their red target outline),
+        // otherwise the dying player keeps seeing them until they fully respawn/spectate
+        glow.clearViewer(player)
+
         if (attacker is ServerPlayer && targets.targetOf(attacker) === player) {
             gainKill(attacker, stats)
             rewarded.add(attacker.uuid)
