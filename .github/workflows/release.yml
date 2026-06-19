@@ -3,7 +3,7 @@ name: Release Please
 on:
   push:
     branches:
-      - "26.1"
+      - "26.2"
 
 permissions:
   contents: write
@@ -19,7 +19,7 @@ jobs:
       body: ${{ steps.release.outputs.body }}
       html_url: ${{ steps.release.outputs.html_url }}
     steps:
-      - uses: googleapis/release-please-action@v4
+      - uses: googleapis/release-please-action@v5
         id: release
 
   build-and-upload:
