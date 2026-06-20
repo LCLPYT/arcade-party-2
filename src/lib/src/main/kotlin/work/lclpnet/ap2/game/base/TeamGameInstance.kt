@@ -1,16 +1,14 @@
 package work.lclpnet.ap2.game.base
 
 import net.minecraft.server.level.ServerLevel
-import net.minecraft.server.level.ServerPlayer
 import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.ext.logger
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.data.type.TeamRef
-import work.lclpnet.ap2.game.player.ParticipantListener
 import work.lclpnet.ap2.game.team.Team
-import work.lclpnet.ap2.game.team.TeamEliminatedListener
 import work.lclpnet.ap2.game.team.TeamManager
 import work.lclpnet.ap2.game.team.TeamSpawnAccess
+import work.lclpnet.ap2.game.util.useLastRemainingTeamListener
 import work.lclpnet.ap2.game.util.useTeamWinManager
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.map.MapUtils
@@ -24,31 +22,14 @@ abstract class TeamGameInstance(
     map: GameMap,
     val teamManager: TeamManager
 ) : MapGameInstance(gameHandle, world, map),
-    ParticipantListener,
-    TeamEliminatedListener,
     TeamSpawnAccess {
 
     override val winManager = useTeamWinManager(teamManager, map) { data }
+    override val participantListener = useLastRemainingTeamListener(teamManager, winManager, ::teamEliminated)
     @Volatile
     private var teamSpawns: MutableMap<String, PositionRotation>? = null
 
-    init {
-        teamManager.bind(this)
-    }
-
-    override val participantListener = this
-
-    override fun participantRemoved(player: ServerPlayer) {
-        val team = teamManager.getTeam(player)
-
-        if (team == null || !teamManager.isParticipating(team)
-            || !team.getParticipatingPlayers(gameHandle.participants).isEmpty()
-        ) return
-
-        teamManager.setTeamEliminated(team)
-    }
-
-    override fun teamEliminated(team: Team) {
+    protected open fun teamEliminated(team: Team) {
         winManager.checkForLastRemaining()
     }
 

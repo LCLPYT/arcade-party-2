@@ -21,7 +21,7 @@ class TeamGatheringInstance(
 
     val data = useDataContainer(teamManager, ::IntScoreDataContainer)
     override val winManager = useTeamWinManager(teamManager, map = null) { data }
-    override val participantListener = null
+    override val participantListener = useLastRemainingTeamListener(teamManager, winManager)
 
     init {
         useSurvivalMode()

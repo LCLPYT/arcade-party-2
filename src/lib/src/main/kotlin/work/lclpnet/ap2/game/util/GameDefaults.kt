@@ -175,6 +175,26 @@ fun useLastRemainingParticipantListener(
     winManager.checkForLastRemaining()
 }
 
+fun MiniGameInstance.useLastRemainingTeamListener(
+    teamManager: TeamManager,
+    winManager: WinManager<Team, TeamRef>,
+    onTeamEliminated: (Team) -> Unit = { winManager.checkForLastRemaining() }
+): ParticipantListener {
+    teamManager.bind { team ->
+        onTeamEliminated(team)
+    }
+
+    return ParticipantListener { player ->
+        val team = teamManager.getTeam(player)
+
+        if (team == null || !teamManager.isParticipating(team)
+            || team.getParticipatingPlayers(gameHandle.participants).isNotEmpty()
+        ) return@ParticipantListener
+
+        teamManager.setTeamEliminated(team)
+    }
+}
+
 fun MiniGameInstance.useScoreboardStatsSync(source: ScoreListenerView<ServerPlayer, Int>, objective: Objective) {
     source.register { player, score ->
         gameHandle.scoreboardManager.setScore(player, objective, score)
