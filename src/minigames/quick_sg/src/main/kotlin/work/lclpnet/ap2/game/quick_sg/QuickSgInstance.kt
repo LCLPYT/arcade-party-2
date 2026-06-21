@@ -6,6 +6,7 @@ import net.minecraft.resources.ResourceKey
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.InteractionResult
+import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.entity.BarrelBlockEntity
 import net.minecraft.world.level.block.entity.ChestBlockEntity
@@ -24,6 +25,7 @@ import work.lclpnet.ap2.util.loot.LazyLootContainerManager
 import work.lclpnet.ap2.util.loot.VanillaLootTableFiller
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
+import work.lclpnet.kibu.translate.text.TranslatedText
 import java.util.concurrent.TimeUnit
 
 val WORLD_BORDER_DELAY = TimeUnit.MINUTES.toTicks(2)
@@ -63,6 +65,7 @@ class QuickSgInstance(
 
         useRemainingPlayersDisplay()
         useSmoothDeath()
+        disableEliminationMessages()
 
         movementBlocker.init(gameHandle.hooks)
 
@@ -77,6 +80,24 @@ class QuickSgInstance(
         val spacing = map.properties.optNumber("spawn-spacing", 16.0).toDouble()
 
         teleportToRandomSpawns(mapSchema.scanBox!!, mapSchema.scanStarts, spacing)
+    }
+
+    override fun eliminate(player: ServerPlayer, source: DamageSource?, customMsg: TranslatedText?) {
+        if (isParticipating(player)) {
+            val deathMessages = gameHandle.deathMessages
+            val normal = customMsg ?: deathMessages.getDeathMessage(player, source)
+            val withHealth = source?.let { deathMessages.getDeathMessageWithKillerHealth(player, it) }
+
+            if (withHealth != null) {
+                // the killer's remaining health is private intel, only reveal it to the victim
+                normal.sendTo(allPlayers().filter { it != player })
+                withHealth.sendTo(player)
+            } else {
+                normal.sendTo(allPlayers())
+            }
+        }
+
+        super.eliminate(player, source, customMsg)
     }
 
     override fun go() {
