@@ -57,6 +57,7 @@ import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.gaco.collisions.ChunkedCollisionDetector
 import work.lclpnet.gaco.collisions.CollisionDetector
 import work.lclpnet.gaco.collisions.movement.TickMovementObserver
+import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.gaco.ds.Checkpoint
 import work.lclpnet.gaco.math.SplinePath
 import work.lclpnet.game.map.GameMap
@@ -232,10 +233,12 @@ class PigRaceInstance(
         progress.update()
         scoreboard.updateRanking()
 
-        gameHandle.scheduler.interval(Runnable {
+        runEveryTick {
+            if (winManager.gameOver) return@runEveryTick
+
             progress.update()
             scoreboard.updateRanking()
-        }, 1)
+        }
 
         for (player in gameHandle.participants) {
             PlayerInventoryAccess.setSelectedSlot(player, STICK_SLOT)
@@ -323,7 +326,7 @@ class PigRaceInstance(
         player.remainingFireTicks = 0
     }
 
-    private fun setupCheckpoints(spawnBounds: work.lclpnet.gaco.ds.BlockBox, goal: Checkpoint) {
+    private fun setupCheckpoints(spawnBounds: BlockBox, goal: Checkpoint) {
         val checkpoints = ArrayList(mapSchema.checkpoints)
 
         val spawn = mapSchema.spawn
@@ -392,7 +395,7 @@ class PigRaceInstance(
         }
     }
 
-    private fun teleportPlayers(bounds: work.lclpnet.gaco.ds.BlockBox) {
+    private fun teleportPlayers(bounds: BlockBox) {
         val spawn = mapSchema.spawn
         val yaw = spawn.yaw
 
