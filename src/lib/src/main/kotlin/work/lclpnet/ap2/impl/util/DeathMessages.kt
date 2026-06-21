@@ -19,7 +19,9 @@ import work.lclpnet.ap2.core.hook.PlayerDeathMessageCallback
 import work.lclpnet.kibu.hook.HookRegistrar
 import work.lclpnet.kibu.translate.Translations
 import work.lclpnet.kibu.translate.text.FormatWrapper
+import work.lclpnet.kibu.translate.text.TextTranslatable
 import work.lclpnet.kibu.translate.text.TranslatedText
+import work.lclpnet.kibu.translate.util.LocaleUtil
 
 class DeathMessages(private val translations: Translations) {
 
@@ -132,11 +134,14 @@ class DeathMessages(private val translations: Translations) {
         return root(content.key, *args.toTypedArray())
     }
 
-    fun killerWithHealth(killer: LivingEntity): Component {
-        return Component.empty()
+    fun killerWithHealth(killer: LivingEntity): TextTranslatable = TextTranslatable { language ->
+        val locale = LocaleUtil.getLocale(language)
+        val health = "%.1f ♥".format(locale, killer.health / 2f)
+
+        Component.empty()
             .append(killer.displayName.copy().withStyle(ChatFormatting.YELLOW))
             .append(" (")
-            .append(Component.literal("%.1f ♥".format(killer.health / 2f)).withStyle(ChatFormatting.RED))
+            .append(Component.literal(health).withStyle(ChatFormatting.RED))
             .append(")")
     }
 
