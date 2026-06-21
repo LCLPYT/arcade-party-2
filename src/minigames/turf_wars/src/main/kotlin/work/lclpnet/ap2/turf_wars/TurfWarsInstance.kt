@@ -71,10 +71,15 @@ class TurfWarsInstance(
     val mapSchema: TurfWarsSchema,
 ) : TeamEliminationGameInstance(gameHandle, level, map, teamManager) {
 
-    val arrowEconomy = ArrowEconomy(gameHandle, teamManager)
     lateinit var turfManager: TurfManager
     lateinit var teamInfos: Map<DyeTeamKey, TurfWarsTeamInfo>
-    lateinit var kitHandler: KitHandler
+    val kitHandler = KitHandler.create(gameHandle, level) { handle ->
+        listOf(
+            ArcherKit(handle),
+            AssassinKit(handle)
+        )
+    }
+    val arrowEconomy = ArrowEconomy(gameHandle, teamManager, kitHandler.manager)
     lateinit var campingMonitor: CampingMonitor
     val movementObserver = TickMovementObserver(
         ChunkedCollisionDetector(),
@@ -271,13 +276,6 @@ class TurfWarsInstance(
     }
 
     fun setupKits(teamInfos: List<TurfWarsTeamInfo>) {
-        kitHandler = KitHandler.create(gameHandle, level) { handle ->
-            listOf(
-                ArcherKit(handle),
-                AssassinKit(handle)
-            )
-        }
-
         kitHandler.setup()
 
         for (info in teamInfos) {
@@ -442,20 +440,10 @@ class TurfWarsInstance(
         // damage constraints validated by allowDamage()
 
         if (source.isOf(DamageTypes.ARROW)) {
-            if (kitHandler.manager.hasKitEquipped<ArcherKit>(attacker)) {
-                // ensure arrows are one-hit for archer kit
-                if (amount < victim.health) {
-                    victim.hurtServer(level, source, victim.health)
-                    return false
-                }
-            }
-
-            if (kitHandler.manager.hasKitEquipped<AssassinKit>(attacker)) {
-                // ensure arrows are two-hit for assassin kit
-                if (amount < 10.0f) {
-                    victim.hurtServer(level, source, 10.0f)
-                    return false
-                }
+            // ensure arrows are one-hit
+            if (amount < victim.health) {
+                victim.hurtServer(level, source, victim.health)
+                return false
             }
         }
 
