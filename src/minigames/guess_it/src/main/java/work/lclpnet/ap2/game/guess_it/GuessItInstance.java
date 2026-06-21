@@ -58,7 +58,7 @@ public class GuessItInstance extends FFAGameInstance {
 
     private static final int PREPARATION_TICKS = Ticks.seconds(3);
     private static final int DELAY_TICKS = Ticks.seconds(5);
-    private static final int MIN_ROUNDS = 8, MAX_ROUNDS = 14;
+    private static final int ROUNDS = 10;
     private static final int MAX_CONSECUTIVE_ERRORS = 5;
     private final IntScoreDataContainer<ServerPlayer, PlayerRef> data = DataContainersKt.useDataContainer(this, IntScoreDataContainer::new);
     private final Random random = new Random();
@@ -74,7 +74,6 @@ public class GuessItInstance extends FFAGameInstance {
     private DynamicEntityModifier dynamicEntities = null;
     private ScoreHandle roundHandle = null;
     private int round = 0;
-    private int rounds = 10;
     private int consecutiveErrors = 0;
     private TaskHandle currentTask;
     private BossBarTimer timer;
@@ -105,8 +104,6 @@ public class GuessItInstance extends FFAGameInstance {
 
         commons().gameRuleBuilder()
                 .set(GameRules.REDUCED_DEBUG_INFO, true);
-
-        rounds = MIN_ROUNDS + random.nextInt(MAX_ROUNDS - MIN_ROUNDS + 1);
 
         Identifier answerId = getGameHandle().getGameInfo().identifier("answer");
 
@@ -188,7 +185,7 @@ public class GuessItInstance extends FFAGameInstance {
     }
 
     private void updateRoundDisplay() {
-        roundHandle.setNumberFormat(new FixedFormat(Component.literal("%s/%s".formatted(round, rounds)).withStyle(YELLOW)));
+        roundHandle.setNumberFormat(new FixedFormat(Component.literal("%s/%s".formatted(round, ROUNDS)).withStyle(YELLOW)));
     }
 
     private synchronized void prepareNextChallenge() {
@@ -356,7 +353,7 @@ public class GuessItInstance extends FFAGameInstance {
 
         inputManager.reset();
 
-        if (round >= rounds) {
+        if (round >= ROUNDS) {
             getWinManager().complete();
             return;
         }
