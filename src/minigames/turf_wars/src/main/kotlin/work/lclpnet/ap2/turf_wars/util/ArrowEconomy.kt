@@ -5,14 +5,13 @@ import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
-import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.team.TeamManager
 import work.lclpnet.ap2.ext.inWholeTicks
 import work.lclpnet.ap2.ext.mc.playNotifySound
-import work.lclpnet.ap2.turf_wars.ARROW_GAIN_DEFICIT_DELAY
-import work.lclpnet.ap2.turf_wars.ARROW_GAIN_DELAY
-import work.lclpnet.ap2.turf_wars.MAX_ARROWS
-import work.lclpnet.ap2.turf_wars.MAX_ARROWS_DEFICIT
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.kit.KitReadView
+import work.lclpnet.ap2.game.kit.hasKitEquipped
+import work.lclpnet.ap2.turf_wars.*
 import work.lclpnet.kibu.scheduler.api.TaskHandle
 import java.util.*
 import kotlin.time.Duration
@@ -23,7 +22,8 @@ import kotlin.time.Duration
  */
 class ArrowEconomy(
     private val gameHandle: MiniGameHandle,
-    private val teamManager: TeamManager
+    private val teamManager: TeamManager,
+    private val kits: KitReadView,
 ) {
 
     private val refillTasks = mutableMapOf<UUID, TaskHandle>()
@@ -72,6 +72,13 @@ class ArrowEconomy(
     private fun maxArrows(player: ServerPlayer): Int =
         if (isOutnumbered(player)) MAX_ARROWS_DEFICIT else MAX_ARROWS
 
-    private fun gainDelay(player: ServerPlayer): Duration =
-        if (isOutnumbered(player)) ARROW_GAIN_DEFICIT_DELAY else ARROW_GAIN_DELAY
+    private fun gainDelay(player: ServerPlayer): Duration {
+        val baseDelay = if (isOutnumbered(player)) ARROW_GAIN_DEFICIT_DELAY else ARROW_GAIN_DELAY
+
+        if (kits.hasKitEquipped<AssassinKit>(player)) {
+            return baseDelay * ASSASSIN_KIT_ARROW_DELAY_MULTIPLIER
+        }
+
+        return baseDelay
+    }
 }
