@@ -16,6 +16,7 @@
     "ServerExplosionMixin",
     "ServerGamePacketListenerImplMixin",
     "ServerLevelMixin",
+    "ai.BrainAccessor",
     "ai.GroundPathNavigationMixin",
     "ai.MoveControlMixin",
     "ai.NodeEvaluatorAccessor",
