@@ -178,6 +178,7 @@ fun useLastRemainingParticipantListener(
 fun MiniGameInstance.useLastRemainingTeamListener(
     teamManager: TeamManager,
     winManager: WinManager<Team, TeamRef>,
+    onParticipantRemoved: (ServerPlayer) -> Unit = {},
     onTeamEliminated: (Team) -> Unit = { winManager.checkForLastRemaining() }
 ): ParticipantListener {
     teamManager.bind { team ->
@@ -185,6 +186,8 @@ fun MiniGameInstance.useLastRemainingTeamListener(
     }
 
     return ParticipantListener { player ->
+        onParticipantRemoved(player)
+
         val team = teamManager.getTeam(player)
 
         if (team == null || !teamManager.isParticipating(team)

@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.game.base
 
 import net.minecraft.server.level.ServerLevel
+import net.minecraft.server.level.ServerPlayer
 import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.ext.logger
 import work.lclpnet.ap2.game.MiniGameHandle
@@ -25,9 +26,18 @@ abstract class TeamGameInstance(
     TeamSpawnAccess {
 
     override val winManager = useTeamWinManager(teamManager, map) { data }
-    override val participantListener = useLastRemainingTeamListener(teamManager, winManager, ::teamEliminated)
+    override val participantListener = useLastRemainingTeamListener(
+        teamManager,
+        winManager,
+        ::participantRemoved,
+        ::teamEliminated
+    )
     @Volatile
     private var teamSpawns: MutableMap<String, PositionRotation>? = null
+
+    protected open fun participantRemoved(player: ServerPlayer) {
+
+    }
 
     protected open fun teamEliminated(team: Team) {
         winManager.checkForLastRemaining()

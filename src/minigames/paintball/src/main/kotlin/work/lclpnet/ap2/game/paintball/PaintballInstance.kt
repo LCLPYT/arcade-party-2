@@ -431,6 +431,7 @@ class PaintballInstance(
 
     override fun participantRemoved(player: ServerPlayer) {
         balanceTeams()
+
         super.participantRemoved(player)
     }
 
