@@ -132,8 +132,6 @@ class PaintballInstance(
     }
 
     override fun prepare() {
-        teams.setup()
-
         scene.animate(1, gameHandle.rootScheduler)
 
         paintManager.data = data
