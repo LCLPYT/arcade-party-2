@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.game.data
 
-import java.util.*
 import java.util.function.ToDoubleFunction
 import java.util.function.ToIntFunction
 import java.util.stream.DoubleStream
@@ -10,18 +9,18 @@ enum class Ordering {
     DESCENDING,
     ASCENDING;
 
-    fun best(stream: IntStream): Optional<Int> {
+    fun best(stream: IntStream): Int? {
         return (when (this) {
             DESCENDING -> stream.max()
             ASCENDING -> stream.min()
-        }).stream().boxed().findAny()
+        }).stream().boxed().findAny().orElse(null)
     }
 
-    fun best(stream: DoubleStream): Optional<Double> {
+    fun best(stream: DoubleStream): Double? {
         return (when (this) {
             DESCENDING -> stream.max()
             ASCENDING -> stream.min()
-        }).stream().boxed().findAny()
+        }).stream().boxed().findAny().orElse(null)
     }
 
     fun opposite(): Ordering {

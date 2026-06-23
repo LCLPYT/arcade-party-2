@@ -20,6 +20,7 @@ import work.lclpnet.ap2.game.GameInfo
 import work.lclpnet.ap2.game.MiniGame
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.player.Participants
+import work.lclpnet.ap2.game.player.PlayerRankView
 import work.lclpnet.ap2.game.team.TeamConfig
 import work.lclpnet.ap2.impl.game.PlayerUtil
 import work.lclpnet.ap2.impl.i18n.GameScopedTranslator
@@ -58,6 +59,7 @@ class DefaultMiniGameHandle(
     override val bossBarHandler: BossBarHandler,
     override val scoreboardManager: CustomScoreboardManager,
     private val remake: AtomicBoolean,
+    override val rankView: PlayerRankView,
 ) : MiniGameHandle, WorldBorderManager {
 
     override val logger: Logger = LoggerFactory.getLogger(game.id.toString())
