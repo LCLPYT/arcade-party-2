@@ -145,21 +145,7 @@
           "weight": 5
         }
       ],
-      "functions": [
-        {
-          "function": "minecraft:enchant_with_levels",
-          "levels": 12,
-          "options": [
-            "minecraft:protection"
-          ],
-          "conditions": [
-            {
-              "condition": "minecraft:random_chance",
-              "chance": 0.42
-            }
-          ]
-        }
-      ]
+      "functions": []
     },
     {
       "rolls": {
