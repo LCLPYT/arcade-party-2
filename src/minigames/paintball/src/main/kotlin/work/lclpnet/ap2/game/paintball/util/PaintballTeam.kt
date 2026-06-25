@@ -3,10 +3,10 @@ package work.lclpnet.ap2.game.paintball.util
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.phys.Vec3
 import org.json.JSONObject
-import work.lclpnet.ap2.api.game.team.DyeTeamKey
-import work.lclpnet.ap2.api.game.team.TeamKeyable
-import work.lclpnet.ap2.api.game.team.TeamManager
 import work.lclpnet.ap2.game.player.Participants
+import work.lclpnet.ap2.game.team.DyeTeamKey
+import work.lclpnet.ap2.game.team.TeamKeyable
+import work.lclpnet.ap2.game.team.TeamManager
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.gaco.core.api.Partial
 import work.lclpnet.gaco.ds.BlockBox
@@ -16,15 +16,13 @@ data class PaintballTeam(
     val yaw: Float,
     val baseBounds: BlockBox,
     val templateColor: DyeTeamKey,
-    private val teamKey: DyeTeamKey
+    override val key: DyeTeamKey
 ) : TeamKeyable {
-
-    override fun key(): DyeTeamKey = teamKey
 
     fun participants(teamManager: TeamManager, participants: Participants): Set<ServerPlayer> =
         teamManager.getTeam(this)
-            .map { it.getParticipatingPlayers(participants) }
-            .orElseGet { emptySet() }
+            ?.getParticipatingPlayers(participants)
+            ?: emptySet()
 }
 
 fun paintballTeamFromJson(json: JSONObject): Partial<PaintballTeam, DyeTeamKey> {

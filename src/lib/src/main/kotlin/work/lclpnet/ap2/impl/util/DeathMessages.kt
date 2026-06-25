@@ -13,9 +13,9 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.projectile.Projectile
 import net.minecraft.world.entity.projectile.throwableitemprojectile.Snowball
 import net.minecraft.world.level.gamerules.GameRules
-import work.lclpnet.ap2.api.game.team.Team
-import work.lclpnet.ap2.api.game.team.TeamKey
 import work.lclpnet.ap2.core.hook.PlayerDeathMessageCallback
+import work.lclpnet.ap2.game.team.Team
+import work.lclpnet.ap2.game.team.TeamKey
 import work.lclpnet.kibu.hook.HookRegistrar
 import work.lclpnet.kibu.translate.Translations
 import work.lclpnet.kibu.translate.text.FormatWrapper
@@ -65,7 +65,7 @@ class DeathMessages(private val translations: Translations) {
     }
 
     fun eliminated(team: Team): TranslatedText {
-        return eliminated(team.key())
+        return eliminated(team.key)
     }
 
     fun eliminated(key: TeamKey): TranslatedText {

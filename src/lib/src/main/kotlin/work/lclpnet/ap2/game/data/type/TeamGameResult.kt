@@ -4,7 +4,7 @@ import it.unimi.dsi.fastutil.objects.ObjectIntPair
 import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.game.data.GenericGameResult
 import work.lclpnet.ap2.api.game.data.SubjectRefResolver
-import work.lclpnet.ap2.api.game.team.Team
+import work.lclpnet.ap2.game.team.Team
 import java.util.*
 
 class TeamGameResult(
@@ -31,7 +31,7 @@ class TeamGameResult(
             val teamRef: TeamRef = teamRank.key()
             val team = refResolver.resolve(teamRef) ?: continue
 
-            for (player in team.getPlayers()) {
+            for (player in team.players) {
                 val ref = PlayerRef.create(player)
                 playerResults.add(ObjectIntPair.of(ref, teamRank.rightInt()))
                 playerTeams[ref] = teamRef

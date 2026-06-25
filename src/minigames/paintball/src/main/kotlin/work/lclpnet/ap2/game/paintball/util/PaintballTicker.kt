@@ -22,11 +22,11 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.shapes.CollisionContext
-import work.lclpnet.ap2.api.game.team.DyeTeamKey
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.mc.resetAttribute
 import work.lclpnet.ap2.ext.mc.setAttribute
 import work.lclpnet.ap2.game.player.Participants
+import work.lclpnet.ap2.game.team.DyeTeamKey
 import work.lclpnet.ap2.impl.game.PlayerUtil
 import work.lclpnet.ap2.impl.util.RayCastUtil
 import work.lclpnet.ap2.impl.util.SoundHelper
@@ -118,7 +118,7 @@ class PaintballTicker(
                 SoundHelper.playSoundAt(player, SoundEvents.HONEY_BLOCK_SLIDE, SoundSource.PLAYERS, 0.40f, 1.65f + Math.random().toFloat() * 0.2f)
             }
 
-            teams.teamOf(player).ifPresent { team ->
+            teams.teamOf(player)?.let { team ->
                 if (resolvedState != null) {
                     world.sendParticles(
                         BlockParticleOption(ParticleTypes.BLOCK, resolvedState),
@@ -126,7 +126,7 @@ class PaintballTicker(
                     )
                 } else {
                     world.sendParticles(
-                        DustParticleOptions(team.key().color(), 0.8f),
+                        DustParticleOptions(team.key.color, 0.8f),
                         player.x, player.y, player.z, 2, 0.2, 0.0, 0.2, 0.2
                     )
                 }
@@ -150,7 +150,7 @@ class PaintballTicker(
     }
 
     private fun tickWallClimbing(player: ServerPlayer): BlockState? {
-        val playerTeam = teams.teamOf(player).orElse(null) ?: return null
+        val playerTeam = teams.teamOf(player) ?: return null
 
         val input = PlayerUtil.getHorizontalInputVector(player)
 
@@ -175,7 +175,7 @@ class PaintballTicker(
         val collisionState = world.getBlockState(hit.blockPos)
         val collisionTeam: DyeTeamKey = paintManager.getTeam(collisionState.block) ?: return null
 
-        if (collisionTeam != playerTeam.key()) return null
+        if (collisionTeam != playerTeam.key) return null
 
         VelocityModifier.setVelocity(player, player.deltaMovement.with(Direction.Axis.Y, 0.25))
 
@@ -204,7 +204,7 @@ class PaintballTicker(
     private fun standingOnInk(player: ServerPlayer): Pair<OnInk, BlockState?> {
         if (player.isSpectator) return Pair.of(OnInk.NONE, null)
 
-        val team = teams.teamOf(player).orElse(null) ?: return Pair.of(OnInk.NONE, null)
+        val team = teams.teamOf(player) ?: return Pair.of(OnInk.NONE, null)
 
         val width = player.getDimensions(player.pose).width().toDouble()
         var ownInkContactState: BlockState? = null
@@ -215,7 +215,7 @@ class PaintballTicker(
             val state = world.getBlockState(pos)
             val paintTeam: DyeTeamKey = paintManager.getTeam(state.block) ?: continue
 
-            if (paintTeam != team.key()) {
+            if (paintTeam != team.key) {
                 return Pair.of(OnInk.ENEMY, state)
             }
 

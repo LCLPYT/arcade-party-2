@@ -102,7 +102,7 @@ class WinActivity(
     }
 
     private fun announceWinner() {
-        val winner = args.scoreManager.getFinalWinner().orElseThrow()
+        val winner = requireNotNull(args.scoreManager.finalWinner) { "No final winner" }
 
         for (player in players()) {
             Title.get(player).title(

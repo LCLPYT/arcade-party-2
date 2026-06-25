@@ -12,10 +12,6 @@ import net.minecraft.util.Mth
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.scores.Team.CollisionRule
-import work.lclpnet.ap2.api.game.team.DyeTeamKey
-import work.lclpnet.ap2.api.game.team.Team
-import work.lclpnet.ap2.api.game.team.TeamKey
-import work.lclpnet.ap2.api.game.team.TeamManager
 import work.lclpnet.ap2.api.stats.CommonStats.DamageDealt
 import work.lclpnet.ap2.api.stats.CommonStats.Deaths
 import work.lclpnet.ap2.api.stats.CommonStats.KillDeathRatio
@@ -28,6 +24,10 @@ import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.TeamEliminationGameInstance
 import work.lclpnet.ap2.game.cozy_campfire.setup.*
 import work.lclpnet.ap2.game.player.Participants
+import work.lclpnet.ap2.game.team.DyeTeamKey
+import work.lclpnet.ap2.game.team.Team
+import work.lclpnet.ap2.game.team.TeamKey
+import work.lclpnet.ap2.game.team.TeamManager
 import work.lclpnet.ap2.game.util.useOldCombat
 import work.lclpnet.ap2.game.util.usePlayerDynamicTaskDisplay
 import work.lclpnet.ap2.game.util.useSurvivalMode

@@ -18,13 +18,13 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.Vec3
-import work.lclpnet.ap2.api.game.team.Team
-import work.lclpnet.ap2.api.game.team.TeamManager
-import work.lclpnet.ap2.api.game.team.TeamSpawnAccess
 import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.game.cozy_campfire.MOVEMENT_SPEED
 import work.lclpnet.ap2.game.player.Participants
+import work.lclpnet.ap2.game.team.Team
+import work.lclpnet.ap2.game.team.TeamManager
+import work.lclpnet.ap2.game.team.TeamSpawnAccess
 import work.lclpnet.gaco.collisions.CollisionDetector
 import work.lclpnet.gaco.collisions.movement.PlayerMovementObserver
 import work.lclpnet.game.api.prot.ProtectionConfig
@@ -172,7 +172,7 @@ class CCHooks(
         if (data.isJoin) return
 
         val player = data.player
-        val team = teamManager.getTeam(player).orElse(null) ?: return
+        val team = teamManager.getTeam(player) ?: return
         val spawn = spawnAccess.getSpawn(team) ?: return
 
         data.position = Vec3(spawn.x(), spawn.y(), spawn.z())
@@ -219,7 +219,7 @@ class CCHooks(
     private fun onEnterBaseOf(player: ServerPlayer, team: Team) {
         if (teamManager.isTeamMember(player, team)) return
 
-        val name = team.key().getDisplayName(translations)
+        val name = team.key.getDisplayName(translations)
 
         val msg = Component.literal("⚠")
             .append(translations.translateText(player, "base_of", name))

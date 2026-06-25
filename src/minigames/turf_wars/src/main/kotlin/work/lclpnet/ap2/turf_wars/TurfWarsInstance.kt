@@ -20,9 +20,6 @@ import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.Team.CollisionRule
-import work.lclpnet.ap2.api.game.team.DyeTeamKey
-import work.lclpnet.ap2.api.game.team.Team
-import work.lclpnet.ap2.api.game.team.TeamManager
 import work.lclpnet.ap2.api.stats.CommonStats.Deaths
 import work.lclpnet.ap2.api.stats.CommonStats.KillDeathRatio
 import work.lclpnet.ap2.api.stats.CommonStats.Kills
@@ -36,6 +33,9 @@ import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.TeamEliminationGameInstance
 import work.lclpnet.ap2.game.kit.KitHandler
 import work.lclpnet.ap2.game.kit.hasKitEquipped
+import work.lclpnet.ap2.game.team.DyeTeamKey
+import work.lclpnet.ap2.game.team.Team
+import work.lclpnet.ap2.game.team.TeamManager
 import work.lclpnet.ap2.game.team.woolBlock
 import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.game.util.useOldCombat
@@ -112,13 +112,13 @@ class TurfWarsInstance(
 
         setupKits(teams)
 
-        teamInfos = teams.associateBy { it.key() }
+        teamInfos = teams.associateBy { it.key }
 
         campingMonitor = CampingMonitor(gameHandle, teamManager, teamInfos)
 
         turfManager = TurfManager(
             teams.map { it.initialTurf },
-            teams.map { it.key() },
+            teams.map { it.key },
             commons().debugController(),
             level
         )
@@ -126,7 +126,7 @@ class TurfWarsInstance(
         turfManager.updateVisualizer()
 
         for (info in teams) {
-            val team = teamManager.getTeam(info).orElse(null) ?: continue
+            val team = teamManager.getTeam(info) ?: continue
 
             for (player in team.players) {
                 player.teleport(info.spawn)
@@ -254,14 +254,14 @@ class TurfWarsInstance(
             spawn = mapSchema.team1Spawn!!,
             baseBounds = mapSchema.team1Base!!,
             initialTurf = mapSchema.team1Turf!!,
-            teamKey = team1Key
+            key = team1Key
         )
 
         val team2Info = TurfWarsTeamInfo(
             spawn = mapSchema.team2Spawn!!,
             baseBounds = mapSchema.team2Base!!,
             initialTurf = mapSchema.team2Turf!!,
-            teamKey = team2Key
+            key = team2Key
         )
 
         teamManager.partitionIntoTeams(players(), setOf(team1Key, team2Key))
@@ -304,8 +304,8 @@ class TurfWarsInstance(
 
         arrowEconomy.scheduleRefill(player)
 
-        val team = teamManager.getTeam(player).orElse(null) ?: return
-        val color = team.key().color()
+        val team = teamManager.getTeam(player) ?: return
+        val color = team.key.color
 
         player.setItemSlot(EquipmentSlot.HEAD, getLeatherArmor(Items.LEATHER_HELMET, color).unbreakable())
         player.setItemSlot(EquipmentSlot.CHEST, getLeatherArmor(Items.LEATHER_CHESTPLATE, color).unbreakable())
@@ -337,7 +337,7 @@ class TurfWarsInstance(
         if (player !is ServerPlayer) return
 
         val opponentTeam = opponentTeam(player) ?: return
-        val turf = turfManager.turfOf(opponentTeam.key()) ?: return
+        val turf = turfManager.turfOf(opponentTeam.key) ?: return
 
         val pos = hitResult.blockPos
 
@@ -347,7 +347,7 @@ class TurfWarsInstance(
     }
 
     private fun opponentTeam(player: ServerPlayer): Team? {
-        val ownTeam = teamManager.getTeam(player).orElse(null) ?: return null
+        val ownTeam = teamManager.getTeam(player) ?: return null
 
         return teamManager.teams.firstOrNull { it != ownTeam }
     }
@@ -368,7 +368,7 @@ class TurfWarsInstance(
         for (team in teams) {
             translate(
                 "eliminated_for_camping",
-                team.key().getDisplayName(gameHandle.translations),
+                team.key.getDisplayName(gameHandle.translations),
                 TimeHelper.formatTime(gameHandle.translations, CAMP_ELIMINATION_SECONDS)
             ).withStyle(ChatFormatting.GRAY)
                 .sendTo(allPlayers())
@@ -378,8 +378,8 @@ class TurfWarsInstance(
     }
 
     private fun onKilled(victim: ServerPlayer, killer: ServerPlayer) {
-        val victimTeam = teamManager.getTeam(victim).orElse(null) ?: return
-        val killerTeam = teamManager.getTeam(killer).orElse(null) ?: return
+        val victimTeam = teamManager.getTeam(victim) ?: return
+        val killerTeam = teamManager.getTeam(killer) ?: return
 
         gainKill(killer, stats.players)
         stats.teams.increment(killerTeam, Kills)
@@ -401,7 +401,7 @@ class TurfWarsInstance(
                     stats.players.get(victim, Deaths).coerceAtLeast(1)
         )
 
-        val key = killerTeam.key()
+        val key = killerTeam.key
 
         if (key !is DyeTeamKey) return
 
@@ -410,7 +410,7 @@ class TurfWarsInstance(
         stats.players.increment(killer, TurfClaimed, blocksPerKill)
         stats.teams.increment(killerTeam, TurfClaimed, blocksPerKill)
 
-        val victimTurf = turfManager.turfOf(victimTeam.key()) ?: return
+        val victimTurf = turfManager.turfOf(victimTeam.key) ?: return
 
         if (victimTurf.bounds == null) {
             changePhase(Nothing)
@@ -471,8 +471,8 @@ class TurfWarsInstance(
     }
 
     private fun repel(player: ServerPlayer): Boolean {
-        val ownTeam = teamManager.getTeam(player).orElse(null) ?: return false
-        val ownTurf = turfManager.turfOf(ownTeam.key()) ?: return false
+        val ownTeam = teamManager.getTeam(player) ?: return false
+        val ownTurf = turfManager.turfOf(ownTeam.key) ?: return false
         val ownTurfBounds = ownTurf.bounds ?: return false
 
         val mayEnterTurf = mayEnterEnemyTurf(player) && phase == Fight
@@ -483,7 +483,7 @@ class TurfWarsInstance(
             if (team == ownTeam) continue
 
             // enemy base is always off-limits, regardless of kit
-            val baseBounds = teamInfos[team.key()]?.baseBounds
+            val baseBounds = teamInfos[team.key]?.baseBounds
 
             if (baseBounds != null && intersectsPlayer(player, baseBounds)) {
                 pushOut(player, ownTurfBounds, baseBounds)
@@ -493,7 +493,7 @@ class TurfWarsInstance(
 
             if (mayEnterTurf) continue
 
-            val turf = turfManager.turfOf(team.key()) ?: continue
+            val turf = turfManager.turfOf(team.key) ?: continue
             val bounds = turf.bounds ?: continue
 
             if (!intersectsPlayer(player, bounds)) continue
@@ -521,9 +521,9 @@ class TurfWarsInstance(
         kitHandler.manager.hasKitEquipped<AssassinKit>(player)
 
     private fun buildingBlock(player: ServerPlayer): Block? {
-        val team = teamManager.getTeam(player).orElse(null) ?: return null
+        val team = teamManager.getTeam(player) ?: return null
 
-        val key = team.key()
+        val key = team.key
 
         if (key !is DyeTeamKey) return null
 
@@ -533,11 +533,11 @@ class TurfWarsInstance(
     fun placeBlock(player: ServerPlayer, pos: BlockPos): Boolean {
         if (phase != Build || !isParticipating(player)) return false
 
-        val team = teamManager.getTeam(player).orElse(null) ?: return false
+        val team = teamManager.getTeam(player) ?: return false
 
-        if (!turfManager.isTurf(pos, team.key())) return false
+        if (!turfManager.isTurf(pos, team.key)) return false
 
-        turfManager.turfOf(team.key())?.builtBlocks?.add(pos)
+        turfManager.turfOf(team.key)?.builtBlocks?.add(pos)
 
         return true
     }
@@ -545,9 +545,9 @@ class TurfWarsInstance(
     fun breakBlock(player: ServerPlayer, pos: BlockPos): Boolean {
         if (phase != Build || !isParticipating(player)) return false
 
-        val team = teamManager.getTeam(player).orElse(null) ?: return false
+        val team = teamManager.getTeam(player) ?: return false
 
-        if (turfManager.turfOf(team.key())?.builtBlocks?.contains(pos) != true) return false
+        if (turfManager.turfOf(team.key)?.builtBlocks?.contains(pos) != true) return false
 
         val state = level.getBlockState(pos)
         player.inventory.add(ItemStack(state.block))
@@ -594,8 +594,8 @@ class TurfWarsInstance(
     }
 
     fun teamInfoOf(player: ServerPlayer): TurfWarsTeamInfo? {
-        val team = teamManager.getTeam(player).orElse(null) ?: return null
+        val team = teamManager.getTeam(player) ?: return null
 
-        return teamInfos[team.key()]
+        return teamInfos[team.key]
     }
 }

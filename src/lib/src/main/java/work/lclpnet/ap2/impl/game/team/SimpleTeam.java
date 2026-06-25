@@ -2,8 +2,9 @@ package work.lclpnet.ap2.impl.game.team;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.PlayerList;
-import work.lclpnet.ap2.api.game.team.Team;
-import work.lclpnet.ap2.api.game.team.TeamKey;
+import org.jspecify.annotations.NonNull;
+import work.lclpnet.ap2.game.team.Team;
+import work.lclpnet.ap2.game.team.TeamKey;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -23,12 +24,12 @@ public class SimpleTeam implements Team {
     }
 
     @Override
-    public TeamKey key() {
+    public @NonNull TeamKey getKey() {
         return key;
     }
 
     @Override
-    public Set<ServerPlayer> getPlayers() {
+    public @NonNull Set<ServerPlayer> getPlayers() {
         return players.stream()
                 .map(playerManager::getPlayer)
                 .filter(Objects::nonNull)

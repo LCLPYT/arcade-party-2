@@ -2,10 +2,10 @@ package work.lclpnet.ap2.game.util
 
 import kotlinx.coroutines.suspendCancellableCoroutine
 import net.minecraft.server.level.ServerLevel
-import work.lclpnet.ap2.api.game.team.TeamManager
 import work.lclpnet.ap2.game.MiniGameFactory
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.MiniGameInstance
+import work.lclpnet.ap2.game.team.TeamManager
 import work.lclpnet.ap2.impl.map.schema.MapSchemaLoader
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.map_api.GameMapApi

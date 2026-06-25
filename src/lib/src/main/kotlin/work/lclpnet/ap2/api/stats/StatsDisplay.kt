@@ -141,7 +141,7 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
                 val teamRef = stats.playerTeams[ref]
 
                 when {
-                    teamRef != null -> name.copy().withStyle { it.withColor(teamRef.key().color()) }
+                    teamRef != null -> name.copy().withStyle { it.withColor(teamRef.key.color) }
                     name.style.color == null -> name.copy().withStyle(GREEN)
                     else -> name
                 }

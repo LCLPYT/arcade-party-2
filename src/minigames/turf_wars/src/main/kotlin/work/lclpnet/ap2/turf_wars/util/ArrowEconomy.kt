@@ -5,12 +5,12 @@ import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
-import work.lclpnet.ap2.api.game.team.TeamManager
 import work.lclpnet.ap2.ext.inWholeTicks
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.kit.KitReadView
 import work.lclpnet.ap2.game.kit.hasKitEquipped
+import work.lclpnet.ap2.game.team.TeamManager
 import work.lclpnet.ap2.turf_wars.*
 import work.lclpnet.kibu.scheduler.api.TaskHandle
 import java.util.*
@@ -62,7 +62,7 @@ class ArrowEconomy(
     }
 
     private fun isOutnumbered(player: ServerPlayer): Boolean {
-        val team = teamManager.getTeam(player).orElse(null) ?: return false
+        val team = teamManager.getTeam(player) ?: return false
         val ownSize = team.playerCount
         val maxSize = teamManager.teams.maxOfOrNull { it.playerCount } ?: return false
 

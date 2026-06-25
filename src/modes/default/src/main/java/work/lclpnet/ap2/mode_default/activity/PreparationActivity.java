@@ -84,7 +84,6 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 import static java.lang.Math.*;
-import static java.util.stream.Collectors.toSet;
 import static net.minecraft.ChatFormatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
@@ -177,7 +176,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         args.forceGameCommand().setGameEnforcer(args.gameQueue()::setNextGame);
 
         if (onScoreUpdate != null) {
-            args.scoreManager().onChange().unregister(onScoreUpdate);
+            args.scoreManager().getOnChange().unregister(onScoreUpdate);
         }
 
         removeGameQueue();
@@ -202,7 +201,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         PlayerManager playerManager = args.playerManager();
 
         if (scoreManager.hasMultipleWinners()) {
-            playerManager.enterFinale(scoreManager.getFinalists().collect(toSet()));
+            playerManager.enterFinale(scoreManager.getFinalists());
 
             // remove games from the queue that cannot be played in a finale
             args.gameQueue().setFilter(game -> game.canBeFinale(this));
@@ -212,7 +211,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         scoreManager.incrementRound();
 
-        scoreManager.onChange().register(onScoreUpdate = this::restartActivity);
+        scoreManager.getOnChange().register(onScoreUpdate = this::restartActivity);
 
         activityConfigurator.resetPlayers();
         activityConfigurator.configureHooks();
@@ -318,7 +317,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     }
 
     private void addFinalistsToScoreboard(DynamicScoreboardObjective objective) {
-        Set<ServerPlayer> finalists = args.scoreManager().getFinalists().collect(toSet());
+        Set<ServerPlayer> finalists = args.scoreManager().getFinalists();
         Translations translations = args.miniGameArgs().translations();
 
         objective.createNewline(ScoreboardLayout.TOP);

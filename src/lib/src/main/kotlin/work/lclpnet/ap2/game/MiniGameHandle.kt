@@ -7,12 +7,13 @@ import work.lclpnet.activity.util.BossBarHandler
 import work.lclpnet.ap2.api.base.WorldBorderManager
 import work.lclpnet.ap2.api.data.DataManager
 import work.lclpnet.ap2.api.game.MiniGameResults
-import work.lclpnet.ap2.api.game.team.TeamConfig
 import work.lclpnet.ap2.api.map.MapFacade
 import work.lclpnet.ap2.api.music.SongCache
 import work.lclpnet.ap2.api.music.SongManager
 import work.lclpnet.ap2.api.stats.StatsResult
 import work.lclpnet.ap2.game.player.Participants
+import work.lclpnet.ap2.game.player.PlayerRankView
+import work.lclpnet.ap2.game.team.TeamConfig
 import work.lclpnet.ap2.impl.game.PlayerUtil
 import work.lclpnet.ap2.impl.util.DeathMessages
 import work.lclpnet.ap2.impl.util.world.SubWorldManager
@@ -97,6 +98,8 @@ interface MiniGameHandle {
     val fontService: FontService
 
     val startTime: Instant
+
+    val rankView: PlayerRankView
 
     fun resetGameScheduler()
 
