@@ -225,8 +225,17 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
         val text = Component.empty()
             .append(Component.literal(labelOf(gameId, stat, player)).withStyle(GOLD, BOLD))
 
+        var position = 0
+        var prevKey: Double? = null
+
         ordered.forEachIndexed { index, (ref, result) ->
-            val position = index + 1
+            val key = sortKey(result, stat)
+
+            // entries sharing the same value share the same rank, the next distinct value skips ranks (e.g. 1, 1, 3)
+            if (key != prevKey) {
+                position = index + 1
+                prevKey = key
+            }
 
             val value = stat.unit.format(result[stat], player, translations)
 
