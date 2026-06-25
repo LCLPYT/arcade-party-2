@@ -6,14 +6,14 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.Blocks
 import work.lclpnet.ap2.api.game.data.SubjectRef
-import work.lclpnet.ap2.api.game.team.TeamKey
-import work.lclpnet.ap2.api.game.team.TeamKeyable
+import work.lclpnet.ap2.game.team.TeamKey
+import work.lclpnet.ap2.game.team.TeamKeyable
 import work.lclpnet.ap2.impl.util.ColorUtil
 import work.lclpnet.kibu.translate.Translations
 import java.util.*
 
 class TeamRef(
-    private val key: TeamKey,
+    override val key: TeamKey,
     private val translations: Translations,
 ) : SubjectRef, TeamKeyable {
 
@@ -21,9 +21,8 @@ class TeamRef(
         return key.getDisplayName(translations).translateFor(viewer)
     }
 
-    override fun getIconStackFor(registryManager: RegistryAccess, viewer: ServerPlayer): ItemStack {
-        return ItemStack(Blocks.WOOL.pick(ColorUtil.closestEntityDyeColor(key.color())))
-    }
+    override fun getIconStackFor(registryManager: RegistryAccess, viewer: ServerPlayer): ItemStack =
+        ItemStack(Blocks.WOOL.pick(ColorUtil.closestEntityDyeColor(key.color)))
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -36,10 +35,6 @@ class TeamRef(
         return Objects.hash(key)
     }
 
-    override fun key(): TeamKey {
-        return key
-    }
-
     override val identifier: String
-        get() = key.id()
+        get() = key.id
 }

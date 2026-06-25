@@ -21,12 +21,12 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
-import work.lclpnet.ap2.api.game.team.DyeTeamKey
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.game.kit.KitManager
 import work.lclpnet.ap2.game.kit.SingleItemKit
 import work.lclpnet.ap2.game.paintball.kit.PaintGunKit
 import work.lclpnet.ap2.game.player.Participants
+import work.lclpnet.ap2.game.team.DyeTeamKey
 import work.lclpnet.ap2.impl.util.RayCastUtil
 import work.lclpnet.ap2.impl.util.debug.DebugController
 import work.lclpnet.ap2.impl.util.math.MathUtil.applySpread
@@ -165,9 +165,9 @@ class PaintGunManager(
 
     fun paintAt(bullet: PaintballBullet, x: Double, y: Double, z: Double, radius: Double, shouldCount: Boolean) {
         val owner = bullet.owner?.let { participants.getParticipant(it).orElse(null) } ?: return
-        val team = teams.teamOf(owner).orElse(null) ?: return
+        val team = teams.teamOf(owner) ?: return
 
-        val key: DyeTeamKey = team.key()
+        val key: DyeTeamKey = team.key
 
         val settings = bullet.settings
         val playerDeficit = teams.playerDeficit(team)
@@ -205,7 +205,7 @@ class PaintGunManager(
     private fun tryPaint(teamKey: DyeTeamKey, blockPos: BlockPos, x: Double, y: Double, z: Double, painter: ServerPlayer): Boolean {
         if (!paintManager.replace(blockPos, teamKey, painter)) return false
 
-        world.sendParticles(DustParticleOptions(teamKey.color(), 0.5f), x, y, z, 10, 0.2, 0.2, 0.2, 0.1)
+        world.sendParticles(DustParticleOptions(teamKey.color, 0.5f), x, y, z, 10, 0.2, 0.2, 0.2, 0.1)
 
         return true
     }
@@ -219,7 +219,7 @@ class PaintGunManager(
             return
         }
 
-        val state = getPaintBulletState(player).orElse(null) ?: return
+        val state = getPaintBulletState(player) ?: return
 
         player.cooldowns.addCooldown(stack, paintGun.cooldownTicks)
         stack.set(DataComponents.DAMAGE, stack.damageValue + 1)
@@ -234,10 +234,10 @@ class PaintGunManager(
         world.sendParticles(ParticleTypes.SMOKE, player.x, player.eyeY, player.z, 2, 0.3, 0.3, 0.3, 0.2)
     }
 
-    fun getPaintBulletState(player: ServerPlayer): Optional<BlockState> =
-        teams.teamOf(player)
-            .map { it.key() }
-            .map { paintManager.getPaintBulletState(it as DyeTeamKey) }
+    fun getPaintBulletState(player: ServerPlayer): BlockState? =
+        teams.teamOf(player)?.key?.let {
+            paintManager.getPaintBulletState(it)
+        }
 
     fun spawnPaintBulletWithSpread(player: ServerPlayer, paintGun: PaintGun, state: BlockState) {
         val bulletSettings = paintGun.bullet

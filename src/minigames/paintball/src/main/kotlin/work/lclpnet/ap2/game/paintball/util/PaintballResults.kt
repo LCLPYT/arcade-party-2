@@ -5,10 +5,10 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.level.GameType
 import net.minecraft.world.phys.Vec3
 import org.json.JSONObject
-import work.lclpnet.ap2.api.game.team.Team
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.game.data.type.TeamRef
+import work.lclpnet.ap2.game.team.Team
 import work.lclpnet.ap2.game.util.Announcer
 import work.lclpnet.ap2.game.util.WinManager
 import work.lclpnet.ap2.impl.map.MapUtil

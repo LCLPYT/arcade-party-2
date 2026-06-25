@@ -3,12 +3,12 @@ package work.lclpnet.ap2.turf_wars.util
 import net.minecraft.ChatFormatting
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
-import work.lclpnet.ap2.api.game.team.DyeTeamKey
-import work.lclpnet.ap2.api.game.team.Team
-import work.lclpnet.ap2.api.game.team.TeamManager
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.player.Participants
+import work.lclpnet.ap2.game.team.DyeTeamKey
+import work.lclpnet.ap2.game.team.Team
+import work.lclpnet.ap2.game.team.TeamManager
 import work.lclpnet.ap2.turf_wars.CAMP_ELIMINATION_SECONDS
 import work.lclpnet.ap2.turf_wars.CAMP_WARNING_SECONDS
 import work.lclpnet.ap2.turf_wars.Phase
@@ -39,7 +39,7 @@ class CampingMonitor(
         val toEliminate = mutableListOf<Team>()
 
         for (team in teamManager.teams) {
-            val teamKey = team.key()
+            val teamKey = team.key
 
             if (teamKey !is DyeTeamKey) continue
 

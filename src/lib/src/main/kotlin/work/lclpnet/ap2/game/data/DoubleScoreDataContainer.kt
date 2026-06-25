@@ -4,7 +4,6 @@ import it.unimi.dsi.fastutil.objects.Object2DoubleMap
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap
 import work.lclpnet.ap2.api.game.data.*
 import work.lclpnet.ap2.game.data.entry.DoubleScoreDataEntry
-import java.util.*
 import java.util.stream.DoubleStream
 import java.util.stream.Stream
 import kotlin.math.abs
@@ -98,11 +97,11 @@ class DoubleScoreDataContainer<T, Ref : SubjectRef> @JvmOverloads constructor(
     }
 
     @get:Synchronized
-    val bestScore: Optional<Double>
+    val bestScore: Double?
         get() = ordering.best(scores())
 
     @get:Synchronized
-    val worstScore: Optional<Double>
+    val worstScore: Double?
         get() = ordering.opposite().best(scores())
 
     @Synchronized
@@ -112,14 +111,10 @@ class DoubleScoreDataContainer<T, Ref : SubjectRef> @JvmOverloads constructor(
 
     @Synchronized
     fun getBestSubjects(resolver: SubjectRefResolver<T, Ref>): Set<T> {
-        val best = this.bestScore
-
-        if (best.isEmpty) return emptySet()
-
-        val bestScore = best.get()
+        val best = this.bestScore ?: return emptySet()
 
         return scoreMap.keys
-            .filter { ref -> abs(scoreMap.getDouble(ref) - bestScore) < 1e-10 }
+            .filter { ref -> abs(scoreMap.getDouble(ref) - best) < 1e-10 }
             .mapNotNull { ref -> resolver.resolve(ref) }
             .toSet()
     }

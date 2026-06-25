@@ -1,7 +1,6 @@
 package work.lclpnet.ap2.game.paintball
 
 import net.minecraft.server.level.ServerPlayer
-import work.lclpnet.ap2.api.game.team.TeamManager
 import work.lclpnet.ap2.api.stats.CommonStats.DamageDealt
 import work.lclpnet.ap2.api.stats.CommonStats.Deaths
 import work.lclpnet.ap2.api.stats.CommonStats.KillDeathRatio
@@ -9,6 +8,7 @@ import work.lclpnet.ap2.api.stats.CommonStats.Kills
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.stats.TeamStatsManager
 import work.lclpnet.ap2.ext.gainKill
+import work.lclpnet.ap2.game.team.TeamManager
 import work.lclpnet.kibu.translate.Translations
 
 val TotalBlocksPainted = Stat("total_blocks_painted", 0)
@@ -24,7 +24,7 @@ class PaintballStats(
     fun blockPainted(player: ServerPlayer, repainted: Boolean) {
         stats.players.increment(player, TotalBlocksPainted)
 
-        teamManager.getTeam(player).ifPresent { team ->
+        teamManager.getTeam(player)?.let { team ->
             stats.teams.increment(team, TotalBlocksPainted)
         }
 
@@ -32,7 +32,7 @@ class PaintballStats(
 
         stats.players.increment(player, BlocksRepainted)
 
-        teamManager.getTeam(player).ifPresent { team ->
+        teamManager.getTeam(player)?.let { team ->
             stats.teams.increment(team, BlocksRepainted)
         }
     }
@@ -40,7 +40,7 @@ class PaintballStats(
     fun damageDealt(attacker: ServerPlayer, amount: Float) {
         stats.players.modify(attacker, DamageDealt) { it + amount }
 
-        teamManager.getTeam(attacker).ifPresent { team ->
+        teamManager.getTeam(attacker)?.let { team ->
             stats.teams.modify(team, DamageDealt) { it + amount }
         }
     }
@@ -51,11 +51,11 @@ class PaintballStats(
         updatePlayerKd(killer)
         updatePlayerKd(victim)
 
-        teamManager.getTeam(killer).ifPresent { team ->
+        teamManager.getTeam(killer)?.let { team ->
             stats.teams.increment(team, Kills)
         }
 
-        teamManager.getTeam(victim).ifPresent { team ->
+        teamManager.getTeam(victim)?.let { team ->
             stats.teams.increment(team, Deaths)
         }
     }
@@ -63,7 +63,7 @@ class PaintballStats(
     fun specialItemUsed(player: ServerPlayer) {
         stats.players.increment(player, SpecialItemsUsed)
 
-        teamManager.getTeam(player).ifPresent { team ->
+        teamManager.getTeam(player)?.let { team ->
             stats.teams.increment(team, SpecialItemsUsed)
         }
     }

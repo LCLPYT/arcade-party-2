@@ -141,7 +141,7 @@ class PandaFinderInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: G
     }
 
     private fun onRoundOver() {
-        val maxScore = data.bestScore.orElse(0) ?: 0
+        val maxScore = data.bestScore ?: 0
 
         if (maxScore >= WIN_SCORE) {
             winManager.complete()

@@ -3,8 +3,7 @@ package work.lclpnet.ap2.game.team
 import net.minecraft.world.item.DyeColor
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks.*
-import work.lclpnet.ap2.api.game.team.DyeTeamKey
-import work.lclpnet.ap2.api.game.team.DyeTeamKey.*
+import work.lclpnet.ap2.game.team.DyeTeamKey.*
 
 fun DyeTeamKey.dyeColor(): DyeColor = when (this) {
     WHITE -> DyeColor.WHITE
