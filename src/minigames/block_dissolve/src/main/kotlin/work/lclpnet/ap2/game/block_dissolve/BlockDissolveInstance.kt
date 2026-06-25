@@ -58,6 +58,7 @@ class BlockDissolveInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
     private var warningTimer = 0
     private var warning = false
     private var physics = false
+    private var started = false
 
     init {
         useOldCombat()
@@ -87,9 +88,25 @@ class BlockDissolveInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
 
         trackSurvivalTime(stats)
         trackDistanceMoved(stats)
+
+        whenBelowCriticalHeight { player ->
+            // during the preparation phase, players that fall off are teleported back instead of eliminated
+            if (!started) {
+                gameHandle.worldFacade.teleport(player)
+                return@whenBelowCriticalHeight
+            }
+
+            killTracker.getLastAttacker(player)?.let { it as? ServerPlayer }?.let { killer ->
+                gainKill(killer, stats)
+            }
+
+            eliminate(player, killTracker.killMessage(player, gameHandle.deathMessages))
+        }
     }
 
     override fun go() {
+        started = true
+
         killTracker.init(gameHandle.scheduler)
 
         ProjectileHitEntityCallback.HOOK.registerWith(gameHandle.hooks) { projectile, hit ->
@@ -100,14 +117,6 @@ class BlockDissolveInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
             if (participants.isParticipating(victim) && participants.isParticipating(shooter)) {
                 killTracker.onHit(victim, shooter)
             }
-        }
-
-        whenBelowCriticalHeight { player ->
-            killTracker.getLastAttacker(player)?.let { it as? ServerPlayer }?.let { killer ->
-                gainKill(killer, stats)
-            }
-
-            eliminate(player, killTracker.killMessage(player, gameHandle.deathMessages))
         }
 
         startDissolve()
