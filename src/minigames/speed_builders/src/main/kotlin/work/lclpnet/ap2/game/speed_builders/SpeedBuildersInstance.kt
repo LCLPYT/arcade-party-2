@@ -136,8 +136,10 @@ class SpeedBuildersInstance(
     override fun participantRemoved(player: ServerPlayer) {
         val participants: Participants = gameHandle.participants
 
+        // register the detail before super, which otherwise tracks the player without one
+        putScoreDetail(player, false)
+
         if (participants.count() == 1) {
-            putScoreDetail(player, false)
             participants.stream().findAny().ifPresent { winner ->
                 putScoreDetail(winner, true)
             }
