@@ -1,0 +1,15 @@
+package ${package}
+
+import work.lclpnet.ap2.game.MiniGameFactory
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.MiniGameInstance
+import work.lclpnet.ap2.game.util.generateRandomLevel
+
+class ${class_name}Factory : MiniGameFactory {
+
+    override suspend fun createInstance(handle: MiniGameHandle): MiniGameInstance {
+        val level = handle.generateRandomLevel()
+
+        return ${instance_class_name}(handle, level)
+    }
+}

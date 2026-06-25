@@ -1,0 +1,28 @@
+package ${package}
+
+import net.minecraft.server.level.ServerLevel
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.MiniGameInstance
+import work.lclpnet.ap2.game.data.IntScoreDataContainer
+import work.lclpnet.ap2.game.util.useDataContainer
+import work.lclpnet.ap2.game.util.useFFAWinManager
+import work.lclpnet.ap2.game.util.useLastRemainingParticipantListener
+import work.lclpnet.ap2.game.util.useSurvivalMode
+
+class ${class_name}(
+    override val gameHandle: MiniGameHandle,
+    override val level: ServerLevel,
+) : MiniGameInstance {
+
+    val data = useDataContainer(::IntScoreDataContainer)
+    override val winManager = useFFAWinManager(map = null) { data }
+    override val participantListener = useLastRemainingParticipantListener(winManager)
+
+    init {
+        useSurvivalMode()
+    }
+
+    override fun start() {
+
+    }
+}
