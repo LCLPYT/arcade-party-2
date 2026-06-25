@@ -378,11 +378,11 @@ class PvpTournamentInstance(
             var damagePerSecond = 2f
             var timer = 0
 
-            data.tasks.add(runEvery(1.seconds) {
+            data.tasks.add(deferEvery(1.seconds) {
                 // if both participants would die at the same time though sudden death, end in draw
                 if (data.participants.all { it.health <= damagePerSecond }) {
                     completeMatch(match, null)
-                    return@runEvery
+                    return@deferEvery
                 }
 
                 data.participants.forEach {
