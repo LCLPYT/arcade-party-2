@@ -7,6 +7,7 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
+import net.minecraft.world.InteractionResult
 import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.entity.EquipmentSlot
@@ -53,6 +54,7 @@ import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.VelocityModifier
+import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.entity.ProjectileHooks
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback
@@ -185,6 +187,13 @@ class TurfWarsInstance(
 
         ProjectileHooks.HIT_BLOCK.registerWith(hooks) { projectile, hitResult ->
             onProjectileHitBlock(projectile, hitResult)
+        }
+
+        PlayerInteractionHooks.ATTACK_BLOCK.registerWith(hooks) { player, _, _, pos, _ ->
+            if (player is ServerPlayer) {
+                attackBuiltBlock(player, pos)
+            }
+            InteractionResult.PASS
         }
 
         CanShootProjectileCallback.HOOK.registerWith(hooks) { shooter, _, _ ->
@@ -540,6 +549,26 @@ class TurfWarsInstance(
         turfManager.turfOf(team.key)?.builtBlocks?.add(pos)
 
         return true
+    }
+
+    private fun attackBuiltBlock(player: ServerPlayer, pos: BlockPos) {
+        if (phase != Build || !isParticipating(player)) return
+
+        val team = teamManager.getTeam(player) ?: return
+        val turf = turfManager.turfOf(team.key) ?: return
+
+        if (!turf.builtBlocks.contains(pos)) return
+
+        // defer one tick so the block is destroyed after the interaction has been processed
+        gameHandle.scheduler.timeout(1) { ->
+            val state = level.getBlockState(pos)
+
+            if (state.isAir) return@timeout
+
+            level.destroyBlock(pos, false)
+            turf.builtBlocks.remove(pos)
+            player.inventory.add(ItemStack(state.block))
+        }
     }
 
     fun breakBlock(player: ServerPlayer, pos: BlockPos): Boolean {
