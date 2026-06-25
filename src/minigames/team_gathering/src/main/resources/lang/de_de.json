@@ -1,5 +1,8 @@
 {
   "name": "Team-Sammeln",
   "description": "Sammle möglichst viele verschiedene Gegenstände in deinem Team. Die Gegenstände müssen sich im Inventar befinden.",
-  "task": "Finde verschiedene Items"
+  "task": "Finde verschiedene Items",
+  "found": "%s hat %s gefunden",
+  "dropped": "%s hat %s fallen gelassen",
+  "count": "%s Gegenstände"
 }

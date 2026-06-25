@@ -1,5 +1,8 @@
 {
   "name": "Team Gathering",
   "description": "Collect as many unique items or blocks in your team as you can. Items must be kept in your inventory to be counted.",
-  "task": "Collect unique items"
+  "task": "Collect unique items",
+  "found": "%s found %s",
+  "dropped": "%s dropped %s",
+  "count": "%s Items"
 }
