@@ -87,10 +87,18 @@ class TeamGatheringInstance(
     }
 
     private fun pickTeamlessPlayer(): ServerPlayer {
-        val eligible = players()
-            .mapNotNull { player -> player to gameHandle.rankView.rank(player) }
-            .sortedBy { (_, rank) -> rank }
-            .take((players().count() / 2).coerceAtLeast(1))
+        val ranked = players()
+            .map { player -> player to gameHandle.rankView.rank(player) }
+
+        val distinctRanks = ranked
+            .map { (_, rank) -> rank }
+            .distinct()
+            .sorted()
+
+        val rankCount = (distinctRanks.size / 2).coerceAtLeast(1)
+        val eligibleRanks = distinctRanks.take(rankCount).toHashSet()
+
+        val eligible = ranked.filter { (_, rank) -> rank in eligibleRanks }
 
         val worstRank = eligible.maxOf { (_, rank) -> rank }
         val disparity = 0.5f
