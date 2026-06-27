@@ -6,6 +6,8 @@ import net.minecraft.core.component.DataComponents
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.sounds.SoundSource
 import net.minecraft.util.Mth
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.effect.MobEffectInstance
@@ -21,11 +23,13 @@ import net.minecraft.world.scores.PlayerTeam
 import net.minecraft.world.scores.TeamColor
 import work.lclpnet.ap2.api.game.GameOverListener
 import work.lclpnet.ap2.api.stats.Stat
-import work.lclpnet.ap2.ext.runAfter
+import work.lclpnet.ap2.ext.*
+import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar
+import work.lclpnet.ap2.impl.util.handler.VisualCooldown
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.FireworkEntityAccess
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
@@ -34,6 +38,7 @@ import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.scheduler.api.TaskHandle
 import work.lclpnet.kibu.scheduler.api.TaskScheduler
 import work.lclpnet.kibu.title.Title
+import work.lclpnet.pal.event.AllowTeleporterCallback
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
 
@@ -54,6 +59,8 @@ class HotPotatoInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
     private val stats = useFFAStats(winManager, listOf(
         PotatoAssigned, TimesPassed
     ))
+    private val teleporterCooldown = VisualCooldown(scheduler)
+    private val restrictTeleporters = map.properties.optBoolean("restrict-teleporters", false)
 
     override fun prepare() {
         winManager.addListener(this)
@@ -61,6 +68,19 @@ class HotPotatoInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
         val scoreboardManager = gameHandle.scoreboardManager
         team = scoreboardManager.createTeam("team")
         team.color = Optional.of(TeamColor.DARK_RED)
+
+        AllowTeleporterCallback.HOOK.registerWith(hooks) { player, _, _ ->
+            if (!restrictTeleporters || player == markedPlayer) {
+                true
+            } else if (teleporterCooldown.isOnCooldown(player)) {
+                translate("teleporter_cooldown").withStyle(ChatFormatting.RED).sendTo(player)
+                player.playNotifySound(SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.NEUTRAL, 0.5f, 0.5f)
+                false
+            } else {
+                teleporterCooldown.setCooldown(player, 5.seconds.inWholeTicks.toInt())
+                true
+            }
+        }
     }
 
     override fun go() {
