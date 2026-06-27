@@ -14,7 +14,7 @@ import work.lclpnet.gaco.scene.animation.Animation
 import work.lclpnet.gaco.scene.animation.AnimationContext
 import work.lclpnet.gaco.scene.`object`.BlockDisplayObject
 import work.lclpnet.gaco.scene.`object`.ItemDisplayObject
-import java.util.*
+import kotlin.random.Random
 
 private const val PARTICLE_PERIOD_SECONDS = 0.2
 private const val BEEP_DELAY_SECONDS = 1.3
