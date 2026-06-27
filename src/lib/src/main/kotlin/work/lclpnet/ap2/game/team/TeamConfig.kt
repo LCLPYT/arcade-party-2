@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.game.team
 
 import net.minecraft.server.level.ServerPlayer
+import work.lclpnet.ap2.game.player.PlayerRankView
 import java.util.*
 
 interface TeamConfig {
@@ -10,8 +11,18 @@ interface TeamConfig {
     val mapping: Map<ServerPlayer, TeamKey>
 
     companion object {
-        val DEFAULT_CONFIG = object : TeamConfig {
+        fun uniform(): TeamConfig = object : TeamConfig {
             override val partitioner = UniformTeamPartitioner(Random())
+            override val mapping = emptyMap<ServerPlayer, TeamKey>()
+        }
+
+        /**
+         * A [TeamConfig] that balances teams by the overall rank of each player, so that the average
+         * rank of each team is roughly equal.
+         * @param rankView The view providing the overall rank of each player.
+         */
+        fun balanced(rankView: PlayerRankView): TeamConfig = object : TeamConfig {
+            override val partitioner = BalancedTeamPartitioner(rankView, Random())
             override val mapping = emptyMap<ServerPlayer, TeamKey>()
         }
     }

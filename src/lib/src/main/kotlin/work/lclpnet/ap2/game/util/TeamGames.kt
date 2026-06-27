@@ -7,7 +7,7 @@ import work.lclpnet.ap2.game.team.TeamManager
 
 fun MiniGameHandle.createTeamManager(): TeamManager {
     val teamConfig = teamConfig.orElseGet {
-        TeamConfig.DEFAULT_CONFIG
+        TeamConfig.balanced(rankView)
     }
 
     val teamManager = SimpleTeamManager(server.playerList, teamConfig, scoreboardManager, playerUtil)
