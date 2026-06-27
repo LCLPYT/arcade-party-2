@@ -67,7 +67,7 @@ metafile = true
 
 [[files]]
 file = "mods/mg-api.pw.toml"
-hash = "6e482e9bb483f7b20f1a136ad2d6434691ccef9ae341e7402f60128799b9bc70"
+hash = "f3966327180a31bd89b386df72e7619ea7e75efe95b9f7901a70bde47abc2769"
 metafile = true
 
 [[files]]
