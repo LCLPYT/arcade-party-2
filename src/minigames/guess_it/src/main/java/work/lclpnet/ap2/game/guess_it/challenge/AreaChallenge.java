@@ -79,7 +79,7 @@ public class AreaChallenge implements Challenge {
                 .map(Block::defaultBlockState)
                 .toList();
 
-        randomizeArea(blockStates);
+        randomizeArea(opts, blockStates);
 
         input.expectSelection(blockStates.stream()
                 .map(TextUtil::getVanillaName)
@@ -88,7 +88,10 @@ public class AreaChallenge implements Challenge {
 
     @Override
     public void evaluate(PlayerChoices choices, ChallengeResult result) {
-        result.setCorrectAnswer(areas.getBiggestAreaText());
+        result.setCorrectAnswer(Component.empty()
+                .append(areas.getBiggestAreaText())
+                .append(" ")
+                .append(areas.getDistributionText()));
 
         for (ServerPlayer player : gameHandle.getParticipants()) {
             var optChoice = choices.getOption(player);
@@ -103,7 +106,7 @@ public class AreaChallenge implements Challenge {
         }
     }
 
-    private void randomizeArea(List<BlockState> blockStates) {
+    private void randomizeArea(List<DyeColor> dyeColors, List<BlockState> blockStates) {
         Set<BlockPos> open = new HashSet<>();
 
         for (BlockPos pos : findGroundPositions(blockShape, world)) {
@@ -112,7 +115,7 @@ public class AreaChallenge implements Challenge {
 
         List<BlockPos> startingPoints = OptionMaker.createOptions(open, 4, random);
 
-        areas = new Areas(open, blockStates, startingPoints);
+        areas = new Areas(open, dyeColors, blockStates, startingPoints);
 
         while (areas.isBuilding()) {
             areas.stepBuild();
@@ -122,11 +125,13 @@ public class AreaChallenge implements Challenge {
     }
 
     private class Areas {
+        private final List<DyeColor> dyeColors;
         private final List<BlockState> blockStates;
         private final Propagation[] props = new Propagation[4];
         private int maxCount = 0;
 
-        public Areas(Set<BlockPos> open, List<BlockState> blockStates, List<BlockPos> startingPoints) {
+        public Areas(Set<BlockPos> open, List<DyeColor> dyeColors, List<BlockState> blockStates, List<BlockPos> startingPoints) {
+            this.dyeColors = dyeColors;
             this.blockStates = blockStates;
 
             startingPoints.forEach(open::remove);
@@ -184,6 +189,33 @@ public class AreaChallenge implements Challenge {
 
                         return text.append(TextUtil.getVanillaName(state));
                     }, MutableComponent::append);
+        }
+
+        public Component getDistributionText() {
+            int[] order = IntStream.range(0, props.length)
+                    .boxed()
+                    .sorted(Comparator.comparingInt((Integer i) -> props[i].getCount()).reversed())
+                    .mapToInt(Integer::intValue)
+                    .toArray();
+
+            MutableComponent text = Component.literal("(");
+
+            for (int j = 0; j < order.length; j++) {
+                int i = order[j];
+
+                if (j > 0) {
+                    text.append(" / ");
+                }
+
+                DyeColor dye = dyeColors.get(i);
+                int count = props[i].getCount();
+
+                text.append(Component.literal(count + " ")
+                        .append(Component.translatable("color.minecraft." + dye.getName()))
+                        .withStyle(style -> style.withColor(dye.getTextColor())));
+            }
+
+            return text.append(")");
         }
     }
 
