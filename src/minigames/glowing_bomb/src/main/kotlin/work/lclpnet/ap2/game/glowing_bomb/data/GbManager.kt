@@ -19,6 +19,7 @@ import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.random.Random
 
 class GbManager(
     private val world: ServerLevel,
