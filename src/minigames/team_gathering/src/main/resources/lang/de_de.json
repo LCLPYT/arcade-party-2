@@ -4,5 +4,6 @@
   "task": "Finde verschiedene Items",
   "found": "%s hat %s gefunden",
   "dropped": "%s hat %s fallen gelassen",
-  "count": "%s Gegenstände"
+  "count": "%s Gegenstände",
+  "solo_hint": "Du bist der Spieler, der alleine spielen muss. Du brauchst deine Items nicht im Inventar zu behalten und du kannst schneller Blöcke abbauen."
 }
