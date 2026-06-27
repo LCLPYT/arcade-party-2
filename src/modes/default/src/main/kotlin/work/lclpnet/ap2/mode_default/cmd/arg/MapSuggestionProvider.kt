@@ -1,41 +1,33 @@
-package work.lclpnet.ap2.mode_default.cmd.arg;
+package work.lclpnet.ap2.mode_default.cmd.arg
 
-import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.suggestion.SuggestionProvider;
-import com.mojang.brigadier.suggestion.Suggestions;
-import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.resources.Identifier;
-import work.lclpnet.ap2.api.map.MapFacade;
-import work.lclpnet.ap2.game.MiniGame;
+import com.mojang.brigadier.context.CommandContext
+import com.mojang.brigadier.suggestion.SuggestionProvider
+import com.mojang.brigadier.suggestion.Suggestions
+import com.mojang.brigadier.suggestion.SuggestionsBuilder
+import net.minecraft.commands.CommandSourceStack
+import work.lclpnet.ap2.api.map.MapFacade
+import work.lclpnet.ap2.game.MiniGame
+import java.util.concurrent.CompletableFuture
+import java.util.function.Supplier
 
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
-import java.util.function.Supplier;
+class MapSuggestionProvider(
+    private val mapFacade: MapFacade,
+    private val gameSupplier: Supplier<MiniGame?>
+) : SuggestionProvider<CommandSourceStack> {
 
-public class MapSuggestionProvider implements SuggestionProvider<CommandSourceStack> {
+    override fun getSuggestions(
+        context: CommandContext<CommandSourceStack>,
+        builder: SuggestionsBuilder
+    ): CompletableFuture<Suggestions> {
+        val miniGame = gameSupplier.get() ?: return builder.buildFuture()
 
-    private final MapFacade mapFacade;
-    private final Supplier<Optional<MiniGame>> gameSupplier;
+        return mapFacade.getMapIds(miniGame.id)
+            .thenApply { mapIds ->
+                for (identifier in mapIds) {
+                    builder.suggest(identifier.toString())
+                }
 
-    public MapSuggestionProvider(MapFacade mapFacade, Supplier<Optional<MiniGame>> gameSupplier) {
-        this.mapFacade = mapFacade;
-        this.gameSupplier = gameSupplier;
-    }
-
-    @Override
-    public CompletableFuture<Suggestions> getSuggestions(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
-        return gameSupplier.get()
-                .map(buildSuggestions(builder))
-                .orElseGet(builder::buildFuture);
-    }
-
-    private Function<MiniGame, CompletableFuture<Suggestions>> buildSuggestions(SuggestionsBuilder builder) {
-        return miniGame -> mapFacade.getMapIds(miniGame.getId()).thenApply(mapIds -> {
-            mapIds.stream().map(Identifier::toString).forEach(builder::suggest);
-
-            return builder.build();
-        });
+                builder.build()
+            }
     }
 }

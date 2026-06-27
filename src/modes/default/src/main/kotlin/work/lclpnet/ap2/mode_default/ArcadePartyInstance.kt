@@ -1,206 +1,216 @@
-package work.lclpnet.ap2.mode_default;
+package work.lclpnet.ap2.mode_default
 
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.SharedConstants;
-import net.minecraft.server.MinecraftServer;
-import org.slf4j.Logger;
-import work.lclpnet.ap2.ApConstants;
-import work.lclpnet.ap2.api.base.GameQueue;
-import work.lclpnet.ap2.api.base.MiniGameManager;
-import work.lclpnet.ap2.api.config.Ap2Config;
-import work.lclpnet.ap2.api.music.SongCache;
-import work.lclpnet.ap2.api.stats.SessionStatsRecorder;
-import work.lclpnet.ap2.game.MiniGame;
-import work.lclpnet.ap2.game.player.PlayerManagerImpl;
-import work.lclpnet.ap2.impl.base.FabricMiniGameManager;
-import work.lclpnet.ap2.impl.base.VotedGameQueue;
-import work.lclpnet.ap2.impl.bootstrap.ApBootstrap;
-import work.lclpnet.ap2.impl.game.PlayerUtil;
-import work.lclpnet.ap2.impl.i18n.DynamicLanguageManager;
-import work.lclpnet.ap2.impl.i18n.VanillaTranslations;
-import work.lclpnet.ap2.impl.music.MapSongCache;
-import work.lclpnet.ap2.mode_default.activity.PreparationActivity;
-import work.lclpnet.ap2.mode_default.cmd.ForceGameCommand;
-import work.lclpnet.ap2.mode_default.cmd.ScoreCommand;
-import work.lclpnet.ap2.mode_default.util.ApBaseArgs;
-import work.lclpnet.ap2.mode_default.util.ScoreManager;
-import work.lclpnet.ap2.util.FontService;
-import work.lclpnet.ap2.util.TablistManager;
-import work.lclpnet.config.json.JsonConfigFactory;
-import work.lclpnet.gaco.ds.queue.JsonFileQueuePersistence;
-import work.lclpnet.game.api.GameEnvironment;
-import work.lclpnet.game.api.GameInstance;
-import work.lclpnet.game.api.option.VoteResult;
-import work.lclpnet.kibu.assets.AssetManager;
-import work.lclpnet.kibu.cmd.impl.CommandStack;
-import work.lclpnet.kibu.hook.HookStack;
-import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.translations.DefaultLanguageTranslator;
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup
+import net.minecraft.SharedConstants
+import net.minecraft.server.MinecraftServer
+import org.slf4j.Logger
+import work.lclpnet.activity.Activity
+import work.lclpnet.ap2.ApConstants
+import work.lclpnet.ap2.api.base.GameQueue
+import work.lclpnet.ap2.api.base.MiniGameManager
+import work.lclpnet.ap2.api.config.Ap2Config
+import work.lclpnet.ap2.api.config.ConfigManager
+import work.lclpnet.ap2.api.stats.SessionStatsRecorder
+import work.lclpnet.ap2.game.MiniGame
+import work.lclpnet.ap2.game.player.PlayerManagerImpl
+import work.lclpnet.ap2.impl.base.FabricMiniGameManager
+import work.lclpnet.ap2.impl.base.VotedGameQueue
+import work.lclpnet.ap2.impl.bootstrap.ApBootstrap
+import work.lclpnet.ap2.impl.game.PlayerUtil
+import work.lclpnet.ap2.impl.i18n.DynamicLanguageManager
+import work.lclpnet.ap2.impl.i18n.VanillaTranslations
+import work.lclpnet.ap2.impl.music.MapSongCache
+import work.lclpnet.ap2.mode_default.activity.PreparationActivity
+import work.lclpnet.ap2.mode_default.cmd.ForceGameCommand
+import work.lclpnet.ap2.mode_default.cmd.ScoreCommand
+import work.lclpnet.ap2.mode_default.util.ApBaseArgs
+import work.lclpnet.ap2.mode_default.util.ScoreManager
+import work.lclpnet.ap2.util.FontService
+import work.lclpnet.ap2.util.TablistManager
+import work.lclpnet.config.json.JsonConfigFactory
+import work.lclpnet.gaco.ds.queue.JsonFileQueuePersistence
+import work.lclpnet.game.api.GameEnvironment
+import work.lclpnet.game.api.GameInstance
+import work.lclpnet.game.api.option.VoteResult
+import work.lclpnet.kibu.assets.AssetManager
+import work.lclpnet.kibu.hook.HookStack
+import work.lclpnet.kibu.translate.Translations
+import work.lclpnet.translations.DefaultLanguageTranslator
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ForkJoinPool
 
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ForkJoinPool;
-import java.util.stream.Collectors;
+private const val WIN_SCORE = 30
 
-import static java.lang.Math.clamp;
-import static work.lclpnet.ap2.ApConstants.identifier;
+class ArcadePartyInstance(
+    private val environment: GameEnvironment,
+    private val vanillaTranslations: VanillaTranslations,
+    private val configFactory: JsonConfigFactory<Ap2Config>,
+    private val miniGameVoteResult: VoteResult<MiniGame>,
+    private val logger: Logger
+) : GameInstance {
 
-public class ArcadePartyInstance implements GameInstance {
+    private val fontService: FontService
 
-    private static final int WIN_SCORE = 30;
+    init {
+        val assetManager = AssetManager.getShared(SharedConstants.getCurrentVersion().name())
 
-    private final GameEnvironment environment;
-    private final VanillaTranslations vanillaTranslations;
-    private final JsonConfigFactory<Ap2Config> configFactory;
-    private final VoteResult<MiniGame> miniGameVoteResult;
-    private final Logger logger;
-    private final FontService fontService;
-
-    public ArcadePartyInstance(GameEnvironment environment, VanillaTranslations vanillaTranslations,
-                               JsonConfigFactory<Ap2Config> configFactory, VoteResult<MiniGame> miniGameVoteResult,
-                               Logger logger) {
-        this.environment = environment;
-        this.vanillaTranslations = vanillaTranslations;
-        this.configFactory = configFactory;
-        this.miniGameVoteResult = miniGameVoteResult;
-        this.logger = logger;
-
-        var assetManager = AssetManager.getShared(SharedConstants.getCurrentVersion().name());
-
-        this.fontService = new FontService(assetManager, logger);
+        this.fontService = FontService(assetManager, logger)
     }
 
-    @Override
-    public void start() {
-        ApBootstrap bootstrap = new ApBootstrap(configFactory, logger, environment::whenDone);
+    override fun start() {
+        val bootstrap = ApBootstrap(configFactory, logger) { action ->
+            environment.whenDone(action)
+        }
 
         bootstrap.loadConfig(ForkJoinPool.commonPool())
-                .thenCompose(configManager -> bootstrap.dispatch(configManager.getConfig(), environment, vanillaTranslations, fontService))
-                .thenCompose(this::setupMode)
-                .exceptionally(throwable -> {
-                    logger.error("Failed to load ArcadeParty2", throwable);
-                    return null;
-                });
-    }
-
-    private CompletableFuture<Void> setupMode(ApBootstrap.Result result) {
-        MiniGameManager gameManager = new FabricMiniGameManager(logger);
-
-        return CompletableFuture.runAsync(() -> {
-            GameQueue queue = createGameQueue(gameManager);
-
-            environment.getServer().execute(() -> dispatchGameStart(result, gameManager, queue));
-        });
-    }
-
-    private GameQueue createGameQueue(MiniGameManager gameManager) {
-        List<MiniGame> votedGames = getVotedGames(gameManager);
-
-        var gameQueuePersistence = JsonFileQueuePersistence.create(
-                ApConstants.RUNTIME_CONFIG_ID,
-                identifier("game_queue"),
-                gameManager.getGameCodec(),
-                logger
-        );
-
-        Set<MiniGame> miniGames = gameManager.getGames();
-        int minQueueSize = clamp(miniGames.size(), 1, 10);
-
-        return new VotedGameQueue(miniGames, votedGames, minQueueSize, gameQueuePersistence);
-    }
-
-    private void dispatchGameStart(ApBootstrap.Result result, MiniGameManager gameManager, GameQueue queue) {
-        MinecraftServer server = environment.getServer();
-        Translations translations = environment.getTranslations();
-
-        PlayerManagerImpl playerManager = new PlayerManagerImpl(server);
-        PlayerUtil playerUtil = new PlayerUtil(server, playerManager);
-
-        ScoreManager scoreManager = new ScoreManager(server.getPlayerList(), WIN_SCORE);
-        CommandStack commandStack = environment.getCommandStack();
-
-        ForceGameCommand forceGameCommand = new ForceGameCommand(gameManager, queue::setNextGame);
-        forceGameCommand.register(commandStack);
-
-        ScoreCommand scoreCommand = new ScoreCommand(scoreManager, translations);
-        scoreCommand.register(commandStack);
-
-        HookStack hookStack = environment.getHookStack();
-        initDynamicLanguages(hookStack, translations, server);
-
-        ApMiniGameArgs container = new ApMiniGameArgs(server, logger, translations, hookStack,
-                commandStack, environment.getSchedulerStack(), result.worldFacade(),
-                result.mapFacade(), playerUtil, gameManager, result.songManager(), result.dataManager(),
-                fontService);
-
-        SongCache songCache = new MapSongCache();
-
-        var sessionStats = new SessionStatsRecorder(translations, logger);
-        sessionStats.init(hookStack);
-
-        var tablistManager = new TablistManager(translations, server);
-
-        var args = new ApBaseArgs(
-                container,
-                queue,
-                playerManager,
-                forceGameCommand,
-                songCache,
-                scoreManager,
-                environment.getFinisher(),
-                sessionStats,
-                tablistManager,
-                result.assetManager(),
-                environment::switchRootActivity
-        );
-
-        PreparationActivity preparation = new PreparationActivity(args);
-
-        environment.switchRootActivity(preparation);
-    }
-
-    private List<MiniGame> getVotedGames(MiniGameManager gameManager) {
-        Map<MiniGame, Integer> voted = miniGameVoteResult.asMap();
-
-        Random random = new Random();
-
-        return voted.keySet().stream()
-                // only voted games
-                .filter(game -> voted.getOrDefault(game, 0) > 0)
-                // group by vote count
-                .collect(Collectors.groupingBy(voted::get)).entrySet().stream()
-                // sort by grouped vote count descending
-                .sorted(Comparator.<Entry<Integer, List<MiniGame>>>comparingInt(Entry::getKey).reversed())
-                .map(Entry::getValue)
-                // shuffle order of games with the same vote count
-                .flatMap(voteGroup -> {
-                    Collections.shuffle(voteGroup, random);
-                    return voteGroup.stream();
-                })
-                // voted games are not the same instances as the ones in the game manager, therefore lookup correct one
-                .flatMap(game -> gameManager.getGame(game.getId()).stream())
-                .toList();
-    }
-
-    private void initDynamicLanguages(HookStack hookStack, Translations translations, MinecraftServer server) {
-        // translation reload is called off-thread by the DynamicLanguageManager
-        var reloadLock = new Object();
-        var callback = reload(translations, reloadLock);
-
-        var manager = new DynamicLanguageManager(vanillaTranslations, translations::getLanguage, callback);
-
-        manager.init(hookStack, PlayerLookup.all(server));
-    }
-
-    private Runnable reload(Translations translations, Object lock) {
-        if (translations.getTranslator() instanceof DefaultLanguageTranslator translator) return () -> {
-            synchronized (lock) {
-                // only one reload should be done at once
-                translator.reload().join();
+            .thenCompose { configManager: ConfigManager ->
+                bootstrap.dispatch(
+                    configManager.config,
+                    environment,
+                    vanillaTranslations,
+                    fontService
+                )
             }
-        };
+            .thenCompose { result: ApBootstrap.Result ->
+                setupMode(result)
+            }
+            .exceptionally { throwable: Throwable ->
+                logger.error("Failed to load ArcadeParty2", throwable)
+                null
+            }
+    }
 
-        return () -> {};  // NOOP
+    private fun setupMode(result: ApBootstrap.Result): CompletableFuture<Void> {
+        val gameManager: MiniGameManager = FabricMiniGameManager(logger)
+
+        return CompletableFuture.runAsync {
+            val queue = createGameQueue(gameManager)
+
+            environment.server.execute {
+                dispatchGameStart(result, gameManager, queue)
+            }
+        }
+    }
+
+    private fun createGameQueue(gameManager: MiniGameManager): GameQueue {
+        val votedGames = getVotedGames(gameManager)
+
+        val gameQueuePersistence = JsonFileQueuePersistence.create(
+            ApConstants.RUNTIME_CONFIG_ID,
+            ApConstants.identifier("game_queue"),
+            gameManager.getGameCodec(),
+            logger
+        )
+
+        val miniGames = gameManager.getGames()
+        val minQueueSize = Math.clamp(miniGames.size.toLong(), 1, 10)
+
+        return VotedGameQueue(miniGames, votedGames, minQueueSize, gameQueuePersistence)
+    }
+
+    private fun dispatchGameStart(result: ApBootstrap.Result, gameManager: MiniGameManager, queue: GameQueue) {
+        val server = environment.server
+        val translations = environment.translations
+
+        val playerManager = PlayerManagerImpl(server)
+        val playerUtil = PlayerUtil(server, playerManager)
+
+        val scoreManager = ScoreManager(server.playerList, WIN_SCORE)
+        val commandStack = environment.commandStack
+
+        val forceGameCommand = ForceGameCommand(gameManager) { miniGame ->
+            queue.setNextGame(miniGame)
+        }
+
+        forceGameCommand.register(commandStack)
+
+        val scoreCommand = ScoreCommand(scoreManager, translations)
+        scoreCommand.register(commandStack)
+
+        val hookStack = environment.hookStack
+        initDynamicLanguages(hookStack, translations, server)
+
+        val container = ApMiniGameArgs(
+            server,
+            logger,
+            translations,
+            hookStack,
+            commandStack,
+            environment.schedulerStack,
+            result.worldFacade,
+            result.mapFacade,
+            playerUtil,
+            gameManager,
+            result.songManager,
+            result.dataManager,
+            fontService
+        )
+
+        val songCache = MapSongCache()
+
+        val sessionStats = SessionStatsRecorder(translations, logger)
+        sessionStats.init(hookStack)
+
+        val tablistManager = TablistManager(translations, server)
+
+        val args = ApBaseArgs(
+            miniGameArgs = container,
+            gameQueue = queue,
+            playerManager = playerManager,
+            forceGameCommand = forceGameCommand,
+            sharedSongCache = songCache,
+            scoreManager = scoreManager,
+            finisher = environment.finisher,
+            stats = sessionStats,
+            tablistManager = tablistManager,
+            assetManager = result.assetManager,
+            activitySwitcher = { activity: Activity ->
+                environment.switchRootActivity(activity)
+            }
+        )
+
+        val preparation = PreparationActivity(args)
+
+        environment.switchRootActivity(preparation)
+    }
+
+    private fun getVotedGames(gameManager: MiniGameManager): List<MiniGame> {
+        val voted = miniGameVoteResult.asMap()
+
+        return voted.keys
+            .filter { voted.getOrDefault(it, 0) > 0 }  // only voted games
+            .groupBy { voted[it] ?: 0 }  // group by vote count
+            .entries
+            .sortedBy { it.key }  // sort by grouped vote count descending
+            .reversed()
+            .flatMap { it.value.shuffled() }  // shuffle order of games with the same vote count
+            .mapNotNull { gameManager.getGame(it.id).orElse(null) }
+    }
+
+    private fun initDynamicLanguages(hookStack: HookStack, translations: Translations, server: MinecraftServer) {
+        // translation reload is called off-thread by the DynamicLanguageManager
+        val reloadLock = Any()
+        val callback = reload(translations, reloadLock)
+
+        val manager = DynamicLanguageManager(
+            vanillaTranslations,
+            { player -> translations.getLanguage(player) },
+            callback
+        )
+
+        manager.init(hookStack, PlayerLookup.all(server))
+    }
+
+    private fun reload(translations: Translations, lock: Any): Runnable {
+        val translator = translations.translator
+
+        if (translator is DefaultLanguageTranslator) return {
+            synchronized(lock) {
+                // only one reload should be done at once
+                translator.reload().join()
+            }
+        }
+
+        return {}  // NOOP
     }
 }
