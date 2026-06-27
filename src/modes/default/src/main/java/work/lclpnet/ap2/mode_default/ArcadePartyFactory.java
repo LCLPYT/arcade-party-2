@@ -17,6 +17,7 @@ import work.lclpnet.ap2.impl.i18n.PrefixTranslationLoader;
 import work.lclpnet.ap2.impl.i18n.VanillaTranslations;
 import work.lclpnet.ap2.impl.util.IconMaker;
 import work.lclpnet.ap2.mode_default.activity.ArcadePartyStartingActivity;
+import work.lclpnet.ap2.mode_default.activity.voting.MiniGameVoting;
 import work.lclpnet.config.json.JsonConfigFactory;
 import work.lclpnet.game.api.GameEnvironment;
 import work.lclpnet.game.api.GameFactory;
@@ -24,7 +25,6 @@ import work.lclpnet.game.api.GameInstance;
 import work.lclpnet.game.api.option.OptionVoting;
 import work.lclpnet.game.api.option.VoteResult;
 import work.lclpnet.game.api.start.GameStartArgs;
-import work.lclpnet.game.impl.Voting;
 import work.lclpnet.kibu.assets.AssetManager;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.util.ModTranslations;
@@ -46,7 +46,7 @@ public class ArcadePartyFactory implements GameFactory {
     private final Logger logger;
 
     private @Nullable VanillaTranslations vanillaTranslations = null;
-    private @Nullable Voting<MiniGame> miniGameVoting = null;
+    private @Nullable MiniGameVoting miniGameVoting = null;
 
     public ArcadePartyFactory(JsonConfigFactory<Ap2Config> configFactory, Logger logger) {
         this.configFactory = configFactory;
@@ -98,21 +98,19 @@ public class ArcadePartyFactory implements GameFactory {
         var miniGameManager = new FabricMiniGameManager(ApConstants.logger);
         Set<MiniGame> miniGames = miniGameManager.getGames();
 
-        miniGameVoting = new Voting<>(
-                "mini_games",
-                new OptionVoting<>(
-                        player -> {
-                            var stack = new ItemStack(Items.PAPER);
-                            stack.set(DataComponents.ITEM_NAME, gameVotingName.translateFor(player).withStyle(AQUA));
-                            return stack;
-                        },
-                        gameVotingName::translateFor,
-                        MiniGame.class,
-                        miniGames,
-                        (player, miniGame) -> IconMaker.createIcon(miniGame, player, translations)
-                ),
-                translations
+        OptionVoting<MiniGame> votingData = new OptionVoting<>(
+                player -> {
+                    var stack = new ItemStack(Items.PAPER);
+                    stack.set(DataComponents.ITEM_NAME, gameVotingName.translateFor(player).withStyle(AQUA));
+                    return stack;
+                },
+                gameVotingName::translateFor,
+                MiniGame.class,
+                miniGames,
+                (player, miniGame) -> IconMaker.createIcon(miniGame, player, translations)
         );
+
+        miniGameVoting = new MiniGameVoting("mini_games", votingData, translations);
 
         return new ArcadePartyStartingActivity(args, logger, miniGameVoting);
     }
