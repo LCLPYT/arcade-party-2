@@ -141,7 +141,7 @@ class SpleefInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMa
         for (player in players()) {
             if (!OnGroundDetector.isOnGroundServer(player) || player.isInLava || player.isInPowderSnow) continue
 
-            val box = player.boundingBox.setMinY(player.y - 0.02).setMaxY(player.y + 1e-5)
+            val box = player.boundingBox.setMinY(player.y - 0.02).setMaxY(player.y - 1e-5).contract(1e-9, 0.0, 1e-9)
 
             for (pos in BlockPos.betweenClosed(box)) {
                 val state = level.getBlockState(pos)
