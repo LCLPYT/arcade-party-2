@@ -8,6 +8,8 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.damagesource.DamageSource
+import net.minecraft.world.effect.MobEffectInstance
+import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.Level
@@ -37,6 +39,7 @@ import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.translate.text.TranslatedText
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 
 private val ChestsLooted = Stat("chests_looted", 0)
 
@@ -123,6 +126,8 @@ class QuickSgInstance(
     override fun onDeath(player: ServerPlayer, attacker: Entity?) {
         if (attacker is ServerPlayer && attacker != player && isParticipating(attacker)) {
             gainKill(attacker, stats)
+
+            attacker.addEffect(MobEffectInstance(MobEffects.REGENERATION, 10.seconds.inWholeTicks.toInt(), 1))
         }
 
         super.onDeath(player, attacker)
