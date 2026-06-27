@@ -33,6 +33,7 @@ class MiningBattleOre(
     private val ores = WeightedList<Ore>()
     lateinit var scoreConsumer: (ServerPlayer, Int) -> Unit
     lateinit var valid: (BlockPos) -> Boolean
+    lateinit var stats: MiningBattleStats
 
     fun init() {
         registerOre(null, 0, 0.9f)
@@ -89,11 +90,14 @@ class MiningBattleOre(
         val value = getValue(broken)
 
         if (value > 0) {
+            stats.oreBroken(player, value)
             scoreConsumer(player, value)
         }
     }
 
     private fun explode(player: ServerPlayer, pos: BlockPos) {
+        stats.tntDetonated(player)
+
         val world = player.level()
 
         val x = pos.x + 0.5
@@ -119,7 +123,15 @@ class MiningBattleOre(
             val exState = world.getBlockState(exPos)
             if (exState.isAir) continue
 
-            totalValue += getValue(exState)
+            stats.blockBroken(player)
+
+            val value = getValue(exState)
+
+            if (value > 0) {
+                stats.oreBroken(player, value)
+            }
+
+            totalValue += value
             world.setBlockAndUpdate(exPos, air)
         }
 
@@ -132,6 +144,8 @@ class MiningBattleOre(
     }
 
     private fun giveHaste(player: ServerPlayer) {
+        stats.efficiencyGained(player)
+
         player.removeEffect(MobEffects.MINING_FATIGUE)
 
         val statusEffect = player.getEffect(MobEffects.HASTE)
@@ -148,6 +162,8 @@ class MiningBattleOre(
     }
 
     private fun weakenOthers(player: ServerPlayer) {
+        stats.weakenedOthers(player)
+
         SoundHelper.playSound(gameHandle.server, SoundEvents.RAVAGER_CELEBRATE, SoundSource.HOSTILE, 0.5f, 1f)
 
         val translations = gameHandle.translations
@@ -167,6 +183,8 @@ class MiningBattleOre(
 
             other.removeEffect(MobEffects.MINING_FATIGUE)
             other.addEffect(MobEffectInstance(MobEffects.MINING_FATIGUE, 120, 0), player)
+
+            stats.gotWeakened(other)
 
             other.sendSystemMessage(otherMsg.translateFor(other))
         }
