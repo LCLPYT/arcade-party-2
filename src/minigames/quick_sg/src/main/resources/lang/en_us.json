@@ -1,4 +1,5 @@
 {
   "name": "Quick SG",
-  "description": "Loot chests and fight your opponents. Last player standing wins."
+  "description": "Loot chests and fight your opponents. Last player standing wins.",
+  "stat.chests_looted": "Chests looted"
 }
