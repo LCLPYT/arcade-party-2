@@ -10,8 +10,11 @@ import net.minecraft.sounds.SoundSource
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.enchantment.Enchantments
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
 import work.lclpnet.ap2.api.stats.CommonStats
+import work.lclpnet.ap2.ext.mc.setBlock
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.util.*
@@ -78,7 +81,7 @@ class MiningBattleInstance(
 
         val subject = gameHandle.translations.translateText(gameHandle.gameInfo.taskKey)
 
-        createTimer(subject, DURATION).whenDone(winManager::complete)
+        createTimer(subject, DURATION).whenDone(::afterTimerDone)
     }
 
     private fun onGainPoints(player: ServerPlayer, points: Int) {
@@ -121,5 +124,17 @@ class MiningBattleInstance(
         val state = level.getBlockState(pos)
 
         return material.contains(state) || ore.isOre(state)
+    }
+
+    private fun afterTimerDone() {
+        for (pos in box) {
+            val state = level.getBlockState(pos)
+
+            if (material.contains(state)) {
+                level.setBlock(pos, Blocks.BARRIER, updateFlags = Block.UPDATE_CLIENTS or Block.UPDATE_KNOWN_SHAPE or Block.UPDATE_SUPPRESS_DROPS)
+            }
+        }
+
+        winManager.complete()
     }
 }
