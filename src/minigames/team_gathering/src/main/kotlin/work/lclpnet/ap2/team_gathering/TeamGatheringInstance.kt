@@ -10,6 +10,9 @@ import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.item.Item
 import net.minecraft.world.level.gamerules.GameRules
+import work.lclpnet.ap2.api.stats.CommonStats
+import work.lclpnet.ap2.api.stats.Stat
+import work.lclpnet.ap2.core.hook.ItemCraftedCallback
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.playNotifySound
@@ -28,6 +31,7 @@ import work.lclpnet.ap2.impl.util.TextUtil
 import work.lclpnet.gaco.ds.WeightedList
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.util.ResetWorldModifier
+import work.lclpnet.kibu.hook.player.PlayerInventoryHooks
 import work.lclpnet.kibu.translate.text.FormatWrapper
 import java.util.*
 import kotlin.math.ceil
@@ -38,9 +42,17 @@ import kotlin.time.Duration.Companion.seconds
 
 val DURATION = 3.minutes
 
+val UniqueItems = Stat("unique_items", 0)
+val ItemsCrafted = Stat("items_crafted", 0)
+val ItemsPickedUp = Stat("items_picked_up", 0)
+
 class TeamState {
     val items = mutableSetOf<Item>()
     val playerItems = mutableMapOf<UUID, Set<Item>>()
+    val crafted = mutableSetOf<Item>()
+    val pickedUp = mutableSetOf<Item>()
+    val playerCrafted = mutableMapOf<UUID, MutableSet<Item>>()
+    val playerPickedUp = mutableMapOf<UUID, MutableSet<Item>>()
 }
 
 class TeamGatheringInstance(
@@ -53,6 +65,13 @@ class TeamGatheringInstance(
     val data = useDataContainer(teamManager, ::IntScoreDataContainer)
     override val winManager = useTeamWinManager(teamManager, map = null) { data }
     override val participantListener = useLastRemainingTeamListener(teamManager, winManager)
+    val stats = useTeamStats(
+        winManager,
+        data,
+        CommonStats.IntScore,
+        teamStats = listOf(ItemsCrafted, ItemsPickedUp),
+        memberStats = listOf(UniqueItems, ItemsCrafted, ItemsPickedUp, CommonStats.DistanceMoved)
+    )
     val teamStates = TeamStorage.create(::TeamState)
     var soloPlayerKey: PlayerRef? = null
     var soloTeamKey: TeamKey? = null
@@ -79,6 +98,8 @@ class TeamGatheringInstance(
 
             translate("solo_hint").withStyle(ChatFormatting.AQUA).sendTo(soloPlayer)
         }
+
+        trackDistanceMoved(stats.players)
 
         useStartup(::go)
     }
@@ -168,6 +189,18 @@ class TeamGatheringInstance(
             }
         }
 
+        PlayerInventoryHooks.PLAYER_PICKUP.registerWith(hooks) { player, itemEntity ->
+            if (player is ServerPlayer) {
+                recordDistinct(player, itemEntity.item.item, pickedUpBucket, craftedBucket)
+            }
+
+            false
+        }
+
+        ItemCraftedCallback.HOOK.registerWith(hooks) { player, stack, _ ->
+            recordDistinct(player, stack.item, craftedBucket, pickedUpBucket)
+        }
+
         runEveryTick {
             for (team in teamManager.teams) {
                 updateItemCount(team)
@@ -207,10 +240,17 @@ class TeamGatheringInstance(
         for (player in team.players) {
             val held = HashSet<Item>()
 
-            for (stack in player.inventory) {
+            for (slot in player.inventoryMenu.slots) {
+                if (slot == player.inventoryMenu.resultSlot) continue
+
+                val stack = slot.item
+
                 if (stack.isEmpty) continue
+
                 held.add(stack.item)
             }
+
+            player.containerMenu.carried.takeIf { !it.isEmpty }?.let { held.add(it.item) }
 
             currentItems[player.uuid] = held
             teamHeldItems.addAll(held)
@@ -249,7 +289,46 @@ class TeamGatheringInstance(
         previousItems.putAll(currentItems)
 
         data.setScore(team, teamItems.size)
+
+        if (team.key == soloTeamKey) {
+            soloPlayer?.let { stats.players.set(it, UniqueItems, teamItems.size) }
+        } else {
+            for (player in team.players) {
+                val held = currentItems[player.uuid] ?: continue
+                stats.players.set(player, UniqueItems, held.size)
+            }
+        }
+
         sendItemCount(team)
+    }
+
+    private class Bucket(
+        val teamSet: (TeamState) -> MutableSet<Item>,
+        val playerSets: (TeamState) -> MutableMap<UUID, MutableSet<Item>>,
+        val stat: Stat<Int>,
+    )
+
+    private val craftedBucket = Bucket(TeamState::crafted, TeamState::playerCrafted, ItemsCrafted)
+    private val pickedUpBucket = Bucket(TeamState::pickedUp, TeamState::playerPickedUp, ItemsPickedUp)
+
+    // counts a distinct item type for [own], unless [other] already claimed it (the first
+    // acquisition method wins, so an item is never counted toward both crafted and pickup)
+    private fun recordDistinct(player: ServerPlayer, item: Item, own: Bucket, other: Bucket) {
+        val team = teamManager.getTeam(player) ?: return
+        val state = teamStates.get(team)
+
+        val ownPlayerSet = own.playerSets(state).getOrPut(player.uuid) { mutableSetOf() }
+        val otherPlayerSet = other.playerSets(state).getOrPut(player.uuid) { mutableSetOf() }
+
+        if (item !in otherPlayerSet && ownPlayerSet.add(item)) {
+            stats.players.set(player, own.stat, ownPlayerSet.size)
+        }
+
+        val ownTeamSet = own.teamSet(state)
+
+        if (item !in other.teamSet(state) && ownTeamSet.add(item)) {
+            stats.teams.set(team, own.stat, ownTeamSet.size)
+        }
     }
 
     private fun notifyFound(team: Team, player: ServerPlayer, item: Item) {
