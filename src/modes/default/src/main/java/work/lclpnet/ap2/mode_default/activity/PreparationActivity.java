@@ -71,7 +71,6 @@ import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
-import work.lclpnet.kibu.inv.type.RestrictedInventory;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.Scheduler;
@@ -92,8 +91,8 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     private static final int GAME_ANNOUNCE_DELAY = Ticks.seconds(3);
     private static final int PREPARATION_TIME = Ticks.seconds(18);
     private static final String GAME_SONG_ID = "ap2_game";
-    private final OptionChooser<MiniGame> gameChooser = new OptionChooser<>();
-    private final OptionChooser<GameMap> mapChooser = new OptionChooser<>();
+    private OptionChooser<MiniGame> gameChooser = null;
+    private OptionChooser<GameMap> mapChooser = null;
     private final ApBaseArgs args;
     private final BaseActivityConfigurator activityConfigurator;
     private int time = 0;
@@ -747,16 +746,30 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         PlayerConnectionHooks.JOIN.registerWith(hooks, this::giveAdminItems);
 
-        gameChooser.listen(hooks, (game, player) -> {
-            forceGame(game);
-            player.sendSystemMessage(Component.literal("Forcing mini-game \"%s\"".formatted(game.getId())));
-        });
+        ApMiniGameArgs container = args.miniGameArgs();
+        Translations translations = container.translations();
+        DataManager dataManager = container.dataManager();
 
-        mapChooser.listen(hooks, (gameMap, player) -> {
-            Identifier mapId = gameMap.getDescriptor().getIdentifier();
-            args.miniGameArgs().mapFacade().forceMap(mapId);
-            player.sendSystemMessage(Component.literal("Next map will be \"%s\"".formatted(mapId)));
-        });
+        gameChooser = new OptionChooser<>(ApConstants.identifier("force_game"), translations,
+                _ -> Component.literal("Force Game"),
+                (player, game) -> IconMaker.createIcon(game, player, translations),
+                (player, game) -> translations.translate(player, game.getTitleKey()),
+                (game, player) -> {
+                    forceGame(game);
+                    player.sendSystemMessage(Component.literal("Forcing mini-game \"%s\"".formatted(game.getId())));
+                });
+        gameChooser.init(hooks);
+
+        mapChooser = new OptionChooser<>(ApConstants.identifier("force_map"), translations,
+                _ -> Component.literal("Force Map"),
+                (player, map) -> IconMaker.createIcon(map, player, translations, dataManager),
+                (player, map) -> map.getName(translations.getLanguage(player)),
+                (gameMap, player) -> {
+                    Identifier mapId = gameMap.getDescriptor().getIdentifier();
+                    args.miniGameArgs().mapFacade().forceMap(mapId);
+                    player.sendSystemMessage(Component.literal("Next map will be \"%s\"".formatted(mapId)));
+                });
+        mapChooser.init(hooks);
     }
 
     private void giveAdminItems(ServerPlayer player) {
@@ -785,12 +798,8 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
     private void openGamePicker(ServerPlayer player) {
         var games = args.miniGameArgs().miniGames().getGames().stream().toList();
-        Translations translations = args.miniGameArgs().translations();
 
-        RestrictedInventory inv = gameChooser.createInventory(games, Component.literal("Force Game"),
-                game -> IconMaker.createIcon(game, player, translations));
-
-        inv.open(player);
+        gameChooser.open(player, games);
     }
 
     private void openMapPicker(ServerPlayer player) {
@@ -799,17 +808,8 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             return;
         }
 
-        ApMiniGameArgs container = args.miniGameArgs();
-        DataManager dataManager = container.dataManager();
-
-        container.mapFacade().getMaps(miniGame.getId()).thenAccept(maps -> {
-            Translations translations = container.translations();
-
-            RestrictedInventory inv = mapChooser.createInventory(maps, Component.literal("Force Map"),
-                    map -> IconMaker.createIcon(map, player, translations, dataManager));
-
-            inv.open(player);
-        });
+        args.miniGameArgs().mapFacade().getMaps(miniGame.getId())
+                .thenAccept(maps -> mapChooser.open(player, maps));
     }
 
     @Override

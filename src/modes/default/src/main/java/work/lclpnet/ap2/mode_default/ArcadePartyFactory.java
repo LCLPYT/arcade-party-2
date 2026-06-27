@@ -17,7 +17,6 @@ import work.lclpnet.ap2.impl.i18n.PrefixTranslationLoader;
 import work.lclpnet.ap2.impl.i18n.VanillaTranslations;
 import work.lclpnet.ap2.impl.util.IconMaker;
 import work.lclpnet.ap2.mode_default.activity.ArcadePartyStartingActivity;
-import work.lclpnet.ap2.mode_default.activity.voting.MiniGameVoting;
 import work.lclpnet.config.json.JsonConfigFactory;
 import work.lclpnet.game.api.GameEnvironment;
 import work.lclpnet.game.api.GameFactory;
@@ -25,8 +24,10 @@ import work.lclpnet.game.api.GameInstance;
 import work.lclpnet.game.api.option.OptionVoting;
 import work.lclpnet.game.api.option.VoteResult;
 import work.lclpnet.game.api.start.GameStartArgs;
+import work.lclpnet.game.impl.Voting;
 import work.lclpnet.kibu.assets.AssetManager;
 import work.lclpnet.kibu.translate.Translations;
+import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.kibu.translate.util.ModTranslations;
 import work.lclpnet.translations.loader.MultiTranslationLoader;
 import work.lclpnet.translations.loader.TranslationLoader;
@@ -46,7 +47,7 @@ public class ArcadePartyFactory implements GameFactory {
     private final Logger logger;
 
     private @Nullable VanillaTranslations vanillaTranslations = null;
-    private @Nullable MiniGameVoting miniGameVoting = null;
+    private @Nullable Voting<MiniGame> miniGameVoting = null;
 
     public ArcadePartyFactory(JsonConfigFactory<Ap2Config> configFactory, Logger logger) {
         this.configFactory = configFactory;
@@ -96,9 +97,17 @@ public class ArcadePartyFactory implements GameFactory {
         var gameVotingName = translations.translateText("ap2.game_voting");
 
         var miniGameManager = new FabricMiniGameManager(ApConstants.logger);
+        OptionVoting<MiniGame> votingData = createOptionVoting(miniGameManager, gameVotingName, translations);
+
+        miniGameVoting = new Voting<>("mini_games", votingData, translations, true, true, true);
+
+        return new ArcadePartyStartingActivity(args, logger, miniGameVoting);
+    }
+
+    private @NonNull OptionVoting<MiniGame> createOptionVoting(FabricMiniGameManager miniGameManager, TranslatedText gameVotingName, Translations translations) {
         Set<MiniGame> miniGames = miniGameManager.getGames();
 
-        OptionVoting<MiniGame> votingData = new OptionVoting<>(
+        return new OptionVoting<>(
                 player -> {
                     var stack = new ItemStack(Items.PAPER);
                     stack.set(DataComponents.ITEM_NAME, gameVotingName.translateFor(player).withStyle(AQUA));
@@ -109,10 +118,6 @@ public class ArcadePartyFactory implements GameFactory {
                 miniGames,
                 (player, miniGame) -> IconMaker.createIcon(miniGame, player, translations)
         );
-
-        miniGameVoting = new MiniGameVoting("mini_games", votingData, translations);
-
-        return new ArcadePartyStartingActivity(args, logger, miniGameVoting);
     }
 
     @Override

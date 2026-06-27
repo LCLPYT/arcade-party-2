@@ -6,9 +6,10 @@ import org.slf4j.Logger;
 import work.lclpnet.activity.ComponentActivity;
 import work.lclpnet.activity.component.ComponentBundle;
 import work.lclpnet.activity.component.builtin.BuiltinComponents;
-import work.lclpnet.ap2.mode_default.activity.voting.MiniGameVoting;
+import work.lclpnet.ap2.game.MiniGame;
 import work.lclpnet.game.api.start.GameStartArgs;
 import work.lclpnet.game.api.start.ItemReservationManager;
+import work.lclpnet.game.impl.Voting;
 import work.lclpnet.game.util.GameStartUtil;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -16,9 +17,9 @@ import work.lclpnet.kibu.scheduler.Ticks;
 public class ArcadePartyStartingActivity extends ComponentActivity {
 
     private final GameStartArgs args;
-    private final MiniGameVoting miniGameVoting;
+    private final Voting<MiniGame> miniGameVoting;
 
-    public ArcadePartyStartingActivity(@NonNull GameStartArgs args, @NonNull Logger logger, MiniGameVoting miniGameVoting) {
+    public ArcadePartyStartingActivity(@NonNull GameStartArgs args, @NonNull Logger logger, Voting<MiniGame> miniGameVoting) {
         super(args.options().getContext().getServer(), logger);
 
         this.args = args;
@@ -38,8 +39,6 @@ public class ArcadePartyStartingActivity extends ComponentActivity {
 
         if (votingItemSlot != null) {
             HookRegistrar hooks = component(BuiltinComponents.HOOKS).hooks();
-
-            miniGameVoting.getScreen().registerHooks(hooks);
 
             GameStartUtil.setupVoting(miniGameVoting, hooks, votingItemSlot.slot(), args, Ticks.seconds(15));
         }
