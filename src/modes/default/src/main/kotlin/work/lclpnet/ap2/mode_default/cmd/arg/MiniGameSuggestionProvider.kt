@@ -1,31 +1,25 @@
-package work.lclpnet.ap2.mode_default.cmd.arg;
+package work.lclpnet.ap2.mode_default.cmd.arg
 
-import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.suggestion.SuggestionProvider;
-import com.mojang.brigadier.suggestion.Suggestions;
-import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.resources.Identifier;
-import work.lclpnet.ap2.api.base.MiniGameManager;
-import work.lclpnet.ap2.game.GameInfo;
+import com.mojang.brigadier.context.CommandContext
+import com.mojang.brigadier.suggestion.SuggestionProvider
+import com.mojang.brigadier.suggestion.Suggestions
+import com.mojang.brigadier.suggestion.SuggestionsBuilder
+import net.minecraft.commands.CommandSourceStack
+import work.lclpnet.ap2.api.base.MiniGameManager
+import java.util.concurrent.CompletableFuture
 
-import java.util.concurrent.CompletableFuture;
+class MiniGameSuggestionProvider(
+    private val miniGameManager: MiniGameManager
+) : SuggestionProvider<CommandSourceStack> {
 
-public class MiniGameSuggestionProvider implements SuggestionProvider<CommandSourceStack> {
+    override fun getSuggestions(
+        context: CommandContext<CommandSourceStack>,
+        builder: SuggestionsBuilder
+    ): CompletableFuture<Suggestions> {
+        for (game in miniGameManager.games) {
+            builder.suggest(game.id.toString())
+        }
 
-    private final MiniGameManager miniGameManager;
-
-    public MiniGameSuggestionProvider(MiniGameManager miniGameManager) {
-        this.miniGameManager = miniGameManager;
-    }
-
-    @Override
-    public CompletableFuture<Suggestions> getSuggestions(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
-        miniGameManager.getGames().stream()
-                .map(GameInfo::getId)
-                .map(Identifier::toString)
-                .forEach(builder::suggest);
-
-        return builder.buildFuture();
+        return builder.buildFuture()
     }
 }
