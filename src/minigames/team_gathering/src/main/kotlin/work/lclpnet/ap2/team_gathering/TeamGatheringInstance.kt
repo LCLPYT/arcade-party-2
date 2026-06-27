@@ -6,17 +6,21 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.damagesource.DamageTypes
+import net.minecraft.world.effect.MobEffectInstance
+import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.item.Item
-import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.gamerules.GameRules
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.playNotifySound
+import work.lclpnet.ap2.ext.mc.teleport
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.MiniGameInstance
 import work.lclpnet.ap2.game.data.IntScoreDataContainer
+import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.team.DyeTeamKey
 import work.lclpnet.ap2.game.team.Team
+import work.lclpnet.ap2.game.team.TeamKey
 import work.lclpnet.ap2.game.team.TeamManager
 import work.lclpnet.ap2.game.util.*
 import work.lclpnet.ap2.impl.util.TeamStorage
@@ -24,8 +28,8 @@ import work.lclpnet.ap2.impl.util.TextUtil
 import work.lclpnet.gaco.ds.WeightedList
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.util.ResetWorldModifier
-import work.lclpnet.kibu.hook.player.PlayerInventoryHooks
 import work.lclpnet.kibu.translate.text.FormatWrapper
+import java.util.*
 import kotlin.math.ceil
 import kotlin.random.Random
 import kotlin.random.asJavaRandom
@@ -34,8 +38,9 @@ import kotlin.time.Duration.Companion.seconds
 
 val DURATION = 3.minutes
 
-class TeamItems {
+class TeamState {
     val items = mutableSetOf<Item>()
+    val playerItems = mutableMapOf<UUID, Set<Item>>()
 }
 
 class TeamGatheringInstance(
@@ -48,7 +53,9 @@ class TeamGatheringInstance(
     val data = useDataContainer(teamManager, ::IntScoreDataContainer)
     override val winManager = useTeamWinManager(teamManager, map = null) { data }
     override val participantListener = useLastRemainingTeamListener(teamManager, winManager)
-    val teamItems = TeamStorage.create(::TeamItems)
+    val teamStates = TeamStorage.create(::TeamState)
+    var soloPlayerKey: PlayerRef? = null
+    var soloTeamKey: TeamKey? = null
 
     init {
         useSurvivalMode()
@@ -58,12 +65,20 @@ class TeamGatheringInstance(
         configureDefaults()
 
         for (player in allPlayers()) {
-            gameHandle.worldFacade.teleport(player)
+            player.teleport(level.respawnData.pos(), level)
         }
 
         setupTeams()
 
         level.gameRules.set(GameRules.KEEP_INVENTORY, true, server)
+
+        val soloPlayer = this.soloPlayer
+
+        if (soloPlayer != null) {
+            soloPlayer.addEffect(MobEffectInstance(MobEffects.HASTE, Int.MAX_VALUE, 1, false, false, false))
+
+            translate("solo_hint").withStyle(ChatFormatting.AQUA).sendTo(soloPlayer)
+        }
 
         useStartup(::go)
     }
@@ -89,8 +104,11 @@ class TeamGatheringInstance(
         val players = players().toMutableSet()
 
         if (players.size % 2 == 1) {
-            val teamless = pickTeamlessPlayer()
+            val teamless = pickSoloPlayer()
             val key = teamKeys.removeFirst()
+
+            soloPlayerKey = PlayerRef.create(teamless)
+            soloTeamKey = key
 
             teamManager.getTeam(key)?.let {
                 teamManager.joinTeam(teamless, it)
@@ -112,7 +130,7 @@ class TeamGatheringInstance(
         gameHandle.playerUtil.updatePlayerListNames(players.toSet())
     }
 
-    private fun pickTeamlessPlayer(): ServerPlayer {
+    private fun pickSoloPlayer(): ServerPlayer {
         val ranked = players()
             .map { player -> player to gameHandle.rankView.rank(player) }
 
@@ -150,20 +168,6 @@ class TeamGatheringInstance(
             }
         }
 
-        PlayerInventoryHooks.PLAYER_PICKUP.registerWith(hooks) { player, itemEntity ->
-            if (player is ServerPlayer && isParticipating(player)) {
-                onItemPickedUp(player, itemEntity.item)
-            }
-
-            false
-        }
-
-        PlayerInventoryHooks.DROPPED_ITEM_ENTITY.registerWith(hooks) { player, itemEntity ->
-            if (player is ServerPlayer && isParticipating(player)) {
-                onItemDropped(player, itemEntity.item)
-            }
-        }
-
         runEveryTick {
             for (team in teamManager.teams) {
                 updateItemCount(team)
@@ -190,36 +194,71 @@ class TeamGatheringInstance(
     }
 
     private fun updateItemCount(team: Team) {
-        val items = teamItems.get(team).items
+        val teamState = this.teamStates.get(team)
+        val teamItems = teamState.items
+        val previousItems = teamState.playerItems
+
+        // the solo team accumulates found items and doesn't have to keep them in the inventory
+        val tracksDrops = team.key != soloTeamKey
+
+        val currentItems = HashMap<UUID, Set<Item>>()
+        val teamHeldItems = HashSet<Item>()
 
         for (player in team.players) {
+            val held = HashSet<Item>()
+
             for (stack in player.inventory) {
                 if (stack.isEmpty) continue
+                held.add(stack.item)
+            }
 
-                items.add(stack.item)
+            currentItems[player.uuid] = held
+            teamHeldItems.addAll(held)
+        }
+
+        // detect items that newly appeared in a player's inventory
+        for (player in team.players) {
+            val current = currentItems[player.uuid] ?: continue
+            val previous = previousItems[player.uuid] ?: emptySet()
+
+            for (item in current) {
+                if (item in previous) continue
+                if (!teamItems.add(item)) continue
+
+                notifyFound(team, player, item)
             }
         }
 
-        data.setScore(team, items.size)
+        // detect items that were held last tick but are no longer held by anyone on the team
+        if (tracksDrops) {
+            for (player in team.players) {
+                val currentPlayerItems = currentItems[player.uuid] ?: continue
+                val previous = previousItems[player.uuid] ?: continue
+
+                for (item in previous) {
+                    if (item in currentPlayerItems) continue
+                    if (item in teamHeldItems) continue
+                    if (!teamItems.remove(item)) continue
+
+                    notifyDropped(team, player, item)
+                }
+            }
+        }
+
+        previousItems.keys.retainAll(currentItems.keys)
+        previousItems.putAll(currentItems)
+
+        data.setScore(team, teamItems.size)
+        sendItemCount(team)
     }
 
-    private fun onItemPickedUp(player: ServerPlayer, stack: ItemStack) {
-        if (stack.isEmpty) return
-
-        val team = teamManager.getTeam(player) ?: return
-
-        val items = teamItems.get(team).items
-        val newItem = items.add(stack.item)
-
-        updateItemCount(team)
-        sendItemCount(team)
-
-        if (!newItem) return
+    private fun notifyFound(team: Team, player: ServerPlayer, item: Item) {
+        data.setScore(team, teamStates.get(team).items.size)
 
         translate(
             "found",
             FormatWrapper.styled(player.scoreboardName, ChatFormatting.YELLOW),
-            TextUtil.getVanillaName(stack).withStyle(ChatFormatting.AQUA)
+            TextUtil.getVanillaName(item).withStyle(ChatFormatting.AQUA)
         ).withStyle(ChatFormatting.GREEN)
             .sendTo(team.players)
 
@@ -228,25 +267,13 @@ class TeamGatheringInstance(
         }
     }
 
-    private fun onItemDropped(player: ServerPlayer, stack: ItemStack) {
-        if (stack.isEmpty) return
-
-        val team = teamManager.getTeam(player) ?: return
-
-        updateItemCount(team)
-        sendItemCount(team)
-
-        val items = teamItems.get(team).items
-
-        // check if a team member still has the item
-        if (team.players.any { player -> player.inventory.contains { it.isOf(stack.item) } }) return
-
-        items.remove(stack.item)
+    private fun notifyDropped(team: Team, player: ServerPlayer, item: Item) {
+        data.setScore(team, teamStates.get(team).items.size)
 
         translate(
             "dropped",
             FormatWrapper.styled(player.scoreboardName, ChatFormatting.YELLOW),
-            TextUtil.getVanillaName(stack).withStyle(ChatFormatting.AQUA)
+            TextUtil.getVanillaName(item).withStyle(ChatFormatting.AQUA)
         ).withStyle(ChatFormatting.RED)
             .sendTo(team.players)
 
@@ -254,4 +281,7 @@ class TeamGatheringInstance(
             p.playNotifySound(SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.PLAYERS, 0.5f, 0.5f)
         }
     }
+
+    private val soloPlayer: ServerPlayer?
+        get() = soloPlayerKey?.let { players().getParticipant(it.uuid).orElse(null) }
 }

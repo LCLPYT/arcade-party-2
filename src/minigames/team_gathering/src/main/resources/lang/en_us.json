@@ -4,5 +4,6 @@
   "task": "Collect unique items",
   "found": "%s found %s",
   "dropped": "%s dropped %s",
-  "count": "%s Items"
+  "count": "%s Items",
+  "solo_hint": "You are the solo player. You don't have to keep items in your inventory and you can break blocks faster."
 }
