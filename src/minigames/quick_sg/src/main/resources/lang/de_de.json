@@ -1,4 +1,5 @@
 {
   "name": "Quick SG",
-  "description": "Sammle Gegenstände aus Kisten und bekämpfe damit die anderen Spieler. Der letzte Überlebende gewinnt!"
+  "description": "Sammle Gegenstände aus Kisten und bekämpfe damit die anderen Spieler. Der letzte Überlebende gewinnt!",
+  "stat.chests_looted": "Kisten geplündert"
 }
