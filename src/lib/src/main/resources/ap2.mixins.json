@@ -11,6 +11,7 @@
     "FuelValuesMixin",
     "MinecraftServerMixin",
     "PlayerListMixin",
+    "ResultSlotMixin",
     "ServerChunkCacheAccessor",
     "ServerExplosionAccessor",
     "ServerExplosionMixin",
