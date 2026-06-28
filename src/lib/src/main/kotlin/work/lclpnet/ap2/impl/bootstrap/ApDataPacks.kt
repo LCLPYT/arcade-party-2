@@ -1,10 +1,14 @@
 package work.lclpnet.ap2.impl.bootstrap
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.future.future
+import kotlinx.coroutines.withContext
 import net.minecraft.resources.Identifier
 import org.apache.commons.io.FileUtils
 import org.slf4j.Logger
 import work.lclpnet.ap2.api.config.Ap2Config
-import work.lclpnet.ap2.api.config.ConfigManager
 import work.lclpnet.config.json.JsonConfigFactory
 import work.lclpnet.gaco.asset.CommonAssets
 import work.lclpnet.game.api.data.DataPackSink
@@ -26,37 +30,17 @@ class ApDataPacks(
     private val logger: Logger
 ) : GameDataPacks {
 
-    override fun downloadPacks(dataPackSink: DataPackSink, executor: Executor): CompletableFuture<Void> {
-        val cleanup = ArrayList<Runnable>()
+    override fun downloadPacks(dataPackSink: DataPackSink, executor: Executor): CompletableFuture<Void?> {
+        return CoroutineScope(executor.asCoroutineDispatcher()).future {
+            val cleanup = ArrayList<Runnable>()
+            val resources = ArrayList<AutoCloseable>()
 
-        val bootstrap = ApBootstrap(configFactory, logger) { task -> cleanup.add(task) }
-        val dataPacksPath = requireNotNull(Identifier.fromNamespaceAndPath("datapacks", ""))
-
-        val resources = ArrayList<AutoCloseable>()
-
-        return bootstrap.loadConfig(executor)
-            .thenApplyAsync({ configManager: ConfigManager ->
-                val config = configManager.config
-                val cache = bootstrap.createAssetCache(CommonAssets.MAPS)
-                val repo = bootstrap.createMapAssetRepo(config, cache)
-                val mapManager = bootstrap.createMapManager(repo)
-
-                cache?.let { resources.add(it) }
-
-                bootstrap.loadMaps(mapManager, MapDescriptor(dataPacksPath), executor).join()
-
-                mapManager
-            }, executor)
-            .thenAcceptAsync{ mapManager ->
-                val maps = mapManager.collection().mapsWithPrefix(dataPacksPath)
-
-                fetchDataPacks(mapManager, maps, dataPackSink)
-            }
-            .whenComplete { _, err: Throwable? ->
-                if (err != null) {
-                    logger.error("Failed to locate data packs")
-                }
-
+            try {
+                downloadPacksAsync(dataPackSink, cleanup, resources)
+            } catch (e: Throwable) {
+                logger.error("Failed to locate data packs", e)
+                throw e
+            } finally {
                 for (resource in resources) {
                     try {
                         resource.close()
@@ -73,6 +57,34 @@ class ApDataPacks(
                     }
                 }
             }
+
+            null
+        }
+    }
+
+    private suspend fun downloadPacksAsync(
+        dataPackSink: DataPackSink,
+        cleanup: MutableList<Runnable>,
+        resources: MutableList<AutoCloseable>
+    ) {
+        val bootstrap = ApBootstrap(configFactory, logger) { task -> cleanup.add(task) }
+        val dataPacksPath = requireNotNull(Identifier.fromNamespaceAndPath("datapacks", ""))
+
+        val configManager = bootstrap.loadConfig()
+        val config = configManager.config
+        val cache = bootstrap.createAssetCache(CommonAssets.MAPS)
+        val repo = bootstrap.createMapAssetRepo(config, cache)
+        val mapManager = bootstrap.createMapManager(repo)
+
+        cache?.let { resources.add(it) }
+
+        bootstrap.loadMaps(mapManager, MapDescriptor(dataPacksPath))
+
+        val maps = mapManager.collection().mapsWithPrefix(dataPacksPath)
+
+        withContext(Dispatchers.IO) {
+            fetchDataPacks(mapManager, maps, dataPackSink)
+        }
     }
 
     private fun fetchDataPacks(mapManager: MapManager, maps: Stream<GameMap>, sink: DataPackSink) {

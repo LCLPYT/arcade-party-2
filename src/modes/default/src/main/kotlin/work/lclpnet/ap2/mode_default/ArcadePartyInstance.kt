@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.mode_default
 
+import kotlinx.coroutines.*
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup
 import net.minecraft.SharedConstants
 import net.minecraft.server.MinecraftServer
@@ -9,7 +10,6 @@ import work.lclpnet.ap2.ApConstants
 import work.lclpnet.ap2.api.base.GameQueue
 import work.lclpnet.ap2.api.base.MiniGameManager
 import work.lclpnet.ap2.api.config.Ap2Config
-import work.lclpnet.ap2.api.config.ConfigManager
 import work.lclpnet.ap2.api.stats.SessionStatsRecorder
 import work.lclpnet.ap2.game.MiniGame
 import work.lclpnet.ap2.game.player.PlayerManagerImpl
@@ -26,6 +26,7 @@ import work.lclpnet.ap2.mode_default.cmd.ScoreCommand
 import work.lclpnet.ap2.mode_default.util.ApBaseArgs
 import work.lclpnet.ap2.mode_default.util.ScoreManager
 import work.lclpnet.ap2.util.FontService
+import work.lclpnet.ap2.util.MinecraftDispatcher
 import work.lclpnet.ap2.util.TablistManager
 import work.lclpnet.config.json.JsonConfigFactory
 import work.lclpnet.gaco.ds.queue.JsonFileQueuePersistence
@@ -36,8 +37,8 @@ import work.lclpnet.kibu.assets.AssetManager
 import work.lclpnet.kibu.hook.HookStack
 import work.lclpnet.kibu.translate.Translations
 import work.lclpnet.translations.DefaultLanguageTranslator
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.ForkJoinPool
+import java.lang.Math
+import java.lang.Runnable
 
 private const val WIN_SCORE = 30
 
@@ -50,11 +51,14 @@ class ArcadePartyInstance(
 ) : GameInstance {
 
     private val fontService: FontService
+    private val scope = CoroutineScope(MinecraftDispatcher(environment.server) + SupervisorJob())
 
     init {
         val assetManager = AssetManager.getShared(SharedConstants.getCurrentVersion().name())
 
         this.fontService = FontService(assetManager, logger)
+
+        environment.whenDone { scope.cancel() }
     }
 
     override fun start() {
@@ -62,34 +66,33 @@ class ArcadePartyInstance(
             environment.whenDone(action)
         }
 
-        bootstrap.loadConfig(ForkJoinPool.commonPool())
-            .thenCompose { configManager: ConfigManager ->
-                bootstrap.dispatch(
+        scope.launch {
+            try {
+                val configManager = bootstrap.loadConfig()
+
+                val result = bootstrap.dispatch(
                     configManager.config,
                     environment,
                     vanillaTranslations,
                     fontService
                 )
-            }
-            .thenCompose { result: ApBootstrap.Result ->
+
                 setupMode(result)
-            }
-            .exceptionally { throwable: Throwable ->
-                logger.error("Failed to load ArcadeParty2", throwable)
-                null
-            }
-    }
-
-    private fun setupMode(result: ApBootstrap.Result): CompletableFuture<Void> {
-        val gameManager: MiniGameManager = FabricMiniGameManager(logger)
-
-        return CompletableFuture.runAsync {
-            val queue = createGameQueue(gameManager)
-
-            environment.server.execute {
-                dispatchGameStart(result, gameManager, queue)
+            } catch (t: Throwable) {
+                logger.error("Failed to load ArcadeParty2", t)
             }
         }
+    }
+
+    private suspend fun setupMode(result: ApBootstrap.Result) {
+        val gameManager: MiniGameManager = FabricMiniGameManager(logger)
+
+        val queue = withContext(Dispatchers.IO) {
+            createGameQueue(gameManager)
+        }
+
+        // the enclosing coroutine runs on MinecraftDispatcher, so this resumes on the server thread
+        dispatchGameStart(result, gameManager, queue)
     }
 
     private fun createGameQueue(gameManager: MiniGameManager): GameQueue {

@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.impl.bootstrap
 
+import kotlinx.coroutines.*
+import kotlinx.coroutines.future.await
 import net.fabricmc.loader.api.Version
 import net.fabricmc.loader.api.VersionParsingException
 import net.minecraft.SharedConstants
@@ -34,14 +36,12 @@ import work.lclpnet.game.map.MapManager
 import work.lclpnet.game.map.RepositoryMapLookup
 import java.io.IOException
 import java.io.InputStream
+import java.lang.Runnable
 import java.net.MalformedURLException
 import java.net.URI
 import java.net.URL
 import java.nio.file.Path
 import java.util.*
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Executor
-import java.util.concurrent.ForkJoinPool
 
 private const val CACHE_TTL_SECONDS = 3600
 
@@ -50,15 +50,16 @@ class ApBootstrap(
     private val logger: Logger,
     private val cleanup: Cleanup
 ) {
-    fun loadConfig(executor: Executor): CompletableFuture<ConfigManager> {
+    suspend fun loadConfig(): ConfigManager {
         val configPath = Path.of("config")
             .resolve(ApConstants.ID)
             .resolve("config.json")
 
         val configManager = ConfigManager(configPath, configFactory, logger)
 
-        return configManager.init(executor)
-            .thenApply { _ -> configManager }
+        configManager.init(Dispatchers.IO.asExecutor()).await()
+
+        return configManager
     }
 
     fun createMapAssetRepo(config: Ap2Config, cache: AssetCache?): AssetRepository =
@@ -143,12 +144,12 @@ class ApBootstrap(
         logger
     )
 
-    fun dispatch(
+    suspend fun dispatch(
         config: Ap2Config,
         environment: GameEnvironment,
         vanillaTranslations: VanillaTranslations,
         fontService: FontService
-    ): CompletableFuture<Result> {
+    ): Result {
         val server = environment.server
 
         val mapsCache = createAssetCache(CommonAssets.MAPS)
@@ -178,19 +179,14 @@ class ApBootstrap(
         val songManager = AssetSongManager(songRepo, logger)
         val dataManager = MutableDataManager()
 
-        val mapTask = loadAp2Maps(mapManager)
-        val containerTask = loadContainer(dataManager)
-        val vanillaTranslationsTask = CompletableFuture.runAsync { vanillaTranslations.init() }
-        val fontServiceTask = CompletableFuture.runAsync { fontService.init() }
-        val assetManagerTask = CompletableFuture.supplyAsync { createAssetManagerBlocking() }
+        return coroutineScope {
+            val assetManagerTask = async(Dispatchers.IO) { createAssetManagerBlocking() }
+            launch(Dispatchers.IO) { loadAp2Maps(mapManager) }
+            launch(Dispatchers.IO) { loadContainer(dataManager) }
+            launch(Dispatchers.IO) { vanillaTranslations.init() }
+            launch(Dispatchers.IO) { fontService.init() }
 
-        return CompletableFuture.supplyAsync {
-            mapTask.join()
-            containerTask.join()
-            vanillaTranslationsTask.join()
-            fontServiceTask.join()
-
-            val assetManager = assetManagerTask.join()
+            val assetManager = assetManagerTask.await()
 
             Result(worldFacade, mapFacade, songManager, dataManager, assetManager)
         }
@@ -214,32 +210,27 @@ class ApBootstrap(
         return AssetManager(httpClient, mojangAssetCache)
     }
 
-    fun loadAp2Maps(mapManager: MapManager): CompletableFuture<Void> =
-        loadMaps(
-            mapManager,
-            MapDescriptor(ApConstants.ID, ""),
-            ForkJoinPool.commonPool()
-        )
+    suspend fun loadAp2Maps(mapManager: MapManager) =
+        loadMaps(mapManager, MapDescriptor(ApConstants.ID, ""))
 
-    fun loadMaps(mapManager: MapManager, descriptor: MapDescriptor, executor: Executor): CompletableFuture<Void> =
-        CompletableFuture.runAsync({
+    suspend fun loadMaps(mapManager: MapManager, descriptor: MapDescriptor) =
+        withContext(Dispatchers.IO) {
             try {
                 // load general arcade party 2 maps
                 mapManager.loadAll(descriptor)
             } catch (e: IOException) {
                 throw RuntimeException("Failed to load maps of namespace ${ApConstants.ID}", e)
             }
-        }, executor)
-
-    fun loadContainer(dataManager: MutableDataManager): CompletableFuture<Void> {
-        return CompletableFuture.runAsync {
-            dataManager.setData(
-                MapDynamicData.builder()
-                    .addSource(JsonDataSource({ openConfigurationFile() }, logger))
-                    .build()
-            )
         }
-    }
+
+    suspend fun loadContainer(dataManager: MutableDataManager) =
+        withContext(Dispatchers.IO) {
+            val data = MapDynamicData.builder()
+                .addSource(JsonDataSource({ openConfigurationFile() }, logger))
+                .build()
+
+            dataManager.setData(data)
+        }
 
     fun openConfigurationFile(): InputStream =
         requireNotNull(javaClass.getResourceAsStream("/configuration.json")) {
