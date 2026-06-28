@@ -7,9 +7,8 @@ import net.minecraft.sounds.SoundSource
 import work.lclpnet.ap2.api.stats.BaseStatsManager
 import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.CommonStats.Kills
-import work.lclpnet.ap2.api.stats.FFAStatsManager
 import work.lclpnet.ap2.ext.mc.playNotifySound
-import work.lclpnet.ap2.game.base.MapGameInstance
+import work.lclpnet.ap2.game.MiniGameInstance
 import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback
 import work.lclpnet.kibu.hook.util.PositionRotation
@@ -24,7 +23,7 @@ import kotlin.math.sqrt
  *
  * @param stats The stats manager that holds [CommonStats.DistanceMoved].
  */
-fun MapGameInstance.trackDistanceMoved(stats: FFAStatsManager) {
+fun MiniGameInstance.trackDistanceMoved(stats: BaseStatsManager<ServerPlayer, PlayerRef>) {
     PlayerMoveCallback.HOOK.registerWith(gameHandle.hooks) { player, from, to ->
         updateDistanceMoved(stats, player, from, to)
         false
@@ -41,8 +40,8 @@ fun MapGameInstance.trackDistanceMoved(stats: FFAStatsManager) {
  * @param from The position the player moved from.
  * @param to The position the player moved to.
  */
-fun MapGameInstance.updateDistanceMoved(
-    stats: FFAStatsManager,
+fun MiniGameInstance.updateDistanceMoved(
+    stats: BaseStatsManager<ServerPlayer, PlayerRef>,
     player: ServerPlayer,
     from: PositionRotation,
     to: PositionRotation
@@ -57,7 +56,7 @@ fun MapGameInstance.updateDistanceMoved(
     }
 }
 
-fun MapGameInstance.gainKill(player: ServerPlayer, stats: BaseStatsManager<ServerPlayer, PlayerRef>) {
+fun MiniGameInstance.gainKill(player: ServerPlayer, stats: BaseStatsManager<ServerPlayer, PlayerRef>) {
     gainKill(player, stats, gameHandle.translations)
 }
 

@@ -12,15 +12,10 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.gameevent.GameEvent
 import net.minecraft.world.phys.Vec3
-import work.lclpnet.ap2.api.game.team.DyeTeamKey
-import work.lclpnet.ap2.api.game.team.Team
-import work.lclpnet.ap2.api.game.team.TeamManager
 import work.lclpnet.ap2.core.mixin.ServerExplosionAccessor
 import work.lclpnet.ap2.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.game.data.type.TeamRef
-import work.lclpnet.ap2.game.team.DyeBlockManager
-import work.lclpnet.ap2.game.team.Paintable
-import work.lclpnet.ap2.game.team.concreteBlock
+import work.lclpnet.ap2.game.team.*
 import work.lclpnet.ap2.impl.util.world.ExplosionUtil
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
 import java.util.*
@@ -42,7 +37,7 @@ class PaintManager(
     lateinit var onPaint: ((player: ServerPlayer, repainted: Boolean) -> Unit)
 
     init {
-        dyeManager.init(teams.map { it.key() })
+        dyeManager.init(teams.map { it.key })
     }
 
     fun getPaintBulletState(team: DyeTeamKey): BlockState = team.concreteBlock().defaultBlockState()
@@ -56,7 +51,7 @@ class PaintManager(
     fun replace(pos: BlockPos, current: BlockState, paintable: Paintable, targetTeam: DyeTeamKey, painter: ServerPlayer? = null): Boolean {
         if (frozen) return false
 
-        if (teams.teamBaseAt(pos).map { it.key() != targetTeam }.orElse(false) ?: false) return false
+        if (teams.teamBaseAt(pos).map { it.key != targetTeam }.orElse(false) ?: false) return false
 
         if (!dyeManager.replace(pos, current, paintable, targetTeam)) return false
 
@@ -76,7 +71,7 @@ class PaintManager(
     fun getTeam(block: Block): DyeTeamKey? = dyeManager.getTeam(block)
 
     private fun addCount(key: DyeTeamKey, amount: Int) {
-        val team = teamManager.getTeam(key).orElse(null) ?: return
+        val team = teamManager.getTeam(key) ?: return
 
         synchronized(this) {
             val score = data.getScore(team)
@@ -100,7 +95,7 @@ class PaintManager(
         }
 
         for (entry in count.object2IntEntrySet()) {
-            teamManager.getTeam(entry.key).ifPresent { team ->
+            teamManager.getTeam(entry.key)?.let { team ->
                 synchronized(this) {
                     data.setScore(team, entry.intValue)
                 }
@@ -129,7 +124,7 @@ class PaintManager(
         val access = explosion as ServerExplosionAccessor
 
         for (affectedPos in access.invokeCalculateExplodedPositions()) {
-            replace(affectedPos, team.key(), player)
+            replace(affectedPos, team.key, player)
         }
 
         access.invokeHurtEntities()

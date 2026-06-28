@@ -1,9 +1,12 @@
 package ${package}
 
-import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.impl.game.TeamEliminationGameInstance
+import net.minecraft.server.level.ServerLevel
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.TeamEliminationGameInstance
+import work.lclpnet.ap2.game.team.TeamManager
+import work.lclpnet.game.map.GameMap
 
-class ${class_name}(gameHandle: MiniGameHandle) : TeamEliminationGameInstance(gameHandle) {
+class ${class_name}(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap, teamManager: TeamManager) : TeamEliminationGameInstance(gameHandle, level, map, teamManager) {
 
     override fun prepare() {
 

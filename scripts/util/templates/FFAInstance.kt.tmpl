@@ -1,15 +1,15 @@
 package ${package}
 
-import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.impl.game.FFAGameInstance
-import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import net.minecraft.server.level.ServerLevel
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.FFAGameInstance
+import work.lclpnet.ap2.game.data.IntScoreDataContainer
+import work.lclpnet.ap2.game.data.type.PlayerRef
+import work.lclpnet.game.map.GameMap
 
-class ${class_name}(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle) {
+class ${class_name}(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
 
-    private val data = IntScoreDataContainer(PlayerRef::create)
-
-    override fun getData() = data
+    override val data = IntScoreDataContainer(PlayerRef::create)
 
     override fun prepare() {
 

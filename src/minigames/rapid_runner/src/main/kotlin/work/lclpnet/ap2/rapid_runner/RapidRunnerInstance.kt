@@ -47,7 +47,9 @@ class RapidRunnerInstance(
         for (player in allPlayers()) {
             gameHandle.worldFacade.teleport(player)
 
-            giveCompass(player)
+            if (isParticipating(player)) {
+                giveCompass(player)
+            }
         }
 
         setupObjective()

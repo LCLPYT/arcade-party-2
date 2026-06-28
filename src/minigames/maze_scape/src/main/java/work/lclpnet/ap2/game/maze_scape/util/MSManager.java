@@ -28,6 +28,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.core.hook.*;
+import work.lclpnet.ap2.core.mixin.ai.BrainAccessor;
 import work.lclpnet.ap2.core.mixin.entity.CreakingAiAccessor;
 import work.lclpnet.ap2.core.mixin.entity.WardenAiAccessor;
 import work.lclpnet.ap2.core.type.ApEntity;
@@ -199,6 +200,9 @@ public class MSManager {
 
         var brain = brainSupplier.get();
 
+        // since 26.1 the brain provider already bakes in all vanilla activities; clear them so only our custom set remains
+        clearActivities(brain);
+
         // adjusted activities from net.minecraft.world.entity.monster.warden.WardenAi#getActivities
         EntityExtensionsKt.addActivity(brain, WardenAiAccessor.invokeInitCoreActivity());  // don't add emerge and dig activities
         EntityExtensionsKt.addActivity(brain, WardenAiAccessor.invokeInitIdleActivity());
@@ -230,6 +234,9 @@ public class MSManager {
 
         var brain = brainSupplier.get();
 
+        // since 26.1 the brain provider already bakes in all vanilla activities; clear them so only our custom set remains
+        clearActivities(brain);
+
         // adjusted activities from CreakingAi::create
         EntityExtensionsKt.addActivity(brain, CreakingAiAccessor.invokeInitCoreActivity());
 
@@ -253,6 +260,13 @@ public class MSManager {
 
     private static boolean isTargeting(Warden warden, LivingEntity entity) {
         return warden.getBrain().getMemory(MemoryModuleType.ATTACK_TARGET).filter(x -> x == entity).isPresent();
+    }
+
+    private static void clearActivities(Brain<?> brain) {
+        var accessor = (BrainAccessor) brain;
+        accessor.getAvailableBehaviorsByPriority().clear();
+        accessor.getActivityRequirements().clear();
+        accessor.getActivityMemoriesToEraseWhenStopped().clear();
     }
 
     private @Nullable Path modifyPathFinding(Entity entity, @Nullable Path path, Set<BlockPos> targets, Function<BlockPos, @Nullable Path> pathFinder) {

@@ -4,9 +4,9 @@ import it.unimi.dsi.fastutil.objects.Object2FloatMap;
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
 import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerPlayer;
-import work.lclpnet.ap2.api.game.team.Team;
-import work.lclpnet.ap2.api.game.team.TeamManager;
 import work.lclpnet.ap2.api.util.bossbar.PlayerBossBar;
+import work.lclpnet.ap2.game.team.Team;
+import work.lclpnet.ap2.game.team.TeamManager;
 import work.lclpnet.kibu.hook.HookRegistrar;
 
 public class DynamicTranslatedTeamBossBar implements PlayerBossBar {
@@ -24,10 +24,12 @@ public class DynamicTranslatedTeamBossBar implements PlayerBossBar {
     public ServerBossEvent getBossBar(ServerPlayer player) {
         ServerBossEvent bossBar = delegate.getBossBar(player);
 
-        teamManager.getTeam(player).ifPresent(team -> {
+        var team = teamManager.getTeam(player);
+
+        if (team != null) {
             float percent = getPercent(team);
             bossBar.setProgress(percent);
-        });
+        }
 
         return bossBar;
     }

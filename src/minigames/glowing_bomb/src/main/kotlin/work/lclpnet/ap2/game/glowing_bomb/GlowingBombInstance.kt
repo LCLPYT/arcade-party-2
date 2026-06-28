@@ -17,6 +17,7 @@ import net.minecraft.world.phys.Vec3
 import org.joml.Vector3d
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.stats.StatUnits
+import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.ext.runEveryTick
@@ -34,9 +35,10 @@ import work.lclpnet.gaco.scene.ServerWorldMountContext
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
-import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.scheduler.api.TaskHandle
 import java.util.*
+import kotlin.random.Random
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 
 private const val BOMB_PASS_COST = 40
@@ -53,7 +55,7 @@ val MinFuseOnPass = Stat("min_fuse_on_pass", 0f, higherIsBetter = false, unit = 
 
 class GlowingBombInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
 
-    private val random = Random()
+    private val random = Random(Clock.System.now().toEpochMilliseconds())
     private val movementBlocker = SimpleMovementBlocker(gameHandle.scheduler).also {
         it.setModifySpeedAttribute(false)
     }
@@ -63,7 +65,7 @@ class GlowingBombInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: G
     private val stats = useFFAStats(winManager, listOf(
         BombAssigned, BombPasses, BombExploded, MaxSafeStreak, BombHoldTime, MinFuseOnPass
     ))
-    private val initialPlayerCount = gameHandle.participants.count()
+    private val config = GbConfig(random, gameHandle.participants.count())
     private val manager = GbManager(level, map, random, gameHandle.participants, ::onAnchorFilled)
     private val scene = Scene(ServerWorldMountContext(level))
     private var bomb: GbBomb? = null
@@ -101,7 +103,7 @@ class GlowingBombInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: G
 
             val stack = serverPlayer.getItemInHand(hand)
 
-            if (stack.`is`(Items.GLOWSTONE)) {
+            if (stack.isOf(Items.GLOWSTONE)) {
                 if (manager.hasBomb(serverPlayer) && !player.cooldowns.isOnCooldown(stack)) {
                     passBomb(serverPlayer)
                 }
@@ -116,7 +118,7 @@ class GlowingBombInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: G
         scene.animate(1, gameHandle.scheduler)
 
         // init min fuse pass to max value for everyone
-        val noPassFuse = maxFuseTicks() / 20f
+        val noPassFuse = config.maxFuseTicks() / 20f
         for (player in players()) {
             stats.set(player, MinFuseOnPass, noPassFuse)
         }
@@ -145,13 +147,13 @@ class GlowingBombInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: G
             b.scale.set(0.4)
             b.position.set(pos.x(), pos.y(), pos.z())
 
-            val amount = randomAmount()
+            val amount = config.randomAmount()
             b.setGlowStoneAmount(amount, random)
 
             scene.add(b)
         }
 
-        fuseTicks = randomFuseTicks()
+        fuseTicks = config.randomFuseTicks()
         gameHandle.scheduler.timeout(fuseTicks) { -> bombTimerExpired() }
 
         val x = pos.x(); val y = pos.y(); val z = pos.z()
@@ -171,39 +173,6 @@ class GlowingBombInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: G
             stats.increment(player, BombAssigned)
             onAcquiredBomb(player)
         }
-    }
-
-    private fun randomFuseTicks(): Int {
-        val minFuse = minFuseTicks()
-        val maxFuse = maxFuseTicks()
-        return random.nextInt(minFuse, maxFuse + 1)
-    }
-
-    private fun maxFuseTicks(): Int = when {
-        initialPlayerCount <= 5 -> Ticks.seconds(18)
-        initialPlayerCount <= 10 -> Ticks.seconds(14)  // avg 10s
-        else -> Ticks.seconds(12)  // avg 8.75s
-    }
-
-    private fun minFuseTicks(): Int = when {
-        initialPlayerCount <= 5 -> Ticks.seconds(7)
-        initialPlayerCount <= 10 -> Ticks.seconds(6)
-        else -> Ticks.seconds(5) + 10
-    }
-
-    private fun randomAmount(): Int = when {
-        // 4 player worst case: 3 * 4 * 18s + 3 * 18s = 270s = 4.5min
-        // 4 player avg case: 3 * 2 * 12.5s + 12.5s = 87.5s = 1.5min
-        // 4 player best case: 3 * 2 * 7s = 42s
-        initialPlayerCount <= 5 -> random.nextInt(1, 4)
-        // 10 player worst case: 9 * 2 * 14s + 14s = 266s = 4.4min
-        // 10 player avg case: 9 * 2 * 10s + 10s = 190s = 3.17min
-        // 10 player best case: 9 * 2 * 6s = 108s = 1.8min
-        initialPlayerCount <= 10 -> random.nextInt(2, 4)
-        // 12 player worst case: 11 * 2 * 12s + 12s = 264s = 4.4min
-        // 12 player avg case: 11 * 2 * 8.75s + 8.75s = 201s = 3.4min
-        // 12 player best case: 11 * 5.5s = 60s = 1min
-        else -> random.nextInt(2, 5)
     }
 
     private fun onAcquiredBomb(player: ServerPlayer) {
@@ -368,7 +337,7 @@ class GlowingBombInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: G
             stats.set(player, BombHoldTime, holdTicks.getInt(uuid) / 20f)
 
             // don't grant credits if the bomb wasn't passed yet and couldn't have exploded yet because of the minimum fuse time
-            if (wasPassed || time >= minFuseTicks()) {
+            if (wasPassed || time >= config.minFuseTicks()) {
                 credits.put(uuid, credits.getOrDefault(uuid, 0) + CREDITS_PER_TICK)
             }
         }

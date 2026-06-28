@@ -152,8 +152,8 @@ class InkGrenadeItem(
             detach()
 
             val player = world.server.playerList.getPlayer(thrower ?: return) ?: return
-            val state = paintGunManager.getPaintBulletState(player).orElse(null) ?: return
-            val team = teams.teamOf(player).orElse(null) ?: return
+            val state = paintGunManager.getPaintBulletState(player) ?: return
+            val team = teams.teamOf(player) ?: return
 
             val pos = Vec3(position.x, position.y, position.z)
 

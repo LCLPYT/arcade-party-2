@@ -52,7 +52,16 @@ class MiniGameActivity(
 
         val remake = AtomicBoolean(false)
 
-        handle = DefaultMiniGameHandle(miniGame, args, bossBars, bossBars, scoreboard, remake)
+        handle = DefaultMiniGameHandle(
+            miniGame,
+            args,
+            bossBars,
+            bossBars,
+            scoreboard,
+            remake,
+            args.scoreManager,
+        )
+
         handle.init()  // hook stack is pushed and later popped by handle::unload in stop()
 
         args.playerManager.startMiniGame()

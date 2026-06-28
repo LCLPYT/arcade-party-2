@@ -39,7 +39,7 @@ private val Clicks = Stat("clicks", 0)
 private val Misses = Stat("misses", 0)
 private val Accuracy = Stat("accuracy", 0f, unit = StatUnits.Percent)
 private val Streak = Stat("streak", 0)
-private val AvgAdvanceTime = Stat("avg_advance_time", 0f, unit = StatUnits.Seconds)
+private val AvgAdvanceTime = Stat("avg_advance_time", 0f, unit = StatUnits.Seconds, higherIsBetter = false)
 
 class AimMasterInstance(
     gameHandle: MiniGameHandle,

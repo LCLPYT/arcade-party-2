@@ -6,6 +6,8 @@ import net.minecraft.core.component.DataComponents
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.sounds.SoundSource
 import net.minecraft.util.Mth
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.effect.MobEffectInstance
@@ -21,20 +23,24 @@ import net.minecraft.world.scores.PlayerTeam
 import net.minecraft.world.scores.TeamColor
 import work.lclpnet.ap2.api.game.GameOverListener
 import work.lclpnet.ap2.api.stats.Stat
-import work.lclpnet.ap2.ext.runAfter
+import work.lclpnet.ap2.ext.*
+import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar
+import work.lclpnet.ap2.impl.util.handler.VisualCooldown
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.FireworkEntityAccess
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
-import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.scheduler.api.TaskHandle
 import work.lclpnet.kibu.scheduler.api.TaskScheduler
 import work.lclpnet.kibu.title.Title
+import work.lclpnet.pal.event.AllowTeleporterCallback
 import java.util.*
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.seconds
 
 const val DURATION_SECONDS = 20
@@ -54,6 +60,9 @@ class HotPotatoInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
     private val stats = useFFAStats(winManager, listOf(
         PotatoAssigned, TimesPassed
     ))
+    private val teleporterCooldown = VisualCooldown(scheduler)
+    private val restrictTeleporters = map.properties.optBoolean("restrict-teleporters", false)
+    private val permanentGlowing = map.properties.optBoolean("permanent-glowing", false)
 
     override fun prepare() {
         winManager.addListener(this)
@@ -61,6 +70,19 @@ class HotPotatoInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
         val scoreboardManager = gameHandle.scoreboardManager
         team = scoreboardManager.createTeam("team")
         team.color = Optional.of(TeamColor.DARK_RED)
+
+        AllowTeleporterCallback.HOOK.registerWith(hooks) { player, _, _ ->
+            if (!restrictTeleporters || player == markedPlayer) {
+                true
+            } else if (teleporterCooldown.isOnCooldown(player)) {
+                translate("teleporter_cooldown").withStyle(ChatFormatting.RED).sendTo(player)
+                player.playNotifySound(SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.NEUTRAL, 0.5f, 0.5f)
+                false
+            } else {
+                teleporterCooldown.setCooldown(player, 5.seconds.inWholeTicks.toInt())
+                true
+            }
+        }
     }
 
     override fun go() {
@@ -91,7 +113,7 @@ class HotPotatoInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
 
         for (player in gameHandle.participants) {
             if (player == markedPlayer) continue
-            glow(player, Ticks.seconds(3))
+            glow(player, if (permanentGlowing) 1.hours else 3.seconds)
         }
 
         val bossBar = dynamicBossBar.bossBar
@@ -140,7 +162,7 @@ class HotPotatoInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
 
     private fun markAndReschedule(scheduler: TaskScheduler) {
         for (player in gameHandle.participants) {
-            glow(player, Ticks.seconds(1))
+            glow(player, 1.seconds)
         }
 
         markTask = runAfter(MARK_PERIOD_DURATION) {
@@ -240,7 +262,7 @@ class HotPotatoInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
 
         player.addEffect(MobEffectInstance(MobEffects.SPEED, DURATION_SECONDS * 20, 1, false, false, false))
 
-        glow(player, DURATION_SECONDS * 20)
+        glow(player, if (permanentGlowing) 1.hours else DURATION_SECONDS.seconds)
 
         val title = translations.translateText(player, "title")
             .withStyle { it.withColor(0xff0000).withBold(true) }
@@ -268,6 +290,6 @@ class HotPotatoInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
     }
 }
 
-private fun glow(player: ServerPlayer, ticks: Int) {
-    player.addEffect(MobEffectInstance(MobEffects.GLOWING, ticks, 1, false, false, false))
+private fun glow(player: ServerPlayer, duration: Duration) {
+    player.addEffect(MobEffectInstance(MobEffects.GLOWING, duration.inWholeTicks.toInt(), 1, false, false, false))
 }

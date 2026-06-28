@@ -71,6 +71,8 @@ When Minecraft updates and this project moves to a new default branch, update th
 | `gradle/libs.versions.toml`     | `minecraft = "..."`      | `"26.1.2"` -> `"26.2.0"` |
 | `gradle.properties`             | `minecraft_compat = ...` | `26.1` -> `26.2`         |
 | `.github/workflows/release.yml` | `branches:` trigger      | `"26.1"` -> `"26.2"`     |
+| `docker/server.sh`              | `MC_VERSION="..."`       | `26.1.2` -> `"26.2"`     |
+| `docker/server.sh`              | `FABRIC_VERSION="..."`   | `0.19.2` -> `"0.19.3"`   |
 
 Also remember to upgrade the packwiz modpack for the docker image.
 ```

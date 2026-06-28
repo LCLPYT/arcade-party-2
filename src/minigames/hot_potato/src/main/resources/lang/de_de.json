@@ -5,5 +5,6 @@
   "title": "Du",
   "subtitle": "bist die heiße Kartoffel",
   "stat.potato_assigned": "Kartoffel erhalten",
-  "stat.times_passed": "Mal weitergegeben"
+  "stat.times_passed": "Mal weitergegeben",
+  "teleporter_cooldown": "Bitte warte bevor du die Teleporter erneut benutzen kannst..."
 }

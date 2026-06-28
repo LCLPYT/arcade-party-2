@@ -6,10 +6,10 @@ import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
-import work.lclpnet.ap2.api.game.team.Team
-import work.lclpnet.ap2.api.game.team.TeamKey
 import work.lclpnet.ap2.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.game.data.type.TeamRef
+import work.lclpnet.ap2.game.team.Team
+import work.lclpnet.ap2.game.team.TeamKey
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.impl.util.title.TitleAnimation
 import work.lclpnet.kibu.scheduler.Ticks
@@ -37,7 +37,7 @@ class PaintballResultAnimation(
     init {
         entries = ArrayList<Entry>().also { list ->
             for (team in teams) {
-                list.add(Entry(team.key(), data.getScore(team)))
+                list.add(Entry(team.key, data.getScore(team)))
             }
         }
 
@@ -103,7 +103,7 @@ class PaintballResultAnimation(
             if (i > 0) root.append(Component.literal(spacer))
 
             val str = String.format(locale, "%.1f%%", interpolated[i])
-            root.append(Component.literal(str).withColor(entry.key.color()))
+            root.append(Component.literal(str).withColor(entry.key.color))
         }
 
         return root

@@ -58,7 +58,7 @@ allprojects {
             url = "https://maven.nucleoid.xyz/"
         }
 
-//    mavenLocal()
+//        mavenLocal()
     }
 
     loom {

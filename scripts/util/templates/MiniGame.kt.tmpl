@@ -1,17 +1,20 @@
 package ${package}
 
+import net.minecraft.core.RegistryAccess
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
-import net.minecraft.core.RegistryAccess
 import work.lclpnet.ap2.ApConstants
-import work.lclpnet.ap2.api.game.*
-
+import work.lclpnet.ap2.api.game.GameStartContext
+import work.lclpnet.ap2.api.game.GameType
+import work.lclpnet.ap2.game.MiniGame
+import work.lclpnet.ap2.game.MiniGameFactory
+${factory_import}
 class ${class_name} : MiniGame {
-    override fun canBeFinale(context: GameStartContext) = ${can_be_finale}
-    override fun canBePlayed(context: GameStartContext) = true
     override val id = ApConstants.identifier("${game_id}")
     override val type = GameType.${game_type}
     override val author = ApConstants.${author_const}
-    override fun getIcon(manager: RegistryAccess) = ItemStack(Items.${icon})
-    override fun createInstance(gameHandle: MiniGameHandle) = ${instance_class_name}(gameHandle)
+${uses_maps_line}    override fun getIcon(manager: RegistryAccess): ItemStack = ItemStack(Items.${icon})
+    override fun canBeFinale(context: GameStartContext): Boolean = ${can_be_finale}
+    override fun canBePlayed(context: GameStartContext): Boolean = true
+    override fun createFactory(): MiniGameFactory = ${factory_expr}
 }
