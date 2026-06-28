@@ -135,7 +135,7 @@ class MobSpawner(
             if (random.nextFloat() < 0.01f) {
                 entity.customName = Component.literal("jeb_")
             } else {
-                entity.color = randomElement(DyeColor.entries.toTypedArray())!!
+                entity.color = randomElement(DyeColor.entries.toTypedArray())
             }
         } else if (entity is Donkey) {
             if (random.nextFloat() < 0.04f) {

@@ -195,7 +195,7 @@ class GuessItInstance(
         val world = level
         val translations = gameHandle.translations
 
-        val prepareMsg = translations.translateText("prepare." + challenge!!.preparationKey)
+        val prepareMsg = translations.translateText("prepare." + challenge.preparationKey)
             .withStyle(ChatFormatting.DARK_GREEN, ChatFormatting.BOLD)
 
         challenge.init(challengeInit.init)
