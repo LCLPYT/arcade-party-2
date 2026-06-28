@@ -1,261 +1,264 @@
-package work.lclpnet.ap2.impl.bootstrap;
+package work.lclpnet.ap2.impl.bootstrap
 
-import net.fabricmc.loader.api.Version;
-import net.fabricmc.loader.api.VersionParsingException;
-import net.minecraft.SharedConstants;
-import net.minecraft.server.MinecraftServer;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import work.lclpnet.ap2.ApConstants;
-import work.lclpnet.ap2.api.config.Ap2Config;
-import work.lclpnet.ap2.api.config.ConfigManager;
-import work.lclpnet.ap2.api.data.DataManager;
-import work.lclpnet.ap2.api.map.MapFacade;
-import work.lclpnet.ap2.api.map.MapRandomizer;
-import work.lclpnet.ap2.api.music.SongManager;
-import work.lclpnet.ap2.impl.data.JsonDataSource;
-import work.lclpnet.ap2.impl.data.MapDynamicData;
-import work.lclpnet.ap2.impl.data.MutableDataManager;
-import work.lclpnet.ap2.impl.i18n.VanillaTranslations;
-import work.lclpnet.ap2.impl.map.MapFacadeImpl;
-import work.lclpnet.ap2.impl.map.SeamlessMapRandomizer;
-import work.lclpnet.ap2.impl.music.AssetSongManager;
-import work.lclpnet.ap2.util.AssetManager;
-import work.lclpnet.ap2.util.FontService;
-import work.lclpnet.ap2.util.mojang.SkinFetcher;
-import work.lclpnet.config.json.JsonConfigFactory;
-import work.lclpnet.gaco.asset.*;
-import work.lclpnet.gaco.asset.cache.AssetCache;
-import work.lclpnet.game.api.GameEnvironment;
-import work.lclpnet.game.api.WorldFacade;
-import work.lclpnet.game.map.AssetMapRepository;
-import work.lclpnet.game.map.MapDescriptor;
-import work.lclpnet.game.map.MapManager;
-import work.lclpnet.game.map.RepositoryMapLookup;
+import net.fabricmc.loader.api.Version
+import net.fabricmc.loader.api.VersionParsingException
+import net.minecraft.SharedConstants
+import net.minecraft.server.MinecraftServer
+import org.slf4j.Logger
+import work.lclpnet.ap2.ApConstants
+import work.lclpnet.ap2.api.config.Ap2Config
+import work.lclpnet.ap2.api.config.ConfigManager
+import work.lclpnet.ap2.api.data.DataManager
+import work.lclpnet.ap2.api.map.MapFacade
+import work.lclpnet.ap2.api.map.MapRandomizer
+import work.lclpnet.ap2.api.music.SongManager
+import work.lclpnet.ap2.impl.data.JsonDataSource
+import work.lclpnet.ap2.impl.data.MapDynamicData
+import work.lclpnet.ap2.impl.data.MutableDataManager
+import work.lclpnet.ap2.impl.i18n.VanillaTranslations
+import work.lclpnet.ap2.impl.map.MapFacadeImpl
+import work.lclpnet.ap2.impl.map.SeamlessMapRandomizer
+import work.lclpnet.ap2.impl.music.AssetSongManager
+import work.lclpnet.ap2.util.AssetManager
+import work.lclpnet.ap2.util.FontService
+import work.lclpnet.ap2.util.mojang.SkinFetcher.Companion.createHttpClient
+import work.lclpnet.ap2.util.mojang.SkinFetcher.Companion.sharedAssetCacheBlocking
+import work.lclpnet.config.json.JsonConfigFactory
+import work.lclpnet.gaco.asset.*
+import work.lclpnet.gaco.asset.cache.AssetCache
+import work.lclpnet.game.api.GameEnvironment
+import work.lclpnet.game.api.WorldFacade
+import work.lclpnet.game.map.AssetMapRepository
+import work.lclpnet.game.map.MapDescriptor
+import work.lclpnet.game.map.MapManager
+import work.lclpnet.game.map.RepositoryMapLookup
+import java.io.IOException
+import java.io.InputStream
+import java.net.MalformedURLException
+import java.net.URI
+import java.net.URL
+import java.nio.file.Path
+import java.util.*
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executor
+import java.util.concurrent.ForkJoinPool
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Random;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ForkJoinPool;
+private const val CACHE_TTL_SECONDS = 3600
 
-import static java.util.concurrent.CompletableFuture.runAsync;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
+class ApBootstrap(
+    private val configFactory: JsonConfigFactory<Ap2Config>,
+    private val logger: Logger,
+    private val cleanup: Cleanup
+) {
+    fun loadConfig(executor: Executor): CompletableFuture<ConfigManager> {
+        val configPath = Path.of("config")
+            .resolve(ApConstants.ID)
+            .resolve("config.json")
 
-public class ApBootstrap {
+        val configManager = ConfigManager(configPath, configFactory, logger)
 
-    private static final int CACHE_TTL_SECONDS = 3600;
-    public static final String ASSET_TYPE_SONGS = "songs";
-
-    private final JsonConfigFactory<Ap2Config> configFactory;
-    private final Logger logger;
-    private final Cleanup cleanup;
-
-    public ApBootstrap(JsonConfigFactory<Ap2Config> configFactory, Logger logger, Cleanup cleanup) {
-        this.configFactory = configFactory;
-        this.logger = logger;
-        this.cleanup = cleanup;
+        return configManager.init(executor)
+            .thenApply { _ -> configManager }
     }
 
-    public CompletableFuture<ConfigManager> loadConfig(Executor executor) {
-        Path configPath = Path.of("config")
-                .resolve(ApConstants.ID)
-                .resolve("config.json");
+    fun createMapAssetRepo(config: Ap2Config, cache: AssetCache?): AssetRepository =
+        createMultiAssetRepo(config.mapsSource, cache, CommonAssets.MAPS)
 
-        ConfigManager configManager = new ConfigManager(configPath, configFactory, logger);
-
-        return configManager.init(executor).thenApply(_ -> configManager);
-    }
-
-    public AssetRepository createMapAssetRepo(Ap2Config config, @Nullable AssetCache cache) {
-        return createMultiAssetRepo(config.mapsSource, cache, CommonAssets.MAPS);
-    }
-
-    public MapManager createMapManager(AssetRepository assetRepo) {
-        Version mcVersion;
+    fun createMapManager(assetRepo: AssetRepository): MapManager {
+        val mcVersion: Version
 
         try {
-            mcVersion = Version.parse(SharedConstants.getCurrentVersion().name());
-        } catch (VersionParsingException e) {
-            throw new RuntimeException(e);
+            mcVersion = Version.parse(SharedConstants.getCurrentVersion().name())
+        } catch (e: VersionParsingException) {
+            throw RuntimeException(e)
         }
 
-        Map<String, Version> versions = Map.of(
-                "minecraft", mcVersion
-        );
+        val versions = mapOf(
+            "minecraft" to mcVersion
+        )
 
-        var mapRepo = new AssetMapRepository(assetRepo, versions, logger);
+        val mapRepo = AssetMapRepository(assetRepo, versions, logger)
 
-        var lookup = new RepositoryMapLookup(mapRepo);
+        val lookup = RepositoryMapLookup(mapRepo)
 
-        return new MapManager(lookup, logger);
+        return MapManager(lookup, logger)
     }
 
-    private @NotNull MultiAssetRepository createMultiAssetRepo(List<URI> uris, @Nullable AssetCache cache, String type) {
-        var repositories = uris.stream()
-                .map(uri -> createAssetRepo(uri, cache))
-                .toArray(AssetRepository[]::new);
+    private fun createMultiAssetRepo(uris: List<URI>, cache: AssetCache?, type: String): MultiAssetRepository {
+        val repositories = uris
+            .map { uri -> createAssetRepo(uri, cache) }
+            .toTypedArray()
 
-        if (repositories.length == 0) {
-            throw new IllegalStateException("Asset source '%s' is empty".formatted(type));
+        check(repositories.isNotEmpty()) {
+            "Asset source '$type' is empty"
         }
 
-        return new MultiAssetRepository(repositories, logger);
+        return MultiAssetRepository(repositories, logger)
     }
 
-    private AssetRepository createAssetRepo(URI uri, @Nullable AssetCache cache) {
-        var repo = new UriAssetRepository(uri, logger);
+    private fun createAssetRepo(uri: URI, cache: AssetCache?): AssetRepository {
+        val repo = UriAssetRepository(uri, logger)
 
         // if uri is remote, use cache repository
-        if (cache == null || uri.getHost() == null) {
-            return repo;
+        if (cache == null || uri.host == null) {
+            return repo
         }
 
-        URL url;
+        val url: URL
 
         try {
-            url = uri.toURL();
-        } catch (MalformedURLException _) {
-            return repo;
+            url = uri.toURL()
+        } catch (_: MalformedURLException) {
+            return repo
         }
 
-        if ("file".equalsIgnoreCase(url.getProtocol())) {
-            return repo;
+        if ("file".equals(url.protocol, ignoreCase = true)) {
+            return repo
         }
 
-        return new CacheAssetRepository(cache, repo, CACHE_TTL_SECONDS, logger);
+        return CacheAssetRepository(cache, repo, CACHE_TTL_SECONDS, logger)
     }
 
-    @Nullable
-    public AssetCache createAssetCache(String type) {
+    fun createAssetCache(type: String): AssetCache? {
         try {
-            return AssetCache.createUserCache(type, logger);
-        } catch (IOException e) {
-            logger.error("Failed to create map cache", e);
-            return null;
+            return AssetCache.createUserCache(type, logger)
+        } catch (e: IOException) {
+            logger.error("Failed to create map cache", e)
+            return null
         }
     }
 
-    @NotNull
-    public MapFacade createMapFacade(MinecraftServer server, MapManager mapManager, WorldFacade worldFacade,
-                                     MapRandomizer mapRandomizer, AssetRepository assetRepo) {
-        return new MapFacadeImpl(worldFacade, mapRandomizer, mapManager, assetRepo, server, logger);
-    }
+    fun createMapFacade(
+        server: MinecraftServer,
+        mapManager: MapManager,
+        worldFacade: WorldFacade,
+        mapRandomizer: MapRandomizer,
+        assetRepo: AssetRepository,
+    ): MapFacade = MapFacadeImpl(
+        worldFacade,
+        mapRandomizer,
+        mapManager,
+        assetRepo,
+        server,
+        logger
+    )
 
-    public CompletableFuture<Result> dispatch(Ap2Config config, GameEnvironment environment,
-                                              VanillaTranslations vanillaTranslations, FontService fontService) {
+    fun dispatch(
+        config: Ap2Config,
+        environment: GameEnvironment,
+        vanillaTranslations: VanillaTranslations,
+        fontService: FontService
+    ): CompletableFuture<Result> {
+        val server = environment.server
 
-        MinecraftServer server = environment.getServer();
+        val mapsCache = createAssetCache(CommonAssets.MAPS)
+        val songsCache = createAssetCache(ASSET_TYPE_SONGS)
 
-        AssetCache mapsCache = createAssetCache(CommonAssets.MAPS);
-        AssetCache songsCache = createAssetCache(ASSET_TYPE_SONGS);
-
-        environment.whenDone(() -> {
+        environment.whenDone {
             try {
-                if (mapsCache != null) mapsCache.close();
-            } catch (Exception e) {
-                logger.error("Failed to close maps cache", e);
+                mapsCache?.close()
+            } catch (e: Exception) {
+                logger.error("Failed to close maps cache", e)
             }
-
             try {
-                if (songsCache != null) songsCache.close();
-            } catch (Exception e) {
-                logger.error("Failed to close songs cache", e);
+                songsCache?.close()
+            } catch (e: Exception) {
+                logger.error("Failed to close songs cache", e)
             }
-        });
+        }
 
-        AssetRepository mapAssetRepo = createMapAssetRepo(config, mapsCache);
-        MapManager mapManager = createMapManager(mapAssetRepo);
-        WorldFacade worldFacade = environment.getWorldFacade();
+        val mapAssetRepo = createMapAssetRepo(config, mapsCache)
+        val mapManager = createMapManager(mapAssetRepo)
+        val worldFacade = environment.worldFacade
 
-        var randomizer = new SeamlessMapRandomizer(mapManager, new Random(), logger);
-        MapFacade mapFacade = createMapFacade(server, mapManager, worldFacade, randomizer, mapAssetRepo);
+        val randomizer = SeamlessMapRandomizer(mapManager, Random(), logger)
+        val mapFacade = createMapFacade(server, mapManager, worldFacade, randomizer, mapAssetRepo)
 
-        AssetRepository songRepo = createMultiAssetRepo(config.songsSource, songsCache, ASSET_TYPE_SONGS);
-        AssetSongManager songManager = new AssetSongManager(songRepo, logger);
-        MutableDataManager dataManager = new MutableDataManager();
+        val songRepo: AssetRepository = createMultiAssetRepo(config.songsSource, songsCache, ASSET_TYPE_SONGS)
+        val songManager = AssetSongManager(songRepo, logger)
+        val dataManager = MutableDataManager()
 
-        var mapTask = loadAp2Maps(mapManager);
-        var containerTask = loadContainer(dataManager);
-        var vanillaTranslationsTask = runAsync(vanillaTranslations::init);
-        var fontServiceTask = runAsync(fontService::init);
-        var assetManagerTask = supplyAsync(this::createAssetManagerBlocking);
+        val mapTask = loadAp2Maps(mapManager)
+        val containerTask = loadContainer(dataManager)
+        val vanillaTranslationsTask = CompletableFuture.runAsync { vanillaTranslations.init() }
+        val fontServiceTask = CompletableFuture.runAsync { fontService.init() }
+        val assetManagerTask = CompletableFuture.supplyAsync { createAssetManagerBlocking() }
 
-        return supplyAsync(() -> {
-            mapTask.join();
-            containerTask.join();
-            vanillaTranslationsTask.join();
-            fontServiceTask.join();
-            var assetManager = assetManagerTask.join();
+        return CompletableFuture.supplyAsync {
+            mapTask.join()
+            containerTask.join()
+            vanillaTranslationsTask.join()
+            fontServiceTask.join()
 
-            return new Result(worldFacade, mapFacade, songManager, dataManager, assetManager);
-        });
+            val assetManager = assetManagerTask.join()
+
+            Result(worldFacade, mapFacade, songManager, dataManager, assetManager)
+        }
     }
 
-    private AssetManager createAssetManagerBlocking() {
-        var httpClient = SkinFetcher.createHttpClient();
+    private fun createAssetManagerBlocking(): AssetManager {
+        val httpClient = createHttpClient()
 
-        cleanup.whenDone(httpClient::close);
+        cleanup.whenDone { httpClient.close() }
 
-        var mojangAssetCache = SkinFetcher.sharedAssetCacheBlocking(logger);
+        val mojangAssetCache = sharedAssetCacheBlocking(logger)
 
-        cleanup.whenDone(() -> {
+        cleanup.whenDone {
             try {
-                mojangAssetCache.close();
-            } catch (Exception e) {
-                logger.error("Failed to close mojang asset cache", e);
+                mojangAssetCache.close()
+            } catch (e: Exception) {
+                logger.error("Failed to close mojang asset cache", e)
             }
-        });
+        }
 
-        return new AssetManager(httpClient, mojangAssetCache);
+        return AssetManager(httpClient, mojangAssetCache)
     }
 
-    @NotNull
-    public CompletableFuture<Void> loadAp2Maps(MapManager mapManager) {
-        return loadMaps(mapManager, new MapDescriptor(ApConstants.ID, ""), ForkJoinPool.commonPool());
-    }
+    fun loadAp2Maps(mapManager: MapManager): CompletableFuture<Void> =
+        loadMaps(
+            mapManager,
+            MapDescriptor(ApConstants.ID, ""),
+            ForkJoinPool.commonPool()
+        )
 
-    @NotNull
-    public CompletableFuture<Void> loadMaps(MapManager mapManager, MapDescriptor descriptor, Executor executor) {
-        return runAsync(() -> {
+    fun loadMaps(mapManager: MapManager, descriptor: MapDescriptor, executor: Executor): CompletableFuture<Void> =
+        CompletableFuture.runAsync({
             try {
                 // load general arcade party 2 maps
-                mapManager.loadAll(descriptor);
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to load maps of namespace %s".formatted(ApConstants.ID), e);
+                mapManager.loadAll(descriptor)
+            } catch (e: IOException) {
+                throw RuntimeException("Failed to load maps of namespace ${ApConstants.ID}", e)
             }
-        }, executor);
+        }, executor)
+
+    fun loadContainer(dataManager: MutableDataManager): CompletableFuture<Void> {
+        return CompletableFuture.runAsync {
+            dataManager.setData(
+                MapDynamicData.builder()
+                    .addSource(JsonDataSource({ openConfigurationFile() }, logger))
+                    .build()
+            )
+        }
     }
 
-    @NotNull
-    public CompletableFuture<Void> loadContainer(MutableDataManager dataManager) {
-        return runAsync(() -> dataManager.setData(MapDynamicData.builder()
-                .addSource(new JsonDataSource(this::openConfigurationFile, logger))
-                .build()));
+    fun openConfigurationFile(): InputStream =
+        requireNotNull(javaClass.getResourceAsStream("/configuration.json")) {
+            "File not found: configuration.json"
+        }
+
+    data class Result(
+        val worldFacade: WorldFacade,
+        val mapFacade: MapFacade,
+        val songManager: SongManager,
+        val dataManager: DataManager,
+        val assetManager: AssetManager
+    )
+
+    fun interface Cleanup {
+        fun whenDone(action: Runnable)
     }
 
-    public InputStream openConfigurationFile() {
-        return Objects.requireNonNull(getClass().getResourceAsStream("/configuration.json"), "File not found: configuration.json");
-    }
-
-    public record Result(
-            WorldFacade worldFacade,
-            MapFacade mapFacade,
-            SongManager songManager,
-            DataManager dataManager,
-            AssetManager assetManager
-    ) {}
-
-    public interface Cleanup {
-        void whenDone(Runnable action);
+    companion object {
+        const val ASSET_TYPE_SONGS: String = "songs"
     }
 }
