@@ -14,8 +14,8 @@ SETTINGS_GRADLE = Path("settings.gradle")
 
 def write_translation_files(inputs: Inputs, resources_dir: Path):
     lang_json = {
-        f"game.ap2.{inputs.game_id}": inputs.game_name,
-        f"game.ap2.{inputs.game_id}.description": inputs.game_desc
+        f"name": inputs.game_name,
+        f"description": inputs.game_desc
     }
 
     lang_dir = resources_dir / "lang"
