@@ -6,7 +6,6 @@ import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -19,15 +18,16 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.UUID;
 
-public record PlayerHead(UUID uuid, String textureId, String texture) {
+public record PlayerHead(String textureId, String texture) {
+
+    private static final UUID NULL_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     public static final Codec<PlayerHead> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            UUIDUtil.CODEC.fieldOf("uuid").forGetter(PlayerHead::uuid),
             Codec.STRING.fieldOf("texture").forGetter(PlayerHead::textureId)
     ).apply(instance, PlayerHead::new));
 
-    public PlayerHead(UUID uuid, String textureId) {
-        this(uuid, textureId, getBase64Texture(textureId));
+    public PlayerHead(String textureId) {
+        this(textureId, getBase64Texture(textureId));
     }
 
     public ItemStack createStack() {
@@ -42,7 +42,7 @@ public record PlayerHead(UUID uuid, String textureId, String texture) {
                 "textures", new Property("textures", texture)
         ));
 
-        return ResolvableProfile.createResolved(new GameProfile(uuid, "", properties));
+        return ResolvableProfile.createResolved(new GameProfile(NULL_UUID, "", properties));
     }
 
     public void apply(SkullBlockEntity skull) {
