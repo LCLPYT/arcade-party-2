@@ -1,145 +1,136 @@
-package work.lclpnet.ap2.impl.bootstrap;
+package work.lclpnet.ap2.impl.bootstrap
 
-import net.minecraft.resources.Identifier;
-import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import work.lclpnet.ap2.api.config.Ap2Config;
-import work.lclpnet.config.json.JsonConfigFactory;
-import work.lclpnet.gaco.asset.AssetRepository;
-import work.lclpnet.gaco.asset.CommonAssets;
-import work.lclpnet.gaco.asset.cache.AssetCache;
-import work.lclpnet.game.api.data.DataPackSink;
-import work.lclpnet.game.api.data.GameDataPacks;
-import work.lclpnet.game.map.GameMap;
-import work.lclpnet.game.map.MapDescriptor;
-import work.lclpnet.game.map.MapManager;
+import net.minecraft.resources.Identifier
+import org.apache.commons.io.FileUtils
+import org.slf4j.Logger
+import work.lclpnet.ap2.api.config.Ap2Config
+import work.lclpnet.ap2.api.config.ConfigManager
+import work.lclpnet.config.json.JsonConfigFactory
+import work.lclpnet.gaco.asset.CommonAssets
+import work.lclpnet.game.api.data.DataPackSink
+import work.lclpnet.game.api.data.GameDataPacks
+import work.lclpnet.game.map.GameMap
+import work.lclpnet.game.map.MapDescriptor
+import work.lclpnet.game.map.MapManager
+import java.io.IOException
+import java.lang.AutoCloseable
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executor
+import java.util.stream.Stream
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.stream.Stream;
+class ApDataPacks(
+    private val cacheDirectory: Path,
+    private val configFactory: JsonConfigFactory<Ap2Config>,
+    private val logger: Logger
+) : GameDataPacks {
 
-public class ApDataPacks implements GameDataPacks {
+    override fun downloadPacks(dataPackSink: DataPackSink, executor: Executor): CompletableFuture<Void> {
+        val cleanup = ArrayList<Runnable>()
 
-    private final Path cacheDirectory;
-    private final JsonConfigFactory<Ap2Config> configFactory;
-    private final Logger logger;
+        val bootstrap = ApBootstrap(configFactory, logger) { task -> cleanup.add(task) }
+        val dataPacksPath = requireNotNull(Identifier.fromNamespaceAndPath("datapacks", ""))
 
-    public ApDataPacks(Path cacheDirectory, JsonConfigFactory<Ap2Config> configFactory, Logger logger) {
-        this.cacheDirectory = cacheDirectory;
-        this.configFactory = configFactory;
-        this.logger = logger;
-    }
-
-    @Override
-    public CompletableFuture<Void> downloadPacks(DataPackSink dataPackSink, Executor executor) {
-        List<Runnable> cleanup = new ArrayList<>();
-
-        ApBootstrap bootstrap = new ApBootstrap(configFactory, logger, cleanup::add);
-        Identifier dataPacksPath = Objects.requireNonNull(Identifier.fromNamespaceAndPath("datapacks", ""));
-
-        List<AutoCloseable> resources = new ArrayList<>();
+        val resources = ArrayList<AutoCloseable>()
 
         return bootstrap.loadConfig(executor)
-                .thenApplyAsync(configManager -> {
-                    Ap2Config config = configManager.getConfig();
+            .thenApplyAsync({ configManager: ConfigManager ->
+                val config = configManager.config
+                val cache = bootstrap.createAssetCache(CommonAssets.MAPS)
+                val repo = bootstrap.createMapAssetRepo(config, cache)
+                val mapManager = bootstrap.createMapManager(repo)
 
-                    AssetCache cache = bootstrap.createAssetCache(CommonAssets.MAPS);
-                    AssetRepository repo = bootstrap.createMapAssetRepo(config, cache);
-                    var mapManager = bootstrap.createMapManager(repo);
+                cache?.let { resources.add(it) }
 
-                    resources.add(cache);
+                bootstrap.loadMaps(mapManager, MapDescriptor(dataPacksPath), executor).join()
 
-                    bootstrap.loadMaps(mapManager, new MapDescriptor(dataPacksPath), executor).join();
+                mapManager
+            }, executor)
+            .thenAcceptAsync{ mapManager ->
+                val maps = mapManager.collection().mapsWithPrefix(dataPacksPath)
 
-                    return mapManager;
-                }, executor)
-                .thenAcceptAsync(mapManager -> {
-                    var maps = mapManager.collection().mapsWithPrefix(dataPacksPath);
+                fetchDataPacks(mapManager, maps, dataPackSink)
+            }
+            .whenComplete { _, err: Throwable? ->
+                if (err != null) {
+                    logger.error("Failed to locate data packs")
+                }
 
-                    fetchDataPacks(mapManager, maps, dataPackSink);
-                })
-                .whenComplete((_, err) -> {
-                    if (err != null) {
-                        logger.error("Failed to locate data packs");
+                for (resource in resources) {
+                    try {
+                        resource.close()
+                    } catch (e: Throwable) {
+                        logger.error("Failed to close resource {}", resource, e)
                     }
+                }
 
-                    for (AutoCloseable resource : resources) {
-                        try {
-                            resource.close();
-                        } catch (Throwable e) {
-                            logger.error("Failed to close resource {}", resource, e);
-                        }
+                for (action in cleanup) {
+                    try {
+                        action.run()
+                    } catch (e: Throwable) {
+                        logger.error("Failed to cleanup", e)
                     }
-
-                    for (Runnable action : cleanup) {
-                        try {
-                            action.run();
-                        } catch (Throwable e) {
-                            logger.error("Failed to cleanup", e);
-                        }
-                    }
-                });
+                }
+            }
     }
 
-    private void fetchDataPacks(MapManager mapManager, Stream<GameMap> maps, DataPackSink sink) {
-        var it = maps.iterator();
+    private fun fetchDataPacks(mapManager: MapManager, maps: Stream<GameMap>, sink: DataPackSink) {
+        val it = maps.iterator()
 
-        Path dir = cacheDirectory.resolve("data_pack_maps");
+        val dir = cacheDirectory.resolve("data_pack_maps")
 
         if (!Files.exists(dir)) {
             try {
-                Files.createDirectories(dir);
-            } catch (IOException e) {
-                logger.error("Failed to create directory: {}", dir, e);
-                return;
+                Files.createDirectories(dir)
+            } catch (e: IOException) {
+                logger.error("Failed to create directory: {}", dir, e)
+                return
             }
         }
 
         while (it.hasNext()) {
-            GameMap map = it.next();
+            val map = it.next()
 
-            Path directory = dir.resolve(map.getDescriptor().getMapPath());
+            val directory = dir.resolve(map.descriptor.getMapPath())
 
             try {
                 if (Files.exists(directory)) {
-                    FileUtils.forceDelete(directory.toFile());
+                    FileUtils.forceDelete(directory.toFile())
                 }
 
-                Files.createDirectories(dir.getParent());
+                Files.createDirectories(dir.parent)
 
-                mapManager.pull(map, directory);
+                mapManager.pull(map, directory)
 
-                offerPacksFrom(directory, sink);
-            } catch (IOException e) {
-                logger.error("Failed fetch data packs of map {}: failed to pull", map, e);
+                offerPacksFrom(directory, sink)
+            } catch (e: IOException) {
+                logger.error("Failed fetch data packs of map {}: failed to pull", map, e)
             }
         }
     }
 
-    private void offerPacksFrom(Path directory, DataPackSink sink) throws IOException {
-        Path packsDir = directory.resolve("datapacks");
+    @Throws(IOException::class)
+    private fun offerPacksFrom(directory: Path, sink: DataPackSink) {
+        val packsDir = directory.resolve("datapacks")
 
-        if (!Files.isDirectory(packsDir)) return;
+        if (!Files.isDirectory(packsDir)) return
 
-        List<Path> packs;
+        val packs: List<Path>
 
-        try (var files = Files.list(packsDir)) {
-            packs = files.filter(file -> file.getFileName().toString().endsWith(".zip"))
-                    .filter(Files::isRegularFile)
-                    .toList();
+        Files.list(packsDir).use { files ->
+            packs = files.filter { it.fileName.toString().endsWith(".zip") }
+                .filter { Files.isRegularFile(it) }
+                .toList()
         }
 
-        for (Path pack : packs) {
-            try (var in = Files.newInputStream(pack)) {
-                sink.offer(pack.getFileName(), in);
-            } catch (IOException e) {
-                logger.error("Failed to copy data pack {}", pack, e);
+        for (pack in packs) {
+            try {
+                Files.newInputStream(pack).use { input ->
+                    sink.offer(pack.fileName, input)
+                }
+            } catch (e: IOException) {
+                logger.error("Failed to copy data pack {}", pack, e)
             }
         }
     }
