@@ -84,7 +84,7 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
     @Override
     public void prepare() {
         if (shape == null) {
-            shape = shapeManager.getRandomShape();
+            shape = shapeManager.randomShape();
         }
 
         List<BlockPos> blocks = new ArrayList<>();

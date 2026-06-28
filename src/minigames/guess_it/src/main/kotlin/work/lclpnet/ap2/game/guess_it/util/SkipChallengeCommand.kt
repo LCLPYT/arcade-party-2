@@ -1,34 +1,26 @@
-package work.lclpnet.ap2.game.guess_it.util;
+package work.lclpnet.ap2.game.guess_it.util
 
-import com.mojang.brigadier.context.CommandContext;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
-import net.minecraft.network.chat.Component;
-import work.lclpnet.kibu.cmd.type.CommandRegistrar;
-import work.lclpnet.kibu.cmd.type.KibuCommand;
+import com.mojang.brigadier.context.CommandContext
+import net.minecraft.commands.CommandSourceStack
+import net.minecraft.commands.Commands
+import net.minecraft.network.chat.Component
+import work.lclpnet.kibu.cmd.type.CommandRegistrar
+import work.lclpnet.kibu.cmd.type.KibuCommand
 
-import static net.minecraft.commands.Commands.literal;
-
-public class SkipChallengeCommand implements KibuCommand {
-
-    private final Runnable skip;
-
-    public SkipChallengeCommand(Runnable skip) {
-        this.skip = skip;
-    }
-
-    @Override
-    public void register(CommandRegistrar commands) {
-        commands.registerCommand(literal("ap2:skip_challenge")
+class SkipChallengeCommand(private val skip: Runnable) : KibuCommand {
+    override fun register(commands: CommandRegistrar) {
+        commands.registerCommand(
+            Commands.literal("ap2:skip_challenge")
                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
-                .executes(this::skipChallenge));
+                .executes { ctx -> skipChallenge(ctx) }
+        )
     }
 
-    private int skipChallenge(CommandContext<CommandSourceStack> ctx) {
-        ctx.getSource().sendSystemMessage(Component.literal("Skipped the current challenge"));
+    private fun skipChallenge(ctx: CommandContext<CommandSourceStack>): Int {
+        ctx.getSource().sendSystemMessage(Component.literal("Skipped the current challenge"))
 
-        skip.run();
+        skip.run()
 
-        return 1;
+        return 1
     }
 }

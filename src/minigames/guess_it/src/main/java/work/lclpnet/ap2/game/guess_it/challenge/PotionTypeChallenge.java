@@ -69,7 +69,7 @@ public class PotionTypeChallenge implements Challenge {
             default -> throw new IllegalStateException();
         };
 
-        var options = OptionMaker.createOptions(potions, 4, random).stream()
+        var options = OptionMaker.INSTANCE.createOptions(potions, 4, random).stream()
                 .map(potion -> {
                     ItemStack stack = new ItemStack(item);
 

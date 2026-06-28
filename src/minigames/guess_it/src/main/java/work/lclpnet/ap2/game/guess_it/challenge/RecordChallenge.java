@@ -66,7 +66,7 @@ public class RecordChallenge implements Challenge {
         messenger.task(translations.translateText("music_disc"));
 
         List<Item> discs = getMusicDiscs();
-        var opts = OptionMaker.createOptions(discs, 4, random);
+        var opts = OptionMaker.INSTANCE.createOptions(discs, 4, random);
 
         correctOption = random.nextInt(opts.size());
         correct = opts.get(correctOption);

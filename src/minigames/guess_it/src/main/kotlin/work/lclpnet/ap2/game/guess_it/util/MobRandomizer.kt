@@ -1,132 +1,126 @@
-package work.lclpnet.ap2.game.guess_it.util;
+package work.lclpnet.ap2.game.guess_it.util
 
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
+import java.util.*
 
-import java.util.*;
+class MobRandomizer @JvmOverloads constructor(types: Set<EntityType<*>> = defaultTypes) {
+    private val types: Set<EntityType<*>>
 
-import static net.minecraft.world.entity.EntityTypes.*;
+    init {
+        require(!types.isEmpty()) { "Entity types cannot be empty" }
 
-public class MobRandomizer {
-
-    private final Set<EntityType<?>> types;
-
-    public MobRandomizer() {
-        this(getDefaultTypes());
+        this.types = types.toSet()
     }
 
-    public MobRandomizer(Set<EntityType<?>> types) {
-        if (types.isEmpty()) {
-            throw new IllegalArgumentException("Entity types cannot be empty");
-        }
-
-        this.types = Collections.unmodifiableSet(types);
-    }
-
-    public EntityType<?> selectRandomEntityType(Random random) {
+    fun selectRandomEntityType(random: Random): EntityType<*> {
         return types.stream()
-                .skip(random.nextInt(types.size()))
-                .findFirst()
-                .orElseThrow();
+            .skip(random.nextInt(types.size).toLong())
+            .findFirst()
+            .orElseThrow()!!
     }
 
-    public static Set<EntityType<?>> getDefaultTypes() {
-        return new HashSet<>(Set.of(
-                ALLAY,
-                ARMADILLO,
-                AXOLOTL,
-                BAT,
-                BEE,
-                BLAZE,
-                BOGGED,
-                BREEZE,
-                CAMEL,
-                CAT,
-                CAVE_SPIDER,
-                CHICKEN,
-                COD,
-                COPPER_GOLEM,
-                COW,
-                CREAKING,
-                CREEPER,
-                DOLPHIN,
-                DONKEY,
-                DROWNED,
-                ELDER_GUARDIAN,
-                ENDERMAN,
-                ENDERMITE,
-                EVOKER,
-                FOX,
-                FROG,
-                GHAST,
-                GIANT,
-                GLOW_SQUID,
-                GOAT,
-                GUARDIAN,
-                HAPPY_GHAST,
-                HOGLIN,
-                HORSE,
-                HUSK,
-                ILLUSIONER,
-                IRON_GOLEM,
-                LLAMA,
-                MAGMA_CUBE,
-                MANNEQUIN,
-                MOOSHROOM,
-                MULE,
-                OCELOT,
-                PANDA,
-                PARROT,
-                PHANTOM,
-                PIG,
-                PIGLIN,
-                PIGLIN_BRUTE,
-                PILLAGER,
-                POLAR_BEAR,
-                PUFFERFISH,
-                RABBIT,
-                RAVAGER,
-                SALMON,
-                SHEEP,
-                SHULKER,
-                SILVERFISH,
-                SKELETON,
-                SKELETON_HORSE,
-                SLIME,
-                SNIFFER,
-                SNOW_GOLEM,
-                SPIDER,
-                SQUID,
-                STRAY,
-                STRIDER,
-                SULFUR_CUBE,
-                TADPOLE,
-                TRADER_LLAMA,
-                TROPICAL_FISH,
-                TURTLE,
-                VEX,
-                VILLAGER,
-                VINDICATOR,
-                WANDERING_TRADER,
-                WARDEN,
-                WITCH,
-                WITHER,
-                WITHER_SKELETON,
-                WOLF,
-                ZOGLIN,
-                ZOMBIE,
-                ZOMBIE_HORSE,
-                ZOMBIE_VILLAGER,
-                ZOMBIFIED_PIGLIN
-        ));
-    }
+    companion object {
+        val defaultTypes: Set<EntityType<*>>
+            get() = (
+                setOf(
+                    EntityTypes.ALLAY,
+                    EntityTypes.ARMADILLO,
+                    EntityTypes.AXOLOTL,
+                    EntityTypes.BAT,
+                    EntityTypes.BEE,
+                    EntityTypes.BLAZE,
+                    EntityTypes.BOGGED,
+                    EntityTypes.BREEZE,
+                    EntityTypes.CAMEL,
+                    EntityTypes.CAT,
+                    EntityTypes.CAVE_SPIDER,
+                    EntityTypes.CHICKEN,
+                    EntityTypes.COD,
+                    EntityTypes.COPPER_GOLEM,
+                    EntityTypes.COW,
+                    EntityTypes.CREAKING,
+                    EntityTypes.CREEPER,
+                    EntityTypes.DOLPHIN,
+                    EntityTypes.DONKEY,
+                    EntityTypes.DROWNED,
+                    EntityTypes.ELDER_GUARDIAN,
+                    EntityTypes.ENDERMAN,
+                    EntityTypes.ENDERMITE,
+                    EntityTypes.EVOKER,
+                    EntityTypes.FOX,
+                    EntityTypes.FROG,
+                    EntityTypes.GHAST,
+                    EntityTypes.GIANT,
+                    EntityTypes.GLOW_SQUID,
+                    EntityTypes.GOAT,
+                    EntityTypes.GUARDIAN,
+                    EntityTypes.HAPPY_GHAST,
+                    EntityTypes.HOGLIN,
+                    EntityTypes.HORSE,
+                    EntityTypes.HUSK,
+                    EntityTypes.ILLUSIONER,
+                    EntityTypes.IRON_GOLEM,
+                    EntityTypes.LLAMA,
+                    EntityTypes.MAGMA_CUBE,
+                    EntityTypes.MANNEQUIN,
+                    EntityTypes.MOOSHROOM,
+                    EntityTypes.MULE,
+                    EntityTypes.OCELOT,
+                    EntityTypes.PANDA,
+                    EntityTypes.PARROT,
+                    EntityTypes.PHANTOM,
+                    EntityTypes.PIG,
+                    EntityTypes.PIGLIN,
+                    EntityTypes.PIGLIN_BRUTE,
+                    EntityTypes.PILLAGER,
+                    EntityTypes.POLAR_BEAR,
+                    EntityTypes.PUFFERFISH,
+                    EntityTypes.RABBIT,
+                    EntityTypes.RAVAGER,
+                    EntityTypes.SALMON,
+                    EntityTypes.SHEEP,
+                    EntityTypes.SHULKER,
+                    EntityTypes.SILVERFISH,
+                    EntityTypes.SKELETON,
+                    EntityTypes.SKELETON_HORSE,
+                    EntityTypes.SLIME,
+                    EntityTypes.SNIFFER,
+                    EntityTypes.SNOW_GOLEM,
+                    EntityTypes.SPIDER,
+                    EntityTypes.SQUID,
+                    EntityTypes.STRAY,
+                    EntityTypes.STRIDER,
+                    EntityTypes.SULFUR_CUBE,
+                    EntityTypes.TADPOLE,
+                    EntityTypes.TRADER_LLAMA,
+                    EntityTypes.TROPICAL_FISH,
+                    EntityTypes.TURTLE,
+                    EntityTypes.VEX,
+                    EntityTypes.VILLAGER,
+                    EntityTypes.VINDICATOR,
+                    EntityTypes.WANDERING_TRADER,
+                    EntityTypes.WARDEN,
+                    EntityTypes.WITCH,
+                    EntityTypes.WITHER,
+                    EntityTypes.WITHER_SKELETON,
+                    EntityTypes.WOLF,
+                    EntityTypes.ZOGLIN,
+                    EntityTypes.ZOMBIE,
+                    EntityTypes.ZOMBIE_HORSE,
+                    EntityTypes.ZOMBIE_VILLAGER,
+                    EntityTypes.ZOMBIFIED_PIGLIN
+                )
+            )
 
-    public static Set<EntityType<?>> trimTypes(Set<EntityType<?>> types, Random random, int amount) {
-        List<EntityType<?>> list = new ArrayList<>(types);
+        fun trimTypes(types: MutableSet<EntityType<*>>, random: Random, amount: Int): Set<EntityType<*>> {
+            val list = ArrayList(types)
 
-        while (list.size() > amount) {
-            list.remove(random.nextInt(list.size()));
+            while (list.size > amount) {
+                list.removeAt(random.nextInt(list.size))
+            }
+
+            return HashSet(list)
         }
-
-        return new HashSet<>(list);
     }
 }

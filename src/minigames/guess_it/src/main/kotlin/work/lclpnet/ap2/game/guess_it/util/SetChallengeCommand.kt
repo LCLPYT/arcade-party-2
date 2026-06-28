@@ -1,54 +1,45 @@
-package work.lclpnet.ap2.game.guess_it.util;
+package work.lclpnet.ap2.game.guess_it.util
 
-import com.mojang.brigadier.context.CommandContext;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
-import net.minecraft.network.chat.Component;
-import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.game.guess_it.data.Challenge;
-import work.lclpnet.ap2.game.guess_it.data.GuessItManager;
-import work.lclpnet.kibu.cmd.type.CommandRegistrar;
-import work.lclpnet.kibu.cmd.type.KibuCommand;
+import com.mojang.brigadier.context.CommandContext
+import net.minecraft.commands.CommandSourceStack
+import net.minecraft.commands.Commands
+import net.minecraft.network.chat.Component
+import work.lclpnet.ap2.game.guess_it.data.Challenge
+import work.lclpnet.ap2.game.guess_it.data.GuessItManager
+import work.lclpnet.kibu.cmd.type.CommandRegistrar
+import work.lclpnet.kibu.cmd.type.KibuCommand
 
-import static net.minecraft.commands.Commands.literal;
+class SetChallengeCommand(
+    private val manager: GuessItManager,
+    private val skip: Runnable
+) : KibuCommand {
 
-public class SetChallengeCommand implements KibuCommand {
+    override fun register(commands: CommandRegistrar) {
+        val root = Commands.literal("ap2:set_challenge")
+            .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
 
-    private final GuessItManager manager;
-    private final Runnable skip;
+        for (challenge in manager.challenges) {
+            val node = Commands.literal(challenge.id())
+                .executes { ctx -> setChallenge(ctx, challenge, null) }
 
-    public SetChallengeCommand(GuessItManager manager, Runnable skip) {
-        this.manager = manager;
-        this.skip = skip;
-    }
+            val initializer = Challenge.Initializer { ctx, init ->
+                setChallenge(ctx, challenge, init)
+            }
 
-    @Override
-    public void register(CommandRegistrar commands) {
-        var root = literal("ap2:set_challenge")
-                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS));
+            challenge.provideInitCommand(node, initializer)
 
-        for (Challenge challenge : manager.getChallenges()) {
-            var node = literal(challenge.id())
-                    .executes(ctx -> setChallenge(ctx, challenge, null));
-
-            Challenge.Initializer initializer = (ctx, init) -> {
-                setChallenge(ctx, challenge, init);
-            };
-
-            challenge.provideInitCommand(node, initializer);
-
-            root.then(node);
+            root.then(node)
         }
 
-        commands.registerCommand(root);
+        commands.registerCommand(root)
     }
 
-    private int setChallenge(CommandContext<CommandSourceStack> ctx, Challenge challenge, @Nullable Object init) {
-        ctx.getSource().sendSystemMessage(Component.literal("Set challenge to \"%s\"".formatted(challenge.id())));
+    private fun setChallenge(ctx: CommandContext<CommandSourceStack>, challenge: Challenge, init: Any?): Int {
+        ctx.getSource().sendSystemMessage(Component.literal("Set challenge to \"${challenge.id()}\""))
 
-        manager.pushChallenge(challenge, init);
-        skip.run();
+        manager.pushChallenge(challenge, init)
+        skip.run()
 
-        return 1;
+        return 1
     }
 }

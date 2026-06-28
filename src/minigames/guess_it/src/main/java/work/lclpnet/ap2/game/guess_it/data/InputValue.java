@@ -10,7 +10,6 @@ import work.lclpnet.kibu.translate.text.TranslatedText;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.function.Function;
 
 import static java.lang.Math.clamp;
@@ -49,17 +48,17 @@ public class InputValue {
         for (InputRule rule : rules) {
             var res = rule.parser().parse(input, player);
 
-            if (res.isEmpty()) {
+            if (res == null) {
                 return Pair.of(input, rule.errorMessage.apply(input));
             }
 
-            input = res.get();
+            input = res;
         }
 
         return Pair.of(input, null);
     }
 
-    private static Optional<String> floatValue(String s, ServerPlayer player, Translations translations, int precision) {
+    private static String floatValue(String s, ServerPlayer player, Translations translations, int precision) {
         s = s.replace(',', '.');
 
         float f;
@@ -67,27 +66,26 @@ public class InputValue {
         try {
             f = Float.parseFloat(s);
         } catch (NumberFormatException _) {
-            return Optional.empty();
+            return null;
         }
 
         String fmt = "%." + clamp(precision, 0, 7) + "f";
         Locale locale = translations.getLocale(player);
-        String str = String.format(locale, fmt, f);
 
-        return Optional.of(str);
+        return String.format(locale, fmt, f);
     }
 
-    public static Optional<String> intValue(String s, ServerPlayer player) {
+    public static @Nullable String intValue(String s, ServerPlayer player) {
         try {
             int i = Integer.parseInt(s, 10);
-            return Optional.of(String.valueOf(i));
+            return String.valueOf(i);
         } catch (NumberFormatException _) {
-            return Optional.empty();
+            return null;
         }
     }
 
     public interface InputParser {
-        Optional<String> parse(String input, ServerPlayer player);
+        @Nullable String parse(String input, ServerPlayer player);
     }
 
     private record InputRule(InputParser parser, Function<String, TranslatedText> errorMessage) {}

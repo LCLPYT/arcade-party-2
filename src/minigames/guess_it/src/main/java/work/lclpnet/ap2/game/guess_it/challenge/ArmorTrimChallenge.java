@@ -72,7 +72,7 @@ public class ArmorTrimChallenge implements Challenge {
         messenger.task(translations.translateText("armor_trim"));
 
         var patterns = getTrimPatterns();
-        var opts = OptionMaker.createOptions(patterns, 4, random);
+        var opts = OptionMaker.INSTANCE.createOptions(patterns, 4, random);
 
         correctOption = random.nextInt(4);
 

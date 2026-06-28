@@ -1,53 +1,47 @@
-package work.lclpnet.ap2.game.guess_it.util;
+package work.lclpnet.ap2.game.guess_it.util
 
-import com.mojang.math.Transformation;
-import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.Display;
-import net.minecraft.world.entity.EntityTypes;
-import net.minecraft.world.item.ItemStack;
-import org.joml.Matrix4f;
-import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
-import work.lclpnet.game.util.WorldModifier;
-import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
+import com.mojang.math.Transformation
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.world.entity.Display
+import net.minecraft.world.entity.EntityTypes
+import net.minecraft.world.item.ItemStack
+import org.joml.Matrix4f
+import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
+import work.lclpnet.game.util.WorldModifier
+import work.lclpnet.kibu.access.entity.DisplayEntityAccess
 
-public class GuessItDisplay {
+class GuessItDisplay(
+    private val world: ServerLevel,
+    private val modifier: WorldModifier,
+    private val blockShape: BlockShape
+) {
+    fun displayItem(stack: ItemStack) {
+        val display = Display.ItemDisplay(EntityTypes.ITEM_DISPLAY, world)
 
-    private final ServerLevel world;
-    private final WorldModifier modifier;
-    private final BlockShape blockShape;
+        DisplayEntityAccess.setItemStack(display, stack)
+        DisplayEntityAccess.setBillboardMode(display, Display.BillboardConstraints.CENTER)
 
-    public GuessItDisplay(ServerLevel world, WorldModifier modifier, BlockShape blockShape) {
-        this.world = world;
-        this.modifier = modifier;
-        this.blockShape = blockShape;
-    }
+        val scale = 8f
 
-    public void displayItem(ItemStack stack) {
-        var display = new Display.ItemDisplay(EntityTypes.ITEM_DISPLAY, world);
+        val transformation = Transformation(
+            Matrix4f(
+                -scale, 0f, 0f, 0f,
+                0f, scale, 0f, 0f,
+                0f, 0f, -scale, 0f,
+                0f, 0f, 0f, 1f
+            )
+        )
 
-        DisplayEntityAccess.setItemStack(display, stack);
-        DisplayEntityAccess.setBillboardMode(display, Display.BillboardConstraints.CENTER);
+        DisplayEntityAccess.setTransformation(display, transformation)
 
-        float scale = 8;
+        val origin = blockShape.origin()
 
-        Transformation transformation = new Transformation(new Matrix4f(
-                -scale, 0, 0, 0,
-                0, scale, 0, 0,
-                0, 0, -scale, 0,
-                0, 0, 0, 1
-        ));
+        val x = origin.x + 0.5
+        val y = (origin.y + scale).toDouble()
+        val z = origin.z + 0.5
 
-        DisplayEntityAccess.setTransformation(display, transformation);
+        display.setPosRaw(x, y, z)
 
-        BlockPos origin = blockShape.origin();
-
-        double x = origin.getX() + 0.5;
-        double y = origin.getY() + scale;
-        double z = origin.getZ() + 0.5;
-
-        display.setPosRaw(x, y, z);
-
-        modifier.spawnEntity(display);
+        modifier.spawnEntity(display)
     }
 }

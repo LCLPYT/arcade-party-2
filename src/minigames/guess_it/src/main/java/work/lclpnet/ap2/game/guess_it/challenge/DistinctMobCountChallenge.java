@@ -60,13 +60,13 @@ public class DistinctMobCountChallenge implements Challenge {
 
         input.expectInput().validateInt(translations);
 
-        var types = MobRandomizer.getDefaultTypes();
+        var types = MobRandomizer.Companion.getDefaultTypes();
         int minAmount = 4;
         amount = minAmount + random.nextInt(Math.min(9, types.size() - minAmount + 1));
 
-        types = MobRandomizer.trimTypes(types, random, amount);
+        types = MobRandomizer.Companion.trimTypes(types, random, amount);
 
-        List<Vec3> spaces = MobSpawner.findSpawns(world, types).findSpaces(findGroundPositions(blockShape, world));
+        List<Vec3> spaces = MobSpawner.Companion.findSpawns(world, types).findSpaces(findGroundPositions(blockShape, world));
 
         if (spaces.isEmpty()) {
             throw new IllegalStateException("No spawn spaces found");

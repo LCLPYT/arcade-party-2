@@ -65,7 +65,7 @@ public class AreaChallenge implements Challenge {
         Translations translations = gameHandle.getTranslations();
         messenger.task(translations.translateText("area"));
 
-        var opts = OptionMaker.createOptions(Set.of(DyeColor.values()), 4, random);
+        var opts = OptionMaker.INSTANCE.createOptions(Set.of(DyeColor.values()), 4, random);
 
         Function<DyeColor, Block> blockFunction = switch (random.nextInt(3)) {
             case 0 -> Blocks.WOOL::pick;
@@ -113,7 +113,7 @@ public class AreaChallenge implements Challenge {
             open.add(pos.immutable());
         }
 
-        List<BlockPos> startingPoints = OptionMaker.createOptions(open, 4, random);
+        List<BlockPos> startingPoints = OptionMaker.INSTANCE.createOptions(open, 4, random);
 
         areas = new Areas(open, dyeColors, blockStates, startingPoints);
 

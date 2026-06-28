@@ -1,27 +1,23 @@
-package work.lclpnet.ap2.game.guess_it.util;
+package work.lclpnet.ap2.game.guess_it.util
 
-import work.lclpnet.gaco.dynamic_entities.DynamicEntity;
-import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager;
+import work.lclpnet.gaco.dynamic_entities.DynamicEntity
+import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager
 
-import java.util.HashSet;
-import java.util.Set;
+class DynamicEntityModifier(private val dynamicEntityManager: DynamicEntityManager) {
+    private val dynamicEntities = HashSet<DynamicEntity>()
 
-public class DynamicEntityModifier {
-
-    private final DynamicEntityManager dynamicEntityManager;
-    private final Set<DynamicEntity> dynamicEntities = new HashSet<>();
-
-    public DynamicEntityModifier(DynamicEntityManager dynamicEntityManager) {
-        this.dynamicEntityManager = dynamicEntityManager;
+    @Synchronized
+    fun spawn(entity: DynamicEntity) {
+        dynamicEntities.add(entity)
+        dynamicEntityManager.add(entity)
     }
 
-    public synchronized void spawn(DynamicEntity entity) {
-        dynamicEntities.add(entity);
-        dynamicEntityManager.add(entity);
-    }
+    @Synchronized
+    fun reset() {
+        for (entity in dynamicEntities) {
+            dynamicEntityManager.remove(entity)
+        }
 
-    public synchronized void reset() {
-        dynamicEntities.forEach(dynamicEntityManager::remove);
-        dynamicEntities.clear();
+        dynamicEntities.clear()
     }
 }

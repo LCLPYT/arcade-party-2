@@ -68,14 +68,14 @@ public class MobCountMultiChallenge implements Challenge {
         amount = random.nextInt((int) Math.floor(budget * 0.2));
         budget -= amount;
 
-        var types = MobRandomizer.getDefaultTypes();
+        var types = MobRandomizer.Companion.getDefaultTypes();
         int typeCount = types.size();
 
         if (typeCount < 2) {
             throw new IllegalStateException("There must be at least two entity types");
         }
 
-        List<Vec3> spaces = MobSpawner.findSpawns(world, types).findSpaces(findGroundPositions(blockShape, world));
+        List<Vec3> spaces = MobSpawner.Companion.findSpawns(world, types).findSpaces(findGroundPositions(blockShape, world));
 
         if (spaces.isEmpty()) {
             throw new IllegalStateException("No spawn spaces found");
@@ -84,7 +84,7 @@ public class MobCountMultiChallenge implements Challenge {
         var searched = types.stream().skip(random.nextInt(typeCount)).findFirst().orElseThrow();
         types.remove(searched);
 
-        types = MobRandomizer.trimTypes(types, random, 10);
+        types = MobRandomizer.Companion.trimTypes(types, random, 10);
 
         MobRandomizer randomizer = new MobRandomizer(types);
         MobSpawner spawner = new MobSpawner(world, random, mannequinUuids);

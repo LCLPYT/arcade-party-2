@@ -1,263 +1,231 @@
-package work.lclpnet.ap2.game.guess_it.util;
+package work.lclpnet.ap2.game.guess_it.util
 
-import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.joml.Quaterniond;
-import org.joml.Vector3d;
-import work.lclpnet.ap2.impl.util.math.MathUtil;
-import work.lclpnet.ap2.impl.util.math.shape.*;
-import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
+import net.minecraft.world.phys.Vec3
+import org.joml.Quaterniond
+import org.joml.Vector3d
+import work.lclpnet.ap2.impl.util.math.MathUtil
+import work.lclpnet.ap2.impl.util.math.shape.*
+import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
+import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape.WithHeight
+import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape.WithRadius
+import java.util.*
+import kotlin.math.*
 
-import java.util.*;
+class BlockCountShapeManager<S>(
+    private val random: Random,
+    private val stage: S
+) where S : BlockShape, S : WithHeight, S : WithRadius {
 
-import static java.lang.Math.*;
+    private val shapesById = HashMap<String, ShapeProvider>()
+    private val shapes = ArrayList<ShapeProvider>()
 
-public class BlockCountShapeManager<S extends BlockShape & BlockShape.WithHeight & BlockShape.WithRadius> {
-
-    private final Map<String, ShapeProvider> shapesById = new HashMap<>();
-    private final List<ShapeProvider> shapes = new ArrayList<>();
-    private final Random random;
-    private final S stage;
-
-    public BlockCountShapeManager(Random random, S stage) {
-        this.random = random;
-        this.stage = stage;
-
-        registerShapes();
+    init {
+        registerShapes()
     }
 
-    private void registerShapes() {
-        final int maxRadius = min(stage.height() / 2, stage.radius());
-        final int maxSquareRadius = (int) floor(sin(PI * 0.25) * stage.radius());
-        final Vec3 center = Vec3.atCenterOf(stage.center());
-        final Vec3 origin = Vec3.atCenterOf(stage.origin());
+    private fun registerShapes() {
+        val maxRadius = min(stage.height() / 2, stage.radius())
+        val maxSquareRadius = floor(sin(Math.PI * 0.25) * stage.radius()).toInt()
+        val center = Vec3.atCenterOf(stage.center())
+        val origin = Vec3.atCenterOf(stage.origin())
 
-        register("cuboid", () -> {
-            final int minRadius = 4;
-
-            int width = minRadius + random.nextInt(max(1, maxSquareRadius - minRadius));
-            int height = minRadius + random.nextInt(max(1, maxSquareRadius - minRadius));
-            int length = minRadius + random.nextInt(max(1, maxSquareRadius - minRadius));
-
-            return new Cuboid(origin.add(0, height * 0.5d, 0), width, height, length);
-        });
-
-        register("cube", () -> {
-            final int minRadius = 4;
-
-            int radius = minRadius + random.nextInt(max(1, maxSquareRadius - minRadius));
-
-            return new Cube(origin.add(0, radius, 0), radius);
-        });
-
-        register("ellipsoid", () -> {
-            final int minRadius = 4;
-
-            int a = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
-            int b = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
-            int c = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
-
-            return new Ellipsoid(center, a, b, c);
-        });
-
-        register("sphere", () -> {
-            final int minRadius = 4;
-
-            int radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
-
-            return new Sphere(center, radius);
-        });
-
-        register("cone", () -> {
-            final int minRadius = 4;
-            final int minHeight = 10;
-            final int maxHeight = stage.height();
-
-            int radius = minRadius + random.nextInt(max(1, maxRadius - minRadius));
-            int height = minHeight + random.nextInt(max(1, maxHeight - minHeight));
-
-            return new Cone(origin, radius, height);
-        });
-
-        register("cylinder", () -> {
-            final int minRadius = 4;
-            final int minHeight = 8;
-            final int maxHeight = stage.height();
-
-            int radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
-            int height = minHeight + random.nextInt(max(1, maxHeight - minHeight));
-
-            return new Cylinder(origin, radius, height);
-        });
-
-        register("hemisphere", () -> {
-            final int minRadius = 4;
-
-            int radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
-            Vec3 normal = MathUtil.randomUnitVec3d(random);
-
-            return new Hemisphere(center, radius, normal);
-        });
-
-        register("pyramid", () -> {
-            final int minRadius = 4;
-
-            int radius = minRadius + random.nextInt(max(1, maxSquareRadius - minRadius));
-
-            return new Pyramid(origin, radius, radius - 0.5);
-        });
-
-        register("prism", () -> {
-            final int minRadius = 5;
-            final int minHeight = 8;
-            final int maxHeight = stage.height();
-            final double minAngle = toRadians(20);
-
-            int r1 = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
-            int r2 = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
-            int r3 = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
-
-            int height = minHeight + random.nextInt(max(1, maxHeight - minHeight));
-
-            double alpha = random.nextDouble() * PI;
-            double beta = alpha + minAngle + random.nextDouble() * (PI - 2 * minAngle);
-            double gamma = (alpha + beta) / 2 + PI;
-
-            Vec3 v1 = origin.add(sin(alpha) * r1, 0, cos(alpha) * r1);
-            Vec3 v2 = origin.add(sin(beta)  * r2, 0, cos(beta)  * r2);
-            Vec3 v3 = origin.add(sin(gamma) * r3, 0, cos(gamma) * r3);
-
-            return new Prism(v1, v2, v3, height, new Vec3(0, 1, 0));
-        });
-
-        register("torus", () -> {
-            final int minMinorRadius = 2;
-            final int maxMinorRadius = 5;
-
-            int minorRadius = minMinorRadius + random.nextInt(maxMinorRadius - minMinorRadius + 1);
-
-            final int maxMajorRadius = maxRadius - minorRadius;
-            final int minMajorRadius = minorRadius + 3;
-
-            int majorRadius = minMajorRadius + random.nextInt(maxMajorRadius - minMajorRadius + 1);
-
-            double maxTilt = PI / 5;
-
-            Quaterniond rotation = new Quaterniond()
-                    .rotateZ(random.nextDouble() * 2 * maxTilt - maxTilt)
-                    .rotateY(random.nextDouble() * PI)
-                    .rotateX(PI / 2);
-
-            return new Torus(center, majorRadius, minorRadius, rotation);
-        });
-
-        register("tetrahedron", () -> {
-            final int minRadius = 6;
-
-            int radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
-
-            return new Tetrahedron(origin.add(0, radius / 3d, 0), radius);
-        });
-
-        register("octahedron", () -> {
-            final int minRadius = 4;
-
-            int radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
-
-            return new Octahedron(center, radius);
-        });
-
-        register("icosahedron", () -> {
-            final int minRadius = 4;
-
-            int radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
-
-            return new Icosahedron(center, radius);
-        });
-
-        register("dodecahedron", () -> {
-            final int minRadius = 4;
-
-            int radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
-
-            return new Dodecahedron(center, radius);
-        });
-    }
-
-    private void register(String id, ShapeProvider provider) {
-        if (shapesById.containsKey(id)) {
-            throw new IllegalStateException("Duplicate shape id \"%s\"".formatted(id));
+        register("cuboid") {
+            val minRadius = 4
+            val width = minRadius + random.nextInt(max(1, maxSquareRadius - minRadius))
+            val height = minRadius + random.nextInt(max(1, maxSquareRadius - minRadius))
+            val length = minRadius + random.nextInt(max(1, maxSquareRadius - minRadius))
+            Cuboid(origin.add(0.0, height * 0.5, 0.0), width.toDouble(), height.toDouble(), length.toDouble())
         }
 
-        shapesById.put(id, provider);
-        shapes.add(provider);
-    }
-
-    public @NotNull Shape getRandomShape() {
-        // TODO use restorable queue
-        return shapes.get(random.nextInt(shapes.size())).provide();
-    }
-
-    public @Nullable Shape getShape(String id) {
-        ShapeProvider shape = shapesById.get(id);
-
-        return shape == null ? null : shape.provide();
-    }
-
-    public Set<String> getShapes() {
-        return Set.copyOf(shapesById.keySet());
-    }
-
-    public double distance(Shape shape, double x, double y, double z) {
-        DistanceFunction distanceFunction = distanceFunction(shape);
-        Vec3 center = shape.center();
-
-        return distanceFunction.distanceTo(x - center.x(), y - center.y(), z - center.z());
-    }
-
-    public DistanceFunction distanceFunction(Shape shape) {
-        if (shape instanceof Cube || shape instanceof Tetrahedron) {
-            return this::chebyshevDist;
+        register("cube") {
+            val minRadius = 4
+            val radius = minRadius + random.nextInt(max(1, maxSquareRadius - minRadius))
+            Cube(origin.add(0.0, radius.toDouble(), 0.0), radius.toDouble())
         }
 
-        if (shape instanceof SphereBoundedShape || shape instanceof Ellipsoid) {
-            return this::euclideanDist;
+        register("ellipsoid") {
+            val minRadius = 4
+            val a = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)))
+            val b = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)))
+            val c = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)))
+            Ellipsoid(center, a.toDouble(), b.toDouble(), c.toDouble())
         }
 
-        if (shape instanceof Torus t) {
-            return (x, y, z) -> {
-                Vector3d localPoint = new Vector3d(x, y, z);
-
-                t.rotation().transformInverse(localPoint);
-
-                double qx = sqrt(localPoint.x * localPoint.x + localPoint.z * localPoint.z);
-                double ringDist = Math.abs(qx - t.majorRadius());
-
-                return sqrt(ringDist * ringDist + localPoint.y * localPoint.y);
-            };
+        register("sphere") {
+            val minRadius = 4
+            val radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)))
+            Sphere(center, radius.toDouble())
         }
 
-        if (shape instanceof Pyramid p) {
-            return (_, y, _) -> (y + p.center().y()) - p.origin().y();
+        register("cone") {
+            val minRadius = 4
+            val minHeight = 10
+            val maxHeight = stage.height()
+
+            val radius = minRadius + random.nextInt(max(1, maxRadius - minRadius))
+            val height = minHeight + random.nextInt(max(1, maxHeight - minHeight))
+            Cone(origin, radius.toDouble(), height.toDouble())
         }
 
-        return this::chebyshevDist;
+        register("cylinder") {
+            val minRadius = 4
+            val minHeight = 8
+            val maxHeight = stage.height()
+
+            val radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)))
+            val height = minHeight + random.nextInt(max(1, maxHeight - minHeight))
+            Cylinder(origin, radius.toDouble(), height.toDouble())
+        }
+
+        register("hemisphere") {
+            val minRadius = 4
+            val radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)))
+            val normal = MathUtil.randomUnitVec3d(random)
+            Hemisphere(center, radius.toDouble(), normal)
+        }
+
+        register("pyramid") {
+            val minRadius = 4
+            val radius = minRadius + random.nextInt(max(1, maxSquareRadius - minRadius))
+            Pyramid(origin, radius.toDouble(), radius - 0.5)
+        }
+
+        register("prism") {
+            val minRadius = 5
+            val minHeight = 8
+            val maxHeight = stage.height()
+            val minAngle = Math.toRadians(20.0)
+
+            val r1 = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)))
+            val r2 = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)))
+            val r3 = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)))
+
+            val height = minHeight + random.nextInt(max(1, maxHeight - minHeight))
+
+            val alpha = random.nextDouble() * Math.PI
+            val beta = alpha + minAngle + random.nextDouble() * (Math.PI - 2 * minAngle)
+            val gamma = (alpha + beta) / 2 + Math.PI
+
+            val v1 = origin.add(sin(alpha) * r1, 0.0, cos(alpha) * r1)
+            val v2 = origin.add(sin(beta) * r2, 0.0, cos(beta) * r2)
+            val v3 = origin.add(sin(gamma) * r3, 0.0, cos(gamma) * r3)
+            Prism(v1, v2, v3, height.toDouble(), Vec3(0.0, 1.0, 0.0))
+        }
+
+        register("torus") {
+            val minMinorRadius = 2
+            val maxMinorRadius = 5
+
+            val minorRadius = minMinorRadius + random.nextInt(maxMinorRadius - minMinorRadius + 1)
+
+            val maxMajorRadius = maxRadius - minorRadius
+            val minMajorRadius = minorRadius + 3
+
+            val majorRadius = minMajorRadius + random.nextInt(maxMajorRadius - minMajorRadius + 1)
+
+            val maxTilt = Math.PI / 5
+
+            val rotation = Quaterniond()
+                .rotateZ(random.nextDouble() * 2 * maxTilt - maxTilt)
+                .rotateY(random.nextDouble() * Math.PI)
+                .rotateX(Math.PI / 2)
+
+            Torus(center, majorRadius.toDouble(), minorRadius.toDouble(), rotation)
+        }
+
+        register("tetrahedron") {
+            val minRadius = 6
+            val radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)))
+            Tetrahedron(origin.add(0.0, radius / 3.0, 0.0), radius.toDouble())
+        }
+
+        register("octahedron") {
+            val minRadius = 4
+            val radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)))
+            Octahedron(center, radius.toDouble())
+        }
+
+        register("icosahedron") {
+            val minRadius = 4
+            val radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)))
+            Icosahedron(center, radius.toDouble())
+        }
+
+        register("dodecahedron") {
+            val minRadius = 4
+            val radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)))
+            Dodecahedron(center, radius.toDouble())
+        }
     }
 
-    private double chebyshevDist(double x, double y, double z) {
-        return max(abs(x), max(abs(y), abs(z)));
+    private fun register(id: String, provider: ShapeProvider) {
+        check(!shapesById.containsKey(id)) { "Duplicate shape id \"$id\"" }
+
+        shapesById[id] = provider
+        shapes.add(provider)
     }
 
-    private double euclideanDist(double x, double y, double z) {
-        return sqrt(x * x + y * y + z * z);
+    // TODO use restorable queue
+    fun randomShape(): Shape =
+        shapes[random.nextInt(shapes.size)].provide()
+
+    fun getShape(id: String): Shape? {
+        val shape = shapesById[id]
+
+        return shape?.provide()
     }
 
-    public interface DistanceFunction {
-        double distanceTo(double x, double y, double z);
+    fun getShapes(): Set<String> =
+        shapesById.keys.toSet()
+
+    fun distance(shape: Shape, x: Double, y: Double, z: Double): Double {
+        val distanceFunction = distanceFunction(shape)
+        val center = shape.center()
+
+        return distanceFunction.distanceTo(x - center.x(), y - center.y(), z - center.z())
     }
 
-    private interface ShapeProvider {
-        Shape provide();
+    fun distanceFunction(shape: Shape): DistanceFunction {
+        if (shape is Cube || shape is Tetrahedron) {
+            return { x, y, z -> chebyshevDist(x, y, z) }
+        }
+
+        if (shape is SphereBoundedShape || shape is Ellipsoid) {
+            return { x, y, z -> euclideanDist(x, y, z) }
+        }
+
+        if (shape is Torus) {
+            return { x, y, z ->
+                val localPoint = Vector3d(x, y, z)
+                shape.rotation().transformInverse(localPoint)
+
+                val qx = sqrt(localPoint.x * localPoint.x + localPoint.z * localPoint.z)
+                val ringDist = abs(qx - shape.majorRadius())
+
+                sqrt(ringDist * ringDist + localPoint.y * localPoint.y)
+            }
+        }
+
+        if (shape is Pyramid) {
+            return { _, y, _ ->
+                (y + shape.center().y()) - shape.origin().y()
+            }
+        }
+
+        return { x, y, z -> chebyshevDist(x, y, z) }
+    }
+
+    private fun chebyshevDist(x: Double, y: Double, z: Double): Double =
+        max(abs(x), max(abs(y), abs(z)))
+
+    private fun euclideanDist(x: Double, y: Double, z: Double): Double =
+        sqrt(x * x + y * y + z * z)
+
+    fun interface DistanceFunction {
+        fun distanceTo(x: Double, y: Double, z: Double): Double
+    }
+
+    private fun interface ShapeProvider {
+        fun provide(): Shape
     }
 }

@@ -1,100 +1,94 @@
-package work.lclpnet.ap2.game.guess_it.util;
+package work.lclpnet.ap2.game.guess_it.util
 
-import java.util.Locale;
-import java.util.Optional;
-import java.util.OptionalInt;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.regex.Matcher
+import java.util.regex.Pattern
+import kotlin.math.roundToInt
 
-public class MinecraftDayTime {
-    private static final Pattern
-            HH_MM_SS = Pattern.compile("([-+]?\\d+)(?::([-+]?\\d+))?(?::([-+]?\\d+))?");
-    private static final Pattern
-            HH_MM_SS_12H = Pattern.compile("([-+]?\\d+)(?::([-+]?\\d+))?(?::([-+]?\\d+))?\\s*(am|pm)");
+object MinecraftDayTime {
+    private val HH_MM_SS: Pattern = Pattern.compile("([-+]?\\d+)(?::([-+]?\\d+))?(?::([-+]?\\d+))?")
+    private val HH_MM_SS_12H: Pattern = Pattern.compile("([-+]?\\d+)(?::([-+]?\\d+))?(?::([-+]?\\d+))?\\s*(am|pm)")
 
-    private MinecraftDayTime() {}
+    fun stringifyDayTime(time: Int): String {
+        var time = time
+        time %= 24000
 
-    public static String stringifyDayTime(int time) {
-        time %= 24000;
+        val hours = (time / 1000 + 6) % 24
+        val minutes = ((time % 1000 * 60) / 1000f).roundToInt() % 60
 
-        int hours = (time / 1000 + 6) % 24;
-        int minutes = Math.round((time % 1000 * 60) / 1000f) % 60;
-
-        return "%02d:%02d".formatted(hours, minutes);
+        return "%02d:%02d".format(hours, minutes)
     }
 
-    public static Optional<String> dayTimeValue(String str) {
-        var time = parseDayTime(str);
+    fun dayTimeValue(str: String): String? {
+        val time = parseDayTime(str) ?: return null
 
-        if (time.isEmpty()) return Optional.empty();
-
-        return Optional.of(stringifyDayTime(time.getAsInt()));
+        return stringifyDayTime(time)
     }
 
-    public static OptionalInt parseDayTime(String str) {
-        str = str.toLowerCase(Locale.ROOT);
+    fun parseDayTime(str: String): Int? {
+        var str = str
+        str = str.lowercase()
 
-        Matcher matcher = HH_MM_SS_12H.matcher(str);
+        var matcher = HH_MM_SS_12H.matcher(str)
 
         if (matcher.find()) {
-            String modifier = matcher.group(4);
+            val modifier = matcher.group(4)
 
-            return parseHourMinuteSecond(matcher)
-                    .filter(res -> res.hour >= 0 && res.hour <= 12 && res.minute >= 0 && res.minute <= 60 && res.second >= 0 && res.second <= 60)
-                    .map(res -> {
-                        int hour = res.hour % 12;
+            return parseHourMinuteSecond(matcher)?.takeIf { res ->
+                res.hour in 0..12 && res.minute in 0..60 && res.second in 0..60
+            }?.let { res ->
+                var hour = res.hour % 12
 
-                        if ("pm".equals(modifier)) {
-                            hour = hour + 12;
-                        }
+                if ("pm" == modifier) {
+                    hour += 12
+                }
 
-                        return OptionalInt.of(toDayTime(hour, res.minute, res.second));
-                    })
-                    .orElse(OptionalInt.empty());
+                toDayTime(hour, res.minute, res.second)
+            }
         }
 
-        matcher = HH_MM_SS.matcher(str);
+        matcher = HH_MM_SS.matcher(str)
 
         if (matcher.find()) {
-            return parseHourMinuteSecond(matcher)
-                    .filter(res -> res.hour >= 0 && res.hour <= 24 && res.minute >= 0 && res.minute <= 60 && res.second >= 0 && res.second <= 60)
-                    .map(res -> OptionalInt.of(toDayTime(res.hour, res.minute, res.second)))
-                    .orElse(OptionalInt.empty());
+            return parseHourMinuteSecond(matcher)?.takeIf{ res: Result ->
+                res.hour in 0..24 && res.minute in 0..60 && res.second in 0..60
+            }?.let { res ->
+                toDayTime(res.hour, res.minute, res.second)
+            }
         }
 
-        return OptionalInt.empty();
+        return null
     }
 
-    public static int toDayTime(int hour, int minute, int second) {
-        return Math.floorMod(hour - 6, 24) * 1000
-               + Math.round(Math.floorMod(minute, 60) * 1000 / 60f)
-               + Math.round(Math.floorMod(second, 60) * 1000 / 3600f);
-    }
+    fun toDayTime(hour: Int, minute: Int, second: Int): Int =
+        (Math.floorMod(hour - 6, 24) * 1000
+                + (Math.floorMod(minute, 60) * 1000 / 60f).roundToInt()
+                + (Math.floorMod(second, 60) * 1000 / 3600f).roundToInt())
 
-    private static Optional<Result> parseHourMinuteSecond(Matcher matcher) {
-        String hourStr = matcher.group(1);
-        String minuteStr = matcher.group(2);
-        String secondStr = matcher.group(3);
+    private fun parseHourMinuteSecond(matcher: Matcher): Result? {
+        val hourStr = matcher.group(1)
+        val minuteStr = matcher.group(2)
+        val secondStr = matcher.group(3)
 
-        int hour;
-        int minute = 0, second = 0;
+        val hour: Int
+        var minute = 0
+        var second = 0
 
         try {
-            hour = Integer.parseInt(hourStr, 10);
+            hour = hourStr.toInt(10)
 
             if (minuteStr != null) {
-                minute = Integer.parseInt(minuteStr, 10);
+                minute = minuteStr.toInt(10)
             }
 
             if (secondStr != null) {
-                second = Integer.parseInt(secondStr, 10);
+                second = secondStr.toInt(10)
             }
-        } catch (NumberFormatException _) {
-            return Optional.empty();
+        } catch (_: NumberFormatException) {
+            return null
         }
 
-        return Optional.of(new Result(hour, minute, second));
+        return Result(hour, minute, second)
     }
 
-    private record Result(int hour, int minute, int second) {}
+    private data class Result(val hour: Int, val minute: Int, val second: Int)
 }

@@ -63,7 +63,7 @@ public class SoundChallenge implements Challenge {
         messenger.task(translations.translateText("sound.guess"));
 
         var soundEvents = soundSubtitles.getSoundEvents();
-        var soundOptions = OptionMaker.createOptions(soundEvents, 4, random);
+        var soundOptions = OptionMaker.INSTANCE.createOptions(soundEvents, 4, random);
 
         correctOption = random.nextInt(soundOptions.size());
         correct = soundOptions.get(correctOption);

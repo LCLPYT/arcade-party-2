@@ -84,7 +84,7 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
         Translations translations = gameHandle.getTranslations();
         messenger.task(translations.translateText("daytime.guess"));
 
-        input.expectInput().validate((str, _) -> MinecraftDayTime.dayTimeValue(str),
+        input.expectInput().validate((str, _) -> MinecraftDayTime.INSTANCE.dayTimeValue(str),
                 str -> translations.translateText("input.daytime", styled(str, YELLOW)).withStyle(RED));
 
         // create compass that points north
@@ -113,7 +113,7 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
 
     @Override
     public void evaluate(PlayerChoices choices, ChallengeResult result) {
-        result.setCorrectAnswer(MinecraftDayTime.stringifyDayTime(correctTime));
+        result.setCorrectAnswer(MinecraftDayTime.INSTANCE.stringifyDayTime(correctTime));
 
         Participants participants = gameHandle.getParticipants();
 
@@ -121,10 +121,9 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
             var optChoice = choices.get(player);
             if (optChoice.isEmpty()) return OptionalInt.empty();
 
-            var optTime = MinecraftDayTime.parseDayTime(optChoice.get());
-            if (optTime.isEmpty()) return OptionalInt.empty();
+            var time = MinecraftDayTime.INSTANCE.parseDayTime(optChoice.get());
 
-            int time = optTime.getAsInt();
+            if (time == null) return OptionalInt.empty();
 
             // wrap time at 0 am
             int diff1 = Math.floorMod(correctTime - time, 24000);
@@ -166,13 +165,6 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
         int time = getInterpolatedTime(progress);
 
         LevelExtensionsKt.setDayTime(world, time);
-
-        // TODO still needed?
-//        var packet = new ClientboundSetTimePacket(world.getGameTime(), world.getOverworldClockTime(), world.getGameRules().get(GameRules.ADVANCE_TIME));
-//
-//        for (ServerPlayer player : PlayerLookup.level(world)) {
-//            player.connection.send(packet);
-//        }
 
         if (t >= ANIMATION_DURATION_TICKS) {
             info.cancel();
