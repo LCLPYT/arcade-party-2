@@ -1,5 +1,48 @@
 # Changelog
 
+## [0.7.0](https://github.com/LCLPYT/arcade-party-2/compare/v0.6.0...v0.7.0) (2026-06-28)
+
+
+### Features
+
+* add 5 second cooldown for using the elevators on the office map in hot potato ([7e2e5e2](https://github.com/LCLPYT/arcade-party-2/commit/7e2e5e29fb6423b8925169a9b518212ccd3a2de6))
+* add mining battle stats ([a93c316](https://github.com/LCLPYT/arcade-party-2/commit/a93c316c100fb78ee2b9e26df98ca420182f5992))
+* add pagination, search and sorting to minigame voting screen ([#286](https://github.com/LCLPYT/arcade-party-2/issues/286)) ([f9a343c](https://github.com/LCLPYT/arcade-party-2/commit/f9a343c2040fdfe24a661bf0f87997b2581ddee6))
+* add permanent glowing on the office map in hot potato ([71d29b0](https://github.com/LCLPYT/arcade-party-2/commit/71d29b06f63124ea86cf8db2ed5a6b0d769d201e))
+* add quick sg stats ([71ba887](https://github.com/LCLPYT/arcade-party-2/commit/71ba8875ac8863ff8cb3c1117bf297e76176cec8))
+* add stats to team gathering ([38299ea](https://github.com/LCLPYT/arcade-party-2/commit/38299ea556c03ee6a59fc342f8a48792f9388be3))
+* add team gathering minigame ([#284](https://github.com/LCLPYT/arcade-party-2/issues/284)) ([20aeff9](https://github.com/LCLPYT/arcade-party-2/commit/20aeff9c32575d7da7f1bda4aa8ddfcbc80b2962))
+* added regeneration after killing players in quick sg ([135e850](https://github.com/LCLPYT/arcade-party-2/commit/135e850e1ad09c5f9cf2b7a796b034f9086db21e))
+* auto-balance teams according to current player ranking ([8b96424](https://github.com/LCLPYT/arcade-party-2/commit/8b96424788a28e03aef4f5b0c526dbf4d5cb0d34))
+* defer first damage tick in pvp tournament death match so that the players aren't damaged instantly when announced ([70a0f19](https://github.com/LCLPYT/arcade-party-2/commit/70a0f192193355e675a1af7b2a0cbe0bb1a14ae2))
+* give haste and remove item in inventory requirement for the solo player in team gathering ([86426ca](https://github.com/LCLPYT/arcade-party-2/commit/86426caf7ee87a88a425fd97f945b62c3a687894))
+* let players instantly destroy blocks in turf wars ([57b1858](https://github.com/LCLPYT/arcade-party-2/commit/57b18585e486024aba56eba56f742eb2e6aa0cb0))
+* localize the remaining health display decimal number ([8dd7096](https://github.com/LCLPYT/arcade-party-2/commit/8dd7096f58561bc9eed4f5f29c1d25cd0807b11f))
+* made glowing bomb a little quicker for big player counts ([56dbb2a](https://github.com/LCLPYT/arcade-party-2/commit/56dbb2a795ba673156f95afec1506a18a4f6b0cc))
+* make arrows one hit with the assassin kit in turf wars, but reduce the arrow gain duration to 1.5x ([e3502df](https://github.com/LCLPYT/arcade-party-2/commit/e3502dfbdb05dca3ed8815bbfc60d5e13524bd3e))
+* reduced guess it rounds from 10 to 8 ([db309d3](https://github.com/LCLPYT/arcade-party-2/commit/db309d34345d89d5c86153e6b3ae29ceab717cd7))
+* remove armor enchantments in quick sg ([7ca716a](https://github.com/LCLPYT/arcade-party-2/commit/7ca716af87593f7aeba1bf1961db85330bf13372))
+* remove red marker from make weapon holder in weapon swap ([432e312](https://github.com/LCLPYT/arcade-party-2/commit/432e312707365a55bc0e53172c1791992102567b))
+* replace stone blocks with barriers after mining battle is done ([229c73b](https://github.com/LCLPYT/arcade-party-2/commit/229c73b9ca5080150de407c20fcfd6ca353c0181))
+* set the round count in guess it to always 10 rounds ([8660e85](https://github.com/LCLPYT/arcade-party-2/commit/8660e85ee110d165182a602bdf4f96feefbfd49e))
+* show block distribution count in area challenge in guess it ([8e42ed8](https://github.com/LCLPYT/arcade-party-2/commit/8e42ed8fb04200e7d641889fa160385acf296de0))
+* show remaining health of killer in one in the chamber and quick sg ([737470a](https://github.com/LCLPYT/arcade-party-2/commit/737470a6c67cc0ed1d80df5cce8f818afe582cf7))
+* show winning team items at the end of team gathering ([1f80c67](https://github.com/LCLPYT/arcade-party-2/commit/1f80c6730ddb72cc037cbab6ce86c45ee0e0aacd))
+* teleport players back to the spawn when falling during preparation time in block dissolve ([6698047](https://github.com/LCLPYT/arcade-party-2/commit/66980475abb5eacd03984e1340cef4a8f3571961))
+
+
+### Bug Fixes
+
+* change aim master average advance time stat so lower is better ([4d171ef](https://github.com/LCLPYT/arcade-party-2/commit/4d171ef8421ec6733c1efcc1b7bdeebf2a559756))
+* docker image failing to start because of wrong versions ([0e1c26d](https://github.com/LCLPYT/arcade-party-2/commit/0e1c26d096d25070393b6be52bdcb44498526c32))
+* fix crash when starting team games ([d5c4acc](https://github.com/LCLPYT/arcade-party-2/commit/d5c4acc698a4ddf2a2449532f1677272cc3fecd7))
+* fix the warden behavior in maze scape by removing conflicting activities ([d096234](https://github.com/LCLPYT/arcade-party-2/commit/d0962342e15ed6f9a8dceb3c8fb3e767dee7b36f))
+* fixed a bug where players would get eliminated for being close to walls in spleef ([1143a9e](https://github.com/LCLPYT/arcade-party-2/commit/1143a9ee3994df4ed5ca7ccb3793523408045174))
+* freeze the placement scoreboard in pig race once someone reached the goal ([2498aa1](https://github.com/LCLPYT/arcade-party-2/commit/2498aa1a7bf4ae5f6433df588308de2c256a0b5a))
+* paintball teams being assigned twice causing paintball not to work ([ccaa0a5](https://github.com/LCLPYT/arcade-party-2/commit/ccaa0a5c1e62e533f307895dfb4b249dfdab5460))
+* rank players the same when they have the same statistic value in the statistics screen ([85e44fe](https://github.com/LCLPYT/arcade-party-2/commit/85e44fe54922fd026659941b7b179b32aa306eee))
+* show completed rounds score detail again when quick mode is active in speed builders ([863c4e6](https://github.com/LCLPYT/arcade-party-2/commit/863c4e6a7ca9fd3f8ed97dcd74e9be731f657120))
+
 ## [0.6.0](https://github.com/LCLPYT/arcade-party-2/compare/v0.5.0...v0.6.0) (2026-06-19)
 
 
