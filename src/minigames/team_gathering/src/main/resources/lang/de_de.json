@@ -6,6 +6,7 @@
   "dropped": "%s hat %s verloren",
   "count": "%s Gegenstände",
   "solo_hint": "Du bist der Spieler, der alleine spielen muss. Du brauchst deine Items nicht im Inventar zu behalten und du kannst schneller Blöcke abbauen.",
+  "winning_team_items": "Items von %s",
   "stat.unique_items": "Verschiedene Items",
   "stat.items_crafted": "Hergestellte Items",
   "stat.items_picked_up": "Aufgesammelte Items"
