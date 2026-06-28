@@ -3,8 +3,6 @@ package work.lclpnet.ap2.game.base
 import net.minecraft.ChatFormatting
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
-import work.lclpnet.ap2.api.game.team.Team
-import work.lclpnet.ap2.api.game.team.TeamManager
 import work.lclpnet.ap2.core.hook.PlayerEliminatedCallback
 import work.lclpnet.ap2.ext.allPlayers
 import work.lclpnet.ap2.ext.hooks
@@ -12,6 +10,8 @@ import work.lclpnet.ap2.ext.isParticipating
 import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.data.EliminationDataContainer
+import work.lclpnet.ap2.game.team.Team
+import work.lclpnet.ap2.game.team.TeamManager
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback
 import work.lclpnet.kibu.translate.text.TranslatedText
@@ -56,7 +56,7 @@ abstract class TeamEliminationGameInstance(
 
     protected fun eliminate(team: Team) {
         // eliminate all remaining team players first
-        for (player in team.getPlayers()) {
+        for (player in team.players) {
             gameHandle.participants.remove(player)
             onEliminated(player)
             resetPlayer(player)
@@ -76,7 +76,7 @@ abstract class TeamEliminationGameInstance(
         for (team in teams) {
             if (!teamManager.isParticipating(team)) continue
 
-            val key = team.key()
+            val key = team.key
             val displayName = key.getDisplayName(gameHandle.translations)
 
             translate("ap2.game.team_eliminated", displayName)
@@ -91,7 +91,7 @@ abstract class TeamEliminationGameInstance(
 
         // deliberately use teams instead of toEliminate, to make sure there are no participating members anymore
         for (team in teams) {
-            for (player in team.getPlayers()) {
+            for (player in team.players) {
                 gameHandle.participants.remove(player)
                 onEliminated(player)
                 resetPlayer(player)

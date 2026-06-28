@@ -32,6 +32,7 @@ import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.game.util.*
+import work.lclpnet.ap2.impl.util.DeathMessages
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
 import work.lclpnet.ap2.impl.util.TextUtil
 import work.lclpnet.ap2.impl.util.handler.VisualCooldown
@@ -168,8 +169,16 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle, level: ServerLevel, ma
         val deathMessages = gameHandle.deathMessages
 
         val text = when {
-            killer != null && shot -> deathMessages.shotBy(player, killer)
-            killer != null -> deathMessages.killedBy(player, killer)
+            killer != null && shot -> deathMessages.root(
+                DeathMessages.SHOT_BY,
+                deathMessages.wrap(player),
+                deathMessages.killerWithHealth(killer)
+            )
+            killer != null -> deathMessages.root(
+                DeathMessages.KILLED_BY,
+                deathMessages.wrap(player),
+                deathMessages.killerWithHealth(killer)
+            )
             else -> deathMessages.eliminated(player)
         }
 

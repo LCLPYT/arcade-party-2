@@ -4,8 +4,6 @@ import net.minecraft.server.level.ServerPlayer
 import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.game.data.SubjectRef
 import work.lclpnet.ap2.api.game.data.SubjectRefFactory
-import work.lclpnet.ap2.api.game.team.Team
-import work.lclpnet.ap2.api.game.team.TeamManager
 import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.game.MiniGameInstance
 import work.lclpnet.ap2.game.data.IntDataContainer
@@ -13,6 +11,8 @@ import work.lclpnet.ap2.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.game.data.ScoreTimeDataContainer
 import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.data.type.TeamRef
+import work.lclpnet.ap2.game.team.Team
+import work.lclpnet.ap2.game.team.TeamManager
 
 fun <T : DataContainer<ServerPlayer, PlayerRef>> MiniGameInstance.useDataContainer(
     factory: (SubjectRefFactory<ServerPlayer, PlayerRef>) -> T
@@ -31,7 +31,7 @@ fun <T : DataContainer<Team, TeamRef>> MiniGameInstance.useDataContainer(
     factory: (SubjectRefFactory<Team, TeamRef>) -> T
 ): T {
     val data = factory { team ->
-        TeamRef(team.key(), gameHandle.translations)
+        TeamRef(team.key, gameHandle.translations)
     }
 
     for (team in teamManager.teams) {

@@ -12,7 +12,6 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.gamerules.GameRules
-import net.minecraft.world.scores.TeamColor
 import work.lclpnet.ap2.api.stats.CommonStats.DamageDealt
 import work.lclpnet.ap2.api.stats.CommonStats.Kills
 import work.lclpnet.ap2.api.stats.FFAStatsManager
@@ -62,9 +61,6 @@ class WeaponSwapInstance(
     private var previousHolders: Set<UUID> = emptySet()
     private val subtitleCountdown = SubtitleCountdown(gameHandle.server, gameHandle.scheduler, ::swapTimerTick) {
         allPlayers()
-    }
-    private val holderTeam = gameHandle.scoreboardManager.createTeam("holders").also {
-        it.color = Optional.of(TeamColor.DARK_RED)
     }
 
     override fun prepare() {
@@ -189,7 +185,6 @@ class WeaponSwapInstance(
             players().getParticipant(uuid).ifPresent { player ->
                 removeWeaponFrom(player)
                 PlayerReset.modifyWalkSpeed(player, 0.1f)
-                gameHandle.scoreboardManager.leaveTeam(player, holderTeam)
             }
         }
 
@@ -201,7 +196,6 @@ class WeaponSwapInstance(
             stats.increment(player, WeaponsReceived)
             player.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 1f, 1.5f)
             PlayerReset.modifyWalkSpeed(player, MOVEMENT_SPEED)
-            gameHandle.scoreboardManager.joinTeam(player, holderTeam)
         }
 
         translate("received")

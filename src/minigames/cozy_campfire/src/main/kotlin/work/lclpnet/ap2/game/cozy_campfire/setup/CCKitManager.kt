@@ -12,12 +12,11 @@ import net.minecraft.world.item.component.TooltipDisplay
 import net.minecraft.world.item.equipment.trim.ArmorTrim
 import net.minecraft.world.item.equipment.trim.TrimMaterials
 import net.minecraft.world.item.equipment.trim.TrimPattern
-import work.lclpnet.ap2.api.game.team.TeamManager
 import work.lclpnet.ap2.game.cozy_campfire.TEAM_RED
+import work.lclpnet.ap2.game.team.TeamManager
 import work.lclpnet.ap2.impl.util.ItemHelper
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
-import java.util.Random
-import java.util.UUID
+import java.util.*
 
 class CCKitManager(
     private val teamManager: TeamManager,
@@ -38,9 +37,11 @@ class CCKitManager(
 
         val registryManager: RegistryAccess = world.registryAccess()
         val trimPattern = patterns.getOrPut(player.uuid) { ItemHelper.getRandomTrimPattern(registryManager, random) }
+
         val trimMaterialKey = teamManager.getTeam(player)
-            .map { if (it.key() == TEAM_RED) TrimMaterials.REDSTONE else TrimMaterials.LAPIS }
-            .orElse(TrimMaterials.IRON)
+            ?.let { if (it.key == TEAM_RED) TrimMaterials.REDSTONE else TrimMaterials.LAPIS }
+            ?: TrimMaterials.IRON
+
         val trimMaterial = ItemHelper.getTrimMaterial(registryManager, trimMaterialKey)
 
         fun armorPiece(item: net.minecraft.world.item.Item): ItemStack {

@@ -1,0 +1,13 @@
+{
+  "name": "Team Gathering",
+  "description": "Collect as many unique items or blocks in your team as you can. Items must be kept in your inventory to be counted.",
+  "task": "Collect unique items",
+  "found": "%s found %s",
+  "dropped": "%s lost %s",
+  "count": "%s Items",
+  "solo_hint": "You are the solo player. You don't have to keep items in your inventory and you can break blocks faster.",
+  "winning_team_items": "%s's Items",
+  "stat.unique_items": "Unique items",
+  "stat.items_crafted": "Items crafted",
+  "stat.items_picked_up": "Items picked up"
+}

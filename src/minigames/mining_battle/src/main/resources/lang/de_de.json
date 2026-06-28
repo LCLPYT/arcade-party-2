@@ -4,5 +4,14 @@
   "task": "Baue Erz ab",
   "weakened": "Du hast die anderen Spieler geschwächt!",
   "weakened_by": "%s hat dich geschwächt!",
-  "haste": "Du hast den Statuseffekt Eile erhalten!"
+  "haste": "Du hast den Statuseffekt Eile erhalten!",
+  "stat.ores_value_1": "Erze (1 Punkt)",
+  "stat.ores_value_2": "Erze (2 Punkte)",
+  "stat.ores_value_3": "Erze (3 Punkte)",
+  "stat.ores_value_4": "Erze (4 Punkte)",
+  "stat.ores_value_5": "Erze (5 Punkte)",
+  "stat.players_weakened": "Spieler geschwächt",
+  "stat.times_weakened": "Male geschwächt",
+  "stat.tnt_detonated": "TNT gezündet",
+  "stat.efficiency_gained": "Eile erhalten"
 }

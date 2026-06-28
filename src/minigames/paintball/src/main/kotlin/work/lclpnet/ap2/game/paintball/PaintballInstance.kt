@@ -16,7 +16,6 @@ import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.GameType
 import net.minecraft.world.level.gamerules.GameRules
-import work.lclpnet.ap2.api.game.team.TeamManager
 import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.CommonStats.DamageDealt
 import work.lclpnet.ap2.api.stats.CommonStats.Deaths
@@ -43,6 +42,7 @@ import work.lclpnet.ap2.game.paintball.kit.ShotgunKit
 import work.lclpnet.ap2.game.paintball.kit.SniperKit
 import work.lclpnet.ap2.game.paintball.util.*
 import work.lclpnet.ap2.game.player.Participants
+import work.lclpnet.ap2.game.team.TeamManager
 import work.lclpnet.ap2.game.util.GameStartSequence
 import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.game.util.useAnnouncer
@@ -132,8 +132,6 @@ class PaintballInstance(
     }
 
     override fun prepare() {
-        teams.setup()
-
         scene.animate(1, gameHandle.rootScheduler)
 
         paintManager.data = data
@@ -148,11 +146,11 @@ class PaintballInstance(
         val resultSpot = resultSpotFromJson(map.properties.getJSONObject("result-spot"))
 
         results = PaintballResults(gameHandle, announcer, level, resultSpot, data, winManager) {
-            teams.mapNotNull { teamManager.getTeam(it).orElse(null) }
+            teams.mapNotNull { teamManager.getTeam(it) }
                 .map { createReference(it) }
         }
 
-        teamManager.partitionIntoTeams(gameHandle.participants, teams.map { it.key() }.toHashSet())
+        teamManager.partitionIntoTeams(gameHandle.participants, teams.map { it.key }.toHashSet())
 
         for (team in teamManager.minecraftTeams) {
             team.setSeeFriendlyInvisibles(true)
@@ -221,7 +219,7 @@ class PaintballInstance(
         entityCollisions.init(gameHandle.rootScheduler)
 
         teams.forEach { pbt ->
-            teamManager.getTeam(pbt).ifPresent { team ->
+            teamManager.getTeam(pbt)?.let { team ->
                 val group = teams.playerGroup(pbt)
 
                 for (player in team.players) {
@@ -263,8 +261,8 @@ class PaintballInstance(
 
     private fun equipPlayers() {
         for (instance in teams) {
-            val team = teamManager.getTeam(instance).orElse(null) ?: continue
-            val color = instance.key().color()
+            val team = teamManager.getTeam(instance) ?: continue
+            val color = instance.key.color
 
             for (player in team.players) {
                 player.setItemSlot(EquipmentSlot.HEAD, unbreakable(getLeatherArmor(Items.LEATHER_HELMET, color)))
@@ -337,7 +335,7 @@ class PaintballInstance(
     }
 
     private fun respawnPlayer(player: ServerPlayer) {
-        teams.teamOf(player).ifPresent { teleportToTeamSpawn(player, it) }
+        teams.teamOf(player)?.let { teleportToTeamSpawn(player, it) }
 
         player.health = player.maxHealth
         player.resetAttribute(Attributes.MAX_ABSORPTION)
@@ -356,7 +354,7 @@ class PaintballInstance(
 
     override fun teleportTeamsToSpawns() {
         for (pbt in teams) {
-            val team = teamManager.getTeam(pbt).orElse(null) ?: continue
+            val team = teamManager.getTeam(pbt) ?: continue
 
             for (player in team.players) {
                 teleportToTeamSpawn(player, pbt)
@@ -376,7 +374,7 @@ class PaintballInstance(
 
         if (!gameHandle.participants.isParticipating(player)) return false
 
-        val team = teams.teamOf(player).orElse(null) ?: return false
+        val team = teams.teamOf(player) ?: return false
 
         if (team.baseBounds.contains(player.position())) return false
 
@@ -431,6 +429,7 @@ class PaintballInstance(
 
     override fun participantRemoved(player: ServerPlayer) {
         balanceTeams()
+
         super.participantRemoved(player)
     }
 

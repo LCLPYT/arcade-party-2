@@ -67,7 +67,7 @@ metafile = true
 
 [[files]]
 file = "mods/mg-api.pw.toml"
-hash = "6e482e9bb483f7b20f1a136ad2d6434691ccef9ae341e7402f60128799b9bc70"
+hash = "f3966327180a31bd89b386df72e7619ea7e75efe95b9f7901a70bde47abc2769"
 metafile = true
 
 [[files]]
@@ -87,7 +87,7 @@ metafile = true
 
 [[files]]
 file = "mods/pal.pw.toml"
-hash = "5d902b2dfebf762b1c63256b7cfe3b5875ca3f54e02d46d6705957739f514da1"
+hash = "af409af4f628d04f3c653d3563e4d01ef3a4f72f582938017e78f4fc9278debf"
 metafile = true
 
 [[files]]

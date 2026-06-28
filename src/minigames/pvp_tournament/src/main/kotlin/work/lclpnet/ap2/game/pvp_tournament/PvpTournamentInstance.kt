@@ -6,19 +6,15 @@ import net.minecraft.ChatFormatting
 import net.minecraft.core.particles.ItemParticleOption
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.ComponentContents
-import net.minecraft.network.chat.contents.TranslatableContents
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
-import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.entity.Avatar
 import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.EquipmentSlot
-import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.decoration.Mannequin
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.ItemStackTemplate
@@ -49,7 +45,6 @@ import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.util.PlayerUtils
 import work.lclpnet.kibu.title.Title
-import work.lclpnet.kibu.translate.text.TranslatedText
 import kotlin.time.Duration.Companion.seconds
 
 const val DEBUG_FILL_WITH_NPC = false
@@ -124,7 +119,7 @@ class PvpTournamentInstance(
             val data = matchInstanceOf(player)
 
             if (data != null) {
-                val msg = getCustomDeathMessage(player, source)
+                val msg = gameHandle.deathMessages.getDeathMessageWithKillerHealth(player, source)
                     ?: gameHandle.deathMessages.getDeathMessage(player, source)
 
                 msg.sendTo(allPlayers())
@@ -139,7 +134,7 @@ class PvpTournamentInstance(
             val data = matchInstanceOf(npc)
 
             if (data != null) {
-                getCustomDeathMessage(npc, source)?.sendTo(allPlayers())
+                gameHandle.deathMessages.getDeathMessageWithKillerHealth(npc, source)?.sendTo(allPlayers())
 
                 loseMatch(data, npc)
             }
@@ -148,44 +143,6 @@ class PvpTournamentInstance(
         }
 
         registerDebugCommands()
-    }
-
-    private fun getCustomDeathMessage(victim: LivingEntity, source: DamageSource): TranslatedText? {
-        val msg = victim.combatTracker.deathMessage
-        val content: ComponentContents = msg.contents
-
-        if (content !is TranslatableContents) return null
-
-        val killer = source.entity
-
-        if (killer !is LivingEntity) return null
-
-        val mappedArgs = content.args.map { arg ->
-            if (arg !is Component) return@map arg
-
-            val styled = Component.literal(arg.string)
-                .withStyle(ChatFormatting.YELLOW)
-
-            if (victim.displayName.string == arg.string) {
-                return@map styled
-            }
-
-            if (killer.displayName.string != arg.string) return@map arg
-
-            Component.empty()
-                .append(styled)
-                .append(" (")
-                .append(
-                    Component.literal("%.1f ♥".format(killer.health / 2))
-                        .withStyle(ChatFormatting.RED)
-                )
-                .append(")")
-        }
-
-        return gameHandle.deathMessages.root(
-            content.key,
-            *mappedArgs.toTypedArray()
-        )
     }
 
     private fun registerHooks() {
@@ -421,11 +378,11 @@ class PvpTournamentInstance(
             var damagePerSecond = 2f
             var timer = 0
 
-            data.tasks.add(runEvery(1.seconds) {
+            data.tasks.add(deferEvery(1.seconds) {
                 // if both participants would die at the same time though sudden death, end in draw
                 if (data.participants.all { it.health <= damagePerSecond }) {
                     completeMatch(match, null)
-                    return@runEvery
+                    return@deferEvery
                 }
 
                 data.participants.forEach {

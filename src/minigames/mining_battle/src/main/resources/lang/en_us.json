@@ -4,5 +4,14 @@
   "task": "Mine ores",
   "weakened": "You weakened the other players!",
   "weakened_by": "%s has weakened you!",
-  "haste": "You gained the haste status effect!"
+  "haste": "You gained the haste status effect!",
+  "stat.ores_value_1": "1-point ores",
+  "stat.ores_value_2": "2-point ores",
+  "stat.ores_value_3": "3-point ores",
+  "stat.ores_value_4": "4-point ores",
+  "stat.ores_value_5": "5-point ores",
+  "stat.players_weakened": "Players weakened",
+  "stat.times_weakened": "Times weakened",
+  "stat.tnt_detonated": "TNT detonated",
+  "stat.efficiency_gained": "Efficiency gained"
 }

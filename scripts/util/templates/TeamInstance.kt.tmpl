@@ -1,14 +1,15 @@
 package ${package}
 
-import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.impl.game.TeamGameInstance
-import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
+import net.minecraft.server.level.ServerLevel
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.TeamGameInstance
+import work.lclpnet.ap2.game.data.IntScoreDataContainer
+import work.lclpnet.ap2.game.team.TeamManager
+import work.lclpnet.game.map.GameMap
 
-class ${class_name}(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandle) {
+class ${class_name}(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap, teamManager: TeamManager) : TeamGameInstance(gameHandle, level, map, teamManager) {
 
-    private val data = IntScoreDataContainer(this::createReference)
-
-    override fun getData() = data
+    override val data = IntScoreDataContainer(this::createReference)
 
     override fun prepare() {
 

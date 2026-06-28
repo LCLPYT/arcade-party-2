@@ -15,6 +15,7 @@ class Inputs:
     author: str
     game_type: str
     can_be_finale: bool
+    uses_maps: bool
     icon: str
     map: MapOptions | None
 
@@ -46,6 +47,8 @@ def read_inputs() -> Inputs | None:
 
     can_be_finale = questionary.confirm("Can this game be a finale?").ask()
 
+    uses_maps = questionary.confirm("Does this game use maps?").ask()
+
     while True:
         icon_id = questionary.text("Enter a minecraft item identifier to use as the game icon, e.g. 'stone_bricks':").ask()
         err = validate_icon(icon_id)
@@ -54,7 +57,7 @@ def read_inputs() -> Inputs | None:
         else:
             break
 
-    map_options = read_map_options()
+    map_options = read_map_options() if uses_maps else None
 
     print("\nSummary:")
     print(f"  Game ID: {game_id}")
@@ -63,6 +66,7 @@ def read_inputs() -> Inputs | None:
     print(f"  Description: {game_desc}")
     print(f"  Type: {game_type}")
     print(f"  Can be finale: {can_be_finale}")
+    print(f"  Uses maps: {uses_maps}")
     print(f"  Icon: minecraft:{icon_id}")
     print(f"  Create Map: {map_options if map_options is not None else "No"}")
     confirm = questionary.confirm("Is this correct?").ask()
@@ -72,7 +76,7 @@ def read_inputs() -> Inputs | None:
         return None
 
     return Inputs(game_id=game_id, game_name=game_name, game_desc=game_desc, author_key=author, author=author_value,
-                  game_type=game_type, can_be_finale=can_be_finale, icon=icon_id, map=map_options)
+                  game_type=game_type, can_be_finale=can_be_finale, uses_maps=uses_maps, icon=icon_id, map=map_options)
 
 
 def validate_game_id(game_id: str) -> str | None:

@@ -4,10 +4,10 @@ import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.level.block.Blocks
-import work.lclpnet.ap2.api.game.team.DyeTeamKey
-import work.lclpnet.ap2.api.game.team.TeamKey
 import work.lclpnet.ap2.ext.mc.setBlocks
 import work.lclpnet.ap2.game.team.DyeBlockManager
+import work.lclpnet.ap2.game.team.DyeTeamKey
+import work.lclpnet.ap2.game.team.TeamKey
 import work.lclpnet.ap2.game.team.stainedGlassBlock
 import work.lclpnet.ap2.impl.util.debug.DebugController
 import work.lclpnet.ap2.turf_wars.DEBUG_TURF

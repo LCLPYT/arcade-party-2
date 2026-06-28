@@ -5,17 +5,16 @@ import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerPlayer
 import org.json.JSONObject
 import org.slf4j.Logger
-import work.lclpnet.ap2.api.game.team.DyeTeamKey
-import work.lclpnet.ap2.api.game.team.TeamKey
-import work.lclpnet.ap2.api.game.team.TeamManager
 import work.lclpnet.ap2.game.player.Participants
+import work.lclpnet.ap2.game.team.DyeTeamKey
+import work.lclpnet.ap2.game.team.TeamKey
+import work.lclpnet.ap2.game.team.TeamManager
 import work.lclpnet.ap2.impl.game.team.ApTeams
 import work.lclpnet.ap2.impl.util.StreamUtil
 import work.lclpnet.gaco.core.api.Partial
 import work.lclpnet.gaco.ds.IndexedSet
 import work.lclpnet.game.map.GameMap
 import java.util.*
-import java.util.stream.Stream
 
 class PaintballTeams(
     val teamManager: TeamManager,
@@ -37,7 +36,7 @@ class PaintballTeams(
         var group = 0x2
 
         for (team in teams) {
-            teamsByKey[team.key()] = team
+            teamsByKey[team.key] = team
             teamGroups.put(team, group)
             group = group shl 2
         }
@@ -90,12 +89,10 @@ class PaintballTeams(
     }
 
     fun isMember(pbt: PaintballTeam, player: ServerPlayer): Boolean =
-        teamOf(player).map { it == pbt }.orElse(false) ?: false
+        teamOf(player)?.let { it == pbt } ?: false
 
-    fun teamOf(player: ServerPlayer): Optional<PaintballTeam> =
-        teamManager.getTeam(player)
-            .map { it.key() }
-            .flatMap { Optional.ofNullable(teamsByKey[it]) }
+    fun teamOf(player: ServerPlayer): PaintballTeam? =
+        teamManager.getTeam(player)?.key?.let { teamsByKey[it] }
 
     fun teamBaseAt(pos: BlockPos): Optional<PaintballTeam> {
         for (team in teams) {
@@ -111,7 +108,7 @@ class PaintballTeams(
         teamGroups.getOrDefault(team, 0x1)
 
     fun bulletGroup(player: ServerPlayer): Int {
-        val team = teamOf(player).orElse(null) ?: return 0x1
+        val team = teamOf(player) ?: return 0x1
         val group = playerGroup(team)
 
         return if (group == 0 || group == 1) group else bulletGroup(group)
@@ -120,7 +117,7 @@ class PaintballTeams(
     fun bulletGroup(group: Int): Int = group shl 1
 
     fun bulletCollisionFlags(player: ServerPlayer): Int {
-        val ownTeam = teamOf(player).orElse(null) ?: return 0x1
+        val ownTeam = teamOf(player) ?: return 0x1
 
         var flags = 0x1
 
@@ -137,7 +134,7 @@ class PaintballTeams(
     }
 
     fun playerDeficit(pbt: PaintballTeam): Int {
-        val team = teamManager.getTeam(pbt).orElse(null) ?: return 0
+        val team = teamManager.getTeam(pbt) ?: return 0
 
         val maxPlayerCount = teamManager.teams.stream()
             .mapToInt { it.getParticipatingPlayers(participants).size }
@@ -147,6 +144,4 @@ class PaintballTeams(
     }
 
     override fun iterator(): Iterator<PaintballTeam> = teams.iterator()
-
-    fun stream(): Stream<PaintballTeam> = teams.stream()
 }

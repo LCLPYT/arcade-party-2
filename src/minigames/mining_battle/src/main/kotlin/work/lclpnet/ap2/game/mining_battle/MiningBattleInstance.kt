@@ -10,13 +10,14 @@ import net.minecraft.sounds.SoundSource
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.enchantment.Enchantments
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
+import work.lclpnet.ap2.api.stats.CommonStats
+import work.lclpnet.ap2.ext.mc.setBlock
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
-import work.lclpnet.ap2.game.util.createTimer
-import work.lclpnet.ap2.game.util.finaleCompatibleIntScoreContainer
-import work.lclpnet.ap2.game.util.useDataContainer
-import work.lclpnet.ap2.game.util.useSurvivalMode
+import work.lclpnet.ap2.game.util.*
 import work.lclpnet.ap2.impl.util.ItemHelper
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
 import work.lclpnet.ap2.impl.util.TextUtil
@@ -40,6 +41,9 @@ class MiningBattleInstance(
 
     override val data = useDataContainer(::finaleCompatibleIntScoreContainer)
 
+    private val stats = useFFAStats(winManager, data, CommonStats.IntScore, allMiningBattleStats)
+    private val mbStats = MiningBattleStats(stats)
+
     init {
         useSurvivalMode()
     }
@@ -47,6 +51,7 @@ class MiningBattleInstance(
     override fun prepare() {
         ore.scoreConsumer = ::onGainPoints
         ore.valid = ::canBeMined
+        ore.stats = mbStats
 
         giveItems()
     }
@@ -63,6 +68,8 @@ class MiningBattleInstance(
             if (entity !is ServerPlayer || !participants.isParticipating(entity)
                 || winManager.gameOver || isOutsideMiningArea(pos)) return@registerWith false
 
+            mbStats.blockBroken(entity)
+
             val state = world.getBlockState(pos)
 
             if (ore.isOre(state)) {
@@ -74,7 +81,7 @@ class MiningBattleInstance(
 
         val subject = gameHandle.translations.translateText(gameHandle.gameInfo.taskKey)
 
-        createTimer(subject, DURATION).whenDone(winManager::complete)
+        createTimer(subject, DURATION).whenDone(::afterTimerDone)
     }
 
     private fun onGainPoints(player: ServerPlayer, points: Int) {
@@ -117,5 +124,17 @@ class MiningBattleInstance(
         val state = level.getBlockState(pos)
 
         return material.contains(state) || ore.isOre(state)
+    }
+
+    private fun afterTimerDone() {
+        for (pos in box) {
+            val state = level.getBlockState(pos)
+
+            if (material.contains(state)) {
+                level.setBlock(pos, Blocks.BARRIER, updateFlags = Block.UPDATE_CLIENTS or Block.UPDATE_KNOWN_SHAPE or Block.UPDATE_SUPPRESS_DROPS)
+            }
+        }
+
+        winManager.complete()
     }
 }
