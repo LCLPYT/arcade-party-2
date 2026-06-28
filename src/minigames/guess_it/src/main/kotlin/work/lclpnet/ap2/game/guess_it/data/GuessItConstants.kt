@@ -1,8 +1,6 @@
-package work.lclpnet.ap2.game.guess_it.data;
+package work.lclpnet.ap2.game.guess_it.data
 
-public interface GuessItConstants {
-    String PREPARE_CALCULATE = "calculate";
-    String PREPARE_ESTIMATE = "estimate";
-    String PREPARE_LISTEN = "listen";
-    String PREPARE_GUESS = "guess";
-}
+const val PREPARE_CALCULATE = "calculate"
+const val PREPARE_ESTIMATE = "estimate"
+const val PREPARE_LISTEN = "listen"
+const val PREPARE_GUESS = "guess"

@@ -25,7 +25,6 @@ import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.translate.Translations;
 
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.Random;
 
 import static net.minecraft.ChatFormatting.RED;
@@ -63,7 +62,7 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
 
     @Override
     public String getPreparationKey() {
-        return GuessItConstants.PREPARE_ESTIMATE;
+        return GuessItConstantsKt.PREPARE_ESTIMATE;
     }
 
     @Override
@@ -119,17 +118,18 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
 
         result.grantClosest3Diff(participants.getAsSet(), player -> {
             var optChoice = choices.get(player);
-            if (optChoice.isEmpty()) return OptionalInt.empty();
 
-            var time = MinecraftDayTime.INSTANCE.parseDayTime(optChoice.get());
+            if (optChoice == null) return null;
 
-            if (time == null) return OptionalInt.empty();
+            var time = MinecraftDayTime.INSTANCE.parseDayTime(optChoice);
+
+            if (time == null) return null;
 
             // wrap time at 0 am
             int diff1 = Math.floorMod(correctTime - time, 24000);
             int diff2 = Math.floorMod(time - correctTime, 24000);
 
-            return OptionalInt.of(Math.min(diff1, diff2));
+            return Math.min(diff1, diff2);
         });
 
         animateTime(correctTime, prevTime);

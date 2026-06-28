@@ -1,78 +1,54 @@
-package work.lclpnet.ap2.game.guess_it.data;
+package work.lclpnet.ap2.game.guess_it.data
 
-import net.minecraft.server.level.ServerPlayer;
-import work.lclpnet.kibu.translate.Translations;
+import net.minecraft.server.level.ServerPlayer
+import work.lclpnet.kibu.translate.Translations
+import java.text.NumberFormat
+import java.text.ParseException
+import java.util.*
 
-import java.text.NumberFormat;
-import java.text.ParseException;
-import java.util.*;
+class PlayerChoices(private val translations: Translations) {
+    private val choices = HashMap<UUID, String>()
 
-public class PlayerChoices {
-
-    private final Translations translations;
-    private final Map<UUID, String> choices = new HashMap<>();
-
-    public PlayerChoices(Translations translations) {
-        this.translations = translations;
+    fun set(player: ServerPlayer, choice: String) {
+        choices[player.getUUID()] = choice
     }
 
-    public void set(ServerPlayer player, String choice) {
-        choices.put(player.getUUID(), choice);
+    fun get(player: ServerPlayer): String? =
+        choices[player.getUUID()]
+
+    fun getInt(player: ServerPlayer): Int? {
+        val c = choices[player.getUUID()] ?: return null
+
+        return c.toIntOrNull()
     }
 
-    public Optional<String> get(ServerPlayer player) {
-        String c = choices.get(player.getUUID());
+    fun getFloat(player: ServerPlayer): Float? {
+        val c = choices[player.getUUID()] ?: return null
 
-        return Optional.ofNullable(c);
-    }
+        val locale = translations.getLocale(player)
+        val format = NumberFormat.getInstance(locale)
 
-    public OptionalInt getInt(ServerPlayer player) {
-        String c = choices.get(player.getUUID());
-
-        if (c == null) {
-            return OptionalInt.empty();
-        }
-
-        try {
-            int i = Integer.parseInt(c, 10);
-            return OptionalInt.of(i);
-        } catch (NumberFormatException _) {
-            return OptionalInt.empty();
+        return try {
+            format.parse(c).toFloat()
+        } catch (_: ParseException) {
+            null
         }
     }
 
-    public Optional<Float> getFloat(ServerPlayer player) {
-        String c = choices.get(player.getUUID());
+    fun getOption(player: ServerPlayer): Int? {
+        val input = choices[player.getUUID()]
 
-        if (c == null) {
-            return Optional.empty();
+        if (input == null || input.length != 1) {
+            return null
         }
 
-        Locale locale = translations.getLocale(player);
-        NumberFormat format = NumberFormat.getInstance(locale);
+        val c: Char = input[0]
+        val option = c.code - 'A'.code
 
-        try {
-            float f = format.parse(c).floatValue();
-            return Optional.of(f);
-        } catch (ParseException _) {
-            return Optional.empty();
-        }
+        return option
     }
 
-    public OptionalInt getOption(ServerPlayer player) {
-        String in = choices.get(player.getUUID());
-
-        if (in == null || in.length() != 1) {
-            return OptionalInt.empty();
-        }
-
-        char c = in.charAt(0);
-        int option = c - 'A';
-
-        return OptionalInt.of(option);
-    }
-
-    public void clear() {
-        choices.clear();
+    fun clear() {
+        choices.clear()
     }
 }

@@ -18,7 +18,7 @@ class SetChallengeCommand(
         val root = Commands.literal("ap2:set_challenge")
             .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
 
-        for (challenge in manager.challenges) {
+        for (challenge in manager.getChallenges()) {
             val node = Commands.literal(challenge.id())
                 .executes { ctx -> setChallenge(ctx, challenge, null) }
 

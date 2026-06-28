@@ -1,92 +1,89 @@
-package work.lclpnet.ap2.game.guess_it.data;
+package work.lclpnet.ap2.game.guess_it.data
 
-import it.unimi.dsi.fastutil.Pair;
-import lombok.Getter;
-import net.minecraft.server.level.ServerPlayer;
-import org.jetbrains.annotations.Nullable;
-import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.kibu.translate.text.TranslatedText;
+import net.minecraft.ChatFormatting
+import net.minecraft.server.level.ServerPlayer
+import work.lclpnet.kibu.translate.Translations
+import work.lclpnet.kibu.translate.text.FormatWrapper
+import work.lclpnet.kibu.translate.text.TranslatedText
+import java.util.function.Function
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.function.Function;
+class InputValue {
 
-import static java.lang.Math.clamp;
-import static net.minecraft.ChatFormatting.RED;
-import static net.minecraft.ChatFormatting.YELLOW;
-import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
+    private val rules = ArrayList<InputRule>()
 
-@SuppressWarnings("UnusedReturnValue")
-public class InputValue {
+    var once = false
+        private set
 
-    private final List<InputRule> rules = new ArrayList<>();
-    @Getter
-    private boolean once = false;
-
-    public InputValue validate(InputParser validator, Function<String, TranslatedText> errorMessage) {
-        rules.add(new InputRule(validator, errorMessage));
-        return this;
+    fun validate(validator: InputParser, errorMessage: Function<String, TranslatedText>): InputValue {
+        rules.add(InputRule(validator, errorMessage))
+        return this
     }
 
-    public InputValue validateInt(Translations translations) {
-        return validate(InputValue::intValue, input ->
-                translations.translateText("input.int", styled(input, YELLOW)).withStyle(RED));
+    fun validateInt(translations: Translations): InputValue = validate(
+        { s, _ -> intValue(s) },
+        { input ->
+            translations.translateText(
+                "input.int",
+                FormatWrapper.styled(input, ChatFormatting.YELLOW)
+            ).withStyle(ChatFormatting.RED)
+        }
+    )
+
+    fun validateFloat(translations: Translations, precision: Int): InputValue = validate(
+        { input, player ->
+            floatValue(
+                input,
+                player,
+                translations,
+                precision
+            )
+        },
+        { input ->
+            translations.translateText(
+                "input.float",
+                FormatWrapper.styled(input, ChatFormatting.YELLOW)
+            ).withStyle(ChatFormatting.RED)
+        }
+    )
+
+    fun onlyOnce(): InputValue {
+        once = true
+        return this
     }
 
-    public InputValue validateFloat(Translations translations, int precision) {
-        return validate((input, player) -> floatValue(input, player, translations, precision), input ->
-                translations.translateText("input.float", styled(input, YELLOW)).withStyle(RED));
-    }
+    fun validate(input: String, player: ServerPlayer): Pair<String?, TranslatedText?> {
+        var input = input
 
-    public InputValue onlyOnce() {
-        once = true;
-        return this;
-    }
+        for (rule in rules) {
+            val res = rule.parser.parse(input, player) ?: return input to rule.errorMessage.apply(input)
 
-    public Pair<String, @Nullable TranslatedText> validate(String input, ServerPlayer player) {
-        for (InputRule rule : rules) {
-            var res = rule.parser().parse(input, player);
-
-            if (res == null) {
-                return Pair.of(input, rule.errorMessage.apply(input));
-            }
-
-            input = res;
+            input = res
         }
 
-        return Pair.of(input, null);
+        return input to null
     }
 
-    private static String floatValue(String s, ServerPlayer player, Translations translations, int precision) {
-        s = s.replace(',', '.');
+    fun interface InputParser {
+        fun parse(input: String, player: ServerPlayer): String?
+    }
 
-        float f;
+    private data class InputRule(
+        val parser: InputParser,
+        val errorMessage: Function<String, TranslatedText>
+    )
 
-        try {
-            f = Float.parseFloat(s);
-        } catch (NumberFormatException _) {
-            return null;
+    companion object {
+        private fun floatValue(s: String, player: ServerPlayer, translations: Translations, precision: Int): String? {
+            val s = s.replace(',', '.')
+            val f = s.toFloatOrNull() ?: return null
+
+            val fmt = "%." + Math.clamp(precision.toLong(), 0, 7) + "f"
+            val locale = translations.getLocale(player)
+
+            return String.format(locale, fmt, f)
         }
 
-        String fmt = "%." + clamp(precision, 0, 7) + "f";
-        Locale locale = translations.getLocale(player);
-
-        return String.format(locale, fmt, f);
+        fun intValue(s: String): String? =
+            s.toIntOrNull()?.toString()
     }
-
-    public static @Nullable String intValue(String s, ServerPlayer player) {
-        try {
-            int i = Integer.parseInt(s, 10);
-            return String.valueOf(i);
-        } catch (NumberFormatException _) {
-            return null;
-        }
-    }
-
-    public interface InputParser {
-        @Nullable String parse(String input, ServerPlayer player);
-    }
-
-    private record InputRule(InputParser parser, Function<String, TranslatedText> errorMessage) {}
 }

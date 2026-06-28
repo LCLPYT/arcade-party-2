@@ -49,7 +49,7 @@ public class SoundChallenge implements Challenge {
 
     @Override
     public String getPreparationKey() {
-        return GuessItConstants.PREPARE_LISTEN;
+        return GuessItConstantsKt.PREPARE_LISTEN;
     }
 
     @Override

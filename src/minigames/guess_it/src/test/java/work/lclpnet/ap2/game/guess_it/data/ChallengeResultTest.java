@@ -7,7 +7,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
-import java.util.OptionalInt;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -29,7 +28,7 @@ class ChallengeResultTest {
 
         Map<ServerPlayer, Integer> score = Map.of(a, 5, b, 10, c, 6, d, 1, e, 5);
 
-        res.grantClosest3(score.keySet(), 7, player -> OptionalInt.of(score.get(player)));
+        res.grantClosest3(score.keySet(), 7, score::get);
 
         assertEquals(3, res.getPointsGained(c));
         assertEquals(2, res.getPointsGained(a));

@@ -52,7 +52,7 @@ public class AreaChallenge implements Challenge {
 
     @Override
     public String getPreparationKey() {
-        return GuessItConstants.PREPARE_GUESS;
+        return GuessItConstantsKt.PREPARE_GUESS;
     }
 
     @Override
@@ -96,9 +96,9 @@ public class AreaChallenge implements Challenge {
         for (ServerPlayer player : gameHandle.getParticipants()) {
             var optChoice = choices.getOption(player);
 
-            if (optChoice.isEmpty()) continue;
+            if (optChoice == null) continue;
 
-            int i = optChoice.getAsInt();
+            int i = optChoice;
 
             if (areas.isMaxCount(i)) {
                 result.grant(player, 3);

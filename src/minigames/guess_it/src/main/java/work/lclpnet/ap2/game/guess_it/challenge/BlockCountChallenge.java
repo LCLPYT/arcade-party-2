@@ -66,7 +66,7 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
 
     @Override
     public String getPreparationKey() {
-        return GuessItConstants.PREPARE_ESTIMATE;
+        return GuessItConstantsKt.PREPARE_ESTIMATE;
     }
 
     @Override

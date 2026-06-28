@@ -1,92 +1,90 @@
-package work.lclpnet.ap2.game.guess_it.data;
+package work.lclpnet.ap2.game.guess_it.data
 
-import net.minecraft.server.level.ServerLevel;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.game.MiniGameHandle;
-import work.lclpnet.ap2.game.guess_it.challenge.*;
-import work.lclpnet.ap2.game.guess_it.util.DynamicEntityModifier;
-import work.lclpnet.ap2.game.guess_it.util.GuessItDisplay;
-import work.lclpnet.ap2.impl.util.debug.DebugController;
-import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
-import work.lclpnet.gaco.ds.IndexedSet;
-import work.lclpnet.game.util.WorldModifier;
+import net.minecraft.server.level.ServerLevel
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.guess_it.challenge.*
+import work.lclpnet.ap2.game.guess_it.util.DynamicEntityModifier
+import work.lclpnet.ap2.game.guess_it.util.GuessItDisplay
+import work.lclpnet.ap2.impl.util.debug.DebugController
+import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
+import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape.WithHeight
+import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape.WithRadius
+import work.lclpnet.gaco.ds.IndexedSet
+import work.lclpnet.game.util.WorldModifier
+import java.util.*
 
-import java.util.*;
+class GuessItManager(
+    gameHandle: MiniGameHandle,
+    world: ServerLevel,
+    private val random: Random,
+    blockShape: BlockShape,
+    modifier: WorldModifier,
+    soundSubtitles: SoundSubtitles,
+    debugController: DebugController,
+    mannequinUuids: IndexedSet<UUID>,
+    dynamicEntities: DynamicEntityModifier,
+) {
+    private val challenges = HashMap<String, Challenge>()
+    private val queue = ArrayList<Challenge>()
+    private val priority = ArrayList<ChallengeInit>()
 
-public class GuessItManager {
+    init {
+        require(blockShape is WithRadius) { "Stage with radius is required" }
+        require(blockShape is WithHeight) { "Stage with height is required" }
 
-    private final Random random;
-    private final Map<String, Challenge> challenges = new HashMap<>();
-    private final List<Challenge> queue = new ArrayList<>();
-    private final List<ChallengeInit> priority = new ArrayList<>();
+        val display = GuessItDisplay(world, modifier, blockShape)
 
-    public GuessItManager(MiniGameHandle gameHandle, ServerLevel world, Random random, BlockShape blockShape,
-                          WorldModifier modifier, SoundSubtitles soundSubtitles, DebugController debugController,
-                          IndexedSet<UUID> mannequinUuids, DynamicEntityModifier dynamicEntities) {
-
-        this.random = random;
-
-        var stageRadiusHeight = validateStage(blockShape);
-
-        GuessItDisplay display = new GuessItDisplay(world, modifier, blockShape);
-
-        registerChallenge(new MathsChallenge(gameHandle, random));
-        registerChallenge(new DayTimeChallenge(gameHandle, world, random, blockShape, dynamicEntities));
-        registerChallenge(new MobCountSingleChallenge(gameHandle, world, random, blockShape, modifier, mannequinUuids));
-        registerChallenge(new MobCountMultiChallenge(gameHandle, world, random, blockShape, modifier, mannequinUuids));
-        registerChallenge(new DistinctMobCountChallenge(gameHandle, world, random, blockShape, modifier, mannequinUuids));
-        registerChallenge(new SoundChallenge(gameHandle, world, random, soundSubtitles));
-        registerChallenge(new CakeBitesChallenge(gameHandle, world, random, blockShape, modifier, dynamicEntities));
-        registerChallenge(new PotionTypeChallenge(gameHandle, random, display));
-        registerChallenge(new FoodAmountChallenge(gameHandle, random, display));
-        registerChallenge(new ArmorTrimChallenge(gameHandle, world, random, blockShape, modifier));
-        registerChallenge(new BlockCountChallenge<>(gameHandle, random, stageRadiusHeight, modifier, debugController));
-        registerChallenge(new RecordChallenge(gameHandle, world, random, display));
-        registerChallenge(new AreaChallenge(gameHandle, world, random, blockShape, modifier));
-        registerChallenge(new MinecartChallenge(gameHandle, world, random, blockShape, modifier));
+        registerChallenge(MathsChallenge(gameHandle, random))
+        registerChallenge(DayTimeChallenge(gameHandle, world, random, blockShape, dynamicEntities))
+        registerChallenge(MobCountSingleChallenge(gameHandle, world, random, blockShape, modifier, mannequinUuids))
+        registerChallenge(MobCountMultiChallenge(gameHandle, world, random, blockShape, modifier, mannequinUuids))
+        registerChallenge(DistinctMobCountChallenge(gameHandle, world, random, blockShape, modifier, mannequinUuids))
+        registerChallenge(SoundChallenge(gameHandle, world, random, soundSubtitles))
+        registerChallenge(CakeBitesChallenge(gameHandle, world, random, blockShape, modifier, dynamicEntities))
+        registerChallenge(PotionTypeChallenge(gameHandle, random, display))
+        registerChallenge(FoodAmountChallenge(gameHandle, random, display))
+        registerChallenge(ArmorTrimChallenge(gameHandle, world, random, blockShape, modifier))
+        registerChallenge(
+            BlockCountChallenge(
+                gameHandle,
+                random,
+                blockShape,
+                modifier,
+                debugController
+            )
+        )
+        registerChallenge(RecordChallenge(gameHandle, world, random, display))
+        registerChallenge(AreaChallenge(gameHandle, world, random, blockShape, modifier))
+        registerChallenge(MinecartChallenge(gameHandle, world, random, blockShape, modifier))
     }
 
-    private void registerChallenge(Challenge challenge) {
-        if (challenges.containsKey(challenge.id())) {
-            throw new IllegalStateException("Duplicate challenge id " + challenge.id());
-        }
+    private fun registerChallenge(challenge: Challenge) {
+        check(!challenges.containsKey(challenge.id())) { "Duplicate challenge id " + challenge.id() }
 
-        challenges.put(challenge.id(), challenge);
+        challenges[challenge.id()] = challenge
     }
 
-    @SuppressWarnings("unchecked")
-    private <S extends BlockShape & BlockShape.WithRadius & BlockShape.WithHeight> S validateStage(BlockShape blockShape) {
-        if (!(blockShape instanceof BlockShape.WithRadius)) throw new IllegalArgumentException("Stage with radius is required");
-        if (!(blockShape instanceof BlockShape.WithHeight)) throw new IllegalArgumentException("Stage with height is required");
-        return (S) blockShape;
-    }
-
-    @NotNull
-    public ChallengeInit nextChallenge() {
+    fun nextChallenge(): ChallengeInit {
         if (!priority.isEmpty()) {
-            return priority.removeFirst();
+            return priority.removeFirst()
         }
 
         if (queue.isEmpty()) {
-            if (challenges.isEmpty()) {
-                throw new IllegalStateException("No challenges registered");
-            }
+            check(!challenges.isEmpty()) { "No challenges registered" }
 
-            queue.addAll(challenges.values());
-            Collections.shuffle(queue, random);
+            queue.addAll(challenges.values)
+            queue.shuffle(random)
         }
 
-        return new ChallengeInit(queue.removeFirst(), null);
+        return ChallengeInit(queue.removeFirst(), null)
     }
 
-    public void pushChallenge(Challenge challenge, @Nullable Object init) {
-        priority.add(new ChallengeInit(challenge, init));
+    fun pushChallenge(challenge: Challenge, init: Any?) {
+        priority.add(ChallengeInit(challenge, init))
     }
 
-    public Collection<Challenge> getChallenges() {
-        return new ArrayList<>(challenges.values());
-    }
+    fun getChallenges(): Collection<Challenge> =
+        challenges.values.toList()
 
-    public record ChallengeInit(Challenge challenge, @Nullable Object init) {}
+    data class ChallengeInit(val challenge: Challenge, val init: Any?)
 }

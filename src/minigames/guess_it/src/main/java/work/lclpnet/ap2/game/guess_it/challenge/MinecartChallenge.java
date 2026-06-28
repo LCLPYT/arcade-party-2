@@ -70,7 +70,7 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
 
     @Override
     public String getPreparationKey() {
-        return GuessItConstants.PREPARE_ESTIMATE;
+        return GuessItConstantsKt.PREPARE_ESTIMATE;
     }
 
     @Override
@@ -91,10 +91,9 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
     @Override
     public void evaluate(PlayerChoices choices, ChallengeResult result) {
         result.setCorrectAnswer(LocalizedFormat.format("%.3f", finalTime / 1000f));
-        result.grantClosest3(gameHandle.getParticipants().getAsSet(), finalTime, player -> choices.getFloat(player)
+        result.grantClosest3(gameHandle.getParticipants().getAsSet(), finalTime, player -> Optional.ofNullable(choices.getFloat(player))
                 .map(f -> Math.round(f * 1000))
-                .map(OptionalInt::of)
-                .orElseGet(OptionalInt::empty));
+                .orElse(null));
     }
 
     @Override

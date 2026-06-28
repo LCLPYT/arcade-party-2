@@ -1,135 +1,135 @@
-package work.lclpnet.ap2.game.guess_it.data;
+package work.lclpnet.ap2.game.guess_it.data
 
-import it.unimi.dsi.fastutil.Pair;
-import net.minecraft.nbt.StringTag;
-import net.minecraft.network.chat.ChatType;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.PlayerChatMessage;
-import net.minecraft.resources.Identifier;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
-import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.game.player.Participants;
-import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
-import work.lclpnet.kibu.hook.HookRegistrar;
-import work.lclpnet.kibu.hook.ServerMessageHooks;
-import work.lclpnet.kibu.hook.network.CustomClickActionCallback;
-import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.kibu.translate.text.TranslatedText;
+import net.minecraft.ChatFormatting
+import net.minecraft.nbt.StringTag
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.PlayerChatMessage
+import net.minecraft.resources.Identifier
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.sounds.SoundSource
+import work.lclpnet.ap2.ext.mc.playNotifySound
+import work.lclpnet.ap2.game.player.Participants
+import work.lclpnet.kibu.hook.HookRegistrar
+import work.lclpnet.kibu.hook.ServerMessageHooks
+import work.lclpnet.kibu.hook.network.CustomClickActionCallback
+import work.lclpnet.kibu.translate.Translations
+import work.lclpnet.kibu.translate.text.FormatWrapper
+import work.lclpnet.kibu.translate.text.TranslatedText
+import java.util.*
 
-import static net.minecraft.ChatFormatting.*;
-import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
+class InputManager(
+    private val choices: PlayerChoices,
+    private val translations: Translations,
+    private val participants: Participants,
+    private val messenger: ChallengeMessenger,
+    private val answerId: Identifier
+) : InputInterface {
+    private var inputValue: InputValue? = null
+    private var optionValue: OptionValue? = null
+    private var locked = false
 
-public class InputManager implements InputInterface {
+    fun init(hooks: HookRegistrar) {
+        ServerMessageHooks.ALLOW_CHAT_MESSAGE.registerWith(hooks) { message, sender, _ ->
+            onChat(message, sender)
+            false
+        }
 
-    private final PlayerChoices choices;
-    private final Translations translations;
-    private final Participants participants;
-    private final ChallengeMessenger messenger;
-    private final Identifier answerId;
-    private InputValue inputValue = null;
-    private OptionValue optionValue = null;
-    private boolean locked = false;
+        CustomClickActionCallback.HOOK.registerWith(hooks) { player, id, payload ->
+            if (id != answerId) return@registerWith
 
-    public InputManager(PlayerChoices choices, Translations translations, Participants participants, ChallengeMessenger messenger, Identifier answerId) {
-        this.choices = choices;
-        this.translations = translations;
-        this.participants = participants;
-        this.messenger = messenger;
-        this.answerId = answerId;
-    }
+            val payload = payload.orElse(null)
 
-    public void init(HookRegistrar hooks) {
-        ServerMessageHooks.ALLOW_CHAT_MESSAGE.registerWith(hooks, (message, sender, params) -> {
-            onChat(message, sender, params);
-            return false;
-        });
-
-        CustomClickActionCallback.HOOK.registerWith(hooks, (player, id, payload) -> {
-            if (!id.equals(answerId)) return;
-
-            if (payload.orElse(null) instanceof StringTag(String value)) {
-                input(player, value);
+            if (payload is StringTag) {
+                input(player, payload.value)
             }
-        });
+        }
     }
 
-    private void onChat(PlayerChatMessage signedMessage, ServerPlayer player, ChatType.Bound parameters) {
-        String input = signedMessage.signedBody().content();
-        input(player, input);
+    private fun onChat(signedMessage: PlayerChatMessage, player: ServerPlayer) {
+        val input = signedMessage.signedBody().content()
+
+        input(player, input)
     }
 
-    public void input(ServerPlayer player, String input) {
-        if (!participants.isParticipating(player) || locked) return;
+    fun input(player: ServerPlayer, input: String) {
+        if (!participants.isParticipating(player) || locked) return
 
-        Pair<String, @Nullable TranslatedText> res;
+        val res: Pair<String?, TranslatedText?>
+
+        val inputValue = this.inputValue
 
         if (inputValue != null) {
-            if (inputValue.isOnce() && hasAnswered(player)) {
-                var msg = translations.translateText(player, "already_answered").withStyle(RED);
-                player.sendSystemMessage(msg);
-                ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.BLAZE_HURT, SoundSource.PLAYERS, 0.5f, 0f);
-                return;
+            if (inputValue.once && hasAnswered(player)) {
+                val msg = translations.translateText(player, "already_answered").withStyle(ChatFormatting.RED)
+                player.sendSystemMessage(msg)
+                player.playNotifySound(SoundEvents.BLAZE_HURT, SoundSource.PLAYERS, 0.5f, 0f)
+                return
             }
 
-            res = inputValue.validate(input, player);
+            res = inputValue.validate(input, player)
         } else if (optionValue != null) {
-            res = optionValue.validate(input);
+            res = optionValue!!.validate(input)
         } else {
-            return;
+            return
         }
 
-        TranslatedText err = res.right();
+        val (transformedInput, err) = res
 
         if (err != null) {
-            player.sendSystemMessage(err.translateFor(player));
-            return;
+            player.sendSystemMessage(err.translateFor(player))
+            return
         }
 
-        String transformedInput = res.left();
-        onAnswer(player, transformedInput);
+        if (transformedInput != null) {
+            onAnswer(player, transformedInput)
+        }
     }
 
-    private void onAnswer(ServerPlayer player, String input) {
-        choices.set(player, input);
+    private fun onAnswer(player: ServerPlayer, input: String) {
+        choices.set(player, input)
 
-        var msg = translations.translateText(player, "guessed", styled(input, YELLOW)).withStyle(GREEN);
-        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 0.75f, 1.5f);
+        val msg = translations.translateText(
+            player,
+            "guessed",
+            FormatWrapper.styled(input, ChatFormatting.YELLOW)
+        ).withStyle(ChatFormatting.GREEN)
 
-        player.sendSystemMessage(msg);
+        player.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 0.75f, 1.5f)
+
+        player.sendSystemMessage(msg)
     }
 
-    private boolean hasAnswered(ServerPlayer player) {
-        return choices.getInt(player).isPresent();
+    private fun hasAnswered(player: ServerPlayer): Boolean =
+        choices.getInt(player) != null
+
+    override fun expectInput(): InputValue {
+        reset()
+
+        val inputValue = InputValue()
+
+        this.inputValue = inputValue
+
+        return inputValue
     }
 
-    @Override
-    public InputValue expectInput() {
-        reset();
+    override fun expectSelection(vararg options: Component) {
+        reset()
 
-        inputValue = new InputValue();
+        messenger.options(*options)
 
-        return inputValue;
+        optionValue = OptionValue(translations, options.size)
     }
 
-    @Override
-    public void expectSelection(Component... options) {
-        reset();
-        messenger.options(options);
-
-        optionValue = new OptionValue(translations, options.length);
+    fun setLocked(locked: Boolean) {
+        this.locked = locked
     }
 
-    public void setLocked(boolean locked) {
-        this.locked = locked;
-    }
-
-    public void reset() {
-        inputValue = null;
-        optionValue = null;
-        choices.clear();
-        locked = false;
+    fun reset() {
+        inputValue = null
+        optionValue = null
+        choices.clear()
+        locked = false
     }
 }
 

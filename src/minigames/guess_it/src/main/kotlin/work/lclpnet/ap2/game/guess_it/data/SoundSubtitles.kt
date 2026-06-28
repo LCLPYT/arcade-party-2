@@ -1,78 +1,65 @@
-package work.lclpnet.ap2.game.guess_it.data;
+package work.lclpnet.ap2.game.guess_it.data
 
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
-import net.minecraft.sounds.SoundEvent;
-import org.json.JSONObject;
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.Identifier
+import net.minecraft.sounds.SoundEvent
+import org.json.JSONObject
+import java.io.FileNotFoundException
+import java.io.IOException
+import java.nio.charset.StandardCharsets
+import java.util.concurrent.CompletableFuture
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
+class SoundSubtitles(val soundEvents: Set<SoundEvent>) {
 
-public class SoundSubtitles {
-
-    private final Set<SoundEvent> soundEvents;
-
-    public SoundSubtitles(Set<SoundEvent> soundEvents) {
-        this.soundEvents = soundEvents;
-    }
-
-    public static CompletableFuture<SoundSubtitles> load() {
-        return CompletableFuture.supplyAsync(() -> {
+    companion object {
+        fun load(): CompletableFuture<SoundSubtitles> = CompletableFuture.supplyAsync {
             try {
-                return loadSync();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
-    }
-
-    private static SoundSubtitles loadSync() throws IOException {
-        String content;
-
-        try (InputStream in = SoundSubtitles.class.getResourceAsStream("/assets/minecraft/lang/en_us.json")) {
-            if (in == null) {
-                throw new FileNotFoundException("Cannot find language file");
-            }
-
-            content = new String(in.readAllBytes(), StandardCharsets.UTF_8);
-        }
-
-        JSONObject json = new JSONObject(content);
-
-        var sounds = loadSoundsFromJson(json);
-
-        return new SoundSubtitles(sounds);
-    }
-
-    private static Set<SoundEvent> loadSoundsFromJson(JSONObject json) {
-        Set<SoundEvent> soundEvents = new HashSet<>();
-        var it = json.keys();
-
-        String prefix = "subtitles.";
-
-        while (it.hasNext()) {
-            String key = it.next();
-
-            if (!key.startsWith(prefix)) continue;
-
-            String rest = key.substring(prefix.length());
-            Identifier id = Identifier.parse(rest);
-            SoundEvent soundEvent = BuiltInRegistries.SOUND_EVENT.getValue(id);
-
-            if (soundEvent != null) {
-                soundEvents.add(soundEvent);
+                return@supplyAsync loadSync()
+            } catch (e: IOException) {
+                throw RuntimeException(e)
             }
         }
 
-        return soundEvents;
-    }
+        @Throws(IOException::class)
+        private fun loadSync(): SoundSubtitles {
+            val content: String?
 
-    public Set<SoundEvent> getSoundEvents() {
-        return soundEvents;
+            SoundSubtitles::class.java.getResourceAsStream("/assets/minecraft/lang/en_us.json").use { input ->
+                if (input == null) {
+                    throw FileNotFoundException("Cannot find language file")
+                }
+
+                content = String(input.readAllBytes(), StandardCharsets.UTF_8)
+            }
+
+            val json = JSONObject(content)
+
+            val sounds = loadSoundsFromJson(json)
+
+            return SoundSubtitles(sounds)
+        }
+
+        private fun loadSoundsFromJson(json: JSONObject): Set<SoundEvent> {
+            val soundEvents = HashSet<SoundEvent>()
+            val it = json.keys()
+
+            val prefix = "subtitles."
+
+            while (it.hasNext()) {
+                val key = it.next()
+
+                if (!key.startsWith(prefix)) continue
+
+                val rest: String = key.substring(prefix.length)
+                val id = Identifier.parse(rest)
+                val soundEvent = BuiltInRegistries.SOUND_EVENT.getValue(id)
+
+                if (soundEvent != null) {
+                    soundEvents.add(soundEvent)
+                }
+            }
+
+            return soundEvents
+        }
     }
 }

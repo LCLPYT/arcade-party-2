@@ -32,7 +32,7 @@ public class MathsChallenge implements Challenge {
 
     @Override
     public String getPreparationKey() {
-        return GuessItConstants.PREPARE_CALCULATE;
+        return GuessItConstantsKt.PREPARE_CALCULATE;
     }
 
     @Override

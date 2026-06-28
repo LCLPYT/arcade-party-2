@@ -12,7 +12,7 @@ import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.LocalizedFormat;
 
-import java.util.OptionalInt;
+import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -37,7 +37,7 @@ public class FoodAmountChallenge implements Challenge {
 
     @Override
     public String getPreparationKey() {
-        return GuessItConstants.PREPARE_GUESS;
+        return GuessItConstantsKt.PREPARE_GUESS;
     }
 
     @Override
@@ -68,10 +68,9 @@ public class FoodAmountChallenge implements Challenge {
     @Override
     public void evaluate(PlayerChoices choices, ChallengeResult result) {
         result.setCorrectAnswer(LocalizedFormat.format("%.1f", amount * 0.5));
-        result.grantClosest3(gameHandle.getParticipants().getAsSet(), amount, player -> choices.getFloat(player)
+        result.grantClosest3(gameHandle.getParticipants().getAsSet(), amount, player -> Optional.ofNullable(choices.getFloat(player))
                 .map(f -> Math.round(f * 2))
-                .map(OptionalInt::of)
-                .orElseGet(OptionalInt::empty));
+                .orElse(null));
     }
 
     private Item selectRandomFood() {

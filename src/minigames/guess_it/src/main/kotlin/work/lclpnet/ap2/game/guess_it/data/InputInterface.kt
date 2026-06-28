@@ -1,10 +1,10 @@
-package work.lclpnet.ap2.game.guess_it.data;
+package work.lclpnet.ap2.game.guess_it.data
 
-import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Component
 
-public interface InputInterface {
+interface InputInterface {
 
-    InputValue expectInput();
+    fun expectInput(): InputValue
 
-    void expectSelection(Component... options);
+    fun expectSelection(vararg options: Component)
 }

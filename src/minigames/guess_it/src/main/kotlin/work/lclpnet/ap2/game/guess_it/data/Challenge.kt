@@ -1,58 +1,62 @@
-package work.lclpnet.ap2.game.guess_it.data;
+package work.lclpnet.ap2.game.guess_it.data
 
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.mojang.brigadier.context.CommandContext;
-import com.mojang.math.Transformation;
-import net.minecraft.ChatFormatting;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.Brightness;
-import net.minecraft.world.entity.Display;
-import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
-import work.lclpnet.ap2.game.guess_it.util.DynamicEntityModifier;
-import work.lclpnet.gaco.dynamic_entities.TranslatedTextDisplay;
-import work.lclpnet.kibu.translate.Translations;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder
+import com.mojang.brigadier.context.CommandContext
+import com.mojang.math.Transformation
+import net.minecraft.ChatFormatting
+import net.minecraft.commands.CommandSourceStack
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.util.Brightness
+import net.minecraft.world.entity.Display
+import net.minecraft.world.phys.Vec3
+import org.joml.Matrix4f
+import work.lclpnet.ap2.game.guess_it.util.DynamicEntityModifier
+import work.lclpnet.gaco.dynamic_entities.TranslatedTextDisplay
+import work.lclpnet.kibu.translate.Translations
 
-public interface Challenge {
+interface Challenge {
+    fun id(): String
 
-    String id();
+    val preparationKey: String
 
-    String getPreparationKey();
+    val durationTicks: Int
 
-    int getDurationTicks();
+    fun begin(input: InputInterface, messenger: ChallengeMessenger)
 
-    void begin(InputInterface input, ChallengeMessenger messenger);
+    fun evaluate(choices: PlayerChoices, result: ChallengeResult)
 
-    void evaluate(PlayerChoices choices, ChallengeResult result);
+    fun destroy() {}
 
-    default void destroy() {}
+    fun prepare() {}
 
-    default void prepare() {}
-
-    default boolean shouldPlayBeginSound() {
-        return true;
+    fun shouldPlayBeginSound(): Boolean {
+        return true
     }
 
-    default void init(@Nullable Object init) {}
+    fun init(init: Any?) {}
 
-    default void provideInitCommand(LiteralArgumentBuilder<CommandSourceStack> node, Initializer init) {}
+    fun provideInitCommand(node: LiteralArgumentBuilder<CommandSourceStack>, init: Initializer) {}
 
-    default void addHint(DynamicEntityModifier dynamicEntities, ServerLevel world, Translations translations, Vec3 pos, String key) {
-        var label = new TranslatedTextDisplay(world, translations);
+    fun addHint(
+        dynamicEntities: DynamicEntityModifier,
+        world: ServerLevel,
+        translations: Translations,
+        pos: Vec3,
+        key: String
+    ) {
+        val label = TranslatedTextDisplay(world, translations)
 
-        var controller = label.controller();
-        controller.setBillboardMode(Display.BillboardConstraints.CENTER);
-        controller.setTransformation(new Transformation(new Matrix4f().scale(3)));
-        controller.setPosition(pos);
-        controller.setText(translations.translateText(key).withStyle(ChatFormatting.GREEN));
-        controller.setBrightness(new Brightness(15, 15));
+        val controller = label.controller()
+        controller.billboardMode = Display.BillboardConstraints.CENTER
+        controller.transformation = Transformation(Matrix4f().scale(3f))
+        controller.position = pos
+        controller.text = translations.translateText(key).withStyle(ChatFormatting.GREEN)
+        controller.brightness = Brightness(15, 15)
 
-        dynamicEntities.spawn(label);
+        dynamicEntities.spawn(label)
     }
 
-    interface Initializer {
-        void accept(CommandContext<CommandSourceStack> ctx, Object config);
+    fun interface Initializer {
+        fun accept(ctx: CommandContext<CommandSourceStack>, config: Any?)
     }
 }

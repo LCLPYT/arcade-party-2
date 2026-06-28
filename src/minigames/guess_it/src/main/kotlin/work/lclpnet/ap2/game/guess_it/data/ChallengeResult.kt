@@ -1,96 +1,83 @@
-package work.lclpnet.ap2.game.guess_it.data;
+package work.lclpnet.ap2.game.guess_it.data
 
-import net.minecraft.server.level.ServerPlayer;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.server.level.ServerPlayer
+import java.util.*
+import kotlin.math.abs
 
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+class ChallengeResult {
+    private val pointsGained = mutableMapOf<UUID, Int>()
+    var correctAnswer: Any? = null
 
-public class ChallengeResult {
-
-    private final Map<UUID, Integer> pointsGained = new HashMap<>();
-    private Object correctAnswer = null;
-
-    public void grant(ServerPlayer player, int points) {
-        pointsGained.put(player.getUUID(), points);
+    fun grant(player: ServerPlayer, points: Int) {
+        pointsGained[player.getUUID()] = points
     }
 
-    public int getPointsGained(ServerPlayer player) {
-        return pointsGained.getOrDefault(player.getUUID(), 0);
+    fun getPointsGained(player: ServerPlayer): Int =
+        pointsGained.getOrDefault(player.getUUID(), 0)
+
+    fun clear() {
+        pointsGained.clear()
+        this.correctAnswer = null
     }
 
-    public void clear() {
-        pointsGained.clear();
-        this.correctAnswer = null;
-    }
-
-    public void setCorrectAnswer(Object correctAnswer) {
-        this.correctAnswer = correctAnswer;
-    }
-
-    @Nullable
-    public Object getCorrectAnswer() {
-        return correctAnswer;
-    }
-
-    public void grantIfCorrect(Iterable<ServerPlayer> participants, int correctResult,
-                               Function<ServerPlayer, OptionalInt> choiceFunction) {
-        for (ServerPlayer player : participants) {
-            var optChoice = choiceFunction.apply(player);
-
-            if (optChoice.isEmpty()) continue;
-
-            int i = optChoice.getAsInt();
+    fun grantIfCorrect(
+        participants: Iterable<ServerPlayer>,
+        correctResult: Int,
+        choiceFunction: (ServerPlayer) -> Int?
+    ) {
+        for (player in participants) {
+            val i = choiceFunction(player) ?: continue
 
             // 3 points, if the answer is correct
             if (i == correctResult) {
-                grant(player, 3);
+                grant(player, 3)
             }
         }
     }
 
-    public void grantClosest3(Collection<ServerPlayer> participants, int correctResult,
-                              Function<ServerPlayer, OptionalInt> valueFunction) {
-        grantClosest3Diff(participants, player -> {
-            var value = valueFunction.apply(player);
+    fun grantClosest3(
+        participants: Collection<ServerPlayer>,
+        correctResult: Int,
+        valueFunction: (ServerPlayer) -> Int?
+    ) {
+        grantClosest3Diff(participants) { player ->
+            val value = valueFunction(player) ?: return@grantClosest3Diff null
 
-            if (value.isEmpty()) return OptionalInt.empty();
-
-            return OptionalInt.of(Math.abs(correctResult - value.getAsInt()));
-        });
+            abs(correctResult - value)
+        }
     }
 
-    public void grantClosest3Diff(Collection<ServerPlayer> participants, Function<ServerPlayer, OptionalInt> diffFunction) {
-        Map<ServerPlayer, Integer> absPlayerDiff = new HashMap<>(participants.size());
+    fun grantClosest3Diff(
+        participants: Collection<ServerPlayer>,
+        diffFunction: (ServerPlayer) -> Int?
+    ) {
+        val absPlayerDiff = HashMap<ServerPlayer, Int>(participants.size)
 
         // collect absolute difference to correct result for every player
-        for (ServerPlayer player : participants) {
-            OptionalInt diff = diffFunction.apply(player);
+        for (player in participants) {
+            val diff = diffFunction(player) ?: continue
 
-            if (diff.isPresent()) {
-                absPlayerDiff.put(player, diff.getAsInt());
-            }
+            absPlayerDiff[player] = diff
         }
 
         // group by difference, sort by least off, select best 3
-        var ordered = absPlayerDiff.entrySet().stream()
-                .collect(Collectors.groupingBy(Map.Entry::getValue))
-                .entrySet().stream()
-                .sorted(Comparator.comparingInt(Map.Entry::getKey))
-                .limit(3)
-                .toList();
+        val ordered = absPlayerDiff.entries
+            .groupBy { it.value }
+            .entries
+            .sortedBy { it.key }
+            .take(3)
+            .toList()
 
         // grant best 3 groups points based on their collective difference
-        for (int i = 0; i < ordered.size(); i++) {
-            var playerEntries = ordered.get(i).getValue();
+        for (i in ordered.indices) {
+            val playerEntries = ordered[i].value
 
-            int points = 3 - i;
+            val points = 3 - i
 
-            for (var playerEntry : playerEntries) {
-                ServerPlayer player = playerEntry.getKey();
+            for (playerEntry in playerEntries) {
+                val player = playerEntry.key
 
-                grant(player, points);
+                grant(player, points)
             }
         }
     }

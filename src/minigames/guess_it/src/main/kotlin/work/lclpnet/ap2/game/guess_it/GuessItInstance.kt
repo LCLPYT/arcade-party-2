@@ -195,7 +195,7 @@ class GuessItInstance(
         val world = level
         val translations = gameHandle.translations
 
-        val prepareMsg = translations.translateText("prepare." + challenge!!.getPreparationKey())
+        val prepareMsg = translations.translateText("prepare." + challenge!!.preparationKey)
             .withStyle(ChatFormatting.DARK_GREEN, ChatFormatting.BOLD)
 
         challenge.init(challengeInit.init)
@@ -257,7 +257,7 @@ class GuessItInstance(
 
         messenger.send()
 
-        val durationTicks = challenge.getDurationTicks()
+        val durationTicks = challenge.durationTicks
 
         val timer = BossBarTimer.builder(translations, translations.translateText("answer"))
             .withAlertSound(true)

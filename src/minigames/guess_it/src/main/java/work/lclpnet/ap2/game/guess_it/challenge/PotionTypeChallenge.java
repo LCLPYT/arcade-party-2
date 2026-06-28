@@ -47,7 +47,7 @@ public class PotionTypeChallenge implements Challenge {
 
     @Override
     public String getPreparationKey() {
-        return GuessItConstants.PREPARE_GUESS;
+        return GuessItConstantsKt.PREPARE_GUESS;
     }
 
     @Override

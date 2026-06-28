@@ -1,78 +1,67 @@
-package work.lclpnet.ap2.game.guess_it.data;
+package work.lclpnet.ap2.game.guess_it.data
 
-import it.unimi.dsi.fastutil.Pair;
-import org.jetbrains.annotations.Nullable;
-import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.kibu.translate.text.TranslatedText;
+import net.minecraft.ChatFormatting
+import work.lclpnet.kibu.translate.Translations
+import work.lclpnet.kibu.translate.text.FormatWrapper
+import work.lclpnet.kibu.translate.text.TranslatedText
 
-import java.util.Optional;
+class OptionValue(translations: Translations, options: Int) {
 
-import static net.minecraft.ChatFormatting.RED;
-import static net.minecraft.ChatFormatting.YELLOW;
-import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
+    private val translations: Translations
+    private val options: Int
 
-public class OptionValue {
+    init {
+        require(options >= 2) { "There must be at least two options" }
 
-    private final Translations translations;
-    private final int options;
-
-    public OptionValue(Translations translations, int options) {
-        if (options < 2) {
-            throw new IllegalArgumentException("There must be at least two options");
-        }
-
-        this.translations = translations;
-        this.options = options;
+        this.translations = translations
+        this.options = options
     }
 
-    public Pair<String, @Nullable TranslatedText> validate(String input) {
-        var option = parseOption(input);
+    fun validate(input: String): Pair<String?, TranslatedText?> {
+        val option = parseOption(input)
 
-        if (option.isEmpty()) {
-            char from = 'A';
-            char to = (char) ('A' + options - 1);
+        if (option == null) {
+            val from = 'A'
+            val to = ('A'.code + options - 1).toChar()
 
-            var err = translations.translateText("input.option",
-                            styled(input, YELLOW), styled(from, YELLOW), styled(to, YELLOW))
-                    .withStyle(RED);
+            val err = translations.translateText(
+                "input.option",
+                FormatWrapper.styled(input, ChatFormatting.YELLOW),
+                FormatWrapper.styled(from, ChatFormatting.YELLOW),
+                FormatWrapper.styled(to, ChatFormatting.YELLOW)
+            ).withStyle(ChatFormatting.RED)
 
-            return Pair.of(null, err);
+            return null to err
         }
 
-        return Pair.of(option.get(), null);
+        return option to null
     }
 
-    private Optional<String> parseOption(String input) {
-        input = input.trim();
+    private fun parseOption(input: String): String? {
+        var input = input.trim()
 
         if (input.endsWith(")")) {
-            input = input.substring(0, input.length() - 1);
+            input = input.substring(0, input.length - 1)
         }
 
-        if (input.length() == 1) {
-            char c = Character.toUpperCase(input.charAt(0));
-            int index = c - 'A';
+        if (input.length == 1) {
+            val c: Char = Character.toUpperCase(input[0])
+            val index = c.code - 'A'.code
 
-            if (index >= 0 && index < options) {
-                return Optional.of(String.valueOf(c));
+            if (index in 0..<options) {
+                return c.toString()
             }
         }
 
-        int num;
+        var num = input.toIntOrNull() ?: return null
 
-        try {
-            num = Integer.parseInt(input);
-        } catch (NumberFormatException _) {
-            return Optional.empty();
+        num -= 1
+
+        if (num in 0..<options) {
+            val letter = ('A'.code + num).toChar()
+            return letter.toString()
         }
 
-        num -= 1;
-
-        if (num >= 0 && num < options) {
-            char letter = (char) ('A' + num);
-            return Optional.of(String.valueOf(letter));
-        }
-
-        return Optional.empty();
+        return null
     }
 }
