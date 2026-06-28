@@ -24,7 +24,7 @@ MAPLESS_FACTORY_TEMPLATES = {
 
 
 def create_instance_class(code_dir: Path, inputs: Inputs):
-    package_path = f"work/lclpnet/ap2/game/{inputs.game_id}"
+    package_path = f"work/lclpnet/ap2/{inputs.game_id}"
     package = package_path.replace('/', '.')
     instance_class_name = f"{pascal_case(inputs.game_id)}Instance"
     class_dir = code_dir / package_path

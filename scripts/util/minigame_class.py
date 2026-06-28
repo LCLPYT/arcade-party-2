@@ -7,7 +7,7 @@ from util.inputs import Inputs
 def create_minigame_class(code_dir: Path, inputs: Inputs):
     class_name = f"{pascal_case(inputs.game_id)}MiniGame"
     instance_class_name = f"{pascal_case(inputs.game_id)}Instance"
-    package_path = f"work/lclpnet/ap2/game/{inputs.game_id}"
+    package_path = f"work/lclpnet/ap2/{inputs.game_id}"
     class_dir = code_dir / package_path
 
     class_dir.mkdir(parents=True, exist_ok=True)
