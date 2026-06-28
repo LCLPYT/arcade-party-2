@@ -1,18 +1,15 @@
-package work.lclpnet.ap2.game.guess_it.math;
+package work.lclpnet.ap2.game.guess_it.math
 
-import org.jetbrains.annotations.Nullable;
+interface Expression {
+    fun evaluate(): Int
 
-public interface Expression {
+    fun precedence(): Int
 
-    int evaluate();
+    fun commutative(): Boolean
 
-    int precedence();
+    fun stringify(parent: Expression?, pos: Int): String
 
-    boolean commutative();
-
-    String stringify(@Nullable Expression parent, int pos);
-
-    default String stringify() {
-        return stringify(null, -1);
+    fun stringify(): String {
+        return stringify(null, -1)
     }
 }

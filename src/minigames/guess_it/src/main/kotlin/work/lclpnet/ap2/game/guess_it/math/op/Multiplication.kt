@@ -1,32 +1,19 @@
-package work.lclpnet.ap2.game.guess_it.math.op;
+package work.lclpnet.ap2.game.guess_it.math.op
 
-import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.game.guess_it.math.Expression;
+import work.lclpnet.ap2.game.guess_it.math.Expression
+import work.lclpnet.ap2.game.guess_it.math.ExpressionUtils
 
-import static work.lclpnet.ap2.game.guess_it.math.ExpressionUtils.addParentheses;
-import static work.lclpnet.ap2.game.guess_it.math.ExpressionUtils.join;
+data class Multiplication(val left: Expression, val right: Expression) : Expression {
 
-public record Multiplication(Expression left, Expression right) implements Expression {
+    override fun evaluate(): Int = left.evaluate() * right.evaluate()
 
-    @Override
-    public int evaluate() {
-        return left.evaluate() * right.evaluate();
-    }
+    override fun precedence(): Int = 300
 
-    @Override
-    public int precedence() {
-        return 300;
-    }
+    override fun commutative(): Boolean = true
 
-    @Override
-    public boolean commutative() {
-        return true;
-    }
+    override fun stringify(parent: Expression?, pos: Int): String {
+        val inner = ExpressionUtils.join(this, left, right, '×')
 
-    @Override
-    public String stringify(@Nullable Expression parent, int pos) {
-        String inner = join(this, left, right, '×');
-
-        return addParentheses(inner, this, parent, pos);
+        return ExpressionUtils.addParentheses(inner, this, parent, pos)
     }
 }

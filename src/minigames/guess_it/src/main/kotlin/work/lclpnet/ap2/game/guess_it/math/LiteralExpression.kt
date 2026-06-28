@@ -1,26 +1,12 @@
-package work.lclpnet.ap2.game.guess_it.math;
+package work.lclpnet.ap2.game.guess_it.math
 
-import org.jetbrains.annotations.Nullable;
+internal data class LiteralExpression(val value: Int) : Expression {
 
-record LiteralExpression(int value) implements Expression {
+    override fun evaluate(): Int = value
 
-    @Override
-    public int evaluate() {
-        return value;
-    }
+    override fun precedence(): Int = Int.MIN_VALUE
 
-    @Override
-    public int precedence() {
-        return Integer.MIN_VALUE;
-    }
+    override fun commutative(): Boolean = false
 
-    @Override
-    public boolean commutative() {
-        return false;
-    }
-
-    @Override
-    public String stringify(@Nullable Expression parent, int pos) {
-        return String.valueOf(value);
-    }
+    override fun stringify(parent: Expression?, pos: Int): String = value.toString()
 }
