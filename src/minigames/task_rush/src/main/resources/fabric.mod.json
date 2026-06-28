@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "ap2-minigame-task-rush",
+  "version": "${version}",
+  "authors": [
+    "LCLP"
+  ],
+  "license": "MIT",
+  "environment": "server",
+  "entrypoints": {
+    "ap2:minigame": [
+      {
+        "adapter": "kotlin",
+        "value": "work.lclpnet.ap2.task_rush.TaskRushMiniGame"
+      }
+    ]
+  },
+  "depends": {
+    "ap2-lib": "*",
+    "fabric-language-kotlin": "*"
+  },
+  "custom": {
+    "timestamp": 1782676698,
+    "modmenu": {
+      "parent": "ap2-minigames"
+    }
+  }
+}
