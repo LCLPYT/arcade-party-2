@@ -42,7 +42,7 @@ import kotlin.time.Duration.Companion.seconds
 
 private val PREPARATION_DELAY = 3.seconds
 private val AFTER_CHALLENGE_DELAY = 5.seconds
-private const val ROUNDS = 10
+private const val ROUNDS = 8
 private const val MAX_CONSECUTIVE_ERRORS = 5
 
 class GuessItInstance(
