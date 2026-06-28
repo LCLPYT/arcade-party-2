@@ -18,6 +18,7 @@ import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
+import work.lclpnet.kibu.cmd.type.CommandRegistrar
 import work.lclpnet.kibu.hook.HookRegistrar
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback
 import work.lclpnet.kibu.scheduler.api.TaskScheduler
@@ -46,6 +47,9 @@ val MiniGameInstance.translations: Translations
 
 val MiniGameInstance.hooks: HookRegistrar
     get() = gameHandle.hooks
+
+val MiniGameInstance.commands: CommandRegistrar
+    get() = gameHandle.commands
 
 fun MiniGameInstance.isParticipating(player: ServerPlayer): Boolean =
     gameHandle.participants.isParticipating(player)
