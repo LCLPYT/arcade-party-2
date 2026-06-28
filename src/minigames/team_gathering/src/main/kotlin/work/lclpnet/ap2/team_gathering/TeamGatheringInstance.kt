@@ -9,6 +9,7 @@ import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.gamerules.GameRules
 import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.Stat
@@ -29,6 +30,7 @@ import work.lclpnet.ap2.game.util.*
 import work.lclpnet.ap2.impl.util.TeamStorage
 import work.lclpnet.ap2.impl.util.TextUtil
 import work.lclpnet.gaco.ds.WeightedList
+import work.lclpnet.game.impl.menu.PaginatedOptionMenu
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.util.ResetWorldModifier
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks
@@ -214,7 +216,34 @@ class TeamGatheringInstance(
         }
 
         useTaskTimer(DURATION).whenDone {
-            winManager.complete()
+            winManager.complete().then {
+                showWinningInventory()
+            }
+        }
+    }
+
+    private fun showWinningInventory() {
+        val bestTeams = data.getBestSubjects { teamManager.getTeam(it) }
+        val winnerTeam = bestTeams.randomOrNull() ?: return
+
+        val items = teamStates.get(winnerTeam).items
+
+        val menu = PaginatedOptionMenu.builder<Item>(translations, gameHandle.gameInfo.identifier("items"))
+            .search(false)
+            .sort(false)
+            .options(items)
+            .optionIcon { _, item -> ItemStack(item) }
+            .closeOnSelect(false)
+            .canInteract { false }
+            .title { player -> translations.translateText(
+                player,
+                "winning_team_items",
+                winnerTeam.key.getDisplayName(translations)
+            ) }
+            .build()
+
+        for (player in allPlayers()) {
+            menu.open(player)
         }
     }
 
