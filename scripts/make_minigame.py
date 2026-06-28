@@ -26,7 +26,7 @@ def write_translation_files(inputs: Inputs, resources_dir: Path):
 
 
 def create_mod_json(inputs: Inputs, resources_dir: Path):
-    game_class = f"work.lclpnet.ap2.game.{inputs.game_id}.{pascal_case(inputs.game_id)}MiniGame"
+    game_class = f"work.lclpnet.ap2.{inputs.game_id}.{pascal_case(inputs.game_id)}MiniGame"
     mod_json = {
         "schemaVersion": 1,
         "id": f"ap2-minigame-{inputs.game_id.replace('_', '-')}",
@@ -54,7 +54,7 @@ def create_mod_json(inputs: Inputs, resources_dir: Path):
 
 
 def create_build_gradle(game_dir: Path):
-    (game_dir / "build.gradle.kts.tmpl").write_text(render_template("build.gradle.kts"))
+    (game_dir / "build.gradle.kts").write_text(render_template("build.gradle.kts.tmpl"))
 
 
 def update_settings_gradle(game_id: str):
