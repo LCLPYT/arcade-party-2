@@ -54,7 +54,7 @@ import net.minecraft.world.level.block.WeatheringCopper
 import net.minecraft.world.phys.Vec3
 import work.lclpnet.ap2.core.mixin.entity.ShulkerAccessor
 import work.lclpnet.ap2.core.type.ApVariantHolder
-import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder
+import work.lclpnet.ap2.util.world.SizedSpaceFinder
 import work.lclpnet.gaco.ds.IndexedSet
 import work.lclpnet.game.util.WorldModifier
 import work.lclpnet.kibu.access.entity.GoatEntityAccess

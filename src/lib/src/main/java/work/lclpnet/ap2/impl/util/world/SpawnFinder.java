@@ -13,6 +13,7 @@ import work.lclpnet.ap2.api.util.world.BlockPredicate;
 import work.lclpnet.ap2.api.util.world.WorldScanner;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
+import work.lclpnet.ap2.util.world.SizedSpaceFinder;
 import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.gaco.ds.StructureMask;
 import work.lclpnet.game.map.GameMap;
