@@ -22,8 +22,8 @@ import work.lclpnet.ap2.game.maze_scape.monster.behaviour.ValidPositionBehaviour
 import work.lclpnet.ap2.game.maze_scape.util.EndermanEscape;
 import work.lclpnet.ap2.game.maze_scape.util.MSManager;
 import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
-import work.lclpnet.ap2.impl.util.VisibilityChecker;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
+import work.lclpnet.ap2.util.VisibilityChecker;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.scheduler.Ticks;
 
