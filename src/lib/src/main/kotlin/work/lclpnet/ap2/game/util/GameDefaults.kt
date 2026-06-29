@@ -143,7 +143,7 @@ private fun MiniGameInstance.createLevelInfo(map: GameMap?): LevelInfo = LevelIn
 
 /**
  * Sets the default player game mode to survival mode.
- * Player game modes are updated by [work.lclpnet.ap2.impl.game.PlayerUtil.resetPlayer].
+ * Player game modes are updated by [PlayerUtil.resetPlayer].
  * Should be called before [configureDefaults] is called.
  * Call this in the class initializer, for example.
  */
@@ -153,7 +153,7 @@ fun MiniGameInstance.useSurvivalMode() {
 
 /**
  * Sets the combat style to classic combat.
- * Player combat styles are updated by [work.lclpnet.ap2.impl.game.PlayerUtil.resetPlayer].
+ * Player combat styles are updated by [PlayerUtil.resetPlayer].
  * Should be called before [configureDefaults] is called.
  * For games extending [work.lclpnet.ap2.game.base.MapGameInstance], call this in the class initializer.
  */

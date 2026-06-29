@@ -6,7 +6,7 @@ import work.lclpnet.ap2.api.base.MiniGameManager
 import work.lclpnet.ap2.api.data.DataManager
 import work.lclpnet.ap2.api.map.MapFacade
 import work.lclpnet.ap2.api.music.SongManager
-import work.lclpnet.ap2.impl.game.PlayerUtil
+import work.lclpnet.ap2.game.util.PlayerUtil
 import work.lclpnet.ap2.util.FontService
 import work.lclpnet.game.api.WorldFacade
 import work.lclpnet.kibu.cmd.impl.CommandStack

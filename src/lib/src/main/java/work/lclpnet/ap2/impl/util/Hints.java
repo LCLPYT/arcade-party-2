@@ -9,7 +9,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import work.lclpnet.ap2.game.MiniGameHandle;
-import work.lclpnet.ap2.impl.game.PlayerUtil;
+import work.lclpnet.ap2.game.util.PlayerUtil;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.Translations;

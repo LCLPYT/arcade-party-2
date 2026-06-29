@@ -13,10 +13,10 @@ import work.lclpnet.ap2.api.config.Ap2Config
 import work.lclpnet.ap2.api.stats.SessionStatsRecorder
 import work.lclpnet.ap2.game.MiniGame
 import work.lclpnet.ap2.game.player.PlayerManagerImpl
+import work.lclpnet.ap2.game.util.PlayerUtil
 import work.lclpnet.ap2.impl.base.FabricMiniGameManager
 import work.lclpnet.ap2.impl.base.VotedGameQueue
 import work.lclpnet.ap2.impl.bootstrap.ApBootstrap
-import work.lclpnet.ap2.impl.game.PlayerUtil
 import work.lclpnet.ap2.impl.i18n.DynamicLanguageManager
 import work.lclpnet.ap2.impl.i18n.VanillaTranslations
 import work.lclpnet.ap2.impl.music.MapSongCache
@@ -37,7 +37,6 @@ import work.lclpnet.kibu.assets.AssetManager
 import work.lclpnet.kibu.hook.HookStack
 import work.lclpnet.kibu.translate.Translations
 import work.lclpnet.translations.DefaultLanguageTranslator
-import java.lang.Math
 import java.lang.Runnable
 
 private const val WIN_SCORE = 30
