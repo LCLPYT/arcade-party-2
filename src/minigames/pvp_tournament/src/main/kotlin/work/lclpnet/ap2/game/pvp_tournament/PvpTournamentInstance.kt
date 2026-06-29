@@ -246,7 +246,7 @@ class PvpTournamentInstance(
 
         val data = initMatchInstance(match, arena, kit)
 
-        val player = players().getParticipant(ref.uuid).orElse(null)
+        val player = players().getParticipant(ref.uuid)
 
         if (player != null) {
             data.teleport(player)
@@ -284,7 +284,7 @@ class PvpTournamentInstance(
     }
 
     private fun makeSpectator(ref: PlayerRef) {
-        val player = players().getParticipant(ref.uuid).orElse(null) ?: return
+        val player = players().getParticipant(ref.uuid) ?: return
 
         makeSpectator(player)
     }

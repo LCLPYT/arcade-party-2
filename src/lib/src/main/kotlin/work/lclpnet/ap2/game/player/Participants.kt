@@ -24,23 +24,19 @@ interface Participants : Iterable<ServerPlayer> {
 
     fun count(): Int = asSet.size
 
-    fun getRandomParticipant(random: Random): Optional<ServerPlayer> {
+    fun getRandomParticipant(random: Random): ServerPlayer? {
         val count = count()
 
         if (count <= 0) {
-            return Optional.empty<ServerPlayer>()
+            return null
         }
 
-        return stream().skip(random.nextInt(count).toLong()).findFirst()
+        return asSet.randomOrNull()
     }
 
-    fun getParticipant(uuid: UUID): Optional<ServerPlayer> {
-        return stream()
-            .filter { player -> player.getUUID() == uuid }
-            .findAny()
-    }
+    fun getParticipant(uuid: UUID): ServerPlayer? =
+        firstOrNull { it.uuid == uuid }
 
-    fun stream(): Stream<ServerPlayer> {
-        return asSet.stream()
-    }
+    fun stream(): Stream<ServerPlayer> =
+        asSet.stream()
 }

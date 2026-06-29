@@ -233,9 +233,9 @@ class HotPotatoInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
     }
 
     private fun markRandomPlayer(): Boolean {
-        val randomPlayer = gameHandle.participants.getRandomParticipant(random)
-        if (randomPlayer.isEmpty) return false
-        val player = randomPlayer.get()
+        val randomPlayer = gameHandle.participants.getRandomParticipant(random) ?: return false
+
+        val player = randomPlayer
         markPlayer(player)
         stats.increment(player, PotatoAssigned)
         return true

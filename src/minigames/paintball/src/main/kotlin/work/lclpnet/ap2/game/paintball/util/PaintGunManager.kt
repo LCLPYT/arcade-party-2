@@ -164,7 +164,7 @@ class PaintGunManager(
     }
 
     fun paintAt(bullet: PaintballBullet, x: Double, y: Double, z: Double, radius: Double, shouldCount: Boolean) {
-        val owner = bullet.owner?.let { participants.getParticipant(it).orElse(null) } ?: return
+        val owner = bullet.owner?.let { participants.getParticipant(it) } ?: return
         val team = teams.teamOf(owner) ?: return
 
         val key: DyeTeamKey = team.key

@@ -31,7 +31,7 @@ class MatchInstance(
         participants.filterIsInstance<ServerPlayer>()
 
     fun entity(ref: PlayerRef): Avatar? {
-        val player = allPlayers.getParticipant(ref.uuid).orElse(null)
+        val player = allPlayers.getParticipant(ref.uuid)
 
         if (player != null) {
             return if (player.uuid in playerUuids) { player } else null

@@ -131,7 +131,7 @@ class TripWireItem(
         private var timer = 0
 
         fun tick(): Boolean {
-            val player = participants.getParticipant(ownerUuid).orElse(null) ?: return true
+            val player = participants.getParticipant(ownerUuid) ?: return true
 
             val team: Team = teams.teamManager.getTeam(player) ?: return true
 

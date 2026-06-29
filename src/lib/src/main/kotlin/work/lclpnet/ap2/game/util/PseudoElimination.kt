@@ -32,7 +32,9 @@ class PseudoElimination(
 
     @Synchronized
     fun commit() {
-        stream().forEach { player -> participants.remove(player) }
+        for (player in participants()) {
+            participants.remove(player)
+        }
 
         toEliminate.clear()
     }
@@ -58,9 +60,9 @@ class PseudoElimination(
         return true
     }
 
-    fun stream(): Stream<ServerPlayer> = toEliminate.stream()
-        .map { uuid -> participants.getParticipant(uuid) }
-        .flatMap { obj -> obj.stream() }
+    fun participants(): Set<ServerPlayer> = toEliminate
+        .mapNotNull { uuid -> participants.getParticipant(uuid) }
+        .toSet()
 
     @Synchronized
     fun size(): Int =
