@@ -23,38 +23,36 @@ import work.lclpnet.ap2.game.apocalypse_survival.goal.RoamGoal
 import work.lclpnet.ap2.game.apocalypse_survival.goal.UnstuckGoal
 import work.lclpnet.ap2.impl.util.GoalModifier
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
+import work.lclpnet.ap2.util.world.SizedSpaceFinder
 import work.lclpnet.gaco.ds.WeightedList
 import work.lclpnet.kibu.access.entity.EntityUtil
-import work.lclpnet.kibu.scheduler.Ticks
 import java.util.*
 import kotlin.math.pow
 
 private const val PARTICLE_TICKS = 12
-private val MOB_MIN_TICKS = Ticks.seconds(1)
-private val MOB_MAX_TICKS = Ticks.seconds(3) + 10
 private const val MOB_LIMIT = 150
 
 class MonsterSpawner(
-    private val world: ServerLevel,
+    private val level: ServerLevel,
     private val stage: BlockShape,
     private val random: Random,
-    private val targetManager: TargetManager
+    private val targetManager: TargetManager,
+    private val minSpawnTicks: Int,
+    private val maxSpawnTicks: Int,
 ) {
 
-    private val stageWithRadius = stage as BlockShape.WithRadius
-
-    private val zombieTypes = WeightedList<EntityType<out Zombie>>().also {
-        it.add(EntityTypes.ZOMBIE, 0.8f)
-        it.add(EntityTypes.ZOMBIE_VILLAGER, 0.07f)
-        it.add(EntityTypes.HUSK, 0.05f)
-        it.add(EntityTypes.ZOMBIFIED_PIGLIN, 0.03f)
-        it.add(EntityTypes.DROWNED, 0.05f)
+    private val zombieTypes = WeightedList<EntityType<out Zombie>>().apply {
+        addIfSupported(EntityTypes.ZOMBIE, 0.8f)
+        addIfSupported(EntityTypes.ZOMBIE_VILLAGER, 0.07f)
+        addIfSupported(EntityTypes.HUSK, 0.05f)
+        addIfSupported(EntityTypes.ZOMBIFIED_PIGLIN, 0.03f)
+        addIfSupported(EntityTypes.DROWNED, 0.05f)
     }
-    private val skeletonTypes = WeightedList<EntityType<out AbstractSkeleton>>().also {
-        it.add(EntityTypes.SKELETON, 0.8f)
-        it.add(EntityTypes.WITHER_SKELETON, 0.05f)
-        it.add(EntityTypes.BOGGED, 0.05f)
-        it.add(EntityTypes.STRAY, 0.08f)
+    private val skeletonTypes = WeightedList<EntityType<out AbstractSkeleton>>().apply {
+        addIfSupported(EntityTypes.SKELETON, 0.8f)
+        addIfSupported(EntityTypes.WITHER_SKELETON, 0.05f)
+        addIfSupported(EntityTypes.BOGGED, 0.05f)
+        addIfSupported(EntityTypes.STRAY, 0.08f)
     }
     private val spawnTypes = WeightedList<SpawnType>()
     private var timeTicks = 0
@@ -80,22 +78,40 @@ class MonsterSpawner(
 
     private fun handleTimedEvents(ticks: Int) {
         when (ticks) {
-            0 -> spawnTypes.add(SpawnType.ZOMBIE, 0.6f)
-            70 * 20 -> spawnTypes.add(SpawnType.VINDICATOR, 0.06f)
-            130 * 20 -> spawnTypes.add(SpawnType.SKELETON, 0.165f)
-            150 * 20 -> spawnTypes.add(SpawnType.GHAST, 0.05f)
-            175 * 20 -> spawnTypes.add(SpawnType.EVOKER, 0.06f)
-            200 * 20 -> spawnTypes.add(SpawnType.PHANTOM, 0.04f)
+            0 -> addSpawnType(SpawnType.ZOMBIE, 0.6f)
+            70 * 20 -> addSpawnType(SpawnType.VINDICATOR, 0.06f)
+            130 * 20 -> addSpawnType(SpawnType.SKELETON, 0.165f)
+            150 * 20 -> addSpawnType(SpawnType.GHAST, 0.05f)
+            175 * 20 -> addSpawnType(SpawnType.EVOKER, 0.06f)
+            200 * 20 -> addSpawnType(SpawnType.PHANTOM, 0.04f)
         }
     }
 
-    private fun scheduleNextMob() = MOB_MIN_TICKS + random.nextInt(MOB_MAX_TICKS - MOB_MIN_TICKS + 1)
+    private fun addSpawnType(type: SpawnType, weight: Float) {
+        val supported = when (type) {
+            SpawnType.ZOMBIE -> zombieTypes.isNotEmpty()
+            SpawnType.SKELETON -> skeletonTypes.isNotEmpty()
+            SpawnType.PHANTOM -> supports(EntityTypes.PHANTOM)
+            SpawnType.GHAST -> supports(EntityTypes.GHAST)
+            SpawnType.VINDICATOR -> supports(EntityTypes.VINDICATOR)
+            SpawnType.EVOKER -> supports(EntityTypes.EVOKER)
+        }
+
+        if (supported) {
+            spawnTypes.add(type, weight)
+        }
+    }
+
+    private fun scheduleNextMob() =
+        minSpawnTicks + random.nextInt(maxSpawnTicks - minSpawnTicks + 1)
 
     private fun spawnParticle() {
-        val center: BlockPos = stage.center()
-        val offset = stageWithRadius.radius() / 2
+        if (stage !is BlockShape.WithRadius) return
 
-        world.sendParticles(
+        val center: BlockPos = stage.center()
+        val offset = stage.radius() / 2
+
+        level.sendParticles(
             ParticleTypes.REVERSE_PORTAL,
             center.x + 0.5, center.y + 0.5, center.z + 0.5,
             30, offset.toDouble(), offset.toDouble(), offset.toDouble(), 0.15
@@ -124,9 +140,12 @@ class MonsterSpawner(
         if (zombie.isBaby) {
             baseSpeed *= 0.75
         } else if (random.nextFloat() < 0.05f) {
-            val scale = random.nextFloat(0.75f, 1.8f)
-            EntityUtil.setAttribute(zombie, Attributes.SCALE, scale.toDouble())
-            baseSpeed *= (1.0 / scale.toDouble().pow(1.15)).coerceIn(0.75, 1.12)
+            val scale = random.nextDouble(0.75, 1.8)
+
+            if (supports(zombie.type, scale)) {
+                EntityUtil.setAttribute(zombie, Attributes.SCALE, scale)
+                baseSpeed *= (1.0 / scale.pow(1.15)).coerceIn(0.75, 1.12)
+            }
         }
 
         if (zombie is Drowned) {
@@ -161,9 +180,12 @@ class MonsterSpawner(
         var baseSpeed = skeleton.getAttributeBaseValue(Attributes.MOVEMENT_SPEED)
 
         if (random.nextFloat() < 0.075f) {
-            val scale = random.nextFloat(0.75f, 2.5f)
-            EntityUtil.setAttribute(skeleton, Attributes.SCALE, scale.toDouble())
-            baseSpeed *= (1.0 / scale.toDouble().pow(1.15)).coerceIn(0.6, 1.1)
+            val scale = random.nextDouble(0.75, 2.5)
+
+            if (supports(skeleton.type, scale)) {
+                EntityUtil.setAttribute(skeleton, Attributes.SCALE, scale)
+                baseSpeed *= (1.0 / scale.pow(1.15)).coerceIn(0.6, 1.1)
+            }
         }
 
         EntityUtil.setAttribute(skeleton, Attributes.MOVEMENT_SPEED, baseSpeed)
@@ -205,7 +227,11 @@ class MonsterSpawner(
         phantom.phantomSize = 0
 
         if (random.nextFloat() < 0.25f) {
-            EntityUtil.setAttribute(phantom, Attributes.SCALE, random.nextFloat(0.2f, 5.0f).toDouble())
+            val scale = random.nextDouble(0.2, 5.0)
+
+            if (supports(phantom.type, scale)) {
+                EntityUtil.setAttribute(phantom, Attributes.SCALE, scale)
+            }
         }
 
         val mobAccess = phantom as MobAccessor
@@ -217,7 +243,11 @@ class MonsterSpawner(
     private fun spawnGhast() {
         val ghast = createMob(EntityTypes.GHAST) ?: return
 
-        EntityUtil.setAttribute(ghast, Attributes.SCALE, random.nextFloat(0.2f, 1.0f).toDouble())
+        val scale = random.nextDouble(0.2, 1.0)
+
+        if (supports(ghast.type, scale)) {
+            EntityUtil.setAttribute(ghast, Attributes.SCALE, scale)
+        }
 
         spawnMobInWorld(ghast)
     }
@@ -228,9 +258,12 @@ class MonsterSpawner(
         var baseSpeed = vindicator.getAttributeBaseValue(Attributes.MOVEMENT_SPEED)
 
         if (random.nextFloat() < 0.05f) {
-            val scale = random.nextFloat(0.75f, 1.3f)
-            EntityUtil.setAttribute(vindicator, Attributes.SCALE, scale.toDouble())
-            baseSpeed *= (1.0 / scale.toDouble().pow(1.15)).coerceIn(0.75, 1.12)
+            val scale = random.nextDouble(0.75, 1.3)
+
+            if (supports(vindicator.type, scale)) {
+                EntityUtil.setAttribute(vindicator, Attributes.SCALE, scale)
+                baseSpeed *= (1.0 / scale.pow(1.15)).coerceIn(0.75, 1.12)
+            }
         }
 
         EntityUtil.setAttribute(vindicator, Attributes.MOVEMENT_SPEED, baseSpeed)
@@ -249,8 +282,10 @@ class MonsterSpawner(
     }
 
     private fun <T : Mob> createMob(type: EntityType<out T>): T? {
+        if (!supports(type)) return null
+
         val mob = type.create(
-            world,
+            level,
             null,
             stage.origin(),
             EntitySpawnReason.COMMAND,
@@ -261,6 +296,25 @@ class MonsterSpawner(
         configureMob(mob)
 
         return mob
+    }
+
+    fun supports(type: EntityType<*>, scale: Double = 1.0): Boolean {
+        val dimensions = type.dimensions
+
+        val width = dimensions.width().toDouble() * scale
+        val height = dimensions.height().toDouble() * scale
+
+        val pos = stage.origin()
+
+        return SizedSpaceFinder.hasSpaceAt(
+            level,
+            pos.x + 0.5,
+            pos.y.toDouble(),
+            pos.z + 0.5,
+            width,
+            height,
+            width
+        )
     }
 
     private fun configureMob(mob: Mob) {
@@ -281,11 +335,17 @@ class MonsterSpawner(
     }
 
     private fun spawnMobInWorld(mob: Mob) {
-        world.addFreshEntity(mob)
+        level.addFreshEntity(mob)
         mobCount++
     }
 
     private enum class SpawnType {
         ZOMBIE, SKELETON, PHANTOM, GHAST, VINDICATOR, EVOKER
+    }
+
+    private fun <T : EntityType<*>> WeightedList<T>.addIfSupported(type: T, weight: Float) {
+        if (supports(type)) {
+            add(type, weight)
+        }
     }
 }

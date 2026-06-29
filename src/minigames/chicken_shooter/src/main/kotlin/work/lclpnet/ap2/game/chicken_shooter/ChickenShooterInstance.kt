@@ -40,7 +40,7 @@ import work.lclpnet.ap2.impl.util.ItemHelper
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
 import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
 import work.lclpnet.ap2.impl.util.world.CardinalAdjacentBlocks
-import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder
+import work.lclpnet.ap2.util.world.SizedSpaceFinder
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.map.MapUtils

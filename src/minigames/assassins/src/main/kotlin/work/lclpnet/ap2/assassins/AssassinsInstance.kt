@@ -43,7 +43,11 @@ import work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor
 import work.lclpnet.ap2.impl.util.ParticleHelper
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
-import work.lclpnet.ap2.impl.util.world.*
+import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
+import work.lclpnet.ap2.impl.util.world.CardinalAdjacentBlocks
+import work.lclpnet.ap2.impl.util.world.SpawnFinder
+import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate
+import work.lclpnet.ap2.util.world.SizedSpaceFinder
 import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.gaco.ds.StructureMask
 import work.lclpnet.game.impl.prot.ProtectionTypes

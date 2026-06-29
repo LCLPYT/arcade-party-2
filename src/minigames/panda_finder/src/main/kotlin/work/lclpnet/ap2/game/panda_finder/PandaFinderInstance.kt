@@ -38,7 +38,7 @@ import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar
 import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
 import work.lclpnet.ap2.impl.util.world.NotOccupiedBlockPredicate
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks
-import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder
+import work.lclpnet.ap2.util.world.SizedSpaceFinder
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.FireworkEntityAccess
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
