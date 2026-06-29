@@ -11,8 +11,8 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.impl.game.GameCommons
-import work.lclpnet.ap2.impl.util.VisibilityChecker
 import work.lclpnet.ap2.impl.util.world.CardinalAdjacentBlocks
+import work.lclpnet.ap2.util.VisibilityChecker
 import work.lclpnet.ap2.util.world.BfsContextScanner
 import work.lclpnet.ap2.util.world.ScannerNode
 import work.lclpnet.gaco.ds.BlockBox
