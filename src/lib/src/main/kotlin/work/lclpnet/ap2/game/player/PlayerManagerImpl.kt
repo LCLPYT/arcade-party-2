@@ -101,11 +101,11 @@ class PlayerManagerImpl(private val server: MinecraftServer) : PlayerManager {
         this.listener = listener
     }
 
-    override fun getParticipant(uuid: UUID): Optional<ServerPlayer> = synchronized(lock) {
+    override fun getParticipant(uuid: UUID): ServerPlayer? = synchronized(lock) {
         if (uuid !in participants) {
-            Optional.empty()
+            null
         } else {
-            Optional.ofNullable(server.playerList.getPlayer(uuid))
+            server.playerList.getPlayer(uuid)
         }
     }
 

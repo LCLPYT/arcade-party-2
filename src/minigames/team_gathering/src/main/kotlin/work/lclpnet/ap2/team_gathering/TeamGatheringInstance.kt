@@ -391,5 +391,5 @@ class TeamGatheringInstance(
     }
 
     private val soloPlayer: ServerPlayer?
-        get() = soloPlayerKey?.let { players().getParticipant(it.uuid).orElse(null) }
+        get() = soloPlayerKey?.let { players().getParticipant(it.uuid) }
 }

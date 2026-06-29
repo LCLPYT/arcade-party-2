@@ -182,10 +182,10 @@ class WeaponSwapInstance(
 
     private fun setHolders(newHolders: List<ServerPlayer>) {
         for (uuid in currentHolders) {
-            players().getParticipant(uuid).ifPresent { player ->
-                removeWeaponFrom(player)
-                PlayerReset.modifyWalkSpeed(player, 0.1f)
-            }
+            val player = players().getParticipant(uuid) ?: continue
+
+            removeWeaponFrom(player)
+            PlayerReset.modifyWalkSpeed(player, 0.1f)
         }
 
         currentHolders.clear()

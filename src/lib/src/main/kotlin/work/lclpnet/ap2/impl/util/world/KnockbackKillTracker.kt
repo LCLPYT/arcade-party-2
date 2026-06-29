@@ -49,7 +49,7 @@ class KnockbackKillTracker(
 
         while (it.hasNext()) {
             val (uuid, entry) = it.next()
-            val player = participants.getParticipant(uuid).orElse(null)
+            val player = participants.getParticipant(uuid)
 
             if (player == null) {
                 it.remove()

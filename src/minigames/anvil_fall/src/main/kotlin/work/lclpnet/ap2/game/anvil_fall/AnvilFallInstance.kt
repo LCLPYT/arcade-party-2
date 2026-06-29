@@ -191,15 +191,13 @@ class AnvilFallInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
     private fun spawnRandomAnvil() {
         if (winManager.gameOver) return
 
-        val pos = gameHandle.participants.getRandomParticipant(random)
-            .map { player ->
-                if (random.nextFloat() < DIRECT_ANVIL_CHANCE) {
-                    setup.getRandomPositionAt(player.blockX, player.blockZ)
-                } else {
-                    setup.getRandomPosition(player.blockX, player.blockZ, SPREAD_RADIUS.toDouble())
-                }
+        val pos = gameHandle.participants.getRandomParticipant(random)?.let { player ->
+            if (random.nextFloat() < DIRECT_ANVIL_CHANCE) {
+                setup.getRandomPositionAt(player.blockX, player.blockZ)
+            } else {
+                setup.getRandomPosition(player.blockX, player.blockZ, SPREAD_RADIUS.toDouble())
             }
-            .orElseGet { setup.getRandomPosition() }
+        } ?: setup.getRandomPosition()
 
         val randomDirection = directions[random.nextInt(directions.size)]
         val state = Blocks.ANVIL.defaultBlockState().setValue(AnvilBlock.FACING, randomDirection)

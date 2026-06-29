@@ -5,7 +5,6 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.EnderMan;
@@ -125,11 +124,9 @@ public class EndermanData implements MonsterData<EnderMan> {
 
         // validate anger target
         if (angerTarget != null) {
-            ServerPlayer player = args.manager().participants().getParticipant(angerTarget)
-                    .filter(p -> p.isAlive() && !p.isSpectator())
-                    .orElse(null);
+            ServerPlayer player = args.manager().participants().getParticipant(angerTarget);
 
-            if (player == null) {
+            if (player == null || !player.isAlive() || player.isSpectator()) {
                 anger = 0;
                 angerTarget = null;
             }
@@ -304,10 +301,11 @@ public class EndermanData implements MonsterData<EnderMan> {
 
     public @Nullable BlockPos targetPos() {
         if (angerTarget != null) {
-            BlockPos angerTargetPos = args.manager().participants().getParticipant(angerTarget)
-                    .filter(p -> !p.isSpectator())
-                    .map(Entity::blockPosition)
-                    .orElse(null);
+            ServerPlayer player = args.manager().participants().getParticipant(angerTarget);
+
+            BlockPos angerTargetPos = player != null && !player.isSpectator()
+                    ? player.blockPosition()
+                    : null;
 
             if (angerTargetPos != null) {
                 return angerTargetPos;

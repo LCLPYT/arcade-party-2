@@ -169,10 +169,10 @@ class GlowingBombInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: G
         wasPassed = false
         mayPass = true
 
-        manager.bombHolder().ifPresent { player ->
-            stats.increment(player, BombAssigned)
-            onAcquiredBomb(player)
-        }
+        val player = manager.bombHolder() ?: return
+
+        stats.increment(player, BombAssigned)
+        onAcquiredBomb(player)
     }
 
     private fun onAcquiredBomb(player: ServerPlayer) {
@@ -230,8 +230,11 @@ class GlowingBombInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: G
     private fun bombTimerExpired() {
         mayPass = false
         val holder = manager.bombHolder()
-        holder.ifPresent(::onPassedBomb)
-        holder.ifPresent(::onBombExploded)
+
+        if (holder != null) {
+            onPassedBomb(holder)
+            onBombExploded(holder)
+        }
 
         val b = bomb!!
         val pos: Vector3d = b.worldTranslation()
@@ -329,17 +332,17 @@ class GlowingBombInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: G
 
         time++
 
-        manager.bombHolder().ifPresent { player ->
-            val uuid = player.uuid
+        val player = manager.bombHolder() ?: return
 
-            // accumulate the total time the player has held a bomb
-            holdTicks.addTo(uuid, 1)
-            stats.set(player, BombHoldTime, holdTicks.getInt(uuid) / 20f)
+        val uuid = player.uuid
 
-            // don't grant credits if the bomb wasn't passed yet and couldn't have exploded yet because of the minimum fuse time
-            if (wasPassed || time >= config.minFuseTicks()) {
-                credits.put(uuid, credits.getOrDefault(uuid, 0) + CREDITS_PER_TICK)
-            }
+        // accumulate the total time the player has held a bomb
+        holdTicks.addTo(uuid, 1)
+        stats.set(player, BombHoldTime, holdTicks.getInt(uuid) / 20f)
+
+        // don't grant credits if the bomb wasn't passed yet and couldn't have exploded yet because of the minimum fuse time
+        if (wasPassed || time >= config.minFuseTicks()) {
+            credits.put(uuid, credits.getOrDefault(uuid, 0) + CREDITS_PER_TICK)
         }
     }
 }

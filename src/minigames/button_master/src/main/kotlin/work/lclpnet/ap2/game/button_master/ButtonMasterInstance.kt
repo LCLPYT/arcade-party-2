@@ -237,7 +237,7 @@ class ButtonMasterInstance(
         level.setBlockAndUpdate(BlockPos.containing(spawn).below(), Blocks.AIR.defaultBlockState())
 
         val uuid = capsules.players[capsule] ?: return
-        val player = players().getParticipant(uuid).orElse(null) ?: return
+        val player = players().getParticipant(uuid) ?: return
 
         movementBlocker.enableMovement(player)
         player.resetAttribute(Attributes.GRAVITY)
@@ -292,7 +292,7 @@ class ButtonMasterInstance(
 
     private fun eliminateButtonMaster() {
         val uuid = buttonMasterUuid ?: return
-        val buttonMaster = players().getParticipant(uuid).orElse(null) ?: return
+        val buttonMaster = players().getParticipant(uuid) ?: return
 
         eliminate(buttonMaster)
 
@@ -396,7 +396,9 @@ class ButtonMasterInstance(
         escapesRecorded = true
 
         for (uuid in capsules.players.values) {
-            players().getParticipant(uuid).ifPresent(bmStats::escaped)
+            val player = players().getParticipant(uuid) ?: continue
+
+            bmStats.escaped(player)
         }
     }
 

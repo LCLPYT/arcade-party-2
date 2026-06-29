@@ -50,7 +50,7 @@ class FineTuningSetup(
         val testMsg = gameHandle.translations.translateText("test")
 
         for ((uuid, room) in rooms) {
-            val player: ServerPlayer = participants.getParticipant(uuid).orElse(null) ?: continue
+            val player: ServerPlayer = participants.getParticipant(uuid) ?: continue
             val testSignPos = room.pos.offset(testSignRelPos)
             val sign = world.getBlockEntity(testSignPos, BlockEntityTypes.SIGN).orElse(null) ?: continue
 
