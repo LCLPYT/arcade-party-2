@@ -4,7 +4,6 @@ import net.fabricmc.fabric.api.networking.v1.PlayerLookup
 import net.minecraft.server.level.ServerPlayer
 import work.lclpnet.ap2.ext.sendGo
 import work.lclpnet.ap2.game.MiniGameHandle
-import work.lclpnet.ap2.impl.game.PlayerUtil
 import work.lclpnet.ap2.util.SubtitleCountdown
 
 /**

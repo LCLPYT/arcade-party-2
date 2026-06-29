@@ -5,7 +5,7 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.server.players.PlayerList
 import net.minecraft.world.scores.PlayerTeam
 import work.lclpnet.ap2.core.hook.PlayerDisplayNameCallback
-import work.lclpnet.ap2.impl.game.PlayerUtil
+import work.lclpnet.ap2.game.util.PlayerUtil
 import work.lclpnet.ap2.impl.game.team.SimpleTeam
 import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.kibu.hook.HookRegistrar

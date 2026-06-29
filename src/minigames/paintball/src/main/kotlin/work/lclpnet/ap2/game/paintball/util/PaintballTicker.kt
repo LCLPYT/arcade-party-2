@@ -27,7 +27,7 @@ import work.lclpnet.ap2.ext.mc.resetAttribute
 import work.lclpnet.ap2.ext.mc.setAttribute
 import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.game.team.DyeTeamKey
-import work.lclpnet.ap2.impl.game.PlayerUtil
+import work.lclpnet.ap2.game.util.PlayerUtil
 import work.lclpnet.ap2.impl.util.RayCastUtil
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.impl.util.VanishManager

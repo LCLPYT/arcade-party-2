@@ -19,9 +19,9 @@ import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.dance_floor.cmd.SetSongCommand
 import work.lclpnet.ap2.game.dance_floor.cmd.SkipSongCommand
+import work.lclpnet.ap2.game.util.PlayerUtil
 import work.lclpnet.ap2.game.util.useSurvivalMode
 import work.lclpnet.ap2.game.util.whenBelowCriticalHeight
-import work.lclpnet.ap2.impl.game.PlayerUtil
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.music.SongHandler
 import work.lclpnet.ap2.impl.util.Hints

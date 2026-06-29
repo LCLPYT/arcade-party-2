@@ -14,7 +14,7 @@ import work.lclpnet.ap2.api.stats.StatsResult
 import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.game.player.PlayerRankView
 import work.lclpnet.ap2.game.team.TeamConfig
-import work.lclpnet.ap2.impl.game.PlayerUtil
+import work.lclpnet.ap2.game.util.PlayerUtil
 import work.lclpnet.ap2.impl.util.DeathMessages
 import work.lclpnet.ap2.impl.util.world.SubWorldManager
 import work.lclpnet.ap2.util.AssetManager
