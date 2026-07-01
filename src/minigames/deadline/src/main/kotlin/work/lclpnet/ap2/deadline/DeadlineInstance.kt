@@ -1,0 +1,17 @@
+package work.lclpnet.ap2.deadline
+
+import net.minecraft.server.level.ServerLevel
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.EliminationGameInstance
+import work.lclpnet.game.map.GameMap
+
+class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
+
+    override fun prepare() {
+
+    }
+
+    override fun go() {
+
+    }
+}

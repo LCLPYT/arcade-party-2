@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "ap2-minigame-deadline",
+  "version": "${version}",
+  "authors": [
+    "Quadrubo"
+  ],
+  "license": "MIT",
+  "environment": "server",
+  "entrypoints": {
+    "ap2:minigame": [
+      {
+        "adapter": "kotlin",
+        "value": "work.lclpnet.ap2.deadline.DeadlineMiniGame"
+      }
+    ]
+  },
+  "depends": {
+    "ap2-lib": "*",
+    "fabric-language-kotlin": "*"
+  },
+  "custom": {
+    "timestamp": 1782847198,
+    "modmenu": {
+      "parent": "ap2-minigames"
+    }
+  }
+}

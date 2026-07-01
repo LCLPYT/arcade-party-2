@@ -20,6 +20,7 @@ public final class ApConstants {
     // people
     public static final String PERSON_LCLP = "@person.lclp";
     public static final String PERSON_BOPS = "@person.bops";
+    public static final String PERSON_QUADRUBO = "@person.quadrubo";
 
     // other
     public static final String SEPARATOR = "=============================================";
