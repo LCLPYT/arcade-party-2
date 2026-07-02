@@ -23,8 +23,11 @@ private const val ROLL = 77f   // rolling resistance, grows linearly with speed.
 private const val MIN_SPEED = 3f  // ~11 km/h
 private const val MAX_SPEED = 20f // ~72 km/h, engine max speed through drag is 60km/h
 
+// steering
+private const val TURN_RATE = 6f
+
 /**
- * A rider's dyed sheep driven like a motorbike: forces-based acceleration.
+ * A rider's dyed sheep driven like a motorbike: forces-based acceleration with A/D steering.
  *
  * Implementation was inspired by https://asawicki.info/Mirror/Car%20Physics%20for%20Games/Car%20Physics%20for%20Games.html
  */
@@ -34,7 +37,20 @@ class LightCycle(val sheep: Sheep) {
         private set
 
     fun tick(input: Input) {
+        steer(input)
         drive(input)
+    }
+
+    private fun steer(input: Input) {
+        var turn = 0f
+        if (input.left()) turn -= TURN_RATE
+        if (input.right()) turn += TURN_RATE
+        if (turn == 0f) return
+
+        // constant angular rate so the turn radius (v / omega) widens naturally with speed
+        val yaw = sheep.yRot + turn
+        sheep.setYRot(yaw)
+        sheep.setYBodyRot(yaw)
     }
 
     private fun drive(input: Input) {
