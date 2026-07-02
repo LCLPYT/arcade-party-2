@@ -36,6 +36,9 @@ class LightCycle(val sheep: Sheep) {
     var speed = MIN_SPEED
         private set
 
+    val speedFraction: Float
+        get() = ((speed - MIN_SPEED) / (MAX_SPEED - MIN_SPEED)).coerceIn(0f, 1f)
+
     fun tick(input: Input) {
         steer(input)
         drive(input)

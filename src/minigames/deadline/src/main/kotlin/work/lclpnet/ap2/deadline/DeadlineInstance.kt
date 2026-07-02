@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.deadline
 
+import net.minecraft.network.protocol.game.ClientboundSetExperiencePacket
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.entity.EntityTypes
@@ -17,6 +18,7 @@ import work.lclpnet.kibu.hook.ServerPlayConnectionHooks
 import work.lclpnet.kibu.hook.entity.EntityDismountCallback
 import java.util.Random
 import java.util.UUID
+import kotlin.math.roundToInt
 
 class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) :
     EliminationGameInstance(gameHandle, level, map) {
@@ -42,12 +44,25 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
         for (player in gameHandle.participants) {
             val cycle = cycles[player.uuid] ?: continue
             cycle.tick(player.lastClientInput)
+            showSpeed(player, cycle)
         }
+    }
+
+    // show the rider's speed on the xp bar in km/h
+    private fun showSpeed(rider: ServerPlayer, cycle: LightCycle) {
+        val kmh = (cycle.speed * 3.6f).roundToInt()
+        rider.connection.send(ClientboundSetExperiencePacket(cycle.speedFraction, 0, kmh))
+    }
+
+    // reset the xp bar readout when a rider stops riding
+    private fun clearSpeed(rider: ServerPlayer) {
+        rider.connection.send(ClientboundSetExperiencePacket(0f, 0, 0))
     }
 
     override fun participantRemoved(player: ServerPlayer) {
         player.vehicle?.discard()
         cycles.remove(player.uuid)
+        clearSpeed(player)
         super.participantRemoved(player)
     }
 
