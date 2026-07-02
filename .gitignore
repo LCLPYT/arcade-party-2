@@ -40,3 +40,6 @@ logs/
 
 **/__pycache__/
 **/worktrees/
+
+# tooling
+.direnv
