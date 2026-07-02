@@ -8,6 +8,7 @@ import net.minecraft.world.item.DyeColor
 import net.minecraft.world.scores.PlayerTeam
 import net.minecraft.world.scores.Team
 import work.lclpnet.ap2.ext.hooks
+import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.impl.util.ColorUtil
@@ -22,6 +23,7 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
 
     private val random = Random()
     private val colors = HashMap<UUID, DyeColor>()
+    private val cycles = HashMap<UUID, LightCycle>()
 
     override fun prepare() {
         useRemainingPlayersDisplay()
@@ -33,11 +35,19 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
     }
 
     override fun go() {
-        // the sheep are stationary; there is no per-tick logic yet
+        runEveryTick { tick() }
+    }
+
+    private fun tick() {
+        for (player in gameHandle.participants) {
+            val cycle = cycles[player.uuid] ?: continue
+            cycle.tick(player.lastClientInput)
+        }
     }
 
     override fun participantRemoved(player: ServerPlayer) {
         player.vehicle?.discard()
+        cycles.remove(player.uuid)
         super.participantRemoved(player)
     }
 
@@ -71,6 +81,7 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
         // players were already teleported to their spawns by the base start sequence
         for (player in gameHandle.participants) {
             val sheep = spawnSheep(player, colors.getValue(player.uuid))
+            cycles[player.uuid] = LightCycle(sheep)
             gameHandle.scoreboardManager.joinTeam(sheep, team)
         }
     }
@@ -83,6 +94,7 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
         sheep.isInvulnerable = true
         sheep.isSilent = true
         sheep.setColor(color)
+        sheep.setYRot(player.yRot)
         sheep.setYBodyRot(player.yRot)
         sheep.setPosRaw(player.x, player.y, player.z)
 
