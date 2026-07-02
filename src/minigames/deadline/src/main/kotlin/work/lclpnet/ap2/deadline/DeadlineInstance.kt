@@ -26,6 +26,7 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
     private val random = Random()
     private val colors = HashMap<UUID, DyeColor>()
     private val cycles = HashMap<UUID, LightCycle>()
+    private val trail = LightTrail(level)
 
     override fun prepare() {
         useRemainingPlayersDisplay()
@@ -44,6 +45,7 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
         for (player in gameHandle.participants) {
             val cycle = cycles[player.uuid] ?: continue
             cycle.tick(player.lastClientInput)
+            trail.extend(player.uuid, cycle.sheep.position(), colors.getValue(player.uuid))
             showSpeed(player, cycle)
         }
     }
