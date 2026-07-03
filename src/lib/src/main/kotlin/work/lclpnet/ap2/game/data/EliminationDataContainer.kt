@@ -1,10 +1,6 @@
 package work.lclpnet.ap2.game.data
 
 import it.unimi.dsi.fastutil.objects.Object2IntArrayMap
-import work.lclpnet.ap2.api.game.data.DataContainer
-import work.lclpnet.ap2.api.game.data.DataEntry
-import work.lclpnet.ap2.api.game.data.SubjectRef
-import work.lclpnet.ap2.api.game.data.SubjectRefFactory
 import work.lclpnet.ap2.game.data.entry.SimpleOrderDataEntry
 import work.lclpnet.kibu.translate.text.TranslatedText
 import java.util.stream.IntStream

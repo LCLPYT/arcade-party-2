@@ -2,8 +2,8 @@ package work.lclpnet.ap2.game.data.type
 
 import it.unimi.dsi.fastutil.objects.ObjectIntPair
 import net.minecraft.server.level.ServerPlayer
-import work.lclpnet.ap2.api.game.data.DataContainer
-import work.lclpnet.ap2.api.game.data.GenericGameResult
+import work.lclpnet.ap2.game.data.DataContainer
+import work.lclpnet.ap2.game.data.GenericGameResult
 
 class FFAGameResult(data: DataContainer<ServerPlayer, PlayerRef>) : GenericGameResult<PlayerRef> {
 

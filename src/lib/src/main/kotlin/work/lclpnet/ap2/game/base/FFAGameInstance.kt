@@ -2,8 +2,8 @@ package work.lclpnet.ap2.game.base
 
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
-import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.data.DataContainer
 import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.player.ParticipantListener
 import work.lclpnet.ap2.game.util.useFFAWinManager

@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.api.game.data
+package work.lclpnet.ap2.game.data
 
 import net.minecraft.server.level.ServerPlayer
 

@@ -4,7 +4,7 @@ import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
-import work.lclpnet.ap2.api.game.data.SubjectRef;
+import work.lclpnet.ap2.game.data.SubjectRef;
 
 public record StringRef(String name) implements SubjectRef {
 

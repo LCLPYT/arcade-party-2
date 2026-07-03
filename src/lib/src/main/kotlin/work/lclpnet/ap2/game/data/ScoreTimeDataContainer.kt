@@ -2,10 +2,6 @@ package work.lclpnet.ap2.game.data
 
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap
-import work.lclpnet.ap2.api.game.data.DataContainer
-import work.lclpnet.ap2.api.game.data.DataEntry
-import work.lclpnet.ap2.api.game.data.SubjectRef
-import work.lclpnet.ap2.api.game.data.SubjectRefFactory
 import work.lclpnet.ap2.game.data.entry.IntScoreDataEntry
 import work.lclpnet.ap2.game.data.entry.ScoreTimeDataEntry
 import work.lclpnet.ap2.game.data.entry.ScoreView

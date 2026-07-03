@@ -13,9 +13,9 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import org.slf4j.Logger
-import work.lclpnet.ap2.api.game.data.SubjectRef
 import work.lclpnet.ap2.ext.component1
 import work.lclpnet.ap2.ext.component2
+import work.lclpnet.ap2.game.data.SubjectRef
 import work.lclpnet.ap2.impl.util.TimeHelper
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.translate.Translations

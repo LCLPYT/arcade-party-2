@@ -2,7 +2,6 @@ package work.lclpnet.ap2.game.data
 
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap
-import work.lclpnet.ap2.api.game.data.*
 import work.lclpnet.ap2.game.data.entry.DoubleScoreDataEntry
 import java.util.stream.DoubleStream
 import java.util.stream.Stream
