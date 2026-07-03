@@ -23,13 +23,13 @@ private const val GRACE_SEGMENTS = 3
 class SegmentCollider {
 
     private val cells = HashMap<Long, MutableList<Segment>>()
-    private val owned = HashMap<UUID, MutableList<Segment>>()
+    private val owned = HashMap<UUID, ArrayDeque<Segment>>()
 
     fun add(owner: UUID, start: Vec3, end: Vec3) {
-        val segments = owned.getOrPut(owner) { mutableListOf() }
+        val segments = owned.getOrPut(owner) { ArrayDeque() }
         // the pane is anchored at its base, so the center line runs at half height
-        val segment = Segment(start.add(0.0, HALF_HEIGHT, 0.0), end.add(0.0, HALF_HEIGHT, 0.0), owner, segments.size)
-        segments.add(segment)
+        val segment = Segment(start.add(0.0, HALF_HEIGHT, 0.0), end.add(0.0, HALF_HEIGHT, 0.0), owner)
+        segments.addLast(segment)
         forEachCell(segment.bounds()) { key ->
             cells.getOrPut(key) { mutableListOf() }.add(segment)
         }
@@ -37,24 +37,42 @@ class SegmentCollider {
 
     fun remove(owner: UUID) {
         val segments = owned.remove(owner) ?: return
-        for (segment in segments) {
-            forEachCell(segment.bounds()) { key ->
-                val list = cells[key] ?: return@forEachCell
-                list.remove(segment)
-                if (list.isEmpty()) cells.remove(key)
-            }
-        }
+        segments.forEach(::dropFromCells)
+    }
+
+    fun removeOldest(owner: UUID) {
+        val oldest = owned[owner]?.removeFirstOrNull() ?: return
+        dropFromCells(oldest)
     }
 
     fun collides(box: AABB, rider: UUID): Boolean {
-        // the rider's own freshest segments are still within the grace window and cannot be crashed into
-        val graceStart = (owned[rider]?.size ?: 0) - GRACE_SEGMENTS
-
         var hit = false
         forEachCell(box) { key ->
-            if (!hit && cells[key]?.any { it.isLethalTo(rider, graceStart) && it.collidesWith(box) } == true) hit = true
+            if (!hit && cells[key]?.any { isLethalTo(it, rider) && it.collidesWith(box) } == true) hit = true
         }
         return hit
+    }
+
+    private fun isLethalTo(segment: Segment, rider: UUID): Boolean {
+        // other riders segments are always lethal
+        if (segment.owner != rider) return true
+
+        val segments = owned[rider] ?: return true
+
+        // owned segments within the grace period are not lethal
+        for (i in (segments.size - GRACE_SEGMENTS).coerceAtLeast(0) until segments.size) {
+            if (segments[i] === segment) return false
+        }
+
+        return true
+    }
+
+    private fun dropFromCells(segment: Segment) {
+        forEachCell(segment.bounds()) { key ->
+            val list = cells[key] ?: return@forEachCell
+            list.remove(segment)
+            if (list.isEmpty()) cells.remove(key)
+        }
     }
 
     private inline fun forEachCell(box: AABB, action: (Long) -> Unit) {
@@ -70,9 +88,7 @@ class SegmentCollider {
         }
     }
 
-    private class Segment(val a: Vec3, val b: Vec3, val owner: UUID, val index: Int) {
-
-        fun isLethalTo(rider: UUID, graceStart: Int) = owner != rider || index < graceStart
+    private class Segment(val a: Vec3, val b: Vec3, val owner: UUID) {
 
         fun bounds(): AABB = AABB(a, b).inflate(HALF_THICKNESS, HALF_HEIGHT, HALF_THICKNESS)
 

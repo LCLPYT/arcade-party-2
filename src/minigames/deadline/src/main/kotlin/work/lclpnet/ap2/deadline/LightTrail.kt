@@ -16,6 +16,7 @@ import kotlin.math.atan2
 import kotlin.math.sqrt
 
 private const val SEGMENT_LENGTH = 1.0 // smallest trail segment length in blocks; larger means fewer displays
+private const val MAX_SEGMENTS = 75 // how many segments a trail keeps before its tail starts to disappear
 
 /**
  * Draws each rider's glowing glass-pane trail as stretched, heading-aligned block displays in a gaco scene.
@@ -37,6 +38,16 @@ class LightTrail(level: ServerLevel) {
         placeSegment(uuid, start, position, color)
         collider.add(uuid, start, position)
         anchor[uuid] = position
+        trim(uuid)
+    }
+
+    // the tail of the trail disappears once the segment limit is reached
+    private fun trim(uuid: UUID) {
+        val displays = trails[uuid] ?: return
+        while (displays.size > MAX_SEGMENTS) {
+            displays.removeFirst().detach()
+            collider.removeOldest(uuid)
+        }
     }
 
     private fun placeSegment(uuid: UUID, start: Vec3, end: Vec3, color: DyeColor) {
