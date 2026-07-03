@@ -9,7 +9,7 @@ import work.lclpnet.ap2.api.game.GameStartContext
 import work.lclpnet.ap2.api.game.GameType
 import work.lclpnet.ap2.game.MiniGame
 import work.lclpnet.ap2.game.MiniGameFactory
-import work.lclpnet.ap2.game.util.MapLevelGameFactory
+import work.lclpnet.ap2.game.util.MapLevelSchemaGameFactory
 
 class DeadlineMiniGame : MiniGame {
     override val id = ApConstants.identifier("deadline")
@@ -18,5 +18,5 @@ class DeadlineMiniGame : MiniGame {
     override fun getIcon(manager: RegistryAccess): ItemStack = ItemStack(Items.STAINED_GLASS_PANE.pick(DyeColor.RED))
     override fun canBeFinale(context: GameStartContext): Boolean = true
     override fun canBePlayed(context: GameStartContext): Boolean = true
-    override fun createFactory(): MiniGameFactory = MapLevelGameFactory(::DeadlineInstance)
+    override fun createFactory(): MiniGameFactory = MapLevelSchemaGameFactory(DeadlineMapSchema::class.java, ::DeadlineInstance)
 }
