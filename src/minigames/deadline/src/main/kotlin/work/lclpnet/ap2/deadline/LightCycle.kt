@@ -4,6 +4,8 @@ import net.minecraft.world.entity.animal.sheep.Sheep
 import net.minecraft.world.entity.player.Input
 import net.minecraft.world.phys.Vec3
 import work.lclpnet.ap2.impl.util.math.MathUtil
+import kotlin.math.abs
+import kotlin.math.sin
 
 // one tick at 20 TPS in seconds
 private const val TICK = 0.05f
@@ -26,6 +28,10 @@ private const val MAX_SPEED = 20f // ~72 km/h, engine max speed through drag is 
 // steering
 private const val TURN_RATE = 6f
 
+// crashing
+private const val CRASH_ANGLE = 60.0 // blocks hit steeper than this crash the bike
+private val HEAD_ON = sin(Math.toRadians(CRASH_ANGLE))
+
 /**
  * A rider's dyed sheep driven like a motorbike: forces-based acceleration with A/D steering.
  *
@@ -34,6 +40,9 @@ private const val TURN_RATE = 6f
 class LightCycle(val sheep: Sheep) {
 
     var speed = MIN_SPEED
+        private set
+
+    var crashed = false
         private set
 
     val speedFraction: Float
@@ -71,7 +80,30 @@ class LightCycle(val sheep: Sheep) {
         val dir = MathUtil.yaw2vec(sheep.yRot)
         val dm = sheep.deltaMovement
         val perTick = speed * TICK
+        val before = sheep.position()
         sheep.deltaMovement = Vec3(dir.x * perTick, dm.y, dir.z * perTick)
         sheep.travel(Vec3.ZERO)
+
+        checkBlockCrash(before, dir, perTick.toDouble())
     }
+
+    private fun checkBlockCrash(before: Vec3, dir: Vec3, dist: Double) {
+        if (!sheep.horizontalCollision) return
+
+        val moved = sheep.position().subtract(before)
+        val blockedX = blocked(moved.x, dir.x * dist)
+        val blockedZ = blocked(moved.z, dir.z * dist)
+
+        if ((blockedX && blockedZ) // wedged into a corner
+            || (blockedX && abs(dir.x) >= HEAD_ON)
+            || (blockedZ && abs(dir.z) >= HEAD_ON)
+        ) {
+            crashed = true
+        }
+    }
+
+    // An axis only counts as blocked when most of its intended movement was canceled.
+    // This is done to avoid going up stairs / slabs crashing you.
+    private fun blocked(moved: Double, intended: Double) =
+        abs(intended) > 1.0e-3 && abs(moved) < abs(intended) * 0.5
 }

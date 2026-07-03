@@ -46,12 +46,17 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
     private fun tick() {
         for (player in gameHandle.participants) {
             val cycle = cycles[player.uuid] ?: continue
+
             cycle.tick(player.lastClientInput)
+
+            // crashing into a wall or driving into a trail
+            if (cycle.crashed || trail.collides(player.boundingBox, player.uuid)) {
+                eliminate(player)
+                continue
+            }
+
             trail.extend(player.uuid, cycle.sheep.position(), colors.getValue(player.uuid))
             showSpeed(player, cycle)
-
-            // driving into any trail
-            if (trail.collides(player.boundingBox, player.uuid)) eliminate(player)
         }
     }
 
