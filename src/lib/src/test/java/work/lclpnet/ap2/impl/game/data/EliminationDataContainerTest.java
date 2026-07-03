@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.impl.game.data;
 
 import org.junit.jupiter.api.Test;
-import work.lclpnet.ap2.api.game.data.DataEntry;
+import work.lclpnet.ap2.game.data.DataEntry;
 import work.lclpnet.ap2.game.data.EliminationDataContainer;
 
 import java.util.List;

@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.game.data.type
 
 import it.unimi.dsi.fastutil.objects.ObjectIntPair
-import work.lclpnet.ap2.api.game.data.DataContainer
-import work.lclpnet.ap2.api.game.data.GenericGameResult
-import work.lclpnet.ap2.api.game.data.SubjectRefResolver
+import work.lclpnet.ap2.game.data.DataContainer
+import work.lclpnet.ap2.game.data.GenericGameResult
+import work.lclpnet.ap2.game.data.SubjectRefResolver
 import work.lclpnet.ap2.game.team.Team
 import java.util.*
 

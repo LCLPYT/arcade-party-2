@@ -9,7 +9,7 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.component.ResolvableProfile
-import work.lclpnet.ap2.api.game.data.SubjectRef
+import work.lclpnet.ap2.game.data.SubjectRef
 import java.util.*
 
 @JvmRecord

@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.api.stats
 
 import net.minecraft.server.level.ServerPlayer
-import work.lclpnet.ap2.api.game.data.GenericGameResult
-import work.lclpnet.ap2.api.game.data.SubjectRefFactory
+import work.lclpnet.ap2.game.data.GenericGameResult
+import work.lclpnet.ap2.game.data.SubjectRefFactory
 import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.data.type.TeamGameResult
 import work.lclpnet.ap2.game.data.type.TeamRef

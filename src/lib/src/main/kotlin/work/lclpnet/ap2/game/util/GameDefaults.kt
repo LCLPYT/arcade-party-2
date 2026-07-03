@@ -5,7 +5,6 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.level.GameType
 import net.minecraft.world.scores.Objective
-import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.stats.LevelInfo
 import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective
 import work.lclpnet.ap2.ext.allPlayers
@@ -15,6 +14,7 @@ import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.game.MiniGameInstance
 import work.lclpnet.ap2.game.base.MapGameInstance
+import work.lclpnet.ap2.game.data.DataContainer
 import work.lclpnet.ap2.game.data.ScoreListenerView
 import work.lclpnet.ap2.game.data.type.FFAGameResult
 import work.lclpnet.ap2.game.data.type.PlayerRef

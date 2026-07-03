@@ -6,9 +6,9 @@ import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.server.level.ServerPlayer
 import work.lclpnet.ap2.ApConstants
-import work.lclpnet.ap2.api.game.data.DataEntry
-import work.lclpnet.ap2.api.game.data.PlayerSubjectRefFactory
-import work.lclpnet.ap2.api.game.data.SubjectRef
+import work.lclpnet.ap2.game.data.DataEntry
+import work.lclpnet.ap2.game.data.PlayerSubjectRefFactory
+import work.lclpnet.ap2.game.data.SubjectRef
 import work.lclpnet.ap2.util.FontService
 import work.lclpnet.kibu.translate.Translations
 import work.lclpnet.kibu.translate.text.FormatWrapper

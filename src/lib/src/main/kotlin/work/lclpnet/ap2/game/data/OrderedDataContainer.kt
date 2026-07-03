@@ -1,9 +1,5 @@
 package work.lclpnet.ap2.game.data
 
-import work.lclpnet.ap2.api.game.data.DataContainer
-import work.lclpnet.ap2.api.game.data.DataEntry
-import work.lclpnet.ap2.api.game.data.SubjectRef
-import work.lclpnet.ap2.api.game.data.SubjectRefFactory
 import work.lclpnet.ap2.game.data.entry.SimpleDataEntry
 import work.lclpnet.kibu.translate.text.TranslatedText
 import java.util.function.Function

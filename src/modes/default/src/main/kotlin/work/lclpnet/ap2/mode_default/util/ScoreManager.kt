@@ -3,7 +3,7 @@ package work.lclpnet.ap2.mode_default.util
 import it.unimi.dsi.fastutil.objects.ObjectIntPair
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.server.players.PlayerList
-import work.lclpnet.ap2.api.game.data.DataEntry
+import work.lclpnet.ap2.game.data.DataEntry
 import work.lclpnet.ap2.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.player.PlayerRankView

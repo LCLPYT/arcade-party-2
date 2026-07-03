@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.api.game.sink
+package work.lclpnet.ap2.game.data
 
 interface IntDataSink<T> {
     fun setScore(subject: T, score: Int)
