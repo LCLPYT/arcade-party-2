@@ -38,6 +38,8 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
     }
 
     override fun go() {
+        eliminateBelowCriticalHeight()
+
         runEveryTick { tick() }
     }
 
@@ -47,6 +49,9 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
             cycle.tick(player.lastClientInput)
             trail.extend(player.uuid, cycle.sheep.position(), colors.getValue(player.uuid))
             showSpeed(player, cycle)
+
+            // driving into any trail
+            if (trail.collides(player.boundingBox, player.uuid)) eliminate(player)
         }
     }
 
@@ -64,6 +69,7 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
     override fun participantRemoved(player: ServerPlayer) {
         player.vehicle?.discard()
         cycles.remove(player.uuid)
+        trail.discard(player.uuid)
         clearSpeed(player)
         super.participantRemoved(player)
     }

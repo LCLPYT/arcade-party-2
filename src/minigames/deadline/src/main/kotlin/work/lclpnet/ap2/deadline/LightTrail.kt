@@ -5,6 +5,7 @@ import net.minecraft.world.item.DyeColor
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector3d
 import work.lclpnet.gaco.scene.Scene
@@ -24,6 +25,7 @@ class LightTrail(level: ServerLevel) {
     private val scene = Scene(ServerWorldMountContext(level))
     private val anchor = HashMap<UUID, Vec3>()
     private val trails = HashMap<UUID, MutableList<BlockDisplayObject>>()
+    private val collider = SegmentCollider()
 
     fun extend(uuid: UUID, position: Vec3, color: DyeColor) {
         val start = anchor[uuid]
@@ -33,6 +35,7 @@ class LightTrail(level: ServerLevel) {
         }
         if (position.distanceToSqr(start) < SEGMENT_LENGTH * SEGMENT_LENGTH) return
         placeSegment(uuid, start, position, color)
+        collider.add(uuid, start, position)
         anchor[uuid] = position
     }
 
@@ -62,4 +65,12 @@ class LightTrail(level: ServerLevel) {
         Blocks.STAINED_GLASS_PANE.pick(color).defaultBlockState()
             .setValue(BlockStateProperties.NORTH, true)
             .setValue(BlockStateProperties.SOUTH, true)
+
+    fun collides(box: AABB, rider: UUID) = collider.collides(box, rider)
+
+    fun discard(uuid: UUID) {
+        collider.remove(uuid)
+        trails.remove(uuid)?.forEach { it.detach() }
+        anchor.remove(uuid)
+    }
 }
