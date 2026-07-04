@@ -51,7 +51,7 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
     override fun go() {
         eliminateBelowCriticalHeight()
         powerUps.startRefreshing(schema.powerUpSpawns)
-        runEveryTick { tick() }
+        gameHandle.rootScheduler.interval(1) { -> tick() }
     }
 
     private fun tick() {
