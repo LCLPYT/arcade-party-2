@@ -27,7 +27,7 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
     private val colors = HashMap<UUID, DyeColor>()
     private val cycles = HashMap<UUID, LightCycle>()
     private val trail = LightTrail(level)
-    private val powerUps = PowerUps(gameHandle, level, random)
+    private val powerUps = PowerUps(gameHandle, map, level, random, commons().debugController()) { cycles[it] }
 
     override fun prepare() {
         useRemainingPlayersDisplay()
@@ -42,7 +42,6 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
     override fun go() {
         eliminateBelowCriticalHeight()
         powerUps.startRefreshing(schema.powerUpSpawns)
-
         runEveryTick { tick() }
     }
 
@@ -57,9 +56,6 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
                 eliminate(player)
                 continue
             }
-
-            // collecting a power-up
-            powerUps.collect(player, cycle.sheep.position())
 
             trail.extend(player.uuid, cycle.sheep.position(), colors.getValue(player.uuid))
             showSpeed(player, cycle)
@@ -110,7 +106,7 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
             handler.player.vehicle?.discard()
         }
 
-        powerUps.initHooks { cycles[it] }
+        powerUps.initHooks()
     }
 
     private fun spawnMounts(team: PlayerTeam) {
