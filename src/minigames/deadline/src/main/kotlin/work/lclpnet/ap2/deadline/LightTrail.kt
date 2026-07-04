@@ -16,7 +16,7 @@ import kotlin.math.atan2
 import kotlin.math.sqrt
 
 private const val SEGMENT_LENGTH = 1.0 // smallest trail segment length in blocks; larger means fewer displays
-private const val MAX_SEGMENTS = 75 // how many segments a trail keeps before its tail starts to disappear
+private const val MAX_SEGMENTS = 150 // how many segments a trail keeps before its tail starts to disappear
 
 /**
  * Draws each rider's glowing glass-pane trail as stretched, heading-aligned block displays in a gaco scene.
