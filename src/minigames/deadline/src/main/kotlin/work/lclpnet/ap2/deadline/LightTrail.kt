@@ -77,7 +77,7 @@ class LightTrail(level: ServerLevel) {
             .setValue(BlockStateProperties.NORTH, true)
             .setValue(BlockStateProperties.SOUTH, true)
 
-    fun collides(box: AABB, rider: UUID) = collider.collides(box, rider)
+    fun collides(box: AABB, movement: Vec3, rider: UUID) = collider.collides(box, movement, rider)
 
     fun discard(uuid: UUID) {
         collider.remove(uuid)

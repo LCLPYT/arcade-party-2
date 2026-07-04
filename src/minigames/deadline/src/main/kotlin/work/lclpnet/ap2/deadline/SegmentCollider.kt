@@ -4,6 +4,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import java.util.UUID
+import kotlin.math.ceil
 import kotlin.math.floor
 
 // grid cell edge length in blocks, used for looking up nearby segments quickly
@@ -15,6 +16,10 @@ private const val HALF_THICKNESS = 0.0625
 
 // the number of freshest segments that are not lethal to themselves
 private const val GRACE_SEGMENTS = 3
+
+// distance between sampled positions along a tick's movement. must stay below the collision
+// window (pane thickness + player width), so a fast rider cannot pass a trail between two samples
+private const val SAMPLE_SPACING = 0.5
 
 /**
  * Collision index for the trail segments: a spatial hash grid for the broad phase,
@@ -45,7 +50,20 @@ class SegmentCollider {
         dropFromCells(oldest)
     }
 
-    fun collides(box: AABB, rider: UUID): Boolean {
+    /** Whether the rider's hitbox touched a lethal segment anywhere along its movement of this tick. */
+    fun collides(box: AABB, movement: Vec3, rider: UUID): Boolean {
+        // check intermediate positions too, so fast riders cannot skip over a trail between two ticks
+        val steps = ceil(movement.length() / SAMPLE_SPACING).toInt().coerceAtLeast(1)
+
+        for (i in 0..steps) {
+            val t = i.toDouble() / steps // 0 = position at the previous tick, 1 = current position
+            if (collides(box.move(movement.scale(t - 1.0)), rider)) return true
+        }
+
+        return false
+    }
+
+    private fun collides(box: AABB, rider: UUID): Boolean {
         var hit = false
         forEachCell(box) { key ->
             if (!hit && cells[key]?.any { isLethalTo(it, rider) && it.collidesWith(box) } == true) hit = true

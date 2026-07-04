@@ -58,10 +58,12 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
         for (player in gameHandle.participants) {
             val cycle = cycles[player.uuid] ?: continue
 
+            val before = cycle.sheep.position()
             cycle.tick(player.lastClientInput)
+            val movement = cycle.sheep.position().subtract(before)
 
             // crashing into a wall or driving into a trail. phased riders pass through trails
-            if (cycle.crashed || (!cycle.phased && trail.collides(player.boundingBox, player.uuid))) {
+            if (cycle.crashed || (!cycle.phased && trail.collides(player.boundingBox, movement, player.uuid))) {
                 eliminate(player)
                 continue
             }
