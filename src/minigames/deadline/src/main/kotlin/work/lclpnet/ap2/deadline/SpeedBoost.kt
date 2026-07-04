@@ -7,7 +7,7 @@ import net.minecraft.world.item.Items
 import work.lclpnet.kibu.scheduler.Ticks
 import java.util.UUID
 
-private const val BOOST_FORCE = 4000f // engine force while the boost is active
+private const val BOOST_FORCE = 6000f // engine force while the boost is active
 private val ACTIVATE_SOUND = GameSound(SoundEvents.FIREWORK_ROCKET_LAUNCH, 0.8f, 1f)
 
 /**

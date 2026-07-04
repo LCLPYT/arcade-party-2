@@ -14,16 +14,16 @@ private const val TICK = 0.05f
 private const val MASS = 250f
 
 // longitudinal forces (newtons)
-private const val ENGINE_FORCE = 2000f // throttle drive force
-private const val BRAKE_FORCE = 2000f  // braking force
+private const val ENGINE_FORCE = 3000f // throttle drive force
+private const val BRAKE_FORCE = 3000f  // braking force
 
 // resistance forces. drag is exaggerated compared to a real bike so the arena top speed stays playable
-private const val DRAG = 2.56f // air resistance, grows with speed squared. balances the engine at ~60km/h
-private const val ROLL = 77f   // rolling resistance, grows linearly with speed. ~30x drag
+private const val DRAG = 1.42f // air resistance, grows with speed squared. balances the engine at ~120km/h
+private const val ROLL = 42.6f // rolling resistance, grows linearly with speed. ~30x drag
 
 // speed clamps (m/s)
-private const val MIN_SPEED = 3f  // ~11 km/h
-private const val MAX_SPEED = 20f // ~72 km/h, engine max speed through drag is 60km/h
+private const val MIN_SPEED = 6f  // ~22 km/h
+private const val MAX_SPEED = 40f // ~144 km/h, engine max speed through drag is 120km/h
 
 // steering
 private const val TURN_RATE = 6f
