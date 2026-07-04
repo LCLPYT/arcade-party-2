@@ -3,15 +3,12 @@ package work.lclpnet.ap2.deadline
 import net.minecraft.network.protocol.game.ClientboundSetExperiencePacket
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
-import net.minecraft.sounds.SoundEvents
-import net.minecraft.sounds.SoundSource
 import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.animal.sheep.Sheep
 import net.minecraft.world.item.DyeColor
 import net.minecraft.world.scores.PlayerTeam
 import net.minecraft.world.scores.Team
 import work.lclpnet.ap2.ext.hooks
-import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
@@ -30,7 +27,7 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
     private val colors = HashMap<UUID, DyeColor>()
     private val cycles = HashMap<UUID, LightCycle>()
     private val trail = LightTrail(level)
-    private val powerUps = PowerUps(level)
+    private val powerUps = PowerUps(gameHandle, level, random)
 
     override fun prepare() {
         useRemainingPlayersDisplay()
@@ -44,6 +41,7 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
 
     override fun go() {
         eliminateBelowCriticalHeight()
+        powerUps.startRefreshing(schema.powerUpSpawns)
 
         runEveryTick { tick() }
     }
@@ -54,17 +52,14 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
 
             cycle.tick(player.lastClientInput)
 
-            // crashing into a wall or driving into a trail
-            if (cycle.crashed || trail.collides(player.boundingBox, player.uuid)) {
+            // crashing into a wall or driving into a trail. phased riders pass through trails
+            if (cycle.crashed || (!cycle.phased && trail.collides(player.boundingBox, player.uuid))) {
                 eliminate(player)
                 continue
             }
 
             // collecting a power-up
-            if (powerUps.collect(cycle.sheep.position())) {
-                // placeholder effect until the actual power-ups are implemented
-                player.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.6f, 1f)
-            }
+            powerUps.collect(player, cycle.sheep.position())
 
             trail.extend(player.uuid, cycle.sheep.position(), colors.getValue(player.uuid))
             showSpeed(player, cycle)
@@ -114,6 +109,8 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
         ServerPlayConnectionHooks.DISCONNECT.registerWith(hooks) { handler, _ ->
             handler.player.vehicle?.discard()
         }
+
+        powerUps.initHooks { cycles[it] }
     }
 
     private fun spawnMounts(team: PlayerTeam) {

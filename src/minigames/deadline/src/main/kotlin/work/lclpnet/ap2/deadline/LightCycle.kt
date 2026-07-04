@@ -45,8 +45,30 @@ class LightCycle(val sheep: Sheep) {
     var crashed = false
         private set
 
+    /** Whether the bike currently passes through trails. */
+    val phased: Boolean
+        get() = phaseTicks > 0
+
+    private var engineOverride = 0f
+    private var engineOverrideTicks = 0
+    private var phaseTicks = 0
+
     val speedFraction: Float
         get() = ((speed - MIN_SPEED) / (MAX_SPEED - MIN_SPEED)).coerceIn(0f, 1f)
+
+    fun overrideEngine(force: Float, durationTicks: Int) {
+        engineOverride = force
+        engineOverrideTicks = durationTicks
+    }
+
+    fun jump(strength: Double) {
+        val dm = sheep.deltaMovement
+        sheep.deltaMovement = Vec3(dm.x, strength, dm.z)
+    }
+
+    fun phase(durationTicks: Int) {
+        phaseTicks = durationTicks
+    }
 
     fun tick(input: Input) {
         steer(input)
@@ -66,7 +88,11 @@ class LightCycle(val sheep: Sheep) {
     }
 
     private fun drive(input: Input) {
+        if (engineOverrideTicks > 0) engineOverrideTicks--
+        if (phaseTicks > 0) phaseTicks--
+
         val engine = when {
+            engineOverrideTicks > 0 -> engineOverride // an overridden engine forces full throttle
             input.forward() -> ENGINE_FORCE // throttle
             input.backward() -> -BRAKE_FORCE // brake
             else -> 0f // coasting, resistance only

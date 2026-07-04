@@ -1,0 +1,25 @@
+package work.lclpnet.ap2.deadline
+
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.Items
+import work.lclpnet.kibu.scheduler.Ticks
+
+private const val BOOST_FORCE = 4000f // engine force while the boost is active
+private val ACTIVATE_SOUND = GameSound(SoundEvents.FIREWORK_ROCKET_LAUNCH, 0.8f, 1f)
+
+/**
+ * Temporarily gives the sheep a stronger engine at full throttle.
+ */
+class SpeedBoost : PowerUp {
+
+    override val item: Item = Items.SUGAR
+    override val nameKey = "power_up.speed_boost"
+    override val duration = Ticks.seconds(4)
+
+    override fun activate(rider: ServerPlayer, cycle: LightCycle) {
+        cycle.overrideEngine(BOOST_FORCE, duration)
+        ACTIVATE_SOUND.playTo(rider)
+    }
+}

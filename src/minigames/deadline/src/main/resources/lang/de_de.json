@@ -1,4 +1,8 @@
 {
   "name": "Deadline",
-  "description": "Reite auf deinem Lichtschaf und ziehe eine tödliche Spur hinter dir her. Wer in eine Spur oder Wand kracht, scheidet aus. Der letzte Reiter gewinnt."
+  "description": "Reite auf deinem Lichtschaf und ziehe eine tödliche Spur hinter dir her. Wer in eine Spur oder Wand kracht, scheidet aus. Der letzte Reiter gewinnt.",
+  "power_up.invisible": "Unsichtbarkeit",
+  "power_up.jump": "Sprung",
+  "power_up.refresh": "Power-Ups",
+  "power_up.speed_boost": "Geschwindigkeitsschub"
 }
