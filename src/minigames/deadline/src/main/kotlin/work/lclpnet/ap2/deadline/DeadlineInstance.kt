@@ -12,6 +12,7 @@ import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
+import work.lclpnet.ap2.game.util.teleportToRandomSpawns
 import work.lclpnet.ap2.impl.util.ColorUtil
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.ServerPlayConnectionHooks
@@ -28,6 +29,14 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
     private val cycles = HashMap<UUID, LightCycle>()
     private val trail = LightTrail(level)
     private val powerUps = PowerUps(gameHandle, map, level, random, commons().debugController()) { cycles[it] }
+
+    override fun teleportPlayers() {
+        val spawnBox = requireNotNull(schema.spawnBox) {
+            "Map property \"Spawn box\" is not set in the deadline schema"
+        }
+
+        teleportToRandomSpawns(spawnBox, schema.scanStarts)
+    }
 
     override fun prepare() {
         useRemainingPlayersDisplay()
