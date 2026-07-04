@@ -79,6 +79,7 @@ public class SpecialItems implements SpecialItemContext {
     private @Setter @Getter int maxItems = 16;
     private @Setter @Getter boolean markGlowing = false;
     private @Setter @Getter int itemSlot = 8;
+    private @Setter @Getter double itemSize = SpecialItemObject.DEFAULT_SIZE;
 
     public SpecialItems(MiniGameHandle gameHandle, GameMap map, ServerLevel level, Random random, SpecialItemPositions positions, SpecialItemRegistry registry) {
         this.gameHandle = gameHandle;
@@ -184,7 +185,7 @@ public class SpecialItems implements SpecialItemContext {
 
         ItemStack dropStack = configureStack(item, item.usedItemStack(stack, level.registryAccess()));
 
-        SpecialItemObject obj = scene.spawnItem(pos, item, dropStack, gameHandle.getTranslations(), itemName(item));
+        SpecialItemObject obj = scene.spawnItem(pos, item, dropStack, gameHandle.getTranslations(), itemName(item), itemSize);
         obj.setPickupDelay(40);
 
         scheduleDespawn(obj);
@@ -375,7 +376,7 @@ public class SpecialItems implements SpecialItemContext {
 
         ItemStack stack = configureStack(item, item.createItemStack(level.registryAccess()));
 
-        SpecialItemObject obj = scene.spawnItem(pos, item, stack, gameHandle.getTranslations(), itemName(item));
+        SpecialItemObject obj = scene.spawnItem(pos, item, stack, gameHandle.getTranslations(), itemName(item), itemSize);
 
         if (markGlowing) {
             obj.setGlowing(true);
