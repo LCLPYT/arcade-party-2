@@ -4,6 +4,7 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
+import work.lclpnet.ap2.impl.game.item.SpecialItemContext
 import work.lclpnet.kibu.scheduler.Ticks
 import java.util.UUID
 
@@ -20,7 +21,7 @@ class SpeedBoost(override val cycles: (UUID) -> LightCycle?) : PowerUp {
 
     override fun id() = "speed_boost"
 
-    override fun activate(rider: ServerPlayer, cycle: LightCycle) {
+    override fun activate(rider: ServerPlayer, cycle: LightCycle, ctx: SpecialItemContext) {
         cycle.overrideEngine(BOOST_FORCE, duration)
         ACTIVATE_SOUND.playTo(rider)
     }

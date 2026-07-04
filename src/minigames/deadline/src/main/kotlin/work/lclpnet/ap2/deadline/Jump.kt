@@ -4,6 +4,7 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
+import work.lclpnet.ap2.impl.game.item.SpecialItemContext
 import java.util.UUID
 
 private const val JUMP_STRENGTH = 0.7 // upward velocity in blocks per tick
@@ -19,7 +20,7 @@ class Jump(override val cycles: (UUID) -> LightCycle?) : PowerUp {
 
     override fun id() = "jump"
 
-    override fun activate(rider: ServerPlayer, cycle: LightCycle) {
+    override fun activate(rider: ServerPlayer, cycle: LightCycle, ctx: SpecialItemContext) {
         cycle.jump(JUMP_STRENGTH)
         ACTIVATE_SOUND.playTo(rider)
     }

@@ -4,16 +4,20 @@ import net.minecraft.network.protocol.game.ClientboundSetExperiencePacket
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.entity.EntityTypes
+import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.animal.sheep.Sheep
 import net.minecraft.world.item.DyeColor
+import net.minecraft.world.item.Items
 import net.minecraft.world.scores.PlayerTeam
 import net.minecraft.world.scores.Team
 import work.lclpnet.ap2.ext.hooks
+import work.lclpnet.ap2.ext.mc.unbreakable
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.util.teleportToRandomSpawns
 import work.lclpnet.ap2.impl.util.ColorUtil
+import work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.ServerPlayConnectionHooks
 import work.lclpnet.kibu.hook.entity.EntityDismountCallback
@@ -123,10 +127,22 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
     private fun spawnMounts(team: PlayerTeam) {
         // players were already teleported to their spawns by the base start sequence
         for (player in gameHandle.participants) {
-            val sheep = spawnSheep(player, colors.getValue(player.uuid))
+            val color = colors.getValue(player.uuid)
+            val sheep = spawnSheep(player, color)
             cycles[player.uuid] = LightCycle(sheep)
             gameHandle.scoreboardManager.joinTeam(sheep, team)
+            equip(player, color)
         }
+    }
+
+    // dress the rider in leather armor matching their sheep and trail
+    private fun equip(player: ServerPlayer, color: DyeColor) {
+        val colorInt = color.textureDiffuseColor
+
+        player.setItemSlot(EquipmentSlot.HEAD, getLeatherArmor(Items.LEATHER_HELMET, colorInt).unbreakable())
+        player.setItemSlot(EquipmentSlot.CHEST, getLeatherArmor(Items.LEATHER_CHESTPLATE, colorInt).unbreakable())
+        player.setItemSlot(EquipmentSlot.LEGS, getLeatherArmor(Items.LEATHER_LEGGINGS, colorInt).unbreakable())
+        player.setItemSlot(EquipmentSlot.FEET, getLeatherArmor(Items.LEATHER_BOOTS, colorInt).unbreakable())
     }
 
     private fun spawnSheep(player: ServerPlayer, color: DyeColor): Sheep {

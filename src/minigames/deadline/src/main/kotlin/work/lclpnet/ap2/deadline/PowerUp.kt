@@ -22,7 +22,7 @@ interface PowerUp : SpecialItem {
     /** Looks up the light cycle of a rider. */
     val cycles: (UUID) -> LightCycle?
 
-    fun activate(rider: ServerPlayer, cycle: LightCycle)
+    fun activate(rider: ServerPlayer, cycle: LightCycle, ctx: SpecialItemContext)
 
     override fun createItemStack(registryManager: RegistryAccess): ItemStack = ItemStack(item)
 
@@ -39,7 +39,7 @@ interface PowerUp : SpecialItem {
             ctx.removeSpecialItem(player, this)
         }
 
-        activate(player, cycle)
+        activate(player, cycle, ctx)
 
         return InteractionResult.SUCCESS_SERVER
     }
