@@ -45,11 +45,11 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
         assignColors()
         initHooks()
         spawnMounts(team)
-        powerUps.spawn(schema.powerUpSpawns)
     }
 
     override fun go() {
         eliminateBelowCriticalHeight()
+        powerUps.spawn(schema.powerUpSpawns)
         powerUps.startRefreshing(schema.powerUpSpawns)
         gameHandle.rootScheduler.interval(1) { -> tick() }
     }
