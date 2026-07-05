@@ -43,7 +43,6 @@ import work.lclpnet.ap2.game.paintball.kit.SniperKit
 import work.lclpnet.ap2.game.paintball.util.*
 import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.game.team.TeamManager
-import work.lclpnet.ap2.game.util.GameStartSequence
 import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.game.util.useAnnouncer
 import work.lclpnet.ap2.game.util.useTeamStats
@@ -271,14 +270,6 @@ class PaintballInstance(
                 player.setItemSlot(EquipmentSlot.FEET, unbreakable(getLeatherArmor(Items.LEATHER_BOOTS, color)))
             }
         }
-    }
-
-    override fun configureStartup(sequence: GameStartSequence) {
-        sequence.beforeGo { next ->
-            kitHandler.startKitSelectionTimer(this, KitHandler.DEFAULT_TIMER_DURATION) { next.run() }
-        }
-
-        super.configureStartup(sequence)
     }
 
     override fun go() {
