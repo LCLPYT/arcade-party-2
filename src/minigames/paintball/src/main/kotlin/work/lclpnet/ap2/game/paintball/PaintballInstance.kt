@@ -1,9 +1,7 @@
 package work.lclpnet.ap2.game.paintball
 
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import it.unimi.dsi.fastutil.longs.LongSet
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup
-import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
@@ -21,9 +19,7 @@ import work.lclpnet.ap2.api.stats.CommonStats.DamageDealt
 import work.lclpnet.ap2.api.stats.CommonStats.Deaths
 import work.lclpnet.ap2.api.stats.CommonStats.KillDeathRatio
 import work.lclpnet.ap2.api.stats.CommonStats.Kills
-import work.lclpnet.ap2.api.util.world.AdjacentBlocks
 import work.lclpnet.ap2.api.util.world.BlockPredicate
-import work.lclpnet.ap2.api.util.world.WorldScanner
 import work.lclpnet.ap2.core.hook.SpectatePlayerCallback
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.resetAttribute
@@ -51,12 +47,8 @@ import work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
 import work.lclpnet.ap2.impl.util.VanishManager
 import work.lclpnet.ap2.impl.util.handler.VisualCooldown
-import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
-import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks
-import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate
 import work.lclpnet.gaco.collisions.ChunkedCollisionDetector
 import work.lclpnet.gaco.collisions.movement.TickMovementObserver
-import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.gaco.scene.Scene
 import work.lclpnet.gaco.scene.ServerWorldMountContext
 import work.lclpnet.gaco.scene.physics.EntityCollisionManager
@@ -77,6 +69,7 @@ class PaintballInstance(
     private val random: Random,
     private val teams: PaintballTeams,
     private val paintManager: PaintManager,
+    private val specialItemSpawns: LongSet
 ) : TeamGameInstance(gameHandle, level, map, teamManager) {
 
     private val respawnCooldown = VisualCooldown(gameHandle.scheduler)
@@ -164,15 +157,13 @@ class PaintballInstance(
     }
 
     private fun setupSpecialItems(world: ServerLevel, map: GameMap) {
-        val validSpawns: LongSet = findReachablePositions(world, map)
-
         for (team in teams) {
             for (pos in team.baseBounds) {
-                validSpawns.remove(pos.asLong())
+                specialItemSpawns.remove(pos.asLong())
             }
         }
 
-        val validSpawn = BlockPredicate { pos -> validSpawns.contains(pos.asLong()) }
+        val validSpawn = BlockPredicate { pos -> specialItemSpawns.contains(pos.asLong()) }
 
         specialItems = SpecialItems.create(
             gameHandle,
@@ -190,24 +181,6 @@ class PaintballInstance(
 
         specialItems.isMarkGlowing = true
         specialItems.setup()
-    }
-
-    private fun findReachablePositions(world: ServerLevel, map: GameMap): LongSet {
-        val bounds: BlockBox = SpecialItems.getSpawnArea(map).bounds()
-        val predicate = BlockPredicate.and(bounds::contains, WalkableBlockPredicate(world))
-        val adjacent: AdjacentBlocks = SimpleAdjacentBlocks(predicate, 1)
-        val scanner: WorldScanner = BfsWorldScanner(adjacent)
-
-        val spawns: LongSet = LongOpenHashSet()
-
-        val anyTeam = teams.first()
-        val startPos = BlockPos.containing(anyTeam.spawn)
-
-        scanner.scan(startPos).forEachRemaining { pos ->
-            spawns.add(pos.asLong())
-        }
-
-        return spawns
     }
 
     private fun setupPlayerCollisions() {
