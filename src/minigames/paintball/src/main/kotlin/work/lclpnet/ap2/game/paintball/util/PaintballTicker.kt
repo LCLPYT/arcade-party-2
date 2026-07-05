@@ -48,7 +48,7 @@ private const val DEBUG_WALL_CLIMBING = false
 private const val HEAL_PER_SECOND = 4.0f
 private val HEAL_DELAY_TICKS = Ticks.seconds(3)
 private const val SOUND_TICKS = 2
-private val DIVE_COOLDOWN = 1.seconds
+private val DIVE_COOLDOWN = 0.5.seconds
 
 class PaintballTicker(
     private val world: ServerLevel,
@@ -108,8 +108,7 @@ class PaintballTicker(
         }
 
         if (onInk == OnInk.OWN && player.isShiftKeyDown) {
-            tickDiving(player, entry, resolvedState)
-            return
+            if (tickDiving(player, entry, resolvedState)) return
         }
         
         if (entry.diving) {
@@ -122,6 +121,7 @@ class PaintballTicker(
         vanishManager.show(player)
         player.resetAttribute(Attributes.MOVEMENT_SPEED)
         player.resetAttribute(Attributes.SNEAKING_SPEED)
+        player.resetAttribute(Attributes.JUMP_STRENGTH)
 
         paintGunManager.removeReloading(player)
 
@@ -135,15 +135,18 @@ class PaintballTicker(
         player.connection.send(ClientboundSetExperiencePacket(cooldownProgress, 0, 0))
     }
 
-    private fun tickDiving(player: ServerPlayer, entry: Entry, resolvedState: BlockState?) {
-        if (!entry.diving && !canDive(entry)) return
-        
-        startDiving(player, entry)
-        
+    private fun tickDiving(player: ServerPlayer, entry: Entry, resolvedState: BlockState?): Boolean {
+        if (!entry.diving) {
+            if (!canDive(entry)) return false
+
+            startDiving(player, entry)
+        }
+
         vanishManager.vanish(player)
 
         player.setAttribute(Attributes.MOVEMENT_SPEED, 0.14)
         player.setAttribute(Attributes.SNEAKING_SPEED, 1.0)
+        player.setAttribute(Attributes.JUMP_STRENGTH, 0.6)
 
         if (entry.outOfCombatTicks >= HEAL_DELAY_TICKS) {
             player.health += HEAL_PER_SECOND / 20
@@ -177,7 +180,7 @@ class PaintballTicker(
         paintGunManager.setReloading(player)
         tickReload(player, entry)
 
-        return
+        return true
     }
 
     private fun canDive(entry: Entry): Boolean = 
@@ -186,14 +189,16 @@ class PaintballTicker(
     private fun startDiving(player: ServerPlayer, entry: Entry) {
         entry.diving = true
 
+        // cooldown will only start decreasing when stopping dive
+        entry.diveCooldown = DIVE_COOLDOWN.inWholeTicks.toInt()
+
+        updateDiveCooldownDisplay(entry, player)
+
         SoundHelper.playSoundAt(player, SoundEvents.HONEY_BLOCK_PLACE, SoundSource.PLAYERS, 0.4f, 1.2f)
     }
 
     private fun onStopDiving(player: ServerPlayer, entry: Entry) {
         entry.diving = false
-        entry.diveCooldown = DIVE_COOLDOWN.inWholeTicks.toInt()
-
-        updateDiveCooldownDisplay(entry, player)
 
         SoundHelper.playSoundAt(player, SoundEvents.HONEY_BLOCK_PLACE, SoundSource.PLAYERS, 0.4f, 0.8f)
     }
