@@ -294,9 +294,9 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
     }
 
     override fun configureStartup(sequence: GameStartSequence) {
-        sequence.beforeGo { next ->
-            kitHandler.startKitSelectionTimer(this, announcer) { next.run() }
-        }
+        val delay = KitHandler.DEFAULT_TIMER_DURATION
+        kitHandler.startKitSelectionTimer(this, delay + sequence.initialDelay)
+        sequence.extraDelay += delay
 
         super.configureStartup(sequence)
     }

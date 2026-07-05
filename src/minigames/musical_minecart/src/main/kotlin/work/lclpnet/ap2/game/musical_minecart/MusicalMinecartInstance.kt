@@ -107,7 +107,7 @@ class MusicalMinecartInstance(
         SetSongCommand(songs, ::skipSong).register(commands)
         SkipSongCommand(::skipSong).register(commands)
 
-        Hints(gameHandle).sendBeforeReady(gameHandle, Hints.Mod.NOTICA)
+        Hints(gameHandle).sendBeforeReady(gameHandle, Hints.Mod.Notica)
     }
 
     override fun go() {

@@ -17,9 +17,7 @@ import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.MiniGameInstance
-import work.lclpnet.ap2.game.base.MapGameInstance
 import work.lclpnet.ap2.game.player.Participants
-import work.lclpnet.ap2.game.util.Announcer
 import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.access.misc.CustomNbt
@@ -162,17 +160,15 @@ class KitHandler(
         }
     }
 
-    fun startKitSelectionTimer(gameInstance: MapGameInstance, announcer: Announcer, onComplete: Runnable) {
-        startKitSelectionTimer(gameInstance, announcer, 10.seconds, onComplete)
-    }
-
-    fun startKitSelectionTimer(gameInstance: MiniGameInstance, announcer: Announcer, duration: Duration, onComplete: Runnable) {
+    fun startKitSelectionTimer(
+        gameInstance: MiniGameInstance,
+        duration: Duration,
+        onComplete: Runnable = {},
+    ) {
         if (manager.kits.size < 2) {
             onComplete.run()
             return
         }
-
-        announcer.announceSubtitle("ap2.kit_selector.hint")
 
         selectKitChanger()
 
@@ -203,6 +199,7 @@ class KitHandler(
     }
 
     companion object {
+        val DEFAULT_TIMER_DURATION = 10.seconds
 
         @JvmStatic
         fun create(

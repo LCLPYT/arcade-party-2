@@ -275,7 +275,7 @@ class PaintballInstance(
 
     override fun configureStartup(sequence: GameStartSequence) {
         sequence.beforeGo { next ->
-            kitHandler.startKitSelectionTimer(this, announcer) { next.run() }
+            kitHandler.startKitSelectionTimer(this, KitHandler.DEFAULT_TIMER_DURATION) { next.run() }
         }
 
         super.configureStartup(sequence)
