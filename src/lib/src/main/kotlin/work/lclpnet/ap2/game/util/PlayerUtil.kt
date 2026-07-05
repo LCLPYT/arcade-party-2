@@ -10,6 +10,7 @@ import net.minecraft.world.entity.player.Input
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.GameType
 import net.minecraft.world.phys.Vec3
+import work.lclpnet.ap2.ext.ticks
 import work.lclpnet.ap2.game.player.PlayerManager
 import work.lclpnet.ap2.impl.util.effect.ApEffect
 import work.lclpnet.combatctl.api.CombatControl
@@ -18,10 +19,12 @@ import work.lclpnet.combatctl.impl.CombatStyles
 import work.lclpnet.game.util.PlayerReset
 import work.lclpnet.kibu.access.VelocityModifier
 import work.lclpnet.kibu.hook.util.PlayerUtils
-import work.lclpnet.kibu.scheduler.Ticks
 import java.util.*
 import kotlin.math.abs
 import kotlin.math.sqrt
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.times
 
 class PlayerUtil(
     private val server: MinecraftServer,
@@ -182,10 +185,8 @@ class PlayerUtil(
     companion object {
         val INITIAL_GAMEMODE: GameType = GameType.ADVENTURE
 
-        @JvmStatic
-        fun getLoadingDelayTicks(players: Int): Int {
-            return Ticks.seconds(5) + players * 10
-        }
+        fun getLoadingDelay(players: Int): Duration =
+            5.seconds + players * 10.ticks
 
         fun getRelativeHorizontalInputVector(input: Input): Vec3 {
             var x = 0.0

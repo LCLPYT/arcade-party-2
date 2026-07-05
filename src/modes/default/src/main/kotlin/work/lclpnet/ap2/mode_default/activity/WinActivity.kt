@@ -10,6 +10,7 @@ import work.lclpnet.activity.ComponentActivity
 import work.lclpnet.activity.component.ComponentBundle
 import work.lclpnet.activity.component.builtin.BuiltinComponents
 import work.lclpnet.ap2.api.util.action.Action
+import work.lclpnet.ap2.ext.inWholeTicks
 import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.util.Announcer
 import work.lclpnet.ap2.game.util.PlayerUtil
@@ -87,7 +88,7 @@ class WinActivity(
 
         activityConfigurator.resetPlayers()
 
-        scheduler.timeout(PlayerUtil.getLoadingDelayTicks(args.playerManager.count())) { ->
+        scheduler.timeout(PlayerUtil.getLoadingDelay(args.playerManager.count()).inWholeTicks) { ->
             afterInitialDelay()
         }
     }

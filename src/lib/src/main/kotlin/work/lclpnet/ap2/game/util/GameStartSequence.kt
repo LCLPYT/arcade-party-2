@@ -5,6 +5,8 @@ import net.minecraft.server.level.ServerPlayer
 import work.lclpnet.ap2.ext.sendGo
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.util.SubtitleCountdown
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * The shared start sequence of a mini-game: an initial countdown followed by a number of optional
@@ -22,6 +24,7 @@ class GameStartSequence(
     private val players: () -> Collection<ServerPlayer> = { PlayerLookup.all(gameHandle.server) },
 ) {
     private val phases = ArrayDeque<StartupPhase>()
+    var extraDelay = 0.seconds
 
     fun interface StartupPhase {
         /** Perform work, then invoke [next] to continue the sequence (synchronously or asynchronously). */
@@ -31,13 +34,20 @@ class GameStartSequence(
     /** Insert custom logic between the countdown and the game start. */
     fun beforeGo(phase: StartupPhase) = apply { phases.addLast(phase) }
 
-    val initialDelay: Int
-        get() = PlayerUtil.getLoadingDelayTicks(gameHandle.participants.asSet.size)
+    val initialDelay: Duration
+        get() = PlayerUtil.getLoadingDelay(gameHandle.participants.asSet.size) +
+                extraDelay.coerceAtLeast(0.seconds)
 
     /** Runs the initial countdown, then the registered phases, then invokes [onComplete]. */
     fun start(onComplete: Runnable) {
-        SubtitleCountdown(gameHandle.server, gameHandle.scheduler, { }, players)
-            .schedule(initialDelay) { runPhases(onComplete) }
+        SubtitleCountdown(
+            gameHandle.server,
+            gameHandle.scheduler,
+            { },
+            players
+        ).schedule(initialDelay) {
+            runPhases(onComplete)
+        }
     }
 
     /** Like [start], but sends the "go" title and sound to every player right before invoking [onGo]. */
