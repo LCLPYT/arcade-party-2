@@ -14,14 +14,18 @@ class ManiacDiggerFactory : MiniGameFactory {
 
         val winHeight = map.requireProperty<Number>("goal-height").toInt()
 
-        val generated = MdGenerator(level, map, handle.logger, Random())
-            .generate(handle.participants.count())
+        val random = Random()
+        val participants = handle.participants.toList()
+        val assignment = handle.colorPreferences.assign(participants, random)
+        val colors = participants.map { assignment.getValue(it.uuid) }
+
+        val generated = MdGenerator(level, map, handle.logger, random)
+            .generate(colors)
 
         val pipes = HashMap<UUID, MdPipe>()
-        var i = 0
 
-        for (player in handle.participants) {
-            pipes[player.uuid] = generated[i++]
+        for ((i, player) in participants.withIndex()) {
+            pipes[player.uuid] = generated[i]
         }
 
         return ManiacDiggerInstance(handle, level, map, winHeight, pipes)
