@@ -3,6 +3,7 @@ package work.lclpnet.ap2.mode_default.util
 import work.lclpnet.ap2.api.base.GameQueue
 import work.lclpnet.ap2.api.music.SongCache
 import work.lclpnet.ap2.api.stats.SessionStatsRecorder
+import work.lclpnet.ap2.game.color.PlayerColorPreferences
 import work.lclpnet.ap2.game.player.PlayerManager
 import work.lclpnet.ap2.mode_default.ApMiniGameArgs
 import work.lclpnet.ap2.mode_default.cmd.ForceGameCommand
@@ -23,6 +24,7 @@ data class ApBaseArgs(
     val miniGameArgs: ApMiniGameArgs,
     val gameQueue: GameQueue,
     val playerManager: PlayerManager,
+    val colorPreferences: PlayerColorPreferences,
     val forceGameCommand: ForceGameCommand,
     val sharedSongCache: SongCache,
     val scoreManager: ScoreManager,

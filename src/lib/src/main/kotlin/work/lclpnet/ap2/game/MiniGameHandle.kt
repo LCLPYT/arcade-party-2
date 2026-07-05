@@ -11,6 +11,7 @@ import work.lclpnet.ap2.api.map.MapFacade
 import work.lclpnet.ap2.api.music.SongCache
 import work.lclpnet.ap2.api.music.SongManager
 import work.lclpnet.ap2.api.stats.StatsResult
+import work.lclpnet.ap2.game.color.PlayerColorPreferences
 import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.game.player.PlayerRankView
 import work.lclpnet.ap2.game.team.TeamConfig
@@ -68,6 +69,8 @@ interface MiniGameHandle {
     val translations: Translations
 
     val participants: Participants
+
+    val colorPreferences: PlayerColorPreferences
 
     val worldBorderManager: WorldBorderManager
 

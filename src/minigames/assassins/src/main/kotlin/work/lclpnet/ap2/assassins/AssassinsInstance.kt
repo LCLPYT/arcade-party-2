@@ -143,6 +143,7 @@ class AssassinsInstance(
 
         for (player in players()) {
             movementBlocker.disableMovement(player)
+            equip(player)
         }
 
         ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(gameHandle.hooks, ::onDamage)
@@ -204,8 +205,11 @@ class AssassinsInstance(
 
         for (player in alive) {
             movementBlocker.disableMovement(player)
-            resetPlayer(player)
-            equip(player)
+
+            if (!initial) {
+                resetPlayer(player)
+                equip(player)
+            }
 
             if (DEBUG_ALWAYS_GIVE_ITEM || player.uuid in rewarded) {
                 giveSpecialItem(player, chooseRandomItem())
@@ -433,12 +437,7 @@ class AssassinsInstance(
 
     private fun assignColors() {
         colors.clear()
-
-        val palette = DyeColor.entries.shuffled(random)
-
-        for ((i, player) in players().withIndex()) {
-            colors[player.uuid] = palette[i % palette.size]
-        }
+        colors.putAll(gameHandle.colorPreferences.assign(players(), random.asJavaRandom()))
     }
 
     private fun resetPlayer(player: ServerPlayer) {

@@ -12,6 +12,7 @@ import work.lclpnet.ap2.api.base.MiniGameManager
 import work.lclpnet.ap2.api.config.Ap2Config
 import work.lclpnet.ap2.api.stats.SessionStatsRecorder
 import work.lclpnet.ap2.game.MiniGame
+import work.lclpnet.ap2.game.color.SessionColorPreferences
 import work.lclpnet.ap2.game.player.PlayerManagerImpl
 import work.lclpnet.ap2.game.util.PlayerUtil
 import work.lclpnet.ap2.impl.base.FabricMiniGameManager
@@ -117,6 +118,8 @@ class ArcadePartyInstance(
         val playerManager = PlayerManagerImpl(server)
         val playerUtil = PlayerUtil(server, playerManager)
 
+        val colorPreferences = SessionColorPreferences()
+
         val scoreManager = ScoreManager(server.playerList, WIN_SCORE)
         val commandStack = environment.commandStack
 
@@ -159,6 +162,7 @@ class ArcadePartyInstance(
             miniGameArgs = container,
             gameQueue = queue,
             playerManager = playerManager,
+            colorPreferences = colorPreferences,
             forceGameCommand = forceGameCommand,
             sharedSongCache = songCache,
             scoreManager = scoreManager,
