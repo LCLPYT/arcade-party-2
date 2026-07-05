@@ -92,7 +92,6 @@ class PaintballInstance(
         random,
         gameHandle.participants,
         gameHandle.translations,
-        commons().debugController(),
         winManager::gameOver
     )
 
@@ -135,8 +134,6 @@ class PaintballInstance(
 
         paintManager.data = data
         paintManager.onPaint = stats::blockPainted
-
-        paintGunManager.init(gameHandle.hooks)
 
         setupSpecialItems(level, map)
 

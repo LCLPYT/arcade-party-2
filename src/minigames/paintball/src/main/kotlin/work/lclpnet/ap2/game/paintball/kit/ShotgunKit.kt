@@ -5,6 +5,8 @@ import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import work.lclpnet.ap2.game.kit.KitHandle
+import work.lclpnet.ap2.game.paintball.util.InkSettings
+import work.lclpnet.ap2.game.paintball.util.NO_TRAIL
 import work.lclpnet.ap2.game.paintball.util.PaintGun
 import work.lclpnet.ap2.game.paintball.util.PaintGunManager
 import work.lclpnet.ap2.impl.util.ItemHelper
@@ -30,29 +32,22 @@ class ShotgunKit(handle: KitHandle, paintGunManager: PaintGunManager) : PaintGun
 private fun shotgunGun() = PaintGun(
     id = SHOTGUN_ID,
     cooldownTicks = 26,
-    bulletCount = 7,
+    bulletCount = 2,
     bulletSpread = 9.0,
     ammo = 14,
     reloadTicks = 14,
     reloadAmount = 3,
     fireSound = PaintGun.SoundCfg(sound = SoundEvents.CHICKEN_EGG, volume = 0.3f, pitch = 0.5f),
-    bullet = PaintGun.BulletSettings(
-        size = 0.15,
-        power = 25.0,
-        maxHits = 16.0,
-        despawnSeconds = 1.5,
-        mass = 0.05f,
-        damage = 4f,
-        maxImpactPower = 5f,
-        restitution = 0.2f,
-        angularDamping = 0.2f,
-        paintRadius = 2.0f,
+    ink = InkSettings(
+        speed = 20.0,
+        gravity = 13.0,
+        range = 15.0,
+        blobCount = 12,
+        blobRadius = 0.15,
+        blobSpread = Math.toRadians(15.0),
+        splatRadius = 1.5f,
+        damage = 1f,
         deficitPaintBoost = 0.1f,
-        split = PaintGun.BulletSplit(
-            splitTicks = 10,
-            maxSplits = 2,
-            splitPaintRadius = 1.3f,
-            splitSubdivisions = 0
-        )
+        trail = NO_TRAIL
     )
 )

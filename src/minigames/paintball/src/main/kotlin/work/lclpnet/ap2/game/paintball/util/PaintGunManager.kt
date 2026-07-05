@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.game.paintball.util
 
-import com.jme3.math.Vector3f
 import it.unimi.dsi.fastutil.Pair
 import net.minecraft.ChatFormatting.RED
 import net.minecraft.core.BlockPos
@@ -28,24 +27,13 @@ import work.lclpnet.ap2.game.paintball.kit.PaintGunKit
 import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.game.team.DyeTeamKey
 import work.lclpnet.ap2.impl.util.RayCastUtil
-import work.lclpnet.ap2.impl.util.debug.DebugController
 import work.lclpnet.ap2.impl.util.math.MathUtil.applySpread
-import work.lclpnet.ap2.impl.util.math.MathUtil.randomUnitVec3d
-import work.lclpnet.gaco.core.util.ThreadUtil.executeOn
 import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.gaco.scene.Scene
-import work.lclpnet.gaco.scene.physics.EntityRefPhysicsElement
-import work.lclpnet.gaco.scene.physics.SceneRigidBody
-import work.lclpnet.kibu.hook.HookRegistrar
-import work.lclpnet.kibu.physics.api.PhysicsElement
-import work.lclpnet.kibu.physics.api.event.collision.ElementCollisionEvents
-import work.lclpnet.kibu.physics.impl.bullet.collision.space.MinecraftSpace
-import work.lclpnet.kibu.physics.impl.bullet.math.Convert.toBullet
-import work.lclpnet.kibu.physics.impl.bullet.thread.PhysicsThread
 import work.lclpnet.kibu.translate.Translations
 import java.util.*
 import java.util.function.BooleanSupplier
-import kotlin.math.max
+import java.util.function.Predicate
 
 const val HIT_PAINT_RADIUS = 1.9
 
@@ -57,7 +45,6 @@ class PaintGunManager(
     private val random: Random,
     private val participants: Participants,
     private val translations: Translations,
-    private val debugController: DebugController,
     private val gameOver: BooleanSupplier
 ) {
     private val reloading = HashSet<UUID>()
@@ -68,110 +55,25 @@ class PaintGunManager(
         this.kitManager = kitManager
     }
 
-    fun init(hooks: HookRegistrar) {
-        MinecraftSpace.get(world).setCollisionEventsEnabled(true)
+    /**
+     * Paints a spherical splat of the owner's team color, centered at the given world position.
+     * @param owner The player that fired the ink.
+     * @param point The center of the splat.
+     * @param radius The base paint radius, in blocks.
+     * @param deficitBoost How much to boost the radius per missing teammate (multiplier).
+     */
+    fun splat(owner: UUID, point: Vec3, radius: Float, deficitBoost: Float) {
+        if (gameOver.asBoolean) return
 
-        ElementCollisionEvents.BLOCK_COLLISION.registerWith(hooks) { element, _, _ ->
-            if (element is PaintballBullet) {
-                onBulletHitTerrain(element)
-            }
-        }
-
-        ElementCollisionEvents.ELEMENT_COLLISION.registerWith(hooks) { first, second, _ ->
-            if (first is PaintballBullet && bulletCollision(first, second)) return@registerWith
-            if (second is PaintballBullet && bulletCollision(second, first)) return@registerWith
-
-            if (first is PaintballBullet && second is PaintballBullet
-                && (first.playerContact || second.playerContact)
-            ) {
-                first.playerContact = true
-                second.playerContact = true
-                first.painting = false
-                second.painting = false
-            }
-        }
-    }
-
-    private fun bulletCollision(bullet: PaintballBullet, other: PhysicsElement<*>): Boolean {
-        if (bullet.ageTicks >= TEAM_COLLISION_ENABLE_TICKS) {
-            bullet.startDespawnTimer()
-        }
-
-        if (other is EntityRefPhysicsElement) {
-            other.cast().optional().ifPresent { entity ->
-                onBulletHitEntity(bullet, entity)
-            }
-            return true
-        }
-
-        return false
-    }
-
-    private fun onBulletHitEntity(bullet: PaintballBullet, entity: Entity) {
-        if (entity !is ServerPlayer || !participants.isParticipating(entity)) return
-
-        bullet.playerContact = true
-        bullet.painting = false
-
-        if (bullet.isFading()) return
-
-        bullet.startFading()
-        bullet.forcePhysicsThread()
-
-        val velocity = bullet.rigidBody.getLinearVelocity(Vector3f())
-
-        if (velocity.lengthSquared() < 0.2f) return
-
-        limitVelocity(bullet)
-
-        val ownerUuid = bullet.owner ?: return
-
-        world.server.execute {
-            val owner = world.server.playerList.getPlayer(ownerUuid) ?: return@execute
-
-            if (teams.teamManager.areTeamMates(owner, entity)) return@execute
-
-            val bulletSettings = bullet.settings
-
-            entity.hurtTime = 0
-            entity.invulnerableTime = 0
-            entity.hurtServer(world, entity.damageSources().source(DamageTypes.ARROW, owner, owner), bulletSettings.damage)
-
-            paintAt(bullet, entity.x, entity.y, entity.z, HIT_PAINT_RADIUS, true)
-        }
-    }
-
-    private fun onBulletHitTerrain(bullet: PaintballBullet) {
-        bullet.startDespawnTimer()
-        limitVelocity(bullet)
-
-        if (gameOver.asBoolean || !bullet.painting) return
-
-        bullet.onHit()
-
-        val hit = bullet.rigidBody.frame.getLocation(Vector3f(), 1f)
-
-        executeOn(world.server) {
-            paintAt(
-                bullet,
-                hit.x.toDouble(),
-                hit.y.toDouble(),
-                hit.z.toDouble(),
-                bullet.settings.paintRadius.toDouble(),
-                true
-            )
-        }
-    }
-
-    fun paintAt(bullet: PaintballBullet, x: Double, y: Double, z: Double, radius: Double, shouldCount: Boolean) {
-        val owner = bullet.owner?.let { participants.getParticipant(it) } ?: return
-        val team = teams.teamOf(owner) ?: return
+        val painter = participants.getParticipant(owner) ?: return
+        val team = teams.teamOf(painter) ?: return
 
         val key: DyeTeamKey = team.key
+        val effectiveRadius = (radius * (1f + teams.playerDeficit(team) * deficitBoost)).toDouble()
 
-        val settings = bullet.settings
-        val playerDeficit = teams.playerDeficit(team)
-        val effectiveRadius = radius * (1f + playerDeficit * settings.deficitPaintBoost)
+        val x = point.x
+        val y = point.y
+        val z = point.z
 
         val box = AABB.ofSize(Vec3(x, y, z), effectiveRadius * 2, effectiveRadius * 2, effectiveRadius * 2)
 
@@ -180,26 +82,27 @@ class PaintGunManager(
             val dy = pos.y + 0.5 - y
             val dz = pos.z + 0.5 - z
 
-            val inRange = dx * dx + dy * dy + dz * dz <= effectiveRadius * effectiveRadius
-
-            if (inRange && tryPaint(key, pos, x, y, z, owner) && shouldCount) {
-                bullet.onHit()
+            if (dx * dx + dy * dy + dz * dz <= effectiveRadius * effectiveRadius) {
+                tryPaint(key, pos, x, y, z, painter)
             }
         }
     }
 
-    fun limitVelocity(bullet: PaintballBullet) {
-        bullet.forcePhysicsThread()
+    /**
+     * Applies an ink hit to an enemy player: deals damage and paints a splat around them.
+     */
+    fun inkHitEntity(owner: UUID, target: Entity, damage: Float, deficitBoost: Float) {
+        if (target !is ServerPlayer || !participants.isParticipating(target)) return
 
-        val rigidBody: SceneRigidBody = bullet.rigidBody
-        val velocity = Vector3f()
-        rigidBody.getLinearVelocity(velocity)
+        val ownerPlayer = world.server.playerList.getPlayer(owner) ?: return
 
-        val maxPower = bullet.settings.maxImpactPower
+        if (teams.teamManager.areTeamMates(ownerPlayer, target)) return
 
-        if (velocity.lengthSquared() > maxPower * maxPower) {
-            rigidBody.setLinearVelocity(velocity.normalize().mult(maxPower))
-        }
+        target.hurtTime = 0
+        target.invulnerableTime = 0
+        target.hurtServer(world, target.damageSources().source(DamageTypes.ARROW, ownerPlayer, ownerPlayer), damage)
+
+        splat(owner, Vec3(target.x, target.y, target.z), HIT_PAINT_RADIUS.toFloat(), deficitBoost)
     }
 
     private fun tryPaint(teamKey: DyeTeamKey, blockPos: BlockPos, x: Double, y: Double, z: Double, painter: ServerPlayer): Boolean {
@@ -219,13 +122,13 @@ class PaintGunManager(
             return
         }
 
-        val state = getPaintBulletState(player) ?: return
+        getPaintBulletState(player) ?: return
 
         player.cooldowns.addCooldown(stack, paintGun.cooldownTicks)
         stack.set(DataComponents.DAMAGE, stack.damageValue + 1)
 
         repeat(paintGun.bulletCount) {
-            spawnPaintBulletWithSpread(player, paintGun, state)
+            spawnInkProjectileWithSpread(player, paintGun)
         }
 
         val fireSound = paintGun.fireSound
@@ -239,37 +142,45 @@ class PaintGunManager(
             paintManager.getPaintBulletState(it)
         }
 
-    fun spawnPaintBulletWithSpread(player: ServerPlayer, paintGun: PaintGun, state: BlockState) {
-        val bulletSettings = paintGun.bullet
-        val scale = bulletSettings.size
+    fun spawnInkProjectileWithSpread(player: ServerPlayer, paintGun: PaintGun) {
+        val settings = paintGun.ink
 
         val dir = applySpread(player.lookAngle, Math.toRadians(paintGun.bulletSpread), random)
-        val pos = getProjectileSpawn(player, dir, scale)
+        val pos = getProjectileSpawn(player, dir, settings.blobRadius)
 
-        executeOn(PhysicsThread.get(world)) {
-            spawnPaintBullet(player, state, bulletSettings, pos, dir)
-        }
+        spawnInkProjectile(player, settings, pos, dir)
     }
 
-    fun spawnPaintBullet(player: ServerPlayer, state: BlockState, bulletSettings: PaintGun.BulletSettings, pos: Vec3, dir: Vec3) {
-        val obj = PaintballBullet(scene, state, player.level(), bulletSettings, this, debugController)
-        obj.position.set(pos.x(), pos.y(), pos.z())
-        obj.scale.set(bulletSettings.size)
-        obj.owner = player.uuid
+    fun spawnInkProjectile(player: ServerPlayer, settings: InkSettings, pos: Vec3, dir: Vec3) {
+        val teamKey = teams.teamOf(player)?.key ?: return
+        val state = paintManager.getPaintBulletState(teamKey)
 
-        val rigidBody: SceneRigidBody = obj.rigidBody
+        val projectile = InkProjectile(
+            scene,
+            world,
+            settings,
+            player.uuid,
+            teamKey,
+            state,
+            this,
+            enemyFilter(player),
+            pos,
+            dir,
+            random
+        )
 
-        obj.updateRigidBody(rigidBody)
+        scene.add(projectile)
+    }
 
-        val velocity = getProjectileVelocity(dir, bulletSettings)
+    private fun enemyFilter(shooter: ServerPlayer): Predicate<Entity> {
+        val shooterId = shooter.uuid
+        val shooterTeam = teams.teamOf(shooter)?.key
 
-        rigidBody.setLinearVelocity(toBullet(velocity))
-        rigidBody.setAngularVelocity(toBullet(randomUnitVec3d(random)))
-        rigidBody.setPhysicsLocation(toBullet(pos))
-        rigidBody.setCollisionGroup(teams.bulletGroup(player))
-        rigidBody.setCollideWithGroups(teams.bulletCollisionFlags(player))
-
-        scene.add(obj)
+        return Predicate { entity ->
+            entity is ServerPlayer && entity.uuid != shooterId
+                    && participants.isParticipating(entity)
+                    && teams.teamOf(entity)?.key != shooterTeam
+        }
     }
 
     fun getProjectileSpawn(player: ServerPlayer, dir: Vec3, projectileSize: Double): Vec3 {
@@ -294,17 +205,6 @@ class PaintGunManager(
         }
 
         return pos
-    }
-
-    private fun getProjectileVelocity(dir: Vec3, bulletSettings: PaintGun.BulletSettings): Vec3 {
-        val basePower = bulletSettings.power
-        val minPowerScale = 0.65
-        val maxPowerScale = 1.0
-
-        val verticalComponent = max(0.0, dir.y)
-        val powerScale = maxPowerScale + (minPowerScale - maxPowerScale) * verticalComponent
-
-        return dir.scale(basePower * powerScale)
     }
 
     fun getPaintGunAndStack(player: ServerPlayer): Optional<Pair<PaintGun, ItemStack>> {

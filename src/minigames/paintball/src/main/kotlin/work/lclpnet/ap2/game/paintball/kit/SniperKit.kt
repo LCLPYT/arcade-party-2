@@ -3,6 +3,8 @@ package work.lclpnet.ap2.game.paintball.kit
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.item.Items
 import work.lclpnet.ap2.game.kit.KitHandle
+import work.lclpnet.ap2.game.paintball.util.InkSettings
+import work.lclpnet.ap2.game.paintball.util.InkTrail
 import work.lclpnet.ap2.game.paintball.util.PaintGun
 import work.lclpnet.ap2.game.paintball.util.PaintGunManager
 
@@ -26,23 +28,21 @@ private fun sniperGun() = PaintGun(
     reloadTicks = 17,
     reloadAmount = 2,
     fireSound = PaintGun.SoundCfg(sound = SoundEvents.MACE_SMASH_AIR, volume = 0.4f, pitch = 1f),
-    bullet = PaintGun.BulletSettings(
-        size = 0.3,
-        power = 100.0,
-        maxHits = 1.0,
-        despawnSeconds = 1.0,
-        mass = 0.01f,
+    ink = InkSettings(
+        speed = 70.0,
+        gravity = 1.5,
+        range = 45.0,
+        blobCount = 3,
+        blobRadius = 0.22,
+        blobSpread = Math.toRadians(0.5),
+        splatRadius = 1.6f,
         damage = 19.5f,
-        maxImpactPower = 4f,
-        restitution = 0.2f,
-        angularDamping = 0.1f,
-        paintRadius = 2.9f,
         deficitPaintBoost = 0.1f,
-        split = PaintGun.BulletSplit(
-            splitTicks = 0,
-            maxSplits = 14,
-            splitPaintRadius = 1.48f,
-            splitSubdivisions = 1
+        trail = InkTrail(
+            trailTicks = 1,
+            maxDroplets = 30,
+            dropletRadius = 1.1f,
+            subdivisions = 1
         )
     )
 )
