@@ -107,10 +107,20 @@ class PaintballTicker(
             player.removeEffect(MobEffects.SLOWNESS)
         }
 
+        tickHandleDiving(player, onInk, entry, resolvedState)
+
+        if (onInk == OnInk.ENEMY) {
+            player.addEffect(MobEffectInstance(MobEffects.SLOWNESS, 20, 1, false, false, false))
+        }
+
+        paintGunManager.sniperCharge.tick(player)
+    }
+
+    private fun tickHandleDiving(player: ServerPlayer, onInk: OnInk, entry: Entry, resolvedState: BlockState?) {
         if (onInk == OnInk.OWN && player.isShiftKeyDown) {
             if (tickDiving(player, entry, resolvedState)) return
         }
-        
+
         if (entry.diving) {
             onStopDiving(player, entry)
         } else if (entry.diveCooldown >= 1) {
@@ -124,10 +134,6 @@ class PaintballTicker(
         player.resetAttribute(Attributes.JUMP_STRENGTH)
 
         paintGunManager.removeReloading(player)
-
-        if (onInk == OnInk.ENEMY) {
-            player.addEffect(MobEffectInstance(MobEffects.SLOWNESS, 20, 1, false, false, false))
-        }
     }
 
     private fun updateDiveCooldownDisplay(entry: Entry, player: ServerPlayer) {
@@ -193,6 +199,8 @@ class PaintballTicker(
         entry.diveCooldown = DIVE_COOLDOWN.inWholeTicks.toInt()
 
         updateDiveCooldownDisplay(entry, player)
+
+        paintGunManager.sniperCharge.reset(player)
 
         SoundHelper.playSoundAt(player, SoundEvents.HONEY_BLOCK_PLACE, SoundSource.PLAYERS, 0.4f, 1.2f)
     }

@@ -51,6 +51,8 @@ class PaintGunManager(
     var shootingEnabled = false
     private var kitManager: KitManager? = null
 
+    val sniperCharge = SniperChargeManager(this)
+
     fun injectKitManager(kitManager: KitManager) {
         this.kitManager = kitManager
     }
@@ -116,9 +118,8 @@ class PaintGunManager(
     fun shoot(player: ServerPlayer, paintGun: PaintGun, stack: ItemStack) {
         if (!shootingEnabled || player.cooldowns.isOnCooldown(stack) || isReloading(player)) return
 
-        if (stack.damageValue >= stack.maxDamage) {
-            translations.translateText("no_ink").withStyle(RED).sendTo(player, true)
-            player.playNotifySound(SoundEvents.NOTE_BLOCK_HAT.value(), SoundSource.PLAYERS, 0.2f, 2f)
+        if (!hasAmmo(player)) {
+            notifyNoAmmo(player)
             return
         }
 
@@ -135,6 +136,39 @@ class PaintGunManager(
 
         world.playSound(null, player.x, player.eyeY, player.z, fireSound.sound, SoundSource.PLAYERS, fireSound.volume, fireSound.pitch)
         world.sendParticles(ParticleTypes.SMOKE, player.x, player.eyeY, player.z, 2, 0.3, 0.3, 0.3, 0.2)
+    }
+
+    /**
+     * Fires a single charged shot with the given, charge scaled [settings]. Reuses the same ammo,
+     * cooldown and feedback handling as [shoot], but spawns exactly one ink projectile along the
+     * player's look direction.
+     */
+    fun shootCharged(player: ServerPlayer, paintGun: PaintGun, stack: ItemStack, settings: InkSettings) {
+        if (!shootingEnabled || player.cooldowns.isOnCooldown(stack) || isReloading(player)) return
+
+        if (stack.damageValue >= stack.maxDamage) {
+            notifyNoAmmo(player)
+            return
+        }
+
+        getPaintBulletState(player) ?: return
+
+        player.cooldowns.addCooldown(stack, paintGun.cooldownTicks)
+        stack.set(DataComponents.DAMAGE, stack.damageValue + 1)
+
+        val dir = player.lookAngle
+        val pos = getProjectileSpawn(player, dir, settings.blobRadius)
+        spawnInkProjectile(player, settings, pos, dir)
+
+        val fireSound = paintGun.fireSound
+
+        world.playSound(null, player.x, player.eyeY, player.z, fireSound.sound, SoundSource.PLAYERS, fireSound.volume, fireSound.pitch)
+        world.sendParticles(ParticleTypes.SMOKE, player.x, player.eyeY, player.z, 2, 0.3, 0.3, 0.3, 0.2)
+    }
+
+    fun notifyNoAmmo(player: ServerPlayer) {
+        translations.translateText("no_ink").withStyle(RED).sendTo(player, true)
+        player.playNotifySound(SoundEvents.NOTE_BLOCK_HAT.value(), SoundSource.PLAYERS, 0.2f, 2f)
     }
 
     fun getPaintBulletState(player: ServerPlayer): BlockState? =
@@ -227,7 +261,8 @@ class PaintGunManager(
         reloading.remove(player.uuid)
     }
 
-    fun isReloading(player: ServerPlayer): Boolean = reloading.contains(player.uuid)
+    fun isReloading(player: ServerPlayer): Boolean =
+        reloading.contains(player.uuid)
 
     fun refillPaintGun(stack: ItemStack) {
         stack.set(DataComponents.DAMAGE, 0)
@@ -237,5 +272,13 @@ class PaintGunManager(
         getPaintGunAndStack(player).ifPresent {
             refillPaintGun(it.right())
         }
+    }
+
+    fun hasAmmo(player: ServerPlayer): Boolean {
+        val pair = getPaintGunAndStack(player).orElse(null) ?: return false
+
+        val stack = pair.right()
+
+        return stack.damageValue < stack.maxDamage
     }
 }
