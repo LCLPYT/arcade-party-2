@@ -54,6 +54,8 @@ class InkGrenadeItem(
         mass = 0.01f,
         damage = 0.5f,
         maxImpactPower = 2f,
+        restitution = 0.15f,
+        angularDamping = 0.2f,
         paintRadius = 1.6f,
         deficitPaintBoost = 0f,
         split = NO_SPLIT

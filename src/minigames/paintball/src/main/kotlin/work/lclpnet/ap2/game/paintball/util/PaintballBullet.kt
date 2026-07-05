@@ -49,11 +49,12 @@ class PaintballBullet(
 
     init {
         rigidBody.setMass(settings.mass)
+        rigidBody.setRestitution(settings.restitution)
+        rigidBody.setAngularDamping(settings.angularDamping)
 
-        if (settings.power >= 20) {
-            rigidBody.setCcdMotionThreshold(1e-4f)
-            rigidBody.setCcdSweptSphereRadius(0.1f)
-        }
+        val inscribedRadius = (0.5 * settings.size).toFloat()
+        rigidBody.setCcdMotionThreshold(inscribedRadius)
+        rigidBody.setCcdSweptSphereRadius(inscribedRadius)
     }
 
     override fun mount(ctx: MountContext) {

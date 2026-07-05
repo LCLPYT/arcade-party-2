@@ -39,6 +39,8 @@ data class PaintGun(
      * @param mass The mass of the bullet.
      * @param damage How much damage a hit of this bullet should deal when hitting an entity.
      * @param maxImpactPower Limit the velocity of this bullet upon impact to this maximum value.
+     * @param restitution The bounciness of the bullet (0 = no bounce, 1 = perfectly elastic).
+     * @param angularDamping Fraction (0..1) that bleeds off the bullet's spin so it settles like a die.
      * @param paintRadius How big the affected block paint radius should be (in blocks).
      * @param deficitPaintBoost How much the paint radius should be boosted per missing player in a team (multiplier).
      * @param split The bullet split configuration.
@@ -51,6 +53,8 @@ data class PaintGun(
         val mass: Float,
         val damage: Float,
         val maxImpactPower: Float,
+        val restitution: Float,
+        val angularDamping: Float,
         val paintRadius: Float,
         val deficitPaintBoost: Float,
         val split: BulletSplit
