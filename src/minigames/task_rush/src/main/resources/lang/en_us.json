@@ -1,4 +1,12 @@
 {
   "name": "Task Rush",
-  "description": "Compete in a random challenge every 30 seconds. The player who does best overall wins!"
+  "description": "Compete in a random challenge every 30 seconds. The player who does best overall wins!",
+  "task.highest_pos": "Reach the highest position in the world you can.",
+  "task.highest_pos.task": "Reach a high position",
+  "task.lowest_pos": "Reach the lowest position in the world you can.",
+  "task.lowest_pos.task": "Reach a low position",
+  "task.mob_kills": "Kill as many mobs as you can",
+  "task.mob_kills.task": "Kill many mobs",
+  "score.height": "Height %s",
+  "score.mobs_killed": "%s mobs killed"
 }

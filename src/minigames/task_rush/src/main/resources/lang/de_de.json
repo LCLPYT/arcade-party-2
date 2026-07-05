@@ -1,4 +1,12 @@
 {
   "name": "Aufgabenflut",
-  "description": "Alle 30 Sekunden gibt es eine zufällige Aufgabe. Wer die Aufgaben insgesamt am besten erledigt, gewinnt!"
+  "description": "Alle 30 Sekunden gibt es eine zufällige Aufgabe. Wer die Aufgaben insgesamt am besten erledigt, gewinnt!",
+  "task.highest_pos": "Erreiche eine möglichst hohe Position in der Welt.",
+  "task.highest_pos.task": "Tiefe Position erreichen",
+  "task.lowest_pos": "Erreiche eine möglichst tiefe Position in der Welt.",
+  "task.lowest_pos.task": "Hohe Position erreichen",
+  "task.mob_kills": "Töte möglichst viele Monster oder Tiere.",
+  "task.mob_kills.task": "Töte viele Mobs",
+  "score.height": "Höhe %s",
+  "score.mobs_killed": "%s Mobs getötet"
 }
