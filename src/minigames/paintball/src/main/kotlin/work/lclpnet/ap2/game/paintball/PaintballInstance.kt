@@ -20,6 +20,8 @@ import work.lclpnet.ap2.api.stats.CommonStats.Deaths
 import work.lclpnet.ap2.api.stats.CommonStats.KillDeathRatio
 import work.lclpnet.ap2.api.stats.CommonStats.Kills
 import work.lclpnet.ap2.api.util.world.BlockPredicate
+import work.lclpnet.ap2.core.hook.ArmorAbsorbDamageCallback
+import work.lclpnet.ap2.core.hook.DamageKnockbackCallback
 import work.lclpnet.ap2.core.hook.SpectatePlayerCallback
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.resetAttribute
@@ -293,6 +295,14 @@ class PaintballInstance(
         }
 
         ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks, ::onDamage)
+
+        DamageKnockbackCallback.HOOK.registerWith(hooks) { _, _, _ ->
+            false
+        }
+
+        ArmorAbsorbDamageCallback.HOOK.registerWith(hooks) { _, _, _ ->
+            false
+        }
     }
 
     private fun respawnPlayer(player: ServerPlayer) {

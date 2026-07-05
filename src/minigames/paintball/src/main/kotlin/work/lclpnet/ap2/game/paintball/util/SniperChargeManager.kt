@@ -16,9 +16,9 @@ import kotlin.math.roundToInt
 private const val CHARGE_TICKS_TO_FULL = 35
 private const val MIN_FIRE_CHARGE = 0.3
 
-private const val MIN_RANGE = 10.0
+private const val MIN_RANGE = 9.0
 private const val MIN_DAMAGE = 8.0f
-private const val MIN_DROPLET_RADIUS = 0.9f
+private const val MIN_DROPLET_RADIUS = 0.8f
 
 /**
  * Drives the charge based sniper.
@@ -38,7 +38,6 @@ class SniperChargeManager(private val paintGunManager: PaintGunManager) {
             return
         }
 
-        println("${player.scoreboardName}dd diving = ${paintGunManager.isReloading(player)}")
         val weaponStack = player.mainHandItem
         val blocked = player.cooldowns.isOnCooldown(weaponStack) || paintGunManager.isReloading(player)
 
@@ -83,7 +82,8 @@ class SniperChargeManager(private val paintGunManager: PaintGunManager) {
         val gun = pair.left()
         val stack = pair.right()
 
-        paintGunManager.shootCharged(player, gun, stack, scaleInk(gun.ink, fraction))
+        val settings = scaleInk(gun.ink, fraction)
+        paintGunManager.shootCharged(player, gun, stack, settings)
     }
 
     private fun clearCharge(player: ServerPlayer) {

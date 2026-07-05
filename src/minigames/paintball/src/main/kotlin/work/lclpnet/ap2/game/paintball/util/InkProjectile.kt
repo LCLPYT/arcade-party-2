@@ -5,7 +5,6 @@ import net.minecraft.core.particles.DustParticleOptions
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.ClipContext
-import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
@@ -20,11 +19,13 @@ import work.lclpnet.gaco.scene.animation.AnimationContext
 import java.util.*
 import java.util.function.Predicate
 import kotlin.math.abs
+import kotlin.math.floor
 import kotlin.math.max
 
 private const val MAX_AGE_TICKS = 160
 private const val TRAIL_PARTICLE_SPACING = 0.4
 private const val UPWARD_SPEED_SCALE = 0.65
+private const val MIN_TRAIL_SPACING = 0.5
 
 /**
  * A non-physics ink projectile.
@@ -39,7 +40,6 @@ class InkProjectile(
     val settings: InkSettings,
     private val owner: UUID,
     private val teamKey: DyeTeamKey,
-    val blockState: BlockState,
     private val manager: PaintGunManager,
     private val enemyFilter: Predicate<Entity>,
     spawnPos: Vec3,
@@ -69,14 +69,34 @@ class InkProjectile(
 
             val prev = blob.pos
             blob.vel = blob.vel.add(0.0, -settings.gravity * dt, 0.0)
-            val next = prev.add(blob.vel.scale(dt))
 
-            val delta = next.subtract(prev)
-            val dist = delta.length()
+            var step = blob.vel.scale(dt)
+            var dist = step.length()
 
-            if (dist > 1e-6 && collide(blob, prev, delta.scale(1.0 / dist), dist)) {
-                iterator.remove()
-                continue
+            // clamp the step so the blob never travels past its configured range, regardless of speed
+            var reachedRange = false
+            val remaining = settings.range - blob.traveled
+
+            if (dist >= remaining) {
+                reachedRange = true
+
+                if (dist > 1e-6) {
+                    step = step.scale(remaining / dist)
+                }
+
+                dist = remaining
+            }
+
+            val next = prev.add(step)
+
+            if (dist > 1e-6) {
+                val impact = collide(prev, step.scale(1.0 / dist), dist)
+
+                if (impact != null) {
+                    finishTrail(blob, impact)
+                    iterator.remove()
+                    continue
+                }
             }
 
             blob.pos = next
@@ -84,10 +104,12 @@ class InkProjectile(
             blob.age++
 
             emitTrailParticles(prev, next, dist)
-            tickTrail(blob, dt)
 
-            if (blob.traveled >= settings.range || blob.age >= MAX_AGE_TICKS) {
+            if (reachedRange || blob.age >= MAX_AGE_TICKS) {
+                finishTrail(blob, next)
                 iterator.remove()
+            } else {
+                tickTrail(blob, dt)
             }
         }
 
@@ -98,9 +120,9 @@ class InkProjectile(
 
     /**
      * Sphere-casts a blob's per-tick motion against terrain and enemies and paints/hurts on the first contact.
-     * Returns true if the blob hit something (and should be retired).
+     * Returns the impact position if the blob hit something (and should be retired), or null otherwise.
      */
-    private fun collide(blob: Blob, from: Vec3, dir: Vec3, dist: Double): Boolean {
+    private fun collide(from: Vec3, dir: Vec3, dist: Double): Vec3? {
         val blockHit = RayCastUtil.raycastBlocks(
             world,
             from,
@@ -122,15 +144,29 @@ class InkProjectile(
 
         if (blockHit.type == HitResult.Type.BLOCK && blockDistSq <= entityDistSq) {
             manager.splat(owner, blockHit.location, settings.splatRadius, settings.deficitPaintBoost)
-            return true
+            return blockHit.location
         }
 
         if (entityHit != null) {
             manager.inkHitEntity(owner, entityHit.first, settings.damage, settings.deficitPaintBoost)
-            return true
+            return entityHit.second
         }
 
-        return false
+        return null
+    }
+
+    /**
+     * Extends the droplet trail up to the given end position before the blob is retired, so the
+     * trail reaches the actual impact or range endpoint instead of stopping at the last drop.
+     * Only affects guns that lay a filled trail (subdivisions greater than zero).
+     */
+    private fun finishTrail(blob: Blob, end: Vec3) {
+        val trail = settings.trail
+
+        if (trail.trailTicks == Int.MAX_VALUE || trail.subdivisions <= 0) return
+
+        blob.pos = end
+        dropTrail(blob)
     }
 
     /**
@@ -195,14 +231,21 @@ class InkProjectile(
 
     private fun dropTrail(blob: Blob) {
         val pos = blob.pos
-        val subdivisions = settings.trail.subdivisions
+        val trail = settings.trail
         val last = blob.lastSplitPos
 
-        if (last != null && subdivisions > 0) {
-            val frac = 1.0 / (subdivisions + 1)
+        if (last != null && trail.subdivisions > 0) {
             val diff = pos.subtract(last)
+            val segmentLength = diff.length()
 
-            for (i in 1..subdivisions) {
+            // derive the droplet count from the segment length so the droplets keep overlapping
+            // at high speeds and the trail stays a solid line. The configured subdivisions act as a floor.
+            val spacing = max(trail.dropletRadius.toDouble(), MIN_TRAIL_SPACING)
+            val count = max(trail.subdivisions, floor(segmentLength / spacing).toInt())
+
+            val frac = 1.0 / (count + 1)
+
+            for (i in 1..count) {
                 dropletAt(blob, last.add(diff.scale(i * frac)))
             }
         }
@@ -226,13 +269,15 @@ class InkProjectile(
         manager.splat(owner, hit.location, settings.trail.dropletRadius, settings.deficitPaintBoost)
     }
 
-    private fun pitchScale(dirY: Double): Double = 1.0 + (UPWARD_SPEED_SCALE - 1.0) * max(0.0, dirY)
+    private fun pitchScale(dirY: Double): Double =
+        1.0 + (UPWARD_SPEED_SCALE - 1.0) * max(0.0, dirY)
 
     private class Blob(var pos: Vec3, var vel: Vec3) {
         var age = 0
         var traveled = 0.0
         var trailTimer = 0.0
         var droplets = 0
-        var lastSplitPos: Vec3? = null
+        // seed with the spawn position so the trail is filled in from the muzzle on the first drop
+        var lastSplitPos: Vec3? = pos
     }
 }

@@ -123,19 +123,13 @@ class PaintGunManager(
             return
         }
 
-        getPaintBulletState(player) ?: return
-
-        player.cooldowns.addCooldown(stack, paintGun.cooldownTicks)
-        stack.set(DataComponents.DAMAGE, stack.damageValue + 1)
+        applyCooldown(player, stack, paintGun)
 
         repeat(paintGun.bulletCount) {
             spawnInkProjectileWithSpread(player, paintGun)
         }
 
-        val fireSound = paintGun.fireSound
-
-        world.playSound(null, player.x, player.eyeY, player.z, fireSound.sound, SoundSource.PLAYERS, fireSound.volume, fireSound.pitch)
-        world.sendParticles(ParticleTypes.SMOKE, player.x, player.eyeY, player.z, 2, 0.3, 0.3, 0.3, 0.2)
+        onFire(paintGun, player)
     }
 
     /**
@@ -151,19 +145,39 @@ class PaintGunManager(
             return
         }
 
-        getPaintBulletState(player) ?: return
-
-        player.cooldowns.addCooldown(stack, paintGun.cooldownTicks)
-        stack.set(DataComponents.DAMAGE, stack.damageValue + 1)
+        applyCooldown(player, stack, paintGun)
 
         val dir = player.lookAngle
         val pos = getProjectileSpawn(player, dir, settings.blobRadius)
         spawnInkProjectile(player, settings, pos, dir)
 
+        onFire(paintGun, player)
+    }
+
+    private fun onFire(paintGun: PaintGun, player: ServerPlayer) {
         val fireSound = paintGun.fireSound
 
-        world.playSound(null, player.x, player.eyeY, player.z, fireSound.sound, SoundSource.PLAYERS, fireSound.volume, fireSound.pitch)
+        world.playSound(
+            null,
+            player.x,
+            player.eyeY,
+            player.z,
+            fireSound.sound,
+            SoundSource.PLAYERS,
+            fireSound.volume,
+            fireSound.pitch
+        )
+
         world.sendParticles(ParticleTypes.SMOKE, player.x, player.eyeY, player.z, 2, 0.3, 0.3, 0.3, 0.2)
+    }
+
+    private fun applyCooldown(
+        player: ServerPlayer,
+        stack: ItemStack,
+        paintGun: PaintGun
+    ) {
+        player.cooldowns.addCooldown(stack, paintGun.cooldownTicks)
+        stack.set(DataComponents.DAMAGE, stack.damageValue + 1)
     }
 
     fun notifyNoAmmo(player: ServerPlayer) {
@@ -195,7 +209,6 @@ class PaintGunManager(
             settings,
             player.uuid,
             teamKey,
-            state,
             this,
             enemyFilter(player),
             pos,
