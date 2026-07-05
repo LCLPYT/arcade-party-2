@@ -19,6 +19,7 @@ import work.lclpnet.ap2.core.type.ApServerPlayerEntity
 import work.lclpnet.ap2.game.GameInfo
 import work.lclpnet.ap2.game.MiniGame
 import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.color.PlayerColorPreferences
 import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.game.player.PlayerRankView
 import work.lclpnet.ap2.game.team.TeamConfig
@@ -135,6 +136,9 @@ class DefaultMiniGameHandle(
 
     override val participants: Participants
         get() = args.playerManager
+
+    override val colorPreferences: PlayerColorPreferences
+        get() = args.colorPreferences
 
     override val worldBorderManager: WorldBorderManager
         get() = this

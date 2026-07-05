@@ -44,10 +44,7 @@ import work.lclpnet.ap2.mode_default.ApMiniGameArgs
 import work.lclpnet.ap2.mode_default.api.Skippable
 import work.lclpnet.ap2.mode_default.cmd.ForceMapCommand
 import work.lclpnet.ap2.mode_default.cmd.SkipCommand
-import work.lclpnet.ap2.mode_default.util.ApBaseArgs
-import work.lclpnet.ap2.mode_default.util.BaseActivityConfigurator
-import work.lclpnet.ap2.mode_default.util.OptionChooser
-import work.lclpnet.ap2.mode_default.util.ScoreManager
+import work.lclpnet.ap2.mode_default.util.*
 import work.lclpnet.ap2.util.scoreboard.setupDynamicSidebarObjective
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager
 import work.lclpnet.gaco.scene.MixedMountContext
@@ -189,6 +186,7 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
         dynamicEntityManager!!.init(scheduler, hooks)
 
         setupAdminItems(hooks)
+        setupSettingsMenu(hooks)
 
         showLeaderboard()
         displayGameQueue()
@@ -710,6 +708,13 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
         }
     }
 
+    private fun setupSettingsMenu(hooks: HookRegistrar) {
+        val settingsMenu = SettingsMenu(args.miniGameArgs.translations, args.colorPreferences)
+
+        settingsMenu.init(hooks)
+        settingsMenu.giveItems(args.playerManager)
+    }
+
     private fun setupAdminItems(hooks: HookRegistrar) {
         val server = getServer()
 
@@ -721,18 +726,33 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
             if (player !is ServerPlayer || !Commands.LEVEL_GAMEMASTERS.check(server.getProfilePermissions(player.nameAndId()))) {
                 return@registerWith InteractionResult.PASS
             }
+
             val stack = player.getItemInHand(hand)
 
-            if (stack.isOf(Items.TOTEM_OF_UNDYING)) {
-                openGamePicker(player)
-            } else if (stack.isOf(Items.EMERALD_BLOCK)) {
-                isSkip = true
-                player.sendSystemMessage(Component.literal("Skipped the preparation phase"))
-            } else if (stack.isOf(Items.HEART_OF_THE_SEA)) {
-                openMapPicker(player)
-            }
+            when {
+                stack.isOf(Items.TOTEM_OF_UNDYING) -> {
+                    openGamePicker(player)
 
-            InteractionResult.SUCCESS_SERVER
+                    InteractionResult.SUCCESS_SERVER
+                }
+
+                stack.isOf(Items.EMERALD_BLOCK) -> {
+                    isSkip = true
+                    player.sendSystemMessage(Component.literal("Skipped the preparation phase"))
+
+                    InteractionResult.SUCCESS_SERVER
+                }
+
+                stack.isOf(Items.HEART_OF_THE_SEA) -> {
+                    openMapPicker(player)
+
+                    InteractionResult.SUCCESS_SERVER
+                }
+
+                else -> {
+                    InteractionResult.PASS
+                }
+            }
         }
 
         PlayerConnectionHooks.JOIN.registerWith(hooks) { player -> giveAdminItems(player) }

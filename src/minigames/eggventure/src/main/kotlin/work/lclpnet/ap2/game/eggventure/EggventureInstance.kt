@@ -45,7 +45,6 @@ import work.lclpnet.ap2.game.util.*
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.tags.PlayerHeadTags
 import work.lclpnet.ap2.impl.util.ApRegistries
-import work.lclpnet.ap2.impl.util.ColorUtil
 import work.lclpnet.ap2.impl.util.ItemHelper
 import work.lclpnet.ap2.impl.util.RayCastUtil
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointHelper
@@ -112,11 +111,13 @@ class EggventureInstance(
             throw IllegalStateException("There are no egg variants defined")
         }
 
+        val colors = gameHandle.colorPreferences.assign(gameHandle.participants, random)
+
         for (player in gameHandle.participants) {
             val variant = variants[random.nextInt(variants.size)]
             player.setItemSlot(EquipmentSlot.HEAD, variant.createStack())
 
-            val color = ColorUtil.getRandomHsvColor(random)
+            val color = colors.getValue(player.uuid).textureDiffuseColor
 
             player.setItemSlot(EquipmentSlot.CHEST, ItemHelper.getLeatherArmor(Items.LEATHER_CHESTPLATE, color))
             player.setItemSlot(EquipmentSlot.LEGS, ItemHelper.getLeatherArmor(Items.LEATHER_LEGGINGS, color))
