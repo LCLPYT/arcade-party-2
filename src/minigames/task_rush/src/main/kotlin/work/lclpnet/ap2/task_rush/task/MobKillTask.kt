@@ -27,6 +27,7 @@ object MobKillTask : Task {
 
             if (env.players.isParticipating(killer)) {
                 data.addScore(killer, 1)
+                env.feedback(killer, "task.feedback.mob_kills", data.getScore(killer), sound = true)
             }
         }
 

@@ -72,6 +72,11 @@ class TaskRushInstance(
             }
         }
 
+        taskManager.init()
+
+        SetTaskCommand(taskManager).register(gameHandle.commands)
+        SkipTaskCommand(taskManager).register(gameHandle.commands)
+
         taskManager.nextTask(initial = true)
     }
 }

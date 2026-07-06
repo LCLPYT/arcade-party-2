@@ -41,8 +41,7 @@ object OreCollectTask : InventoryCountTask("ore_collect", "score.ores_collected"
         super.begin(env)
 
         for (player in env.players) {
-            val stack = ItemStack(Items.IRON_PICKAXE)
-            player.inventory.add(stack)
+            env.give(player, ItemStack(Items.IRON_PICKAXE))
         }
     }
 }

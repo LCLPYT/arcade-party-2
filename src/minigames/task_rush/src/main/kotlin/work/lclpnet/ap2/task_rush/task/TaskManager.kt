@@ -17,6 +17,7 @@ import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.util.Announcer
 import work.lclpnet.ap2.game.util.ResultAnnouncement
 import work.lclpnet.ap2.game.util.createTimer
+import work.lclpnet.kibu.scheduler.api.TaskHandle
 import kotlin.time.Duration.Companion.seconds
 
 private val NEXT_TASK_DELAY = 4.seconds
@@ -29,7 +30,9 @@ class TaskManager(
     val onComplete: () -> Unit,
 ) {
 
-    private val allTasks = setOf(
+    val itemQueue = ItemQueue(gameHandle.scheduler, gameHandle.server, gameHandle.translations)
+
+    val allTasks = setOf(
         HeightTask("highest_pos", Ordering.DESCENDING),
         HeightTask("lowest_pos", Ordering.ASCENDING),
         MobKillTask,
@@ -56,12 +59,33 @@ class TaskManager(
 
     private var currentTaskEnv: TaskEnvImpl? = null
     private var currentTask: Task? = null
+    private var pendingNext: TaskHandle? = null
     private var round = 0
 
+    fun init() {
+        itemQueue.init()
+    }
+
     fun nextTask(initial: Boolean = false) {
+        round++
+
         val task = pickNextTask()
 
         startTask(task, initial = initial)
+    }
+
+    /**
+     * Destroys the current task without scoring and starts the given task in its place (same round).
+     */
+    fun changeTask(task: Task) {
+        startTask(task)
+    }
+
+    /**
+     * Destroys the current task without scoring and advances to the next task from the queue.
+     */
+    fun skipCurrentTask() {
+        nextTask()
     }
 
     fun pickNextTask(): Task {
@@ -76,7 +100,9 @@ class TaskManager(
     }
 
     fun startTask(task: Task, initial: Boolean = false) {
-        round++
+        // End the previous task atomically: cancel any pending auto-advance and unload the current
+        // task before starting the new one, so exactly one task is ever active.
+        unload()
 
         if (!initial) {
             for (player in gameHandle.participants) {
@@ -88,14 +114,15 @@ class TaskManager(
             players = gameHandle.participants,
             level = level,
             translations = gameHandle.translations,
+            scoreboardManager = gameHandle.scoreboardManager,
             logger = gameHandle.logger,
+            itemQueue = itemQueue,
             createTimer = { labelKey, duration ->
                 gameHandle.createTimer(gameHandle.translations.translateText(labelKey), duration)
             },
-            onComplete = { taskData, env ->
+            onComplete = { taskData, _ ->
                 awardPoints(taskData)
 
-                task.end(env)
                 deferNextTask()
             }
         )
@@ -167,10 +194,13 @@ class TaskManager(
             return
         }
 
-        gameHandle.scheduler.timeout(NEXT_TASK_DELAY.inWholeTicks, ::nextTask)
+        pendingNext = gameHandle.scheduler.timeout(NEXT_TASK_DELAY.inWholeTicks, ::nextTask)
     }
 
     fun unload() {
+        pendingNext?.cancel()
+        pendingNext = null
+
         currentTaskEnv?.let { env ->
             currentTask?.end(env)
             env.unload()

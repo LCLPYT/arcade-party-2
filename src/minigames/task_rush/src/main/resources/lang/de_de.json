@@ -58,5 +58,18 @@
   "score.damage_dealt": "%s Schaden",
   "score.blocks_broken": "%s Blöcke abgebaut",
   "score.flower_types": "%s Blumenarten",
-  "score.light_level": "Lichtlevel %s"
+  "score.light_level": "Lichtlevel %s",
+  "task.completed_by": "%s hat die Aufgabe erledigt!",
+  "itemqueue.full": "Du hast %s Gegenstände, die auf Platz im Inventar warten.",
+  "task.feedback.collect": "Gesammelt: %s",
+  "task.feedback.bow_distance": "Neuer Rekord: %s Blöcke",
+  "task.feedback.break_blocks": "Abgebaute Blöcke: %s",
+  "task.feedback.entity_damage": "Verursachter Schaden: %s",
+  "task.feedback.fall_into_water": "Neuer Fallrekord: %s Blöcke",
+  "task.feedback.height": "Höhe: %s",
+  "task.feedback.mob_kills": "Getötete Mobs: %s",
+  "task.feedback.stand_in_area": "+1s (gesamt: %ss)",
+  "task.feedback.water_distance": "Strecke: %s Blöcke",
+  "task.feedback.darkest_place": "Lichtlevel: %s",
+  "task.feedback.breed_animals": "Du hast ein Tier gepaart!"
 }

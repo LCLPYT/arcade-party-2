@@ -41,7 +41,12 @@ object StandInAreaTask : Task {
             val inside = env.players.filter { box.intersects(it.boundingBox) }
             if (inside.size == 1) {
                 val player = inside[0]
-                ticksInside[player.uuid] = (ticksInside[player.uuid] ?: 0) + 1
+                val ticks = (ticksInside[player.uuid] ?: 0) + 1
+                ticksInside[player.uuid] = ticks
+
+                if (ticks % 20 == 0) {
+                    env.feedback(player, "task.feedback.stand_in_area", ticks / 20, sound = true)
+                }
             }
         }
 

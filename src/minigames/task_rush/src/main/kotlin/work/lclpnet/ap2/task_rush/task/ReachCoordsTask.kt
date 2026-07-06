@@ -11,8 +11,8 @@ import kotlin.math.sqrt
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Be the first to reach a set of coordinates near spawn (~200 blocks away). Players are shown the target
- * and their live distance to it.
+ * Be the first to reach a set of coordinates near spawn (~200 blocks away).
+ * Players are shown the target and their live distance to it.
  */
 object ReachCoordsTask : OrderTask("reach_coords", 90.seconds) {
 
@@ -20,9 +20,20 @@ object ReachCoordsTask : OrderTask("reach_coords", 90.seconds) {
     private const val REACH_RADIUS = 3.0
 
     override fun begin(env: TaskEnv) {
-        val progress = start(env)
         val target = pickTarget(env.level, env.spawnPos)
         val center = Vec3.atCenterOf(target)
+
+        lateinit var progress: Progress
+
+        progress = start(env) {
+            val remaining = env.players.sortedBy {
+                val dx = it.x - center.x
+                val dz = it.z - center.z
+                dx * dx + dz * dz
+            }
+
+            progress.rankRemaining(remaining)
+        }
 
         env.translations.translateText("task.reach_coords.target", Component.literal("${target.x} ${target.y} ${target.z}"))
             .sendTo(env.players)

@@ -30,6 +30,7 @@ object BreakBlocksTask : Task {
 
                 if (destroySpeed > 0) {
                     data.addScore(breaker, 1)
+                    env.feedback(breaker, "task.feedback.break_blocks", data.getScore(breaker))
                 }
             }
 

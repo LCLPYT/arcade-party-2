@@ -58,5 +58,18 @@
   "score.damage_dealt": "%s damage",
   "score.blocks_broken": "%s blocks broken",
   "score.flower_types": "%s flower types",
-  "score.light_level": "light level %s"
+  "score.light_level": "light level %s",
+  "task.completed_by": "%s completed the task!",
+  "itemqueue.full": "You have %s item(s) waiting for free inventory space.",
+  "task.feedback.collect": "Collected: %s",
+  "task.feedback.bow_distance": "New best: %s blocks",
+  "task.feedback.break_blocks": "Blocks broken: %s",
+  "task.feedback.entity_damage": "Damage dealt: %s",
+  "task.feedback.fall_into_water": "New best fall: %s blocks",
+  "task.feedback.height": "Height: %s",
+  "task.feedback.mob_kills": "Mobs killed: %s",
+  "task.feedback.stand_in_area": "+1s (total: %ss)",
+  "task.feedback.water_distance": "Distance: %s blocks",
+  "task.feedback.darkest_place": "Light level: %s",
+  "task.feedback.breed_animals": "You bred an animal!"
 }

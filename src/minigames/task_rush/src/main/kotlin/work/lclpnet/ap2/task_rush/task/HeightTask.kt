@@ -11,6 +11,12 @@ class HeightTask(
 ) : Task {
 
     override fun begin(env: TaskEnv) {
+        env.scheduler.interval(10L) { ->
+            for (player in env.players) {
+                env.feedback(player, "task.feedback.height", player.blockY)
+            }
+        }
+
         env.timer("task.$id.task", 30.seconds) {
             val data = IntScoreDataContainer(
                 PlayerRef::create,

@@ -26,6 +26,7 @@ object EntityDamageTask : Task {
 
             if (attacker != null && env.players.isParticipating(attacker) && victim !is ServerPlayer && amount > 0f) {
                 data.addScore(attacker, amount.coerceAtMost(victim.health).toDouble())
+                env.feedback(attacker, "task.feedback.entity_damage", data.getScore(attacker).toInt())
             }
 
             false

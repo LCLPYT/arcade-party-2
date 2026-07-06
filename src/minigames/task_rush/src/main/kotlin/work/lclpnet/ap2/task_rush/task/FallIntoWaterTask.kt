@@ -34,6 +34,7 @@ object FallIntoWaterTask : Task {
 
                     if (fall > data.getScore(player)) {
                         data.setScore(player, fall)
+                        env.feedback(player, "task.feedback.fall_into_water", fall.toInt(), sound = true)
                     }
                 }
 

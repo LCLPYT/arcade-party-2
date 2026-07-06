@@ -36,6 +36,7 @@ object WaterDistanceTask : Task {
 
                     if (dist > 0) {
                         data.addScore(player, dist)
+                        env.feedback(player, "task.feedback.water_distance", data.getScore(player).toInt())
                     }
                 }
             }

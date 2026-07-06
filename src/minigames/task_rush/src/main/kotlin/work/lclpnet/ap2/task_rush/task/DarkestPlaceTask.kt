@@ -21,6 +21,13 @@ object DarkestPlaceTask : Task {
             entity is ServerPlayer && env.players.isParticipating(entity)
         }
 
+        env.scheduler.interval(10L) { ->
+            for (player in env.players) {
+                val light = env.level.getMaxLocalRawBrightness(player.blockPosition())
+                env.feedback(player, "task.feedback.darkest_place", light)
+            }
+        }
+
         env.timer("task.$id.task", 30.seconds) {
             val data = IntScoreDataContainer(PlayerRef::create, Ordering.ASCENDING, "score.light_level")
 

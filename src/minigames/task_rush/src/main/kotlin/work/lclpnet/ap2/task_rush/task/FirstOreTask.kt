@@ -5,13 +5,12 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.kibu.hook.level.BlockModificationHooks
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Be the first to mine a specific ore.
  * One of iron, copper or coal ore is chosen at random.
  */
-object FirstOreTask : OrderTask("first_ore", 60.seconds) {
+object FirstOreTask : OrderTask("first_ore") {
 
     private val ores = listOf(
         listOf(Blocks.IRON_ORE, Blocks.DEEPSLATE_IRON_ORE),
