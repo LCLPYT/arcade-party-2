@@ -18,11 +18,15 @@ object MobKillTask : Task {
             "score.mobs_killed"
         )
 
+        for (player in env.players) {
+            data.identityIfAbsent(player)
+        }
+
         ServerLivingEntityHooks.AFTER_DEATH.registerWith(env.hooks) { _, source ->
             val killer = source.entity as? ServerPlayer ?: return@registerWith
 
             if (env.players.isParticipating(killer)) {
-                data.add(killer)
+                data.addScore(killer, 1)
             }
         }
 
