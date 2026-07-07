@@ -2,13 +2,17 @@ package work.lclpnet.ap2.game.paintball.util
 
 import net.minecraft.sounds.SoundEvent
 
-val NO_SPLIT = PaintGun.BulletSplit(
-    splitTicks = Int.MAX_VALUE,
-    maxSplits = 0,
-    splitPaintRadius = 0f,
-    splitSubdivisions = 0
-)
-
+/**
+ * @param id The id of the paint gun.
+ * @param cooldownTicks The fire cooldown of the paint gun, in ticks.
+ * @param bulletCount How many ink clusters this gun fires per shot.
+ * @param bulletSpread The maximum spread of this gun, in degrees deviating from the looking direction.
+ * @param ammo How much ammo this gun has.
+ * @param reloadTicks How many ticks it takes for the player to reload one ammo unit with this gun.
+ * @param reloadAmount How much ammo should be reloaded per ammo unit (per reload tick).
+ * @param fireSound The fire sound.
+ * @param ink The ink settings.
+ */
 data class PaintGun(
     val id: String,
     val cooldownTicks: Int,
@@ -18,27 +22,7 @@ data class PaintGun(
     val reloadTicks: Int,
     val reloadAmount: Int,
     val fireSound: SoundCfg,
-    val bullet: BulletSettings
+    val ink: InkSettings
 ) {
-    data class BulletSettings(
-        val size: Double,
-        val power: Double,
-        val maxHits: Double,
-        val despawnSeconds: Double,
-        val mass: Float,
-        val damage: Float,
-        val maxImpactPower: Float,
-        val paintRadius: Float,
-        val deficitPaintBoost: Float,
-        val split: BulletSplit
-    )
-
-    data class BulletSplit(
-        val splitTicks: Int,
-        val maxSplits: Int,
-        val splitPaintRadius: Float,
-        val splitSubdivisions: Int
-    )
-
     data class SoundCfg(val sound: SoundEvent, val volume: Float, val pitch: Float)
 }

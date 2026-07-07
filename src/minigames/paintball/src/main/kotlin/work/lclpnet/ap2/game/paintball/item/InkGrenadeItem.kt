@@ -16,7 +16,7 @@ import work.lclpnet.ap2.core.hook.DeathMessageItemCallback
 import work.lclpnet.ap2.game.paintball.util.*
 import work.lclpnet.ap2.impl.game.item.SpecialItem
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext
-import work.lclpnet.ap2.impl.util.SoundHelper.playSound
+import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.impl.util.math.MathUtil
 import work.lclpnet.ap2.impl.util.math.MathUtil.randomUnitVec3d
 import work.lclpnet.gaco.core.util.ThreadUtil.executeOn
@@ -46,17 +46,17 @@ class InkGrenadeItem(
     private val onUsed: (ServerPlayer) -> Unit
 ) : SpecialItem {
 
-    private val bulletSettings = PaintGun.BulletSettings(
-        size = 0.08,
-        power = 16.0,
-        maxHits = 2.0,
-        despawnSeconds = 2.0,
-        mass = 0.01f,
+    private val inkSettings = InkSettings(
+        speed = 16.0,
+        gravity = 11.0,
+        range = 6.0,
+        blobCount = 1,
+        blobRadius = 0.1,
+        blobSpread = 0.0,
+        splatRadius = 1.6f,
         damage = 0.5f,
-        maxImpactPower = 2f,
-        paintRadius = 1.6f,
         deficitPaintBoost = 0f,
-        split = NO_SPLIT
+        trail = NO_TRAIL
     )
 
     override fun id() = "ink_grenade"
@@ -86,7 +86,7 @@ class InkGrenadeItem(
             spawnObject(player)
         }
 
-        playSound(world, SoundEvents.END_PORTAL_FRAME_FILL, SoundSource.PLAYERS, 0.8f, 1.2f)
+        SoundHelper.playSoundAt(player, SoundEvents.END_PORTAL_FRAME_FILL, SoundSource.PLAYERS, 0.8f, 1.2f)
 
         stack.consume(1, player)
 
@@ -152,23 +152,21 @@ class InkGrenadeItem(
             detach()
 
             val player = world.server.playerList.getPlayer(thrower ?: return) ?: return
-            val state = paintGunManager.getPaintBulletState(player) ?: return
+            paintGunManager.getPaintBulletState(player) ?: return
             val team = teams.teamOf(player) ?: return
 
             val pos = Vec3(position.x, position.y, position.z)
 
             paintGunManager.paintManager.createExplosion(player, pos, team, EXPLOSION_POWER)
 
-            executeOn(PhysicsThread.get(world)) {
-                spawnFragments(pos, player, state)
-            }
+            spawnFragments(pos, player)
         }
 
-        private fun spawnFragments(pos: Vec3, player: ServerPlayer, state: BlockState) {
+        private fun spawnFragments(pos: Vec3, player: ServerPlayer) {
             for (offset in MathUtil.fibonacciHemisphere(EXPLOSION_FRAGMENTS)) {
                 val dir = Vec3(offset.x.toDouble(), offset.y.toDouble(), offset.z.toDouble())
                 val fragPos = pos.add(dir.scale(FRAGMENT_SPAWN_RADIUS.toDouble()))
-                paintGunManager.spawnPaintBullet(player, state, bulletSettings, fragPos, dir)
+                paintGunManager.spawnInkProjectile(player, inkSettings, fragPos, dir)
             }
         }
     }
