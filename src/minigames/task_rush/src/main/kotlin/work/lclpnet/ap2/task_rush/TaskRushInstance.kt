@@ -4,8 +4,10 @@ import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.numbers.StyledFormat
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.scores.DisplaySlot
 import work.lclpnet.ap2.ext.allPlayers
+import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.MiniGameInstance
 import work.lclpnet.ap2.game.data.IntScoreDataContainer
@@ -68,8 +70,10 @@ class TaskRushInstance(
             allowAll()
 
             ProtectionTypes.ALLOW_DAMAGE.disallow(this) { victim, source ->
-                victim is ServerPlayer && source.entity is ServerPlayer
+                (victim is ServerPlayer && source.entity is ServerPlayer) || source.isOf(DamageTypes.FALL)
             }
+
+            disallow(ProtectionTypes.HUNGER)
         }
 
         taskManager.init()

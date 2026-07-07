@@ -18,6 +18,12 @@ import work.lclpnet.ap2.game.util.Announcer
 import work.lclpnet.ap2.game.util.ResultAnnouncement
 import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.kibu.scheduler.api.TaskHandle
+import java.util.UUID
+import kotlin.collections.ArrayDeque
+import kotlin.collections.HashSet
+import kotlin.collections.isNotEmpty
+import kotlin.collections.setOf
+import kotlin.collections.shuffle
 import kotlin.time.Duration.Companion.seconds
 
 private val NEXT_TASK_DELAY = 4.seconds
@@ -48,11 +54,11 @@ class TaskManager(
         BreakBlocksTask,
         FlowerTypesTask,
         DarkestPlaceTask,
-        StandInAreaTask,
+//        StandInAreaTask,
         TreasureHuntTask,
         FirstOreTask,
         BreedAnimalsTask,
-        ReachCoordsTask,
+//        ReachCoordsTask,
     )
     private val taskQueue = ArrayDeque<Task>()
     private val announcer = Announcer(gameHandle.translations, gameHandle.server)
@@ -132,7 +138,7 @@ class TaskManager(
         this.currentTaskEnv = env
         this.currentTask = task
 
-        val msg = gameHandle.translations.translateText("task.${task.id}")
+        val msg = task.announcement(env)
             .withStyle(ChatFormatting.DARK_GREEN, ChatFormatting.BOLD)
 
         announcer.announceInChat(msg)
@@ -161,8 +167,12 @@ class TaskManager(
             announcement.sendTop(3, player, labelKey = "task_results")
         }
 
+        val heard = HashSet<UUID>()
+
         for (pair: ObjectIntPair<PlayerRef> in order) {
             val player = gameHandle.server.playerList.getPlayer(pair.left().uuid) ?: continue
+
+            heard.add(player.uuid)
 
             val rank = pair.rightInt()
 
@@ -183,6 +193,13 @@ class TaskManager(
             if (points == 0) continue
 
             data.addScore(player, points)
+        }
+
+        // Players without a score are not part of the ranking, so give them the "no reward" sound too.
+        for (player in gameHandle.participants) {
+            if (player.uuid in heard) continue
+
+            player.playNotifySound(SoundEvents.NOTE_BLOCK_BASEDRUM.value(), SoundSource.UI, 0.5f, 1f)
         }
     }
 

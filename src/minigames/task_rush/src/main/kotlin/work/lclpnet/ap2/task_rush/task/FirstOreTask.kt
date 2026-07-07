@@ -5,6 +5,7 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.kibu.hook.level.BlockModificationHooks
+import work.lclpnet.kibu.translate.text.TranslatedText
 
 /**
  * Be the first to mine a specific ore.
@@ -18,12 +19,17 @@ object FirstOreTask : OrderTask("first_ore") {
         listOf(Blocks.COAL_ORE, Blocks.DEEPSLATE_COAL_ORE),
     )
 
+    private var blocks: List<Block> = emptyList()
+
+    override fun announcement(env: TaskEnv): TranslatedText {
+        blocks = ores[env.level.random.nextInt(ores.size)]
+
+        return env.translations.translateText("task.first_ore", blocks.first().name)
+    }
+
     override fun begin(env: TaskEnv) {
         val progress = start(env)
-        val blocks: List<Block> = ores[env.level.random.nextInt(ores.size)]
-
-        env.translations.translateText("task.first_ore.mine", blocks.first().name)
-            .sendTo(env.players)
+        val blocks = this.blocks
 
         BlockModificationHooks.BLOCK_BROKEN.registerWith(env.hooks) { world, pos, entity ->
             val breaker = entity as? ServerPlayer ?: return@registerWith

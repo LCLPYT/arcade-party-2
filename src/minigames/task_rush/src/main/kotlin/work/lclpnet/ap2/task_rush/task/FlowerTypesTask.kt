@@ -8,6 +8,7 @@ import work.lclpnet.ap2.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.game.data.Ordering
 import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.tags.ApItemTags
+import work.lclpnet.kibu.hook.player.PlayerInventoryHooks
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
 
@@ -39,11 +40,31 @@ object FlowerTypesTask : Task {
     override fun begin(env: TaskEnv) {
         val startTypes = HashMap<UUID, Set<Item>>()
         val removed = mutableMapOf<UUID, List<ItemStack>>()
+        val collected = HashMap<UUID, MutableSet<Item>>()
 
         for (player in env.players) {
             startTypes[player.uuid] = flowerTypes(player)
 
             removed[player.uuid] = removeItems(player)
+        }
+
+        PlayerInventoryHooks.PLAYER_PICKUP.registerWith(env.hooks) { player, itemEntity ->
+            val stack = itemEntity.item
+
+            if (player is ServerPlayer && env.players.isParticipating(player) && isFlower(stack)) {
+                val start = startTypes[player.uuid] ?: emptySet()
+                val item = stack.item
+
+                if (item !in start) {
+                    val types = collected.getOrPut(player.uuid) { HashSet() }
+
+                    if (types.add(item)) {
+                        env.feedback(player, "task.feedback.flower_types", types.size, sound = true)
+                    }
+                }
+            }
+
+            false
         }
 
         env.timer("task.$id.task", 45.seconds) {

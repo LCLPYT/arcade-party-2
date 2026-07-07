@@ -9,6 +9,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.level.saveddata.maps.MapDecorationTypes
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData
+import net.minecraft.world.phys.Vec3
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.setBlock
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
@@ -23,8 +24,16 @@ import kotlin.math.sin
 object TreasureHuntTask : OrderTask("treasure_hunt", winnerCount = 1) {
 
     override fun begin(env: TaskEnv) {
-        val progress = start(env)
         val chestPos = placeChest(env.level, env.spawnPos, env)
+        val center = Vec3.atCenterOf(chestPos)
+
+        lateinit var progress: Progress
+
+        // If nobody digs up the chest in time, credit the player who got closest to it.
+        progress = start(env) {
+            val closest = env.players.minByOrNull { it.distanceToSqr(center) } ?: return@start
+            progress.rankRemaining(listOf(closest))
+        }
 
         for (player in env.players) {
             giveMap(env, player, chestPos)

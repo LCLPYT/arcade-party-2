@@ -5,6 +5,7 @@ import work.lclpnet.ap2.game.data.DoubleScoreDataContainer
 import work.lclpnet.ap2.game.data.Ordering
 import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.kibu.hook.entity.EntityDamageCallback
+import java.util.*
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -26,7 +27,7 @@ object EntityDamageTask : Task {
 
             if (attacker != null && env.players.isParticipating(attacker) && victim !is ServerPlayer && amount > 0f) {
                 data.addScore(attacker, amount.coerceAtMost(victim.health).toDouble())
-                env.feedback(attacker, "task.feedback.entity_damage", data.getScore(attacker).toInt())
+                env.feedback(attacker, "task.feedback.entity_damage", String.format(Locale.ROOT, "%.1f", data.getScore(attacker)))
             }
 
             false

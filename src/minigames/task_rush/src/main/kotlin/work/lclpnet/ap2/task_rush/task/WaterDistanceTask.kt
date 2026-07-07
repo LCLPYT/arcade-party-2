@@ -26,6 +26,8 @@ object WaterDistanceTask : Task {
 
         env.scheduler.interval(1) { ->
             for (player in env.players) {
+                player.airSupply = player.maxAirSupply
+
                 val inWater = player.isInWater || player.isUnderWater || player.vehicle is AbstractBoat
                 val prev = lastPos.put(player.uuid, player.position())
 

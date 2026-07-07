@@ -21,6 +21,7 @@ import work.lclpnet.kibu.scheduler.api.Scheduler
 import work.lclpnet.kibu.scheduler.api.TaskScheduler
 import work.lclpnet.kibu.translate.Translations
 import work.lclpnet.kibu.translate.text.FormatWrapper
+import work.lclpnet.kibu.translate.text.TranslatedText
 import kotlin.time.Duration
 
 interface TaskEnv {
@@ -100,6 +101,8 @@ class TaskEnvImpl(
     }
 
     fun unload() {
+        completed = true
+
         timers.forEach { it.stop() }
         timers.clear()
         hooks.unload()
@@ -110,6 +113,13 @@ class TaskEnvImpl(
 interface Task {
 
     val id: String
+
+    /**
+     * The chat announcement shown when the task starts. Called once, right before [begin], so tasks may
+     * pick random parameters here and merge them into the message.
+     */
+    fun announcement(env: TaskEnv): TranslatedText =
+        env.translations.translateText("task.$id")
 
     fun begin(env: TaskEnv)
 
