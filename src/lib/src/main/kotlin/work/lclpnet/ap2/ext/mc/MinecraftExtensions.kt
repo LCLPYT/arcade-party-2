@@ -5,11 +5,13 @@ import net.minecraft.core.Position
 import net.minecraft.core.RegistryAccess
 import net.minecraft.core.TypedInstance
 import net.minecraft.core.particles.ParticleOptions
+import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceKey
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.tags.TagKey
 import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.damagesource.DamageType
+import net.minecraft.world.item.DyeColor
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.enchantment.Enchantment
 import net.minecraft.world.level.Level
@@ -72,3 +74,6 @@ fun <T : Any> TypedInstance<T>.isIn(tag: TagKey<T>) = `is`(tag)
 
 fun DamageSource.isOf(type: ResourceKey<DamageType>) = `is`(type)
 fun DamageSource.isIn(tag: TagKey<DamageType>) = `is`(tag)
+
+fun DyeColor.displayName(): Component =
+    Component.translatable("color.minecraft.${this.getName()}").withColor(textureDiffuseColor)

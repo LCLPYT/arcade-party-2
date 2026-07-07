@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import work.lclpnet.ap2.core.hook.ArmorAbsorbDamageCallback;
+import work.lclpnet.ap2.core.hook.DamageKnockbackCallback;
 import work.lclpnet.ap2.core.hook.LivingEntityAttributeInitCallback;
 import work.lclpnet.ap2.core.hook.PowderedSnowSlowCallback;
 import work.lclpnet.ap2.core.type.ApLivingEntity;
@@ -99,4 +100,17 @@ public class LivingEntityMixin implements ApLivingEntity {
 
         cir.setReturnValue(damage);
     }
+
+     @Inject(
+             method = "dealDefaultKnockback",
+             at = @At("HEAD"),
+             cancellable = true
+     )
+    public void ap2$onDealDefaultKnockback(DamageSource source, float damage, boolean blocked, CallbackInfo ci) {
+         var self = (LivingEntity) (Object) this;
+
+         if (!DamageKnockbackCallback.HOOK.invoker().shouldTakeKnockback(self, source, damage)) {
+             ci.cancel();
+         }
+     }
 }

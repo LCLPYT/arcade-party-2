@@ -8,6 +8,7 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
 import work.lclpnet.ap2.api.util.world.AdjacentBlocks
+import work.lclpnet.ap2.ext.mc.displayName
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.guess_it.data.*
 import work.lclpnet.ap2.game.guess_it.util.OptionMaker
@@ -172,7 +173,7 @@ class AreaChallenge(
 
                 text.append(
                     Component.literal("$count ")
-                        .append(Component.translatable("color.minecraft." + dye.getName()))
+                        .append(dye.displayName())
                         .withStyle { style -> style.withColor(dye.textColor) }
                 )
             }

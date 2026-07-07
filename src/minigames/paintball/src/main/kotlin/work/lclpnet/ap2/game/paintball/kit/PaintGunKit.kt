@@ -33,17 +33,28 @@ open class PaintGunKit(
 
             if (!stack.isOf(item)) return@registerWith InteractionResult.PASS
 
-            paintGunManager.shoot(player, paintGun, stack)
-
-            InteractionResult.SUCCESS
+            onUse(player, stack)
         }
+    }
+
+    protected open fun onUse(
+        player: ServerPlayer,
+        stack: ItemStack
+    ): InteractionResult {
+        paintGunManager.shoot(player, paintGun, stack)
+
+        return InteractionResult.SUCCESS
     }
 
     override fun configureItemStack(stack: ItemStack) {
         super.configureItemStack(stack)
 
         val group = Optional.of(ApConstants.identifier(paintGun.id))
-        stack.set(DataComponents.USE_COOLDOWN, UseCooldown(paintGun.cooldownTicks.toFloat(), group))
+
+        if (paintGun.cooldownTicks > 0) {
+            stack.set(DataComponents.USE_COOLDOWN, UseCooldown(paintGun.cooldownTicks.toFloat(), group))
+        }
+
         stack.set(DataComponents.MAX_DAMAGE, paintGun.ammo)
     }
 }

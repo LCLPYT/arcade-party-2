@@ -107,9 +107,9 @@ class KilleporterInstance(
     }
 
     override fun configureStartup(sequence: GameStartSequence) {
-        sequence.beforeGo { next ->
-            kitHandler?.startKitSelectionTimer(this, announcer, 15.seconds) { next.run() }
-        }
+        val delay = 15.seconds
+        kitHandler!!.startKitSelectionTimer(this, duration = delay + sequence.initialDelay)
+        sequence.extraDelay += delay
 
         super.configureStartup(sequence)
     }
