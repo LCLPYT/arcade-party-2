@@ -13,8 +13,6 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import org.slf4j.Logger
-import work.lclpnet.ap2.ext.component1
-import work.lclpnet.ap2.ext.component2
 import work.lclpnet.ap2.game.data.SubjectRef
 import work.lclpnet.ap2.impl.util.TimeHelper
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
@@ -169,7 +167,7 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
         val ranks = HashMap<Ref, Int>()
 
         for ((ref, rank) in view.order) {
-            if (ref != null) ranks[ref] = rank
+            ranks[ref] = rank
         }
 
         if (ranking) body.add(rankingSection(view, player, renderName))
@@ -192,8 +190,6 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
             .append(Component.literal(label).withStyle(GOLD, BOLD))
 
         for ((ref, rank) in view.order) {
-            if (ref == null) continue
-
             text.append(Component.literal("\n"))
                 .append(Component.literal("#$rank ").withStyle(YELLOW))
                 .append(renderName(ref, rank))

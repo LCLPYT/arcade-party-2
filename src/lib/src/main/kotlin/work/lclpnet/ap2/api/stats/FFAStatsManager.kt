@@ -8,7 +8,7 @@ import work.lclpnet.kibu.translate.text.TranslatedText
 class FFAStatsManager(stats: StatSet) : BaseStatsManager<ServerPlayer, PlayerRef>(stats, PlayerRef::create), StatsManager<PlayerRef> {
 
     override fun fillDefaults(result: GenericGameResult<PlayerRef>) {
-        fillDefaults(result.playerResults.mapNotNull { it.left() })
+        fillDefaults(result.playerResults.map { (ref, _) -> ref })
     }
 
     override fun getResult(

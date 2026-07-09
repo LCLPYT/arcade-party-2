@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.api.stats
 
-import it.unimi.dsi.fastutil.objects.ObjectIntPair
 import work.lclpnet.ap2.game.data.GenericGameResult
 import work.lclpnet.ap2.game.data.SubjectRef
 import work.lclpnet.ap2.game.data.SubjectRefFactory
@@ -40,7 +39,7 @@ class Stats(stats: StatSet) {
 
 class StatsView<Ref : SubjectRef>(
     val stats: StatSet,
-    val order: List<ObjectIntPair<Ref>>,
+    val order: List<Pair<Ref, Int>>,
     val results: Map<Ref, Stats>,
     val details: Map<Ref, TranslatedText> = emptyMap(),
 )
