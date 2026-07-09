@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Position;
 import net.minecraft.core.Vec3i;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -86,5 +87,14 @@ public class BoxBlockShape implements BlockShape {
     @Override
     public boolean collidesWith(AABB other) {
         return box.collidesWith(other);
+    }
+
+    @Override
+    public @NotNull Vec3 project(@NotNull Position pos) {
+        return new Vec3(
+                Math.clamp(pos.x(), box.min().getX(), box.max().getX() + 1.0),
+                Math.clamp(pos.y(), box.min().getY(), box.max().getY() + 1.0),
+                Math.clamp(pos.z(), box.min().getZ(), box.max().getZ() + 1.0)
+        );
     }
 }

@@ -3,6 +3,7 @@ package work.lclpnet.ap2.impl.util.world.block_shape;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Position;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.NotNull;
 import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.gaco.ds.Collider;
 
@@ -38,6 +39,8 @@ public interface BlockShape extends Iterable<BlockPos>, Collider {
     default boolean collidesWith(double x, double y, double z) {
         return contains(x, y, z);
     }
+
+    @NotNull Vec3 project(@NotNull Position pos);
 
     @Override
     default BlockPos min() {
