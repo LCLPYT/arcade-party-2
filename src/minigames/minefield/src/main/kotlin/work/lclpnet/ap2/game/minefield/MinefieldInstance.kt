@@ -115,7 +115,7 @@ class MinefieldInstance(
     override fun go() {
         level.setBlocks(readShape("spawn-gate"), Blocks.AIR)
 
-        interval(1) {
+        runEveryTick {
             for (player in players()) {
                 if (player.isSpectator) continue
 
@@ -159,7 +159,7 @@ class MinefieldInstance(
     fun entry(player: ServerPlayer): Entry = entries.computeIfAbsent(player.uuid) { Entry() }
 
     fun onReachGoal(player: ServerPlayer) {
-        if (!inGoal.add(player.uuid) || !players().isParticipating(player)) return
+        if (!inGoal.add(player.uuid) || !isParticipating(player)) return
 
         data.add(player)
         entry(player).done()
@@ -216,7 +216,10 @@ class MinefieldInstance(
         stats.increment(player, Exploded)
 
         timeout(20) {
-            player.teleport(spawnShape.randomPos(Random.asJavaRandom()), spawnYaw)
+            val respawnPos = spawnShape.project(Vec3.atBottomCenterOf(pos))
+                .with(Direction.Axis.Y, spawnShape.min().y.toDouble())
+
+            player.teleport(respawnPos, spawnYaw)
             gameHandle.playerUtil.resetPlayer(player)
             visibility.giveItem(player)
         }

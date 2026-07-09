@@ -4,8 +4,10 @@ import com.google.common.collect.Iterators;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Position;
 import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.gaco.ds.BlockBox;
 
@@ -60,7 +62,7 @@ public class CylinderBlockShape implements BlockShape, BlockShape.WithRadius, Bl
     public boolean contains(double x, double y, double z) {
         int oy = origin.getY();
 
-        if (y < oy || y > oy + height - 1) return false;
+        if (y < oy || y >= oy + height) return false;
 
         double dx = x - (origin.getX() + 0.5);
         double dz = z - (origin.getZ() + 0.5);
@@ -106,5 +108,25 @@ public class CylinderBlockShape implements BlockShape, BlockShape.WithRadius, Bl
         }
 
         return false;
+    }
+
+    @Override
+    public @NotNull Vec3 project(@NotNull Position pos) {
+        double y = Math.clamp(pos.y(), origin.getY(), origin.getY() + height);
+
+        double ox = origin.getX() + 0.5;
+        double oz = origin.getZ() + 0.5;
+
+        double dx = pos.x() - ox;
+        double dz = pos.z() - oz;
+
+        double dist = Math.sqrt(dx * dx + dz * dz);
+
+        if (dist > radius) {
+            dx = dx / dist * radius;
+            dz = dz / dist * radius;
+        }
+
+        return new Vec3(ox + dx, y, oz + dz);
     }
 }
