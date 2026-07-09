@@ -275,7 +275,7 @@ class DefaultMiniGameHandle(
                         scoreManager.addScore(playerResult.ref, score)
                     }
 
-                    score--
+                    score -= group.size
                 }
             }
             GameType.TEAM -> {
