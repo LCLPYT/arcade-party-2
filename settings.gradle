@@ -21,8 +21,8 @@ project(':lib').projectDir = file("src/lib")
 def minigames = [
         "aim_master",
         "anvil_fall",
-        "assassins",
         "apocalypse_survival",
+        "assassins",
         "block_dissolve",
         "bow_spleef",
         "button_master",
@@ -30,6 +30,7 @@ def minigames = [
         "cozy_campfire",
         "dance_floor",
         "dragon_escape",
+        "dragons",
         "eggventure",
         "fine_tuning",
         "glowing_bomb",

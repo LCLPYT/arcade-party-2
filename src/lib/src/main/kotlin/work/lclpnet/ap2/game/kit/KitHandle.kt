@@ -83,7 +83,6 @@ interface KitHandle {
         ItemStackUtil.setLore(stack, newLore)
     }
 
-    fun kitName(kit: Kit): TranslatedText {
-        return translations.translateText("game.${gameId.namespace}.${gameId.path}.kit.${kit.id()}")
-    }
+    fun kitName(kit: Kit): TranslatedText =
+        translations.translateText("kit.${kit.id()}")
 }

@@ -122,5 +122,8 @@
   "ap2.status.game_over": "Game Over",
   "ap2.playing_on": "Playing on %s",
   "game.ap2.title": "ArcadeParty",
-  "game.ap2.reached_checkpoint": "Checkpoint reached"
+  "game.ap2.reached_checkpoint": "Checkpoint reached",
+  "kit.leap": "Leap-Axe",
+  "kit.leap.description": "Get an axe that leaps you in the current looking direction when used.",
+  "kit.leap.hint": "Use to leap in the direction you are current looking in."
 }

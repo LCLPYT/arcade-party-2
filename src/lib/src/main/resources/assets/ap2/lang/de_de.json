@@ -122,5 +122,8 @@
   "ap2.status.game_over": "Game Over",
   "ap2.playing_on": "Spiel auf %s",
   "game.ap2.title": "ArcadeParty",
-  "game.ap2.reached_checkpoint": "Checkpoint erreicht"
+  "game.ap2.reached_checkpoint": "Checkpoint erreicht",
+  "kit.leap": "Sprung-Axt",
+  "kit.leap.description": "Erhalte eine Axt, welche dich in Blickrichtung hechten lässt, sobald du sie einsetzt.",
+  "kit.leap.hint": "Lässt dich in Blickrichtung hechten sobald du sie einsetzt."
 }
