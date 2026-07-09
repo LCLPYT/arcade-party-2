@@ -13,6 +13,7 @@ import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.Display
 import net.minecraft.world.entity.EntityTypes
+import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.item.DyeColor
 import net.minecraft.world.level.GameType
 import net.minecraft.world.level.block.Blocks
@@ -22,10 +23,7 @@ import org.joml.Matrix4f
 import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.*
-import work.lclpnet.ap2.ext.mc.isOf
-import work.lclpnet.ap2.ext.mc.setBlock
-import work.lclpnet.ap2.ext.mc.setBlocks
-import work.lclpnet.ap2.ext.mc.teleport
+import work.lclpnet.ap2.ext.mc.*
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.data.OrderedDataContainer
@@ -59,6 +57,7 @@ import kotlin.time.Duration.Companion.seconds
 
 val END_TIME = 15.seconds
 const val DEBUG_PRESSURE_PLATE_POSITIONS = false
+const val PLAYER_SCALE = 0.96
 
 val Exploded = Stat("exploded", 0, higherIsBetter = false)
 
@@ -86,6 +85,7 @@ class MinefieldInstance(
     override fun prepare() {
         for (player in players()) {
             player.teleport(spawnShape.randomPos(Random.asJavaRandom()))
+            player.setAttribute(Attributes.SCALE, PLAYER_SCALE)
         }
 
         taskBar = useTaskDisplay()
