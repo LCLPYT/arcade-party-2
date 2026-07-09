@@ -5,7 +5,6 @@ import net.minecraft.ChatFormatting
 import net.minecraft.commands.Commands
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.numbers.FixedFormat
 import net.minecraft.network.chat.numbers.StyledFormat
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
@@ -39,9 +38,6 @@ import work.lclpnet.ap2.impl.activity.ArcadePartyComponents
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.music.MusicHelper
 import work.lclpnet.ap2.impl.util.IconMaker
-import work.lclpnet.ap2.impl.util.scoreboard.DynamicScoreHandle
-import work.lclpnet.ap2.impl.util.scoreboard.DynamicScoreboardObjective
-import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout
 import work.lclpnet.ap2.impl.util.title.AnimatedTitle
 import work.lclpnet.ap2.impl.util.title.NextGameTitleAnimation
 import work.lclpnet.ap2.mode_default.ApMiniGameArgs
@@ -50,7 +46,6 @@ import work.lclpnet.ap2.mode_default.cmd.ForceMapCommand
 import work.lclpnet.ap2.mode_default.cmd.SkipCommand
 import work.lclpnet.ap2.mode_default.util.*
 import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager
-import work.lclpnet.ap2.util.scoreboard.setupDynamicSidebarObjective
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager
 import work.lclpnet.gaco.scene.MixedMountContext
 import work.lclpnet.gaco.scene.Object3d
@@ -69,7 +64,6 @@ import work.lclpnet.kibu.scheduler.api.TaskHandle
 import work.lclpnet.kibu.scheduler.api.TaskScheduler
 import work.lclpnet.kibu.translate.Translations
 import work.lclpnet.kibu.translate.text.FormatWrapper
-import java.util.*
 import java.util.concurrent.CompletableFuture
 import kotlin.math.floor
 import kotlin.math.max
@@ -242,202 +236,21 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
     }
 
     private fun showLeaderboard() {
-        val translations = args.miniGameArgs.translations
         val scoreManager = args.scoreManager
-        val component = component(ArcadePartyComponents.SCORE_BOARD)
-        val scoreboard = component.scoreboardManager(args.miniGameArgs::translations)
+        val scoreboard = component(ArcadePartyComponents.SCORE_BOARD)
+            .scoreboardManager(args.miniGameArgs::translations)
 
-        val objective = setupDynamicSidebarObjective(scoreboard, "game.${ApConstants.ID}.title")
-
-        // header
-        val round = FixedFormat(
-            Component.literal(scoreManager.round.toString()).withStyle(ChatFormatting.YELLOW)
+        val leaderboard = PreparationLeaderboard(
+            server, args.miniGameArgs.translations, scoreManager, args.playerManager
         )
 
-        objective.createText(translations.translateText("ap2.prepare.round")
-            .withStyle(ChatFormatting.GREEN)
-        ).setNumberFormat(round)
+        scoreboard.addVirtualObjective(leaderboard)
 
-        var shownScoreHolders: Set<UUID> = emptySet()
-
-        if (args.playerManager.isFinale) {
-            addFinalistsToScoreboard(objective)
-        } else {
-            shownScoreHolders = addPlayerScoresToScoreboard(objective)
-        }
-
-        // footer
-        if (args.playerManager.isFinale) {
-            objective.createText({ player ->
-                val translation = if (args.playerManager.isParticipating(player))
-                    "ap2.prepare.win_finale"
-                else
-                    "ap2.prepare.spectating"
-
-                translations.translateText(player, translation).withStyle(ChatFormatting.AQUA)
-            }, ScoreboardLayout.BOTTOM)
-        } else {
-            val requiredScore = FormatWrapper.styled(scoreManager.targetScore).formatted(ChatFormatting.YELLOW)
-            val taskMsg = translations.translateText("ap2.prepare.score_required", requiredScore)
-            objective.createText(taskMsg.withStyle(ChatFormatting.AQUA), ScoreboardLayout.BOTTOM)
-        }
-
-        objective.createNewline(ScoreboardLayout.BOTTOM)
-
-        var ownScoreHandle: DynamicScoreHandle? = null
-
-        if (!args.playerManager.isFinale && scoreManager.hasScores()) {
-            ownScoreHandle = addOwnScoreLine(objective, shownScoreHolders)
+        for (player in PlayerLookup.all(server)) {
+            leaderboard.add(player)
         }
 
         setupPlayerListScoreObjective(scoreboard)
-
-        // display objective for all players
-        for (player in PlayerLookup.all(args.miniGameArgs.server)) {
-            objective.add(player)
-        }
-
-        // apply the per-viewer score numbers after the objective was sent to the clients
-        if (ownScoreHandle != null) {
-            applyOwnScoreNumbers(ownScoreHandle, shownScoreHolders)
-        }
-    }
-
-    private fun addFinalistsToScoreboard(objective: DynamicScoreboardObjective) {
-        val finalists = args.scoreManager.finalists
-        val translations = args.miniGameArgs.translations
-
-        objective.createNewline(ScoreboardLayout.TOP)
-
-        objective.createText(
-            translations.translateText("ap2.finale").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD)
-        )
-
-        val separator = Component.literal(ApConstants.SCOREBOARD_SEPARATOR_SM)
-            .withStyle(ChatFormatting.DARK_GREEN, ChatFormatting.STRIKETHROUGH)
-
-        objective.createText(separator)
-
-        for (finalist in finalists) {
-            objective.createText(
-                Component.literal("• ${finalist.scoreboardName}").withStyle(ChatFormatting.GREEN)
-            )
-        }
-    }
-
-    private fun addPlayerScoresToScoreboard(objective: DynamicScoreboardObjective): Set<UUID> {
-        val translations: Translations = args.miniGameArgs.translations
-        val scoreManager: ScoreManager = args.scoreManager
-
-        if (scoreManager.hasScores()) {
-            objective.createNewline(ScoreboardLayout.TOP)
-
-            objective.createText(
-                translations.translateText("ap2.score").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD)
-            )
-
-            val separator = Component.literal(ApConstants.SCOREBOARD_SEPARATOR_SM)
-                .withStyle(ChatFormatting.DARK_GREEN, ChatFormatting.STRIKETHROUGH)
-
-            objective.createText(separator)
-        }
-
-        // top 5 scores
-        val shownScoreHolders = mutableSetOf<UUID>()
-        var i = 0
-
-        for ((ref, rank) in scoreManager.iterateRankedScores()) {
-            if (i++ >= 5) continue
-
-            val score = scoreManager.getScore(ref)
-
-            objective.setScore(ref.name, score)
-
-            objective.setDisplayName(
-                ref.name,
-                Component.literal("#$rank ").withStyle(ChatFormatting.YELLOW)
-                    .append(Component.literal(ref.name).withStyle(ChatFormatting.GREEN))
-            )
-
-            shownScoreHolders.add(ref.uuid)
-        }
-
-        return shownScoreHolders
-    }
-
-    /**
-     * Adds a per-viewer line to the sidebar that shows the viewing player their own rank and score,
-     * rendered exactly like the top scores, but only for participants that are not already visible
-     * in the top scores.
-     * When better-ranked players exist that are not shown in the top scores, a "..." placeholder is inserted between the top scores and the own line.
-     *
-     * @return the handle of the own score line, or `null` if no line was added. The score numbers
-     * have to be applied via [applyOwnScoreNumbers] after the objective was sent to the clients.
-     */
-    private fun addOwnScoreLine(
-        objective: DynamicScoreboardObjective,
-        shownScoreHolders: Set<UUID>
-    ): DynamicScoreHandle? {
-        val playerManager = args.playerManager
-        val scoreManager = args.scoreManager
-
-        fun isOwnLineViewer(player: ServerPlayer) =
-            playerManager.isParticipating(player) && player.uuid !in shownScoreHolders
-
-        // nothing to show if every participant is already visible in the top scores
-        if (playerManager.asSet.none(::isOwnLineViewer)) return null
-
-        val handle = objective.createDynamicText({ player ->
-            if (!isOwnLineViewer(player)) return@createDynamicText Component.empty()
-
-            val rank = scoreManager.rank(player)
-
-            Component.literal("#$rank ").withStyle(ChatFormatting.YELLOW)
-                .append(Component.literal(player.scoreboardName).withStyle(ChatFormatting.GREEN))
-        }, ScoreboardLayout.BOTTOM)
-
-        // "..." placeholder for hidden better-ranked players between the top scores and the own line
-        if (playerManager.asSet.any { isOwnLineViewer(it) && hasHiddenBetterRank(it, shownScoreHolders) }) {
-            objective.createText({ player ->
-                if (isOwnLineViewer(player) && hasHiddenBetterRank(player, shownScoreHolders)) {
-                    Component.literal("...").withStyle(ChatFormatting.GRAY)
-                } else {
-                    Component.empty()
-                }
-            }, ScoreboardLayout.BOTTOM)
-        }
-
-        return handle
-    }
-
-    /**
-     * Whether there is a player with a better rank than the given player that is not shown in the
-     * top scores (i.e. a hidden player between the top scores and the player's own score line).
-     */
-    private fun hasHiddenBetterRank(player: ServerPlayer, shownScoreHolders: Set<UUID>): Boolean {
-        val ownRank = args.scoreManager.rank(player)
-
-        return args.scoreManager.iterateRankedScores().any { (ref, rank) ->
-            ref.uuid !in shownScoreHolders && rank < ownRank
-        }
-    }
-
-    /**
-     * Applies the per-viewer score number to the own score line for every participant that is not
-     * shown in the top scores, matching the number format of the top scores.
-     */
-    private fun applyOwnScoreNumbers(handle: DynamicScoreHandle, shownScoreHolders: Set<UUID>) {
-        val scoreManager = args.scoreManager
-
-        for (player in args.playerManager.asSet) {
-            if (player.uuid in shownScoreHolders) continue
-
-            val score = scoreManager.score(player)
-
-            handle.setNumberFormat(player, FixedFormat(
-                Component.literal(score.toString()).withStyle(ChatFormatting.YELLOW)
-            ))
-        }
     }
 
     /**
