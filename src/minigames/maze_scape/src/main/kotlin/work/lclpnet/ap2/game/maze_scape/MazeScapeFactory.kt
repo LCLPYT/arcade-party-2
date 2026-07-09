@@ -11,8 +11,8 @@ import work.lclpnet.ap2.game.maze_scape.setup.MSDebugController
 import work.lclpnet.ap2.game.maze_scape.setup.MSGenerator
 import work.lclpnet.ap2.game.maze_scape.setup.MSLoader
 import work.lclpnet.ap2.game.util.openRandomMap
+import work.lclpnet.ap2.game.util.useDebugController
 import work.lclpnet.ap2.impl.resource.ApResources
-import work.lclpnet.ap2.impl.util.debug.DebugController
 import java.util.*
 
 class MazeScapeFactory : MiniGameFactory {
@@ -24,11 +24,10 @@ class MazeScapeFactory : MiniGameFactory {
 
         val modelManager: ModelManager = ApResources.getInstance()
 
-        val parentDebugController = DebugController()
+        val parentDebugController = useDebugController(level)
         val debugController = MSDebugController(parentDebugController)
 
         if (ApConstants.DEBUG) {
-            parentDebugController.init(modelManager, level)
             debugController.init(modelManager)
         }
 

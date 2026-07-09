@@ -1,17 +1,14 @@
-package work.lclpnet.ap2.api.util.world;
+package work.lclpnet.ap2.api.util.world
 
-import net.minecraft.core.BlockPos;
-
-import java.util.Iterator;
+import net.minecraft.core.BlockPos
 
 /**
  * Provides adjacent blocks of a block.
  */
-public interface AdjacentBlocks {
+interface AdjacentBlocks {
+    fun getAdjacent(pos: BlockPos): Iterator<BlockPos>
 
-    Iterator<BlockPos> getAdjacent(BlockPos pos);
-
-    default Iterable<BlockPos> iterate(BlockPos pos) {
-        return () -> getAdjacent(pos);
+    fun iterate(pos: BlockPos): Iterable<BlockPos> {
+        return Iterable { getAdjacent(pos) }
     }
 }

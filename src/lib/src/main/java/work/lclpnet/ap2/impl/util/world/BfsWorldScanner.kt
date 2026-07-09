@@ -1,48 +1,36 @@
-package work.lclpnet.ap2.impl.util.world;
+package work.lclpnet.ap2.impl.util.world
 
-import net.minecraft.core.BlockPos;
-import work.lclpnet.ap2.api.util.world.AdjacentBlocks;
-import work.lclpnet.ap2.api.util.world.WorldScanner;
+import net.minecraft.core.BlockPos
+import work.lclpnet.ap2.api.util.world.AdjacentBlocks
+import work.lclpnet.ap2.api.util.world.WorldScanner
 
-import java.util.*;
+class BfsWorldScanner(private val adjacentBlocks: AdjacentBlocks) : WorldScanner {
 
-public class BfsWorldScanner implements WorldScanner {
+    override fun scan(starts: Set<BlockPos>): Iterator<BlockPos> {
+        val queue = ArrayList(starts)
+        val known = HashSet(starts)
 
-    private final AdjacentBlocks adjacentBlocks;
+        return object : Iterator<BlockPos> {
 
-    public BfsWorldScanner(AdjacentBlocks adjacentBlocks) {
-        this.adjacentBlocks = adjacentBlocks;
-    }
+            override fun hasNext(): Boolean = !queue.isEmpty()
 
-    @Override
-    public Iterator<BlockPos> scan(Set<BlockPos> starts) {
-        final List<BlockPos> queue = new ArrayList<>(starts);
-        final Set<BlockPos> known = new HashSet<>(starts);
+            override fun next(): BlockPos {
+                val current = queue.removeFirst()
 
-        return new Iterator<>() {
-            @Override
-            public boolean hasNext() {
-                return !queue.isEmpty();
+                advance(current)
+
+                return current
             }
 
-            @Override
-            public BlockPos next() {
-                BlockPos current = queue.removeFirst();
+            fun advance(pos: BlockPos) {
+                for (adj in adjacentBlocks.iterate(pos)) {
+                    if (known.contains(adj)) continue
 
-                advance(current);
-
-                return current;
-            }
-
-            private void advance(BlockPos pos) {
-                for (BlockPos adj : adjacentBlocks.iterate(pos)) {
-                    if (known.contains(adj)) continue;
-
-                    BlockPos immutable = adj.immutable();
-                    queue.add(immutable);
-                    known.add(immutable);
+                    val immutable = adj.immutable()
+                    queue.add(immutable)
+                    known.add(immutable)
                 }
             }
-        };
+        }
     }
 }

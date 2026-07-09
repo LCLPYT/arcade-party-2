@@ -1,15 +1,11 @@
-package work.lclpnet.ap2.api.util.world;
+package work.lclpnet.ap2.api.util.world
 
-import net.minecraft.core.BlockPos;
+import net.minecraft.core.BlockPos
 
-import java.util.Iterator;
-import java.util.Set;
+interface WorldScanner {
 
-public interface WorldScanner {
+    fun scan(starts: Set<BlockPos>): Iterator<BlockPos>
 
-    Iterator<BlockPos> scan(Set<BlockPos> starts);
-
-    default Iterator<BlockPos> scan(BlockPos start) {
-        return scan(Set.of(start));
-    }
+    fun scan(start: BlockPos): Iterator<BlockPos> =
+        scan(setOf(start))
 }
