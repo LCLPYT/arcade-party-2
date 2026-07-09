@@ -258,7 +258,6 @@ class ButtonMasterInstance(
         scene?.clear()
 
         player.teleport(mapSchema.buttonMasterSpawn!!)
-        player.setAttribute(Attributes.JUMP_STRENGTH, 0.0)
 
         val otherPlayers = players().filter { it != player }
 
@@ -321,7 +320,6 @@ class ButtonMasterInstance(
             movementBlocker.enableMovement(player)
             gameHandle.worldFacade.teleport(player)
 
-            player.resetAttribute(Attributes.JUMP_STRENGTH)
             player.resetAttribute(Attributes.GRAVITY)
         }
 
