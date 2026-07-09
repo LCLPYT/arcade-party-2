@@ -191,6 +191,10 @@ class CustomScoreboardManager(
         return objective
     }
 
+    fun addVirtualObjective(objective: VirtualScoreboardObjective) {
+        virtualObjectives.add(objective)
+    }
+
     fun createDynamicObjective(name: String, title: Function<ServerPlayer, Component>): DynamicScoreboardObjective {
         return createDynamicObjective(name, ObjectiveCriteria.RenderType.INTEGER, title)
     }

@@ -5,7 +5,7 @@ import net.minecraft.ChatFormatting
 import net.minecraft.commands.Commands
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.numbers.FixedFormat
+import net.minecraft.network.chat.numbers.StyledFormat
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
@@ -14,6 +14,8 @@ import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.Display
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
+import net.minecraft.world.scores.DisplaySlot
+import net.minecraft.world.scores.criteria.ObjectiveCriteria
 import org.joml.Vector3d
 import org.json.JSONObject
 import org.slf4j.Logger
@@ -36,8 +38,6 @@ import work.lclpnet.ap2.impl.activity.ArcadePartyComponents
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.music.MusicHelper
 import work.lclpnet.ap2.impl.util.IconMaker
-import work.lclpnet.ap2.impl.util.scoreboard.DynamicScoreboardObjective
-import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout
 import work.lclpnet.ap2.impl.util.title.AnimatedTitle
 import work.lclpnet.ap2.impl.util.title.NextGameTitleAnimation
 import work.lclpnet.ap2.mode_default.ApMiniGameArgs
@@ -45,7 +45,7 @@ import work.lclpnet.ap2.mode_default.api.Skippable
 import work.lclpnet.ap2.mode_default.cmd.ForceMapCommand
 import work.lclpnet.ap2.mode_default.cmd.SkipCommand
 import work.lclpnet.ap2.mode_default.util.*
-import work.lclpnet.ap2.util.scoreboard.setupDynamicSidebarObjective
+import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager
 import work.lclpnet.gaco.scene.MixedMountContext
 import work.lclpnet.gaco.scene.Object3d
@@ -236,106 +236,39 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
     }
 
     private fun showLeaderboard() {
-        val translations = args.miniGameArgs.translations
         val scoreManager = args.scoreManager
-        val component = component(ArcadePartyComponents.SCORE_BOARD)
-        val scoreboard = component.scoreboardManager(args.miniGameArgs::translations)
+        val scoreboard = component(ArcadePartyComponents.SCORE_BOARD)
+            .scoreboardManager(args.miniGameArgs::translations)
 
-        val objective = setupDynamicSidebarObjective(scoreboard, "game.${ApConstants.ID}.title")
-
-        // header
-        val round = FixedFormat(
-            Component.literal(scoreManager.round.toString()).withStyle(ChatFormatting.YELLOW)
+        val leaderboard = PreparationLeaderboard(
+            server, args.miniGameArgs.translations, scoreManager, args.playerManager
         )
 
-        objective.createText(translations.translateText("ap2.prepare.round")
-            .withStyle(ChatFormatting.GREEN)
-        ).setNumberFormat(round)
+        scoreboard.addVirtualObjective(leaderboard)
 
-        if (args.playerManager.isFinale) {
-            addFinalistsToScoreboard(objective)
-        } else {
-            addPlayerScoresToScoreboard(objective)
+        for (player in PlayerLookup.all(server)) {
+            leaderboard.add(player)
         }
 
-        // footer
-        if (args.playerManager.isFinale) {
-            objective.createText({ player ->
-                val translation = if (args.playerManager.isParticipating(player))
-                    "ap2.prepare.win_finale"
-                else
-                    "ap2.prepare.spectating"
-
-                translations.translateText(player, translation).withStyle(ChatFormatting.AQUA)
-            }, ScoreboardLayout.BOTTOM)
-        } else {
-            val requiredScore = FormatWrapper.styled(scoreManager.targetScore).formatted(ChatFormatting.YELLOW)
-            val taskMsg = translations.translateText("ap2.prepare.score_required", requiredScore)
-            objective.createText(taskMsg.withStyle(ChatFormatting.AQUA), ScoreboardLayout.BOTTOM)
-        }
-
-        objective.createNewline(ScoreboardLayout.BOTTOM)
-
-        // display objective for all players
-        for (player in PlayerLookup.all(args.miniGameArgs.server)) {
-            objective.add(player)
-        }
+        setupPlayerListScoreObjective(scoreboard)
     }
 
-    private fun addFinalistsToScoreboard(objective: DynamicScoreboardObjective) {
-        val finalists = args.scoreManager.finalists
-        val translations = args.miniGameArgs.translations
+    /**
+     * Shows every participant's current score behind their name in the player list (tab list),
+     * using a dedicated vanilla objective bound to [DisplaySlot.LIST].
+     */
+    private fun setupPlayerListScoreObjective(manager: CustomScoreboardManager) {
+        val scoreManager = args.scoreManager
 
-        objective.createNewline(ScoreboardLayout.TOP)
-
-        objective.createText(
-            translations.translateText("ap2.finale").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD)
+        val objective = manager.createObjective(
+            "ap2_prep_score", ObjectiveCriteria.DUMMY, Component.empty(),
+            ObjectiveCriteria.RenderType.INTEGER, StyledFormat.PLAYER_LIST_DEFAULT
         )
 
-        val separator = Component.literal(ApConstants.SCOREBOARD_SEPARATOR_SM)
-            .withStyle(ChatFormatting.DARK_GREEN, ChatFormatting.STRIKETHROUGH)
+        manager.setDisplay(DisplaySlot.LIST, objective)
 
-        objective.createText(separator)
-
-        for (finalist in finalists) {
-            objective.createText(
-                Component.literal("• ${finalist.scoreboardName}").withStyle(ChatFormatting.GREEN)
-            )
-        }
-    }
-
-    private fun addPlayerScoresToScoreboard(objective: DynamicScoreboardObjective) {
-        val translations: Translations = args.miniGameArgs.translations
-        val scoreManager: ScoreManager = args.scoreManager
-
-        if (scoreManager.hasScores()) {
-            objective.createNewline(ScoreboardLayout.TOP)
-
-            objective.createText(
-                translations.translateText("ap2.score").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD)
-            )
-
-            val separator = Component.literal(ApConstants.SCOREBOARD_SEPARATOR_SM)
-                .withStyle(ChatFormatting.DARK_GREEN, ChatFormatting.STRIKETHROUGH)
-
-            objective.createText(separator)
-        }
-
-        // top 5 scores
-        var i = 0
-
-        for ((ref, rank) in scoreManager.iterateRankedScores()) {
-            if (i++ >= 5) continue
-
-            val score = scoreManager.getScore(ref)
-
-            objective.setScore(ref.name, score)
-
-            objective.setDisplayName(
-                ref.name,
-                Component.literal("#$rank ").withStyle(ChatFormatting.YELLOW)
-                    .append(Component.literal(ref.name).withStyle(ChatFormatting.GREEN))
-            )
+        for (player in args.playerManager.asSet) {
+            manager.setScore(player, objective, scoreManager.score(player))
         }
     }
 
