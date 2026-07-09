@@ -46,7 +46,7 @@ import work.lclpnet.kibu.title.Title
 import java.util.*
 import kotlin.random.Random
 
-private const val TUNING_TIME_SECONDS = 36
+private const val TUNING_TIME_SECONDS = 30
 
 class TuningPhase(
     private val gameHandle: MiniGameHandle,
