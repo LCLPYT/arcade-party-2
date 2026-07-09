@@ -324,12 +324,10 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
         // top 5 scores
         var i = 0
 
-        for (entry in scoreManager.iterateRankedScores()) {
+        for ((ref, rank) in scoreManager.iterateRankedScores()) {
             if (i++ >= 5) continue
 
-            val ref = entry.left()
             val score = scoreManager.getScore(ref)
-            val rank = entry.rightInt()
 
             objective.setScore(ref.name, score)
 

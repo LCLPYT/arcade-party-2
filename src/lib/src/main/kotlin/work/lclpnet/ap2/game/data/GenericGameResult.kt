@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.game.data
 
-import it.unimi.dsi.fastutil.objects.ObjectIntPair
 import work.lclpnet.ap2.game.data.type.PlayerRef
 
 interface GenericGameResult<Ref : SubjectRef> {
@@ -9,7 +8,7 @@ interface GenericGameResult<Ref : SubjectRef> {
 
     val winningSubjects: Set<Ref>
 
-    val playerResults: List<ObjectIntPair<PlayerRef>>
+    val playerResults: List<Pair<PlayerRef, Int>>
 
-    val subjectResults: List<ObjectIntPair<Ref>>
+    val subjectResults: List<Pair<Ref, Int>>
 }

@@ -120,8 +120,7 @@ class WinManager<T, Ref : SubjectRef>(
         val translations = gameHandle.translations
         val details = HashMap<Ref, TranslatedText>()
 
-        for (rank in result.subjectResults) {
-            val ref = rank.left() ?: continue
+        for ((ref, _) in result.subjectResults) {
             val detail = finalData.getEntry(ref)?.toText(translations) ?: continue
             details[ref] = detail
         }

@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.game.util
 
-import it.unimi.dsi.fastutil.objects.ObjectIntPair
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.MutableComponent
@@ -21,18 +20,17 @@ class ResultAnnouncement<Ref : SubjectRef>(
     private val translations: Translations,
     private val font: FontService,
     private val refs: PlayerSubjectRefFactory<Ref?>,
-    private val order: List<ObjectIntPair<Ref>>,
+    private val order: List<Pair<Ref, Int>>,
     entryGetter: Function<Ref, DataEntry<Ref>?>
 ) {
     private val placement = HashMap<Ref, Int>()
     private val entryByRef: HashMap<Ref, DataEntry<Ref>> = HashMap()
 
     init {
-        for (rankEntry in order) {
-            val ref = rankEntry.left()
+        for ((ref, rank) in order) {
             val entry = entryGetter.apply(ref) ?: continue
 
-            placement[ref] = rankEntry.rightInt()
+            placement[ref] = rank
             entryByRef[ref] = entry
         }
     }
@@ -87,19 +85,18 @@ class ResultAnnouncement<Ref : SubjectRef>(
         for (i in 0..<amount) {
             if (order.size <= i) break
 
-            val rankEntry = order.get(i)
-            val subject = rankEntry.left()
+            val (subject, rank) = order[i]
 
             val entry = entryByRef.getOrDefault(subject, null)
             val text = entry?.toText(translations)
 
-            var subjectName = subject!!.getNameFor(player)
+            var subjectName = subject.getNameFor(player)
 
             if (subjectName.style.color == null) {
                 subjectName = subjectName.copy().withStyle(ChatFormatting.GRAY)
             }
 
-            val msg = Component.literal("#${rankEntry.rightInt()} ")
+            val msg = Component.literal("#$rank ")
                 .withStyle(ChatFormatting.YELLOW)
                 .append(subjectName)
 

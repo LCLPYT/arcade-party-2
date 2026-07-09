@@ -1,7 +1,6 @@
 package work.lclpnet.ap2.game.data
 
 import com.google.common.collect.AbstractIterator
-import it.unimi.dsi.fastutil.objects.ObjectIntPair
 import work.lclpnet.ap2.impl.util.RankUtil
 import java.util.*
 import java.util.stream.Stream
@@ -39,12 +38,12 @@ interface DataContainer<T, Ref : SubjectRef> {
     val isEmpty: Boolean
         get() = streamEntriesRanked().findAny().isEmpty
 
-    fun streamEntriesRanked(): Stream<Set<ObjectIntPair<Ref>>> = RankUtil.rank(
+    fun streamEntriesRanked(): Stream<Set<Pair<Ref, Int>>> = RankUtil.rank(
         { streamRankedEntries() },
-        { it.rightInt() }
+        { (_, rank) -> rank }
     )
 
-    fun streamRankedEntries(): Stream<ObjectIntPair<Ref>> {
+    fun streamRankedEntries(): Stream<Pair<Ref, Int>> {
         return StreamSupport.stream(
             Spliterators.spliteratorUnknownSize(
                 this.rankedEntries, 0
@@ -52,16 +51,16 @@ interface DataContainer<T, Ref : SubjectRef> {
         )
     }
 
-    val rankedEntries: MutableIterator<ObjectIntPair<Ref>>
+    val rankedEntries: Iterator<Pair<Ref, Int>>
         get() {
-            val parent: MutableIterator<DataEntry<Ref>> = streamOrderedEntries().iterator()
+            val parent = streamOrderedEntries().iterator()
 
-            return object : AbstractIterator<ObjectIntPair<Ref>>() {
+            return object : AbstractIterator<Pair<Ref, Int>>() {
                 var rank: Int = 1
                 var skippedRanks: Int = 0
                 var prevEntry: DataEntry<Ref>? = null
 
-                override fun computeNext(): ObjectIntPair<Ref>? {
+                override fun computeNext(): Pair<Ref, Int>? {
                     if (!parent.hasNext()) {
                         endOfData()
                         return null
@@ -81,7 +80,7 @@ interface DataContainer<T, Ref : SubjectRef> {
 
                     this.prevEntry = dataEntry
 
-                    return ObjectIntPair.of(dataEntry.subject, rank)
+                    return dataEntry.subject to rank
                 }
             }
         }

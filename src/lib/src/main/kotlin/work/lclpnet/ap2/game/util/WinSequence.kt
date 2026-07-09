@@ -98,8 +98,8 @@ class WinSequence<T, Ref : SubjectRef>(
         gameHandle.rootScheduler.timeout(Ticks.seconds(POST_GAME_SECONDS)) { ->
             val resultsMap = winners.playerResults.stream().collect(
                 Collectors.toMap(
-                    Function { it.left() },
-                    Function { PlayerResult(it.left(), it.rightInt()) }
+                    Function { (ref, _) -> ref },
+                    Function { (ref, rank) -> PlayerResult(ref, rank) }
                 ))
 
             gameHandle.complete(MiniGameResults(status, resultsMap))
