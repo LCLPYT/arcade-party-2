@@ -3,11 +3,13 @@ package work.lclpnet.ap2.game.minefield
 import com.mojang.math.Transformation
 import net.minecraft.ChatFormatting.*
 import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
+import net.minecraft.tags.BlockTags
 import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
@@ -217,6 +219,15 @@ class MinefieldInstance(
             player.teleport(spawnShape.randomPos(Random.asJavaRandom()), spawnYaw)
             gameHandle.playerUtil.resetPlayer(player)
             visibility.giveItem(player)
+        }
+
+        for (direction in Direction.Plane.HORIZONTAL) {
+            val adj = pos.relative(direction)
+            val state = level.getBlockState(adj)
+
+            if (state.isIn(BlockTags.PRESSURE_PLATES)) {
+                level.setBlock(adj, Blocks.AIR)
+            }
         }
     }
 
