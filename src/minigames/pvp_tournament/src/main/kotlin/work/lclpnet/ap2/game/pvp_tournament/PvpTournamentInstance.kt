@@ -414,6 +414,11 @@ class PvpTournamentInstance(
         val inst = matchInstances.remove(match)
 
         if (inst == null) {
+            if (match === tournamentResult.tournament.finale) {
+                finishGame(match, match.winner)
+                return
+            }
+
             if (winner == null) {
                 // draw propagated from a child; still need to wake up parents
                 checkParentMatchStatus(match)
@@ -431,19 +436,32 @@ class PvpTournamentInstance(
         }
 
         finalizeMatchInstance(inst, match, winner)
+        scoreEliminatedPlayers(match)
 
-        if (isGameComplete(match)) {
-            finishGame(match, winner)
+        if (match === tournamentResult.tournament.finale) {
+            finishGame(match, match.winner)
             return
         }
 
         announceMatchResult(inst, winner)
 
-        if (winner == null) {
-            checkParentMatchStatus(match)
-        }
+        checkParentMatchStatus(match)
 
         scheduleMatchCleanup(inst, match)
+    }
+
+    /**
+     * Scores players of [match] that have no further matches to play, unless they are the
+     * overall tournament winner (which is scored separately once the finale concludes).
+     */
+    private fun scoreEliminatedPlayers(match: Match) {
+        val finaleWinner = tournamentResult.tournament.finale.winner
+
+        match.players.forEach { ref ->
+            if (ref != finaleWinner && nextMatch(ref) == null) {
+                setPlacementLostInMatch(ref, match)
+            }
+        }
     }
 
     private fun finalizeMatchInstance(inst: MatchInstance, match: Match, winner: PlayerRef?) {
@@ -462,10 +480,6 @@ class PvpTournamentInstance(
 
         if (winner != null) {
             data.setScore(winner, 1)
-
-            match.other(winner)?.let {
-                setPlacementLostInMatch(it, match)
-            }
         }
 
         winManager.complete()
@@ -504,14 +518,14 @@ class PvpTournamentInstance(
             inst.npcs.mapNotNull { it.resolve() }.forEach { it.discard() }
             inst.npcs.clear()
 
-            match.players.forEach { ref ->
-                val nextMatch = setupPlayerForNextMatch(ref)
+            val finaleWinner = tournamentResult.tournament.finale.winner
 
-                if (nextMatch == null) {
-                    setPlacementLostInMatch(ref, match)
-                } else {
-                    checkMatchStatus(nextMatch)
-                }
+            match.players.forEach { ref ->
+                // the overall tournament winner is handled separately; don't treat them
+                // as eliminated just because they have no more matches to play
+                if (ref == finaleWinner) return@forEach
+
+                setupPlayerForNextMatch(ref)?.let { checkMatchStatus(it) }
             }
         }
     }
@@ -519,13 +533,6 @@ class PvpTournamentInstance(
     private fun checkParentMatchStatus(match: Match) {
         match.winnerNext?.let { checkMatchStatus(it) }
         match.loserNext?.let { checkMatchStatus(it) }
-    }
-
-    private tailrec fun isGameComplete(match: Match): Boolean {
-        // TODO respect swiss style tournament
-        val next = match.winnerNext ?: return match.completed
-
-        return isGameComplete(next)
     }
 
     private fun checkMatchStatus(match: Match) {
