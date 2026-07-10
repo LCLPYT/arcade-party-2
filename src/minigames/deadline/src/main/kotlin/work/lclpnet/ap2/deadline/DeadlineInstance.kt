@@ -204,6 +204,7 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
         sheep.setColor(color)
         sheep.setYRot(player.yRot)
         sheep.setYBodyRot(player.yRot)
+        sheep.setYHeadRot(player.yRot)
         sheep.setPosRaw(player.x, player.y, player.z)
 
         world.addFreshEntity(sheep)
