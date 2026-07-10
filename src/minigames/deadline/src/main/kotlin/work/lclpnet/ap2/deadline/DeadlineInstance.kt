@@ -59,6 +59,8 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
     }
 
     private fun tick() {
+        trail.tick()
+
         for (player in gameHandle.participants) {
             val cycle = cycles[player.uuid] ?: continue
 

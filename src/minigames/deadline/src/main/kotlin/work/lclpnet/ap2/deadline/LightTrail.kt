@@ -16,7 +16,9 @@ import kotlin.math.atan2
 import kotlin.math.sqrt
 
 private const val SEGMENT_LENGTH = 1.0 // smallest trail segment length in blocks; larger means fewer displays
-private const val MAX_SEGMENTS = 150 // how many segments a trail keeps before its tail starts to disappear
+private const val INITIAL_SEGMENTS = 100 // how many segments a trail keeps before its tail starts to disappear
+private const val MAX_SEGMENTS = 500 // the segment limit stops growing once it reaches this
+private const val GROWTH_INTERVAL = 9 // ticks it takes for the segment limit to grow by one
 
 /**
  * Draws each rider's glowing glass-pane trail as stretched, heading-aligned block displays in a gaco scene.
@@ -27,6 +29,15 @@ class LightTrail(level: ServerLevel) {
     private val anchor = HashMap<UUID, Vec3>()
     private val trails = HashMap<UUID, MutableList<BlockDisplayObject>>()
     private val collider = SegmentCollider()
+    private var maxSegments = INITIAL_SEGMENTS
+    private var age = 0
+
+    // trails get longer the longer the game goes on
+    fun tick() {
+        if (maxSegments < MAX_SEGMENTS && ++age % GROWTH_INTERVAL == 0) {
+            maxSegments++
+        }
+    }
 
     fun extend(uuid: UUID, position: Vec3, color: DyeColor) {
         val start = anchor[uuid]
@@ -44,7 +55,7 @@ class LightTrail(level: ServerLevel) {
     // the tail of the trail disappears once the segment limit is reached
     private fun trim(uuid: UUID) {
         val displays = trails[uuid] ?: return
-        while (displays.size > MAX_SEGMENTS) {
+        while (displays.size > maxSegments) {
             displays.removeFirst().detach()
             collider.removeOldest(uuid)
         }
