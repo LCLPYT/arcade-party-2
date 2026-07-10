@@ -14,6 +14,9 @@ import kotlin.math.*
 import kotlin.random.Random
 import kotlin.random.asJavaRandom
 
+private const val MAX_LAYOUT_ATTEMPTS = 8
+private const val LARGE_COVERAGE = Int.MAX_VALUE / 2
+
 interface Pattern {
     val minColors: Int
         get() = 12
@@ -48,9 +51,123 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerLevel) {
 
     val existingColors = mutableListOf<DyeColor>()
 
-    fun randomizeBlocks() {
+    // fixed 2d grid of the floor cells, keyed by (x, z), used for coverage evaluation
+    private val cellIndex = HashMap<Long, Int>()
+    private val cellX: IntArray
+    private val cellZ: IntArray
+    private var currentLayout: Layout? = null
+
+    init {
+        val xs = ArrayList<Int>()
+        val zs = ArrayList<Int>()
+
+        for (pos in floorShape) {
+            val key = packKey(pos.x, pos.z)
+
+            if (cellIndex.putIfAbsent(key, xs.size) == null) {
+                xs.add(pos.x)
+                zs.add(pos.z)
+            }
+        }
+
+        cellX = xs.toIntArray()
+        cellZ = zs.toIntArray()
+    }
+
+    private fun packKey(x: Int, z: Int): Long =
+        (x.toLong() shl 32) or (z.toLong() and 0xffffffffL)
+
+    /**
+     * The coverage radius of a set of cells: the maximum graph distance (8-connectivity)
+     * of any floor cell to the nearest cell in the set.
+     * Lower means better distributed.
+     * A floor cell that cannot reach the set (disconnected floor) yields [LARGE_COVERAGE].
+     */
+    private fun coverageRadius(seeds: IntArray): Int {
+        if (seeds.isEmpty()) return LARGE_COVERAGE
+
+        val dist = IntArray(cellX.size) { -1 }
+        val queue = ArrayDeque<Int>()
+
+        for (s in seeds) {
+            if (dist[s] == -1) {
+                dist[s] = 0
+                queue.add(s)
+            }
+        }
+
+        var maxDist = 0
+
+        while (queue.isNotEmpty()) {
+            val cur = queue.removeFirst()
+            val d = dist[cur]
+            if (d > maxDist) maxDist = d
+
+            val cx = cellX[cur]
+            val cz = cellZ[cur]
+
+            for (dx in -1..1) for (dz in -1..1) {
+                if (dx == 0 && dz == 0) continue
+
+                val ni = cellIndex[packKey(cx + dx, cz + dz)] ?: continue
+
+                if (dist[ni] == -1) {
+                    dist[ni] = d + 1
+                    queue.add(ni)
+                }
+            }
+        }
+
+        for (d in dist) if (d == -1) return LARGE_COVERAGE
+
+        return maxDist
+    }
+
+    private inner class Layout(val colorPositions: Map<DyeColor, List<BlockPos>>) {
+        val coverage: Map<DyeColor, Int> = colorPositions.mapValues { (_, positions) ->
+            val idx = positions.mapNotNull { cellIndex[packKey(it.x, it.z)] }.toIntArray()
+            coverageRadius(idx)
+        }
+
+        // best achievable coverage if the fairest color were chosen as the safe one
+        val bestCoverage: Int = coverage.values.minOrNull() ?: LARGE_COVERAGE
+    }
+
+    fun randomizeBlocks(maxCoverage: Int) {
         existingColors.clear()
 
+        // reject layouts coarser than the round can fairly handle (each attempt re-rolls a random
+        // pattern), keeping the best-scoring attempt as a fallback so we never hard-fail
+        var chosen: Layout? = null
+        var attempts = 0
+
+        while (attempts < MAX_LAYOUT_ATTEMPTS) {
+            val layout = buildLayout()
+
+            if (chosen == null || layout.bestCoverage < chosen.bestCoverage) {
+                chosen = layout
+            }
+
+            if (layout.bestCoverage <= maxCoverage) break
+
+            attempts++
+        }
+
+        val layout = chosen!!
+        currentLayout = layout
+
+        for ((color, positions) in layout.colorPositions) {
+            if (positions.isEmpty()) continue
+
+            existingColors.add(color)
+
+            for (pos in positions) {
+                world.setBlock(pos, Blocks.WOOL.pick(color))
+            }
+        }
+    }
+
+    private fun buildLayout(): Layout {
         val pattern = patterns.getRandomElement(Random.asJavaRandom())!!.apply { init() }
         val baseColors = listOf(
             DyeColor.WHITE, DyeColor.ORANGE, DyeColor.MAGENTA, DyeColor.LIGHT_BLUE, DyeColor.YELLOW, DyeColor.LIME,
@@ -105,15 +222,26 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerLevel) {
             sortedGroups.sortBy { it.second.size }
         }
 
-        for ((color, positions) in sortedGroups) {
-            if (positions.isEmpty()) continue
+        return Layout(sortedGroups.toMap())
+    }
 
-            existingColors.add(color)
+    /**
+     * Picks the safe color for a round given how far a player can travel in the reaction window ([reachBlocks]).
+     * Prefers a random color reachable from anywhere on the floor.
+     * If none qualifies, falls back to the fairest available color.
+     * Returns the chosen color and its coverage radius.
+     */
+    fun pickSafeColor(reachBlocks: Int): Pair<DyeColor, Int> {
+        val layout = currentLayout!!
+        val coverageOf = { color: DyeColor -> layout.coverage[color] ?: LARGE_COVERAGE }
 
-            for (pos in positions) {
-                world.setBlock(pos, Blocks.WOOL.pick(color))
-            }
-        }
+        val fair = existingColors.filter { coverageOf(it) <= reachBlocks }
+        val chosen = if (fair.isNotEmpty()) fair.random() else existingColors.minBy(coverageOf)
+
+        // an unreachable (disconnected) coverage can't be fixed with more time, so report 0
+        val coverage = coverageOf(chosen).let { if (it >= LARGE_COVERAGE) 0 else it }
+
+        return chosen to coverage
     }
 
     class Uniform(override val minColors: Int = 10, override val maxColors: Int = 12) : Pattern {
@@ -160,7 +288,7 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerLevel) {
         var refAngle = 0.0
 
         override fun init() {
-            subdivisions = Random.nextInt(5, 12)
+            subdivisions = Random.nextInt(8, 14)
             refAngle = Random.nextDouble() * PI * 2
         }
 
@@ -239,7 +367,7 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerLevel) {
         private var tightness = 4.0
 
         override fun init() {
-            arms = Random.nextInt(4, 7)
+            arms = Random.nextInt(5, 9)
             tightness = Random.nextDouble(3.0, 8.0)
         }
 
@@ -260,7 +388,7 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerLevel) {
         private var scale = 0.1
 
         override fun init() {
-            scale = Random.nextDouble(0.05, 0.2)
+            scale = Random.nextDouble(0.1, 0.25)
         }
 
         override fun group(pos: BlockPos): Int {
@@ -314,7 +442,7 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerLevel) {
         private var offsetX = 1.0
 
         override fun init() {
-            scale = Random.nextDouble(0.01, 0.06)
+            scale = Random.nextDouble(0.03, 0.08)
             offsetX = Random.nextDouble(0.5, 1.5)
         }
 

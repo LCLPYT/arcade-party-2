@@ -76,6 +76,7 @@ class DanceFloorInstance(
     var visibilityManager: VisibilityManager? = null
     var delayTicks = MAX_DELAY_TICKS
     var round = 1
+    val fairness = DanceFloorFairness()
 
     init {
         useRemainingPlayersDisplay()
@@ -180,14 +181,24 @@ class DanceFloorInstance(
             loadingSong?.thenAccept(::playSong)
         }
 
-        blockRandomizer?.randomizeBlocks()
+        blockRandomizer?.randomizeBlocks(fairness.coverageCap(blockDelayTicks()))
 
         for (player in players()) {
             player.inventory.setItem(4, ItemStack.EMPTY)
         }
     }
 
-    private fun floorShape(): BlockShape = MapUtil.readShape(map, "floor")!!
+    /** Base reaction window for the current round, before any fairness adjustments. Shrinks over time */
+    private fun blockDelayTicks(): Int {
+        val decreaseTicks = (totalDurationTicks * BLOCK_DELAY_TICKS_DECREASE_PER_MINUTE / Ticks.minutes(1).toFloat())
+            .roundToInt()
+            .coerceAtLeast(0)
+
+        return max(TOTAL_MIN_BLOCK_DELAY_TICKS, INITIAL_BLOCK_DELAY_TICKS - decreaseTicks)
+    }
+
+    private fun floorShape(): BlockShape =
+        MapUtil.readShape(map, "floor")!!
 
     @Synchronized
     fun playSong(song: ConfiguredSong) {
@@ -255,10 +266,14 @@ class DanceFloorInstance(
         currentSong?.stop()
         currentSong = null
 
-        // give players the correct wool to compare with the floor
-        val dyeColor = blockRandomizer!!.existingColors.random()
+        val blockDelayTicks = blockDelayTicks()
+
+        // pick a safe color reachable from anywhere within the reaction window
+        val reach = fairness.selectionReach(blockDelayTicks)
+        val (dyeColor, coverage) = blockRandomizer!!.pickSafeColor(reach)
         val block = Blocks.WOOL.pick(dyeColor)
 
+        // give players the correct wool to compare with the floor
         for (player in players()) {
             player.inventory.setItem(4, ItemStack(block))
             player.setSelectedSlot(4)
@@ -266,13 +281,10 @@ class DanceFloorInstance(
 
         SoundHelper.playSound(level, SoundEvents.IRON_GOLEM_HURT, SoundSource.HOSTILE, 0.9f, 0f)
 
-        val decreaseTicks = (totalDurationTicks * BLOCK_DELAY_TICKS_DECREASE_PER_MINUTE / Ticks.minutes(1).toFloat())
-            .roundToInt()
-            .coerceAtLeast(0)
+        // grant just enough extra time to keep coarse layouts survivable, without erasing the ramp
+        val fairBlockDelay = fairness.reactionTicks(blockDelayTicks, coverage)
 
-        val blockDelayTicks = max(TOTAL_MIN_BLOCK_DELAY_TICKS, INITIAL_BLOCK_DELAY_TICKS - decreaseTicks)
-
-        task = timeout(blockDelayTicks) {
+        task = timeout(fairBlockDelay) {
             SoundHelper.playSound(level, SoundEvents.WITHER_BREAK_BLOCK, SoundSource.HOSTILE, 0.4f, 0.8f)
             removeBlocks(block)
         }
