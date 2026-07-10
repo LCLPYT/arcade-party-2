@@ -3,6 +3,8 @@ package work.lclpnet.ap2.deadline
 import net.minecraft.network.protocol.game.ClientboundSetExperiencePacket
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.damagesource.DamageTypes
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.animal.sheep.Sheep
@@ -11,6 +13,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.scores.PlayerTeam
 import net.minecraft.world.scores.Team
 import work.lclpnet.ap2.ext.hooks
+import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.unbreakable
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.game.MiniGameHandle
@@ -18,12 +21,17 @@ import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.util.teleportToRandomSpawns
 import work.lclpnet.ap2.impl.util.ColorUtil
 import work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor
+import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.ServerPlayConnectionHooks
 import work.lclpnet.kibu.hook.entity.EntityDismountCallback
+import work.lclpnet.kibu.scheduler.Ticks
 import java.util.Random
 import java.util.UUID
 import kotlin.math.roundToInt
+
+private val WORLD_BORDER_DELAY = Ticks.minutes(3).toLong()
+private val WORLD_BORDER_TIME = Ticks.minutes(1).toLong()
 
 class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap, private val schema: DeadlineMapSchema) :
     EliminationGameInstance(gameHandle, level, map) {
@@ -44,6 +52,14 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
 
     override fun prepare() {
         useRemainingPlayersDisplay()
+        useSmoothDeath()
+
+        gameHandle.protect { config ->
+            // riders caught outside the shrinking world border take damage until they die
+            ProtectionTypes.ALLOW_DAMAGE.allow(config) { _, damageSource ->
+                damageSource.isOf(DamageTypes.OUTSIDE_BORDER)
+            }
+        }
 
         val team = createTeam()
         assignColors()
@@ -55,6 +71,10 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
         eliminateBelowCriticalHeight()
         powerUps.spawn(schema.powerUpSpawns)
         powerUps.startRefreshing(schema.powerUpSpawns)
+
+        // the border closes in after a while, so the game is guaranteed to end
+        commons().scheduleWorldBorderShrink(WORLD_BORDER_DELAY, WORLD_BORDER_TIME, 0)
+
         gameHandle.rootScheduler.interval(1) { -> tick() }
     }
 
@@ -89,6 +109,9 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
     private fun clearSpeed(rider: ServerPlayer) {
         rider.connection.send(ClientboundSetExperiencePacket(0f, 0, 0))
     }
+
+    // intentionally not calling super.onDeath -> no equipment/experience drops
+    override fun onDeath(player: ServerPlayer, attacker: Entity?) {}
 
     override fun participantRemoved(player: ServerPlayer) {
         player.vehicle?.discard()
