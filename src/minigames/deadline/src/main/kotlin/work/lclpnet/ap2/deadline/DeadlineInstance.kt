@@ -53,6 +53,7 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
     override fun prepare() {
         useRemainingPlayersDisplay()
         useSmoothDeath()
+        disableTeleportEliminated()
 
         gameHandle.protect { config ->
             // riders caught outside the shrinking world border take damage until they die
