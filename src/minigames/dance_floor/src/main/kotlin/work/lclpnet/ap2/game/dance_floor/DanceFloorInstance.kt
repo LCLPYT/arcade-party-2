@@ -44,14 +44,16 @@ import kotlin.random.Random
 import kotlin.random.asJavaRandom
 
 private val MIN_DELAY_TICKS = Ticks.seconds(6)
-private val MAX_DELAY_TICKS = Ticks.seconds(10)
+private val MAX_DELAY_TICKS = Ticks.seconds(8)
 
-private const val INITIAL_BLOCK_DELAY_TICKS = 66
+private const val INITIAL_BLOCK_DELAY_TICKS = 48
 private const val BLOCK_DELAY_TICKS_DECREASE_PER_MINUTE = 18
 private const val TOTAL_MIN_BLOCK_DELAY_TICKS = 5
-private const val NEXT_ROUND_INITIAL_TICKS = 80
+private const val NEXT_ROUND_INITIAL_TICKS = 55
 private const val NEXT_ROUND_TICKS_DECREASE_PER_MINUTE = 40
 private const val NEXT_ROUND_MIN_TICKS = 35
+
+private const val DELAY_DECREASE_FACTOR = 30f
 
 private const val PARTICLE_AMOUNT = 3
 
@@ -204,7 +206,7 @@ class DanceFloorInstance(
             .coerceAtMost(remainingSongTicks)
 
         // decrease ticks
-        val decrease = round(20f / round.toFloat()).toInt()
+        val decrease = round(DELAY_DECREASE_FACTOR / round.toFloat()).toInt()
         delayTicks = max(MIN_DELAY_TICKS, delayTicks - decrease)
         round++
 
