@@ -30,6 +30,7 @@ import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.ServerPlayConnectionHooks
 import work.lclpnet.kibu.hook.entity.EntityDismountCallback
+import work.lclpnet.kibu.hook.entity.EntityHealthCallback
 import work.lclpnet.kibu.scheduler.Ticks
 import java.util.Random
 import java.util.UUID
@@ -157,6 +158,11 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
         // clean up the mount if a rider disconnects
         ServerPlayConnectionHooks.DISCONNECT.registerWith(hooks) { handler, _ ->
             handler.player.vehicle?.discard()
+        }
+
+        // riders caught outside the world border must not regenerate the border damage away
+        EntityHealthCallback.HOOK.registerWith(hooks) { entity, health ->
+            entity is ServerPlayer && health > entity.health && !level.worldBorder.isWithinBounds(entity.boundingBox)
         }
 
         powerUps.initHooks()
