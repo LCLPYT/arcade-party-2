@@ -13,6 +13,7 @@ import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.animal.sheep.Sheep
 import net.minecraft.world.item.DyeColor
 import net.minecraft.world.item.Items
+import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.PlayerTeam
 import net.minecraft.world.scores.Team
 import work.lclpnet.ap2.ext.hooks
@@ -53,7 +54,11 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
             "Map property \"Spawn box\" is not set in the deadline schema"
         }
 
-        teleportToRandomSpawns(spawnBox, schema.scanStarts)
+        // riders start facing the arena center, so nobody spawns aimed at a nearby wall
+        val border = commons().readWorldBorderConfig()
+        val center = Vec3(border.centerX + 0.5, 0.0, border.centerZ + 0.5)
+
+        teleportToRandomSpawns(spawnBox, schema.scanStarts, lookAt = center)
     }
 
     override fun prepare() {
