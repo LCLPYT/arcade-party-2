@@ -1,26 +1,21 @@
-package work.lclpnet.ap2.impl.util.scoreboard;
+package work.lclpnet.ap2.util.scoreboard
 
-public class ScoreboardLayout {
+class ScoreboardLayout {
+    private var topId = Int.MAX_VALUE - 1
+    private var bottomId = Int.MIN_VALUE + 1
 
-    public static final int UNDEFINED = -1;
-    public static final int TOP = 0;
-    public static final int BOTTOM = 1;
-    private int topId = Integer.MAX_VALUE - 1;
-    private int bottomId = Integer.MIN_VALUE + 1;
+    fun addTop(): Int = topId--
 
-    public int addTop() {
-        return topId--;
+    fun addBottom(): Int = bottomId++
+
+    fun resolvePosition(position: Int): Int = when (position) {
+        TOP -> addTop()
+        BOTTOM -> addBottom()
+        else -> 0
     }
 
-    public int addBottom() {
-        return bottomId++;
-    }
-
-    public int resolvePosition(int position) {
-        return switch (position) {
-            case ScoreboardLayout.TOP -> addTop();
-            case ScoreboardLayout.BOTTOM -> addBottom();
-            default -> 0;
-        };
+    companion object {
+        const val TOP: Int = 0
+        const val BOTTOM: Int = 1
     }
 }

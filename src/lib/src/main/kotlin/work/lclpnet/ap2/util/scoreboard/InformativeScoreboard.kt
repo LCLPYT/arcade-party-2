@@ -1,25 +1,21 @@
-package work.lclpnet.ap2.api.util.scoreboard;
+package work.lclpnet.ap2.util.scoreboard
 
-import net.minecraft.network.chat.Component;
-import work.lclpnet.ap2.impl.util.scoreboard.ScoreHandle;
-import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout;
-import work.lclpnet.kibu.translate.text.TranslatedText;
+import net.minecraft.network.chat.Component
+import work.lclpnet.kibu.translate.text.TranslatedText
 
-public interface InformativeScoreboard {
+interface InformativeScoreboard {
 
-    ScoreHandle createText(Component text, int position);
+    fun createText(text: Component, position: Int): ScoreHandle
 
-    ScoreHandle createText(TranslatedText text, int position);
+    fun createText(text: TranslatedText, position: Int): ScoreHandle
 
-    default ScoreHandle createText(Component text) {
-        return createText(text, ScoreboardLayout.TOP);
-    }
+    fun createText(text: Component): ScoreHandle =
+        createText(text, ScoreboardLayout.TOP)
 
-    default ScoreHandle createText(TranslatedText text) {
-        return createText(text, ScoreboardLayout.TOP);
-    }
+    fun createText(text: TranslatedText): ScoreHandle =
+        createText(text, ScoreboardLayout.TOP)
 
-    default void createNewline(int position) {
-        createText(Component.empty(), position);
+    fun createNewline(position: Int) {
+        createText(Component.empty(), position)
     }
 }

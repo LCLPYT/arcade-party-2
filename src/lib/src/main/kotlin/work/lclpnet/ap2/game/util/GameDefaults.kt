@@ -6,7 +6,6 @@ import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.level.GameType
 import net.minecraft.world.scores.Objective
 import work.lclpnet.ap2.api.stats.LevelInfo
-import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective
 import work.lclpnet.ap2.ext.allPlayers
 import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.isParticipating
@@ -23,7 +22,8 @@ import work.lclpnet.ap2.game.data.type.TeamRef
 import work.lclpnet.ap2.game.player.ParticipantListener
 import work.lclpnet.ap2.game.team.Team
 import work.lclpnet.ap2.game.team.TeamManager
-import work.lclpnet.ap2.impl.util.scoreboard.TranslatedScoreboardObjective
+import work.lclpnet.ap2.util.scoreboard.CustomScoreboardObjective
+import work.lclpnet.ap2.util.scoreboard.TranslatedScoreboardObjective
 import work.lclpnet.combatctl.impl.CombatStyles
 import work.lclpnet.gaco.collisions.movement.TickMovementDetector
 import work.lclpnet.game.impl.prot.MutableProtectionConfig
@@ -230,10 +230,18 @@ fun MiniGameInstance.useScoreboardStatsSync(
         val localized = LocalizedFormat.format(format, score)
 
         objective.setNumberFormat(holder) { language ->
-            val defaultFormat = objective.defaultEntry.numberFormat.translateTo(language)
-            val defaultStyle = defaultFormat.format(0).style
+            val defaultStyle = objective.defaultEntry.numberFormat
+                ?.translateTo(language)
+                ?.format(0)
+                ?.style
 
-            FixedFormat(localized.translateTo(language).copy().withStyle(defaultStyle))
+            val text = localized.translateTo(language).copy()
+
+            if (defaultStyle != null) {
+                text.withStyle(defaultStyle)
+            }
+
+            FixedFormat(text)
         }
 
         val ordered = scores.entries.sortedByDescending { it.value }

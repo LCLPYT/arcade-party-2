@@ -1,31 +1,23 @@
-package work.lclpnet.ap2.impl.util.scoreboard;
+package work.lclpnet.ap2.util.scoreboard
 
-import lombok.Getter;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.numbers.NumberFormat;
-import net.minecraft.server.level.ServerPlayer;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.numbers.NumberFormat
+import net.minecraft.server.level.ServerPlayer
 
-public class DynamicScoreHandle {
+class DynamicScoreHandle(
+    val holder: String,
+    val objective: DynamicScoreboardObjective
+) {
 
-    @Getter
-    private final String holder;
-    private final DynamicScoreboardObjective objective;
-
-    public DynamicScoreHandle(String holder, DynamicScoreboardObjective objective) {
-        this.holder = holder;
-        this.objective = objective;
+    fun setScore(player: ServerPlayer, score: Int) {
+        objective.setScore(player, holder, score)
     }
 
-    public void setScore(ServerPlayer player, int score) {
-        objective.setScore(player, holder, score);
+    fun setDisplay(player: ServerPlayer, text: Component?) {
+        objective.setDisplayName(player, holder, text)
     }
 
-    public void setDisplay(ServerPlayer player, @Nullable Component text) {
-        objective.setDisplayName(player, holder, text);
-    }
-
-    public void setNumberFormat(ServerPlayer player, NumberFormat numberFormat) {
-        objective.setNumberFormat(player, holder, numberFormat);
+    fun setNumberFormat(player: ServerPlayer, numberFormat: NumberFormat?) {
+        objective.setNumberFormat(player, holder, numberFormat)
     }
 }

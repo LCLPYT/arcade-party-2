@@ -1,24 +1,22 @@
-package work.lclpnet.ap2.impl.util
+package work.lclpnet.ap2.util
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.HoverEvent
-import net.minecraft.network.chat.Style
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import work.lclpnet.ap2.ext.inWholeTicks
 import work.lclpnet.ap2.game.MiniGameHandle
-import work.lclpnet.ap2.game.util.PlayerUtil.Companion.getLoadingDelay
+import work.lclpnet.ap2.game.util.PlayerUtil
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.translate.Translations
 import work.lclpnet.notica.network.NoticaNetworking
 import java.net.URI
 import java.util.function.Predicate
-import java.util.function.UnaryOperator
 import kotlin.time.Duration.Companion.seconds
 
 class Hints(private val translations: Translations, private val server: MinecraftServer) {
@@ -30,8 +28,8 @@ class Hints(private val translations: Translations, private val server: Minecraf
             if (mod.installed.test(player)) continue
 
             val modLabel = Component.literal(mod.name + " ↗")
-                .withStyle(UnaryOperator { style: Style? ->
-                    style!!
+                .withStyle { style ->
+                    style
                         .withColor(0x145ee8)
                         .withBold(false)
                         .withUnderlined(true)
@@ -44,12 +42,12 @@ class Hints(private val translations: Translations, private val server: Minecraf
                                 )
                             )
                         )
-                        .withClickEvent(ClickEvent.OpenUrl(mod.link!!))
-                })
+                        .withClickEvent(ClickEvent.OpenUrl(mod.link))
+                }
 
             val sub = translations.translateText(player, "ap2.hint.mod", modLabel)
                 .withStyle(ChatFormatting.YELLOW)
-                .withStyle(UnaryOperator { style: Style? -> style!!.withBold(false) })
+                .withStyle { style -> style.withBold(false) }
 
             val hint = translations.translateText(player, "ap2.hint", sub)
                 .withStyle(ChatFormatting.RED, ChatFormatting.BOLD)
@@ -60,7 +58,7 @@ class Hints(private val translations: Translations, private val server: Minecraf
     }
 
     fun sendBeforeReady(gameHandle: MiniGameHandle, mod: Mod) {
-        val initialDelay = getLoadingDelay(gameHandle.participants.count())
+        val initialDelay = PlayerUtil.getLoadingDelay(gameHandle.participants.count())
 
         val delay = (initialDelay - 3.seconds).coerceAtLeast(0.seconds)
 
@@ -70,8 +68,10 @@ class Hints(private val translations: Translations, private val server: Minecraf
     }
 
     data class Mod(
-        val name: String, val link: URI, val installed: Predicate<ServerPlayer>) {
-
+        val name: String,
+        val link: URI,
+        val installed: Predicate<ServerPlayer>,
+    ) {
         companion object {
             val Notica = Mod(
                 "Notica",

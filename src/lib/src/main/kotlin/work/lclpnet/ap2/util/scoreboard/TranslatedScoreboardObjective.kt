@@ -1,380 +1,325 @@
-package work.lclpnet.ap2.impl.util.scoreboard;
+package work.lclpnet.ap2.util.scoreboard
 
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import lombok.Getter;
-import lombok.Setter;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
-import net.minecraft.network.chat.numbers.BlankFormat;
-import net.minecraft.network.chat.numbers.NumberFormat;
-import net.minecraft.network.chat.numbers.StyledFormat;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.players.PlayerList;
-import net.minecraft.world.scores.DisplaySlot;
-import net.minecraft.world.scores.criteria.ObjectiveCriteria;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.api.util.StyleTransformer;
-import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective;
-import work.lclpnet.ap2.api.util.scoreboard.InformativeScoreboard;
-import work.lclpnet.ap2.api.util.scoreboard.VirtualScoreboardObjective;
-import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.kibu.translate.text.RootText;
-import work.lclpnet.kibu.translate.text.TextTranslatable;
-import work.lclpnet.kibu.translate.text.TranslatedText;
-
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.Style
+import net.minecraft.network.chat.numbers.BlankFormat
+import net.minecraft.network.chat.numbers.NumberFormat
+import net.minecraft.network.chat.numbers.StyledFormat
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.server.players.PlayerList
+import net.minecraft.world.scores.DisplaySlot
+import net.minecraft.world.scores.criteria.ObjectiveCriteria
+import work.lclpnet.ap2.util.StyleTransformer
+import work.lclpnet.kibu.translate.Translations
+import work.lclpnet.kibu.translate.text.TextTranslatable
+import work.lclpnet.kibu.translate.text.TranslatedText
+import java.util.*
 
 /**
  * One vanilla objective for each language.
  */
-public class TranslatedScoreboardObjective implements
-        CustomScoreboardObjective,
-        StyleTransformer<TranslatedScoreboardObjective>,
-        InformativeScoreboard,
-        VirtualScoreboardObjective {
+class TranslatedScoreboardObjective(
+    private val translations: Translations,
+    private val playerManager: PlayerList,
+    private val name: String,
+    private val renderType: ObjectiveCriteria.RenderType,
+    private var translationKey: String,
+    private var args: Array<Any>
+) : CustomScoreboardObjective,
+    StyleTransformer<TranslatedScoreboardObjective>,
+    InformativeScoreboard,
+    VirtualScoreboardObjective {
 
-    private final Translations translations;
-    private final PlayerList playerManager;
-    private final String name;
-    private final ObjectiveCriteria.RenderType renderType;
-    private final Map<CustomObjective, Set<UUID>> objectivePlayers = new HashMap<>();
-    private final Map<String, CustomObjective> localizedObjectives = new HashMap<>();
-    private final Map<UUID, String> players = new HashMap<>();
-    private final Object2IntMap<String> scores = new Object2IntOpenHashMap<>();
-    private final Map<String, CustomEntry> entries = new HashMap<>();
-    private final ScoreboardLayout layout = new ScoreboardLayout();
-    private CustomEntry defaultEntry = new CustomEntry(null, null, TranslatedNumberFormat.constant(StyledFormat.SIDEBAR_DEFAULT));
-    private String translationKey;
-    private Object[] args;
-    private DisplaySlot slot = null;
-    @Setter @Getter
-    private Style style = Style.EMPTY;
-    @Nullable
-    private Function<String, @Nullable Component> displayFunction = null;
+    private val objectivePlayers = HashMap<CustomObjective, MutableSet<UUID>>()
+    private val localizedObjectives = HashMap<String, CustomObjective>()
+    private val players = HashMap<UUID, String>()
+    private val scores = Object2IntOpenHashMap<String>()
+    private val entries = HashMap<String, CustomEntry>()
+    private val layout = ScoreboardLayout()
 
-    public TranslatedScoreboardObjective(Translations translations, PlayerList playerManager, String name,
-                                         ObjectiveCriteria.RenderType renderType, String translationKey, Object[] args) {
-        this.translations = translations;
-        this.playerManager = playerManager;
-        this.name = name;
-        this.renderType = renderType;
-        this.translationKey = translationKey;
-        this.args = args;
-    }
+    var defaultEntry = CustomEntry(
+        null,
+        null,
+        TranslatedNumberFormat.constant(StyledFormat.SIDEBAR_DEFAULT)
+    )
+        private set
 
-    @Override
-    public void add(ServerPlayer player) {
-        final String language = translations.getLanguage(player);
-        final UUID uuid = player.getUUID();
+    var slot = DisplaySlot.SIDEBAR
+        private set
 
-        final String oldLanguage = players.get(uuid);
+    override var style = Style.EMPTY
+
+    private var displayFunction: ((String) -> Component?)? = null
+
+    override fun add(player: ServerPlayer) {
+        val language = translations.getLanguage(player)
+        val uuid = player.getUUID()
+
+        val oldLanguage = players[uuid]
 
         // check if language did change
-        if (language.equals(oldLanguage)) return;
+        if (language == oldLanguage) return
 
         if (oldLanguage != null) {
             // the language changed, remove the player from the old boss bar
-            remove(player);
+            remove(player)
         }
 
-        CustomObjective objective = getLocalizedObjective(language);
+        val objective = getLocalizedObjective(language)
 
-        objectivePlayers.computeIfAbsent(objective, _ -> new HashSet<>()).add(uuid);
+        objectivePlayers.computeIfAbsent(objective) { _ ->
+            HashSet<UUID>()
+        }.add(uuid)
 
-        objective.add(player);
-        objective.setDisplay(player, slot);
-        syncScores(objective, player);
+        objective.add(player)
+        objective.setDisplay(player, slot)
+        syncScores(objective, player)
 
-        players.put(uuid, language);
+        players[uuid] = language
     }
 
-    @Override
-    public void remove(ServerPlayer player) {
-        UUID uuid = player.getUUID();
-        String lang = players.remove(uuid);
-        if (lang == null) return;
+    override fun remove(player: ServerPlayer) {
+        val uuid = player.getUUID()
+        val lang = players.remove(uuid) ?: return
 
-        CustomObjective objective = localizedObjectives.get(lang);
+        val objective = localizedObjectives[lang] ?: return
 
-        if (objective == null) return;
+        CustomObjective.setDisplay(player, null, slot)
+        objective.remove(player)
 
-        CustomObjective.setDisplay(player, null, slot);
-        objective.remove(player);
-
-        Set<UUID> uuids = objectivePlayers.get(objective);
-        uuids.remove(uuid);
+        objectivePlayers[objective]?.remove(uuid)
     }
 
-    @Override
-    public void update(ServerPlayer player) {
-        if (!players.containsKey(player.getUUID())) return;
+    override fun update(player: ServerPlayer) {
+        if (!players.containsKey(player.getUUID())) return
 
         // adding the player will update the language
-        add(player);
+        add(player)
     }
 
-    @NotNull
-    private CustomObjective getLocalizedObjective(String language) {
-        return localizedObjectives.computeIfAbsent(language, this::createLocalizedObjective);
+    private fun getLocalizedObjective(language: String): CustomObjective =
+        localizedObjectives.computeIfAbsent(language) { language ->
+            createLocalizedObjective(language)
+        }
+
+    private fun createLocalizedObjective(language: String): CustomObjective {
+        val localizedTitle = getLocalizedTitle(language)
+
+        val suffix = language.replace("[^a-zA-Z0-9._-]".toRegex(), "") // remove invalid characters
+        val localizedName = name + "_" + (suffix)
+
+        return CustomObjective(
+            localizedName,
+            localizedTitle,
+            renderType,
+            defaultEntry.numberFormat?.translateTo(language)
+        )
     }
 
-    @NotNull
-    private CustomObjective createLocalizedObjective(String language) {
-        Component localizedTitle = getLocalizedTitle(language);
+    private fun getLocalizedTitle(language: String): Component {
+        val rootText = translations.translateText(language, translationKey, *args)
 
-        String suffix = language.replaceAll("[^a-zA-Z0-9._-]", "");  // remove invalid characters
-        String localizedName = name + "_" + (suffix);
+        rootText.setStyle(style)
 
-        return new CustomObjective(localizedName, localizedTitle, renderType, defaultEntry.numberFormat().translateTo(language));
+        return rootText
     }
 
-    @NotNull
-    private Component getLocalizedTitle(String language) {
-        RootText rootText = translations.translateText(language, translationKey, args);
-        rootText.setStyle(style);
+    fun setTitle(translationKey: String, vararg args: Any) {
+        this.translationKey = translationKey
+        this.args = arrayOf(*args)
 
-        return rootText;
-    }
+        for (entry in localizedObjectives.entries) {
+            val localizedTitle = getLocalizedTitle(entry.key)
 
-    public void setTitle(String translationKey, Object... args) {
-        this.translationKey = translationKey;
-        this.args = args;
+            val objective = entry.value
+            objective.setTitle(localizedTitle)
 
-        for (var entry : localizedObjectives.entrySet()) {
-            Component localizedTitle = getLocalizedTitle(entry.getKey());
+            val uuids = objectivePlayers[objective] ?: emptySet()
 
-            CustomObjective objective = entry.getValue();
-            objective.setTitle(localizedTitle);
+            for (uuid in uuids) {
+                val player = playerManager.getPlayer(uuid) ?: continue
 
-            Set<UUID> uuids = objectivePlayers.get(objective);
-
-            for (UUID uuid : uuids) {
-                ServerPlayer player = playerManager.getPlayer(uuid);
-                if (player == null) continue;
-
-                objective.update(player);
+                objective.update(player)
             }
         }
     }
 
-    private void updateObjectives(Consumer<CustomObjective> action) {
-        for (var objective : localizedObjectives.values()) {
-            action.accept(objective);
+    private fun updateObjectives(action: (CustomObjective) -> Unit) {
+        for (objective in localizedObjectives.values) {
+            action(objective)
         }
     }
 
-    public void setSlot(@Nullable DisplaySlot slot) {
-        if (slot == this.slot) return;
+    fun setSlot(slot: DisplaySlot) {
+        if (slot == this.slot) return
 
-        DisplaySlot prevSlot = this.slot;
-        this.slot = slot;
+        val prevSlot = this.slot
+        this.slot = slot
 
-        for (var entry : players.entrySet()) {
-            ServerPlayer player = playerManager.getPlayer(entry.getKey());
+        for (entry in players.entries) {
+            val player = playerManager.getPlayer(entry.key) ?: continue
 
-            if (player == null) continue;
+            CustomObjective.setDisplay(player, null, prevSlot)
 
-            if (prevSlot != null) {
-                CustomObjective.setDisplay(player, null, prevSlot);
-            }
+            val lang = entry.value
+            val objective = localizedObjectives[lang] ?: continue
 
-            if (slot == null) continue;  // hidden
-
-            String lang = entry.getValue();
-            CustomObjective objective = localizedObjectives.get(lang);
-
-            if (objective == null) continue;
-
-            CustomObjective.setDisplay(player, objective, slot);
+            CustomObjective.setDisplay(player, objective, slot)
         }
     }
 
-    public int getScore(String scoreHolder) {
-        return scores.getOrDefault(scoreHolder, 0);
+    fun getScore(scoreHolder: String?): Int =
+        scores.getOrDefault(scoreHolder, 0)
+
+    override fun setScore(scoreHolder: String, score: Int) {
+        scores.put(scoreHolder, score)
+
+        updateObjectives { objective ->
+            syncScore(objective, scoreHolder, score)
+        }
     }
 
-    @Override
-    public void setScore(String scoreHolder, int score) {
-        scores.put(scoreHolder, score);
-
-        updateObjectives(objective -> syncScore(objective, scoreHolder, score));
+    override fun setDisplayName(scoreHolder: String, display: Component?) {
+        val entry = getEntry(scoreHolder)
+        entries[scoreHolder] = entry.copy(display = display, translatedDisplay = null)
+        syncEntry(scoreHolder)
     }
 
-    @Override
-    public void setDisplayName(String scoreHolder, @Nullable Component display) {
-        CustomEntry entry = getEntry(scoreHolder);
-        entries.put(scoreHolder, entry.withDisplay(display));
-        syncEntry(scoreHolder);
+    fun setDisplayName(scoreHolder: String, display: TextTranslatable?) {
+        val entry = getEntry(scoreHolder)
+        entries[scoreHolder] = entry.copy(display = null, translatedDisplay = display)
+        syncEntry(scoreHolder)
     }
 
-    public void setDisplayName(String scoreHolder, @Nullable TextTranslatable display) {
-        CustomEntry entry = getEntry(scoreHolder);
-        entries.put(scoreHolder, entry.withTranslatedDisplay(display));
-        syncEntry(scoreHolder);
+    override fun setNumberFormat(scoreHolder: String, numberFormat: NumberFormat?) {
+        val entry = getEntry(scoreHolder)
+        entries[scoreHolder] = entry.copy(numberFormat = TranslatedNumberFormat.constant(numberFormat))
+        syncEntry(scoreHolder)
     }
 
-    @Override
-    public void setNumberFormat(String scoreHolder, NumberFormat numberFormat) {
-        CustomEntry entry = getEntry(scoreHolder);
-        entries.put(scoreHolder, entry.withNumberFormat(numberFormat));
-        syncEntry(scoreHolder);
+    fun setNumberFormat(scoreHolder: String, numberFormat: TranslatedNumberFormat?) {
+        val entry = getEntry(scoreHolder)
+        entries[scoreHolder] = entry.copy(numberFormat = numberFormat)
+        syncEntry(scoreHolder)
     }
 
-    public void setNumberFormat(String scoreHolder, TranslatedNumberFormat numberFormat) {
-        CustomEntry entry = getEntry(scoreHolder);
-        entries.put(scoreHolder, entry.withNumberFormat(numberFormat));
-        syncEntry(scoreHolder);
+    fun setDisplayName(displayFunction: ((String) -> Component?)?) {
+        this.displayFunction = displayFunction
     }
 
-    public void setDisplayName(@Nullable Function<String, @Nullable Component> displayFunction) {
-        this.displayFunction = displayFunction;
+    fun setNumberFormat(numberFormat: NumberFormat?) {
+        defaultEntry = defaultEntry.copy(numberFormat = TranslatedNumberFormat.constant(numberFormat))
     }
 
-    public void setNumberFormat(NumberFormat numberFormat) {
-        defaultEntry = defaultEntry.withNumberFormat(numberFormat);
-    }
-
-    public CustomEntry getDefaultEntry() {
-        return defaultEntry;
-    }
-
-    private CustomEntry getEntry(String scoreHolder) {
+    private fun getEntry(scoreHolder: String): CustomEntry {
         if (displayFunction == null) {
-            return entries.getOrDefault(scoreHolder, defaultEntry);
+            return entries.getOrDefault(scoreHolder, defaultEntry)
         }
 
-        return entries.computeIfAbsent(scoreHolder, _ -> {
-            Component display = displayFunction.apply(scoreHolder);
-            return defaultEntry.withDisplay(display);
-        });
-    }
-
-    private void syncEntry(String scoreHolder) {
-        int score = getScore(scoreHolder);
-        updateObjectives(objective -> syncScore(objective, scoreHolder, score));
-    }
-
-    private void syncScores(CustomObjective objective, ServerPlayer player) {
-        scores.forEach((scoreHolder, score) -> {
-            var entry = getEntry(scoreHolder);
-            Component display = getScoreHolderDisplay(entry, player);
-            NumberFormat format = entry.numberFormat().translateTo(translations.getLanguage(player));
-
-            objective.sendScore(player, scoreHolder, score, display, format);
-        });
-    }
-
-    private void syncScore(CustomObjective objective, String scoreHolder, int score) {
-        Set<UUID> uuids = objectivePlayers.get(objective);
-        if (uuids == null) return;
-
-        var entry = getEntry(scoreHolder);
-
-        for (UUID uuid : uuids) {
-            ServerPlayer player = playerManager.getPlayer(uuid);
-            if (player == null) continue;
-
-            Component display = getScoreHolderDisplay(entry, player);
-            NumberFormat format = entry.numberFormat().translateTo(translations.getLanguage(player));
-
-            objective.sendScore(player, scoreHolder, score, display, format);
+        return entries.computeIfAbsent(scoreHolder) { _ ->
+            val display = displayFunction!!(scoreHolder)
+            defaultEntry.copy(display = display, translatedDisplay = null)
         }
     }
 
-    @Nullable
-    private Component getScoreHolderDisplay(CustomEntry entry, ServerPlayer viewer) {
-        Component display = entry.display();
-        TextTranslatable translatedDisplay = entry.translatedDisplay();
+    private fun syncEntry(scoreHolder: String) {
+        val score = getScore(scoreHolder)
 
-        if (translatedDisplay == null) {
-            return display;
+        updateObjectives { objective ->
+            syncScore(objective, scoreHolder, score)
         }
-
-        String language = translations.getLanguage(viewer);
-
-        return translatedDisplay.translateTo(language);
     }
 
-    @Override
-    public ScoreHandle createText(Component text, int position) {
-        ScoreHandle handle = createHandle(position);
-        handle.setDisplay(text);
+    private fun syncScores(objective: CustomObjective, player: ServerPlayer) {
+        for ((scoreHolder, score) in scores) {
+            val entry = getEntry(scoreHolder)
+            val display = getScoreHolderDisplay(entry, player)
+            val format = entry.numberFormat?.translateTo(translations.getLanguage(player))
 
-        return handle;
+            objective.sendScore(player, scoreHolder, score, display, format)
+        }
     }
 
-    @Override
-    public ScoreHandle createText(TranslatedText text, int position) {
-        ScoreHandle handle = createHandle(position);
+    private fun syncScore(objective: CustomObjective, scoreHolder: String, score: Int) {
+        val uuids = objectivePlayers[objective] ?: return
 
-        setDisplayName(handle.getHolder(), text);
+        val entry = getEntry(scoreHolder)
 
-        return handle;
+        for (uuid in uuids) {
+            val player = playerManager.getPlayer(uuid) ?: continue
+
+            val display = getScoreHolderDisplay(entry, player)
+            val format = entry.numberFormat?.translateTo(translations.getLanguage(player))
+
+            objective.sendScore(player, scoreHolder, score, display, format)
+        }
     }
 
-    @Override
-    public void removeEntry(String scoreHolder) {
-        scores.removeInt(scoreHolder);
-        entries.remove(scoreHolder);
+    private fun getScoreHolderDisplay(entry: CustomEntry, viewer: ServerPlayer): Component? {
+        val translatedDisplay = entry.translatedDisplay ?: return entry.display
 
-        updateObjectives(objective -> {
-            objective.remove(scoreHolder);
+        val language = translations.getLanguage(viewer)
 
-            Set<UUID> uuids = objectivePlayers.getOrDefault(objective, Set.of());
+        return translatedDisplay.translateTo(language)
+    }
 
-            for (UUID uuid : uuids) {
-                ServerPlayer player = playerManager.getPlayer(uuid);
+    override fun createText(text: Component, position: Int): ScoreHandle {
+        val handle = createHandle(position)
+        handle.setDisplay(text)
 
-                if (player == null) continue;
+        return handle
+    }
 
-                objective.clear(player, scoreHolder);
+    override fun createText(text: TranslatedText, position: Int): ScoreHandle {
+        val handle = createHandle(position)
+
+        setDisplayName(handle.holder, text)
+
+        return handle
+    }
+
+    override fun removeEntry(scoreHolder: String) {
+        scores.removeInt(scoreHolder)
+        entries.remove(scoreHolder)
+
+        updateObjectives { objective ->
+            objective.remove(scoreHolder)
+
+            val uuids = objectivePlayers[objective] ?: emptySet()
+
+            for (uuid in uuids) {
+                val player = playerManager.getPlayer(uuid) ?: continue
+
+                objective.clear(player, scoreHolder)
             }
-        });
+        }
     }
 
-    private @NotNull ScoreHandle createHandle(int position) {
-        String holder = UUID.randomUUID().toString();
-        ScoreHandle handle = new ScoreHandle(holder, this);
+    private fun createHandle(position: Int): ScoreHandle {
+        val holder = UUID.randomUUID().toString()
+        val handle = ScoreHandle(holder, this)
 
-        setScore(holder, layout.resolvePosition(position));
+        setScore(holder, layout.resolvePosition(position))
 
-        handle.setNumberFormat(BlankFormat.INSTANCE);
-        return handle;
+        handle.setNumberFormat(BlankFormat.INSTANCE)
+
+        return handle
     }
 
-    @Override
-    public void unload() {
-        objectivePlayers.forEach((objective, uuids) -> {
-            for (UUID uuid : uuids) {
-                ServerPlayer player = playerManager.getPlayer(uuid);
-                if (player == null) continue;
+    override fun unload() {
+        for ((objective, uuids) in objectivePlayers) {
+            for (uuid in uuids) {
+                val player = playerManager.getPlayer(uuid) ?: continue
 
-                objective.remove(player);
+                objective.remove(player)
             }
-        });
-    }
-
-    public record CustomEntry(@Nullable Component display, @Nullable TextTranslatable translatedDisplay,
-                              TranslatedNumberFormat numberFormat) {
-
-        public CustomEntry withDisplay(@Nullable Component display) {
-            return new CustomEntry(display, null, this.numberFormat);
-        }
-
-        public CustomEntry withTranslatedDisplay(@Nullable TextTranslatable display) {
-            return new CustomEntry(null, display, this.numberFormat);
-        }
-
-        public CustomEntry withNumberFormat(NumberFormat numberFormat) {
-            return new CustomEntry(this.display, this.translatedDisplay, TranslatedNumberFormat.constant(numberFormat));
-        }
-
-        public CustomEntry withNumberFormat(TranslatedNumberFormat numberFormat) {
-            return new CustomEntry(this.display, this.translatedDisplay, numberFormat);
         }
     }
+
+    data class CustomEntry(
+        val display: Component?,
+        val translatedDisplay: TextTranslatable?,
+        val numberFormat: TranslatedNumberFormat?
+    )
 }

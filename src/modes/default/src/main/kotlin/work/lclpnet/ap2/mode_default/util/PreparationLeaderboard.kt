@@ -10,10 +10,10 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.criteria.ObjectiveCriteria
 import work.lclpnet.ap2.ApConstants
-import work.lclpnet.ap2.api.util.scoreboard.VirtualScoreboardObjective
 import work.lclpnet.ap2.game.player.PlayerManager
-import work.lclpnet.ap2.impl.util.scoreboard.CustomObjective
-import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardEntry
+import work.lclpnet.ap2.util.scoreboard.CustomObjective
+import work.lclpnet.ap2.util.scoreboard.CustomScoreboardEntry
+import work.lclpnet.ap2.util.scoreboard.VirtualScoreboardObjective
 import work.lclpnet.kibu.translate.Translations
 import work.lclpnet.kibu.translate.text.FormatWrapper
 import java.util.*
