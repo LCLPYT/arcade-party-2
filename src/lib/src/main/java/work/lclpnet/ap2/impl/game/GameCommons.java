@@ -156,8 +156,9 @@ public class GameCommons {
 
         boolean randomCenter = wbConfig.optBoolean("random-center", false);
         boolean alignRandomCenter = wbConfig.optBoolean("align-random-center", true);
+        double damagePerBlock = wbConfig.optDouble("damage-per-block", WorldBorderConfig.DEFAULT_DAMAGE_PER_BLOCK);
 
-        return new WorldBorderConfig(centerX, centerZ, maxRadius, minSize, randomCenter, alignRandomCenter);
+        return new WorldBorderConfig(centerX, centerZ, maxRadius, minSize, randomCenter, alignRandomCenter, damagePerBlock);
     }
 
     public WorldBorder setupWorldBorder(WorldBorderConfig config) {
@@ -165,7 +166,7 @@ public class GameCommons {
         worldBorder.setCenter(config.centerX() + 0.5, config.centerZ() + 0.5);
         worldBorder.setSize(config.maxRadius());
         worldBorder.setSafeZone(0);
-        worldBorder.setDamagePerBlock(0.8);
+        worldBorder.setDamagePerBlock(config.damagePerBlock());
 
         return worldBorder;
     }
@@ -330,8 +331,15 @@ public class GameCommons {
             int maxRadius,
             int minSize,
             boolean randomCenter,
-            boolean alignRandomCenter
+            boolean alignRandomCenter,
+            double damagePerBlock
     ) {
+        public static final double DEFAULT_DAMAGE_PER_BLOCK = 0.8;
+
+        public WorldBorderConfig(int centerX, int centerZ, int maxRadius, int minSize, boolean randomCenter, boolean alignRandomCenter) {
+            this(centerX, centerZ, maxRadius, minSize, randomCenter, alignRandomCenter, DEFAULT_DAMAGE_PER_BLOCK);
+        }
+
         public double align(double v) {
             return alignRandomCenter ? floor(v) + 0.5 : v;
         }
