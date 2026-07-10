@@ -23,7 +23,7 @@ private const val DRAG = 1.42f // air resistance, grows with speed squared. bala
 private const val ROLL = 42.6f // rolling resistance, grows linearly with speed. ~30x drag
 
 // speed clamps (m/s)
-private const val MIN_SPEED = 6f  // ~22 km/h
+private const val MIN_SPEED = 12f // ~43 km/h
 private const val MAX_SPEED = 40f // ~144 km/h, engine max speed through drag is 120km/h
 
 // steering
