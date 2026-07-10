@@ -3,6 +3,5 @@
   "description": "Reite auf deinem Lichtschaf und ziehe eine tödliche Spur hinter dir her. Wer in eine Spur oder Wand kracht, scheidet aus. Der letzte Reiter gewinnt.",
   "item.invisible": "Unsichtbarkeit",
   "item.jump": "Sprung",
-  "item.speed_boost": "Geschwindigkeitsschub",
-  "power_up.refresh": "Power-Ups"
+  "item.speed_boost": "Geschwindigkeitsschub"
 }
