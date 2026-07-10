@@ -17,6 +17,8 @@ import kotlin.time.Duration.Companion.seconds
 
 private const val ITEM_SLOT = 4
 
+private const val SPAWN_CHANCE = 0.7f // chance that a free spawn point actually gets a power-up
+
 // the interval of power up refreshes
 private val REFRESH_INTERVAL = 30.seconds
 
@@ -26,7 +28,7 @@ class PowerUps(
     private val gameHandle: MiniGameHandle,
     map: GameMap,
     level: ServerLevel,
-    random: Random,
+    private val random: Random,
     debugController: DebugController,
     cycles: (UUID) -> LightCycle?,
 ) {
@@ -72,12 +74,13 @@ class PowerUps(
         }
     }
 
-    /** Spawns a random power-up at every spawn point that no longer has one. */
+    /** Spawns a random power-up with [SPAWN_CHANCE] at every spawn point that no longer has one. */
     fun spawn(positions: List<BlockPos>) {
         for (pos in positions) {
             val existing = points[pos]
 
             if (existing != null && specialItems.contains(existing)) continue
+            if (random.nextFloat() >= SPAWN_CHANCE) continue
 
             specialItems.spawnRandomItemAt(pos)?.let { points[pos] = it }
         }
