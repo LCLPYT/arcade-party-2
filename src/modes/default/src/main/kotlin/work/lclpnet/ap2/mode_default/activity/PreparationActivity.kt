@@ -14,6 +14,7 @@ import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.Display
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
+import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.criteria.ObjectiveCriteria
 import org.joml.Vector3d
@@ -94,7 +95,7 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
     private var world: ServerLevel? = null
     private var map: GameMap? = null
     private var dynamicEntityManager: DynamicEntityManager? = null
-    private var gameQueueDisplay: Object3d? = null
+    private var gameQueueDisplays = mutableListOf<Object3d>()
     private var nextGameSong: WeightedSong? = null
 
     override fun registerComponents(componentBundle: ComponentBundle) {
@@ -285,15 +286,32 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
 
         removeGameQueue()
 
-        gameQueueDisplay = Object3d(scene)
-        gameQueueDisplay!!.position.set(pos.x(), pos.y(), pos.z())
-        gameQueueDisplay!!.rotation.setAngleAxis(yaw, Vector3d(0.0, 1.0, 0.0))
+        val frontDisplay = createGameQueueDisplay(scene, pos, yaw, height, translations)
+        val backDisplay = createGameQueueDisplay(scene, pos, yaw + Math.PI, height, translations)
+
+        scene.add(frontDisplay)
+        scene.add(backDisplay)
+
+        gameQueueDisplays.add(frontDisplay)
+        gameQueueDisplays.add(backDisplay)
+    }
+
+    private fun createGameQueueDisplay(
+        scene: Scene,
+        pos: Vec3,
+        yaw: Double,
+        height: Double,
+        translations: Translations
+    ): Object3d {
+        val display = Object3d(scene)
+        display.position.set(pos.x(), pos.y(), pos.z())
+        display.rotation.setAngleAxis(yaw, Vector3d(0.0, 1.0, 0.0))
 
         var offsetY = 0.0
         val textHeight = 0.25
 
         if (!args.playerManager.isFinale) {
-            offsetY = addUpcomingGames(height, translations, offsetY, textHeight)
+            offsetY = addUpcomingGames(height, translations, offsetY, textHeight, display)
         }
 
         if (miniGame != null) {
@@ -314,7 +332,7 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
 
             offsetY += textHeight
 
-            gameQueueDisplay!!.addChild(obj)
+            display.addChild(obj)
         }
 
         val title = TranslatedTextDisplayObject(scene, translations)
@@ -328,22 +346,25 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
 
         title.position.set(0.0, offsetY, 0.0)
 
-        gameQueueDisplay!!.addChild(title)
+        display.addChild(title)
 
-        scene.add(gameQueueDisplay)
+        return display
     }
 
     private fun removeGameQueue() {
-        if (gameQueueDisplay != null) {
-            gameQueueDisplay!!.detach()
+        for (display in gameQueueDisplays) {
+            display.detach()
         }
+
+        gameQueueDisplays.clear()
     }
 
     private fun addUpcomingGames(
         height: Double,
         translations: Translations,
         offsetY: Double,
-        textHeight: Double
+        textHeight: Double,
+        parent: Object3d,
     ): Double {
         var offsetY = offsetY
         var preview: MutableList<GameQueue.Entry> = args.gameQueue.preview()
@@ -355,7 +376,7 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
         preview.reverse()
 
         for (entry in preview) {
-            val obj = TranslatedTextDisplayObject(gameQueueDisplay!!.getScene(), translations)
+            val obj = TranslatedTextDisplayObject(parent.scene, translations)
 
             val color = when (entry.type) {
                 GameQueue.Type.REGULAR -> ChatFormatting.GREEN
@@ -384,8 +405,9 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
 
             offsetY += textHeight
 
-            gameQueueDisplay!!.addChild(obj)
+            parent.addChild(obj)
         }
+
         return offsetY
     }
 
