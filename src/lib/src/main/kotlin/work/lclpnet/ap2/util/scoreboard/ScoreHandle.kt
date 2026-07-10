@@ -1,31 +1,22 @@
-package work.lclpnet.ap2.impl.util.scoreboard;
+package work.lclpnet.ap2.util.scoreboard
 
-import lombok.Getter;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.numbers.NumberFormat;
-import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective;
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.numbers.NumberFormat
 
-public class ScoreHandle {
+class ScoreHandle(
+    val holder: String,
+    val objective: CustomScoreboardObjective
+) {
 
-    @Getter
-    private final String holder;
-    private final CustomScoreboardObjective objective;
-
-    public ScoreHandle(String holder, CustomScoreboardObjective objective) {
-        this.holder = holder;
-        this.objective = objective;
+    fun setScore(score: Int) {
+        objective.setScore(holder, score)
     }
 
-    public void setScore(int score) {
-        objective.setScore(holder, score);
+    fun setDisplay(text: Component?) {
+        objective.setDisplayName(holder, text)
     }
 
-    public void setDisplay(@Nullable Component text) {
-        objective.setDisplayName(holder, text);
-    }
-
-    public void setNumberFormat(NumberFormat numberFormat) {
-        objective.setNumberFormat(holder, numberFormat);
+    fun setNumberFormat(numberFormat: NumberFormat?) {
+        objective.setNumberFormat(holder, numberFormat)
     }
 }

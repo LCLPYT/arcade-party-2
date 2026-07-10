@@ -1,131 +1,128 @@
-package work.lclpnet.ap2.impl.util.scoreboard;
+package work.lclpnet.ap2.util.scoreboard
 
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.numbers.NumberFormat;
-import net.minecraft.network.protocol.game.ClientboundResetScorePacket;
-import net.minecraft.network.protocol.game.ClientboundSetDisplayObjectivePacket;
-import net.minecraft.network.protocol.game.ClientboundSetObjectivePacket;
-import net.minecraft.network.protocol.game.ClientboundSetScorePacket;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.scores.DisplaySlot;
-import net.minecraft.world.scores.Objective;
-import net.minecraft.world.scores.criteria.ObjectiveCriteria;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.numbers.NumberFormat
+import net.minecraft.network.protocol.game.ClientboundResetScorePacket
+import net.minecraft.network.protocol.game.ClientboundSetDisplayObjectivePacket
+import net.minecraft.network.protocol.game.ClientboundSetObjectivePacket
+import net.minecraft.network.protocol.game.ClientboundSetScorePacket
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.scores.DisplaySlot
+import net.minecraft.world.scores.Objective
+import net.minecraft.world.scores.Scoreboard
+import net.minecraft.world.scores.criteria.ObjectiveCriteria
+import java.util.*
 
 /**
  * Simple controller of a custom objective, providing networking bindings for higher level scoreboard APIs.
  */
-public final class CustomObjective {
+class CustomObjective(
+    val name: String,
+    private var title: Component,
+    renderType: ObjectiveCriteria.RenderType,
+    numberFormat: NumberFormat?
+) {
+    val vanillaObjective: Objective = Objective(
+        Scoreboard(),
+        name,
+        ObjectiveCriteria.DUMMY,
+        title,
+        renderType,
+        false,
+        numberFormat
+    )
+    private val entries = HashMap<String, CustomScoreboardEntry>()
 
-    private final String name;
-    private final Objective vanillaObjective;
-    private final Map<String, CustomScoreboardEntry> entries = new HashMap<>();
-    private Component title;
-
-    public CustomObjective(String name, Component title, ObjectiveCriteria.RenderType renderType, NumberFormat numberFormat) {
-        this.name = name;
-        this.title = title;
-
-        this.vanillaObjective = new Objective(null, name, ObjectiveCriteria.DUMMY, title,
-                renderType, false, numberFormat);
+    fun display(): Component {
+        return title
     }
 
-    Objective vanillaObjective() {
-        return vanillaObjective;
+    override fun equals(other: Any?): Boolean {
+        if (other === this) return true
+        if (other == null || other.javaClass != this.javaClass) return false
+        val that = other as CustomObjective
+        return this.name == that.name &&
+                this.title == that.title
     }
 
-    public String name() {
-        return name;
+    override fun hashCode(): Int {
+        return Objects.hash(name, title)
     }
 
-    public Component display() {
-        return title;
+    override fun toString(): String =
+        "Objective[name=$name, title=$title]"
+
+    fun setTitle(title: Component) {
+        this.title = title
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) return true;
-        if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (CustomObjective) obj;
-        return Objects.equals(this.name, that.name) &&
-                Objects.equals(this.title, that.title);
+    fun setEntry(holder: String, entry: CustomScoreboardEntry) {
+        entries[holder] = entry
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(name, title);
+    fun getEntry(holder: String): CustomScoreboardEntry? =
+        entries[holder]
+
+    fun add(player: ServerPlayer) {
+        val packet = ClientboundSetObjectivePacket(vanillaObjective, ClientboundSetObjectivePacket.METHOD_ADD)
+        player.connection.send(packet)
     }
 
-    @Override
-    public String toString() {
-        return "Objective[name=%s, title=%s]".formatted(name, title);
+    fun remove(player: ServerPlayer) {
+        val packet = ClientboundSetObjectivePacket(vanillaObjective, ClientboundSetObjectivePacket.METHOD_REMOVE)
+        player.connection.send(packet)
     }
 
-    public void setTitle(Component title) {
-        this.title = Objects.requireNonNull(title);
+    fun update(player: ServerPlayer) {
+        val packet = ClientboundSetObjectivePacket(vanillaObjective, ClientboundSetObjectivePacket.METHOD_CHANGE)
+        player.connection.send(packet)
     }
 
-    public void setEntry(String holder, CustomScoreboardEntry entry) {
-        entries.put(holder, entry);
+    fun sendScore(player: ServerPlayer, scoreHolder: String, score: Int, display: Component?, format: NumberFormat?) {
+        val packet = ClientboundSetScorePacket(
+            scoreHolder,
+            name,
+            score,
+            Optional.ofNullable(display),
+            Optional.ofNullable(format)
+        )
+
+        player.connection.send(packet)
     }
 
-    public Optional<CustomScoreboardEntry> getEntry(String holder) {
-        return Optional.ofNullable(entries.getOrDefault(holder, null));
+    fun syncScore(player: ServerPlayer, holder: String) {
+        val entry = entries.getOrDefault(holder, null) ?: return
+
+        sendScore(player, holder, entry.score, entry.display, entry.numberFormat)
     }
 
-    public void add(ServerPlayer player) {
-        var packet = new ClientboundSetObjectivePacket(this.vanillaObjective(), ClientboundSetObjectivePacket.METHOD_ADD);
-        player.connection.send(packet);
+    fun syncScores(player: ServerPlayer) {
+        for (holder in entries.keys) {
+            syncScore(player, holder)
+        }
     }
 
-    public void remove(ServerPlayer player) {
-        var packet = new ClientboundSetObjectivePacket(this.vanillaObjective(), ClientboundSetObjectivePacket.METHOD_REMOVE);
-        player.connection.send(packet);
+    fun setDisplay(player: ServerPlayer, slot: DisplaySlot) {
+        setDisplay(player, this, slot)
     }
 
-    public void update(ServerPlayer player) {
-        var packet = new ClientboundSetObjectivePacket(this.vanillaObjective(), ClientboundSetObjectivePacket.METHOD_CHANGE);
-        player.connection.send(packet);
+    fun remove(holder: String) {
+        entries.remove(holder)
     }
 
-    public void sendScore(ServerPlayer player, String scoreHolder, int score, Component display, NumberFormat format) {
-        var packet = new ClientboundSetScorePacket(scoreHolder, this.name(), score, Optional.ofNullable(display), Optional.ofNullable(format));
-        player.connection.send(packet);
+    fun clear(player: ServerPlayer, holder: String) {
+        player.connection.send(ClientboundResetScorePacket(holder, vanillaObjective.name))
     }
 
-    public void syncScore(ServerPlayer player, String holder) {
-        CustomScoreboardEntry entry = entries.getOrDefault(holder, null);
+    companion object {
+        fun setDisplay(player: ServerPlayer, objective: CustomObjective?, slot: DisplaySlot) {
+            // could be that ScoreboardObjectiveUpdateS2CPacket with ScoreboardObjectiveUpdateS2CPacket.REMOVE_MODE has to be sent
+            val packet = ClientboundSetDisplayObjectivePacket(
+                slot,
+                objective?.vanillaObjective
+            )
 
-        if (entry == null) return;
-
-        sendScore(player, holder, entry.getScore(), entry.getDisplay(), entry.getNumberFormat());
-    }
-
-    public void syncScores(ServerPlayer player) {
-        entries.keySet().forEach((holder) -> syncScore(player, holder));
-    }
-
-    public void setDisplay(ServerPlayer player, DisplaySlot slot) {
-       setDisplay(player, this, slot);
-    }
-
-    public void remove(String holder) {
-        entries.remove(holder);
-    }
-
-    public void clear(ServerPlayer player, String holder) {
-        player.connection.send(new ClientboundResetScorePacket(holder, this.vanillaObjective.getName()));
-    }
-
-    public static void setDisplay(ServerPlayer player, @Nullable CustomObjective objective, DisplaySlot slot) {
-        // could be that ScoreboardObjectiveUpdateS2CPacket with ScoreboardObjectiveUpdateS2CPacket.REMOVE_MODE has to be sent
-        var packet = new ClientboundSetDisplayObjectivePacket(slot, objective != null ? objective.vanillaObjective() : null);
-
-        player.connection.send(packet);
+            player.connection.send(packet)
+        }
     }
 }

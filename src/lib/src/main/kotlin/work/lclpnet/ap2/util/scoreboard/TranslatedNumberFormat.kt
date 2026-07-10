@@ -1,16 +1,17 @@
-package work.lclpnet.ap2.impl.util.scoreboard;
+package work.lclpnet.ap2.util.scoreboard
 
-import net.minecraft.network.chat.numbers.NumberFormat;
+import net.minecraft.network.chat.numbers.NumberFormat
 
 /**
- * A {@link NumberFormat} that may differ per language, resolved for a viewer's language.
+ * A [NumberFormat] that may differ per language, resolved for a viewer's language.
  */
-@FunctionalInterface
-public interface TranslatedNumberFormat {
+fun interface TranslatedNumberFormat {
 
-    NumberFormat translateTo(String language);
+    fun translateTo(language: String): NumberFormat?
 
-    static TranslatedNumberFormat constant(NumberFormat format) {
-        return language -> format;
+    companion object {
+        fun constant(format: NumberFormat?): TranslatedNumberFormat {
+            return TranslatedNumberFormat { language -> format }
+        }
     }
 }

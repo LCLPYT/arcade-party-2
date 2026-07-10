@@ -5,9 +5,6 @@ import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.numbers.StyledFormat
 import net.minecraft.world.scores.DisplaySlot
 import work.lclpnet.ap2.ApConstants
-import work.lclpnet.ap2.impl.util.scoreboard.DynamicScoreboardObjective
-import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout
-import work.lclpnet.ap2.impl.util.scoreboard.TranslatedScoreboardObjective
 
 fun setupTranslatedSidebarObjective(
     scoreboardManager: CustomScoreboardManager,
@@ -44,11 +41,11 @@ fun setupDynamicSidebarObjective(scoreboardManager: CustomScoreboardManager, tit
 
     objective.setSlot(DisplaySlot.SIDEBAR)
 
-    objective.setDefaultDisplay { _, holder ->
+    objective.defaultDisplay = { _, holder ->
         Component.literal(holder).withStyle(ChatFormatting.GREEN)
     }
 
-    objective.setDefaultNumberFormat(StyledFormat.PLAYER_LIST_DEFAULT)
+    objective.defaultNumberFormat = StyledFormat.PLAYER_LIST_DEFAULT
 
     // separators at top and bottom
     val separator = Component.literal(ApConstants.SCOREBOARD_SEPARATOR)

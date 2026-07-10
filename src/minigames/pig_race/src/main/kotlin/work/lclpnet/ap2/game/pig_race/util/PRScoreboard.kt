@@ -8,9 +8,9 @@ import net.minecraft.server.level.ServerPlayer
 import work.lclpnet.ap2.ApConstants
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar
-import work.lclpnet.ap2.impl.util.scoreboard.DynamicScoreHandle
-import work.lclpnet.ap2.impl.util.scoreboard.DynamicScoreboardObjective
-import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout
+import work.lclpnet.ap2.util.scoreboard.DynamicScoreHandle
+import work.lclpnet.ap2.util.scoreboard.DynamicScoreboardObjective
+import work.lclpnet.ap2.util.scoreboard.ScoreboardLayout
 import work.lclpnet.ap2.util.scoreboard.setupDynamicSidebarObjective
 import work.lclpnet.kibu.translate.text.FormatWrapper.styled
 

@@ -1,21 +1,20 @@
-package work.lclpnet.ap2.api.util.scoreboard;
+package work.lclpnet.ap2.util.scoreboard
 
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.numbers.NumberFormat;
-import net.minecraft.server.level.ServerPlayer;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.numbers.NumberFormat
+import net.minecraft.server.level.ServerPlayer
 
-public interface CustomScoreboardObjective {
+interface CustomScoreboardObjective {
 
-    void setScore(String scoreHolder, int score);
+    fun setScore(scoreHolder: String, score: Int)
 
-    void setDisplayName(String scoreHolder, @Nullable Component display);
+    fun setDisplayName(scoreHolder: String, display: Component?)
 
-    void setNumberFormat(String scoreHolder, NumberFormat numberFormat);
+    fun setNumberFormat(scoreHolder: String, numberFormat: NumberFormat?)
 
-    void removeEntry(String scoreHolder);
+    fun removeEntry(scoreHolder: String)
 
-    default void setScore(ServerPlayer player, int score) {
-        setScore(player.getScoreboardName(), score);
+    fun setScore(player: ServerPlayer, score: Int) {
+        setScore(player.scoreboardName, score)
     }
 }
