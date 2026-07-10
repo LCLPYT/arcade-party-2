@@ -17,6 +17,7 @@ import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.*
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
+import work.lclpnet.ap2.game.dance_floor.cmd.SetPatternCommand
 import work.lclpnet.ap2.game.dance_floor.cmd.SetSongCommand
 import work.lclpnet.ap2.game.dance_floor.cmd.SkipSongCommand
 import work.lclpnet.ap2.game.util.PlayerUtil
@@ -111,6 +112,9 @@ class DanceFloorInstance(
 
     override fun go() {
         whenBelowCriticalHeight(::softEliminate)
+
+        SetPatternCommand(blockRandomizer!!, this::setPattern).register(gameHandle.commands)
+
         nextCycle()
 
         val particleShape = MapUtil.readShape(map, "particle-shape")
@@ -174,14 +178,22 @@ class DanceFloorInstance(
         nextCycle()
     }
 
-    private fun nextCycle() {
+    @Synchronized
+    fun setPattern(pattern: Pattern) = nextCycle(pattern)
+
+    private fun nextCycle(forcedPattern: Pattern? = null) {
         task?.cancel()
 
         synchronized(this) {
-            loadingSong?.thenAccept(::playSong)
+            if (currentSong == null) {
+                loadingSong?.thenAccept(::playSong)
+            } else {
+                // music already playing (debug-forced mid-window): keep it, just restart the window
+                task = timeout(delayTicks) { stopMusic() }
+            }
         }
 
-        blockRandomizer?.randomizeBlocks(fairness.coverageCap(blockDelayTicks()))
+        blockRandomizer?.randomizeBlocks(fairness.coverageCap(blockDelayTicks()), forcedPattern)
 
         for (player in players()) {
             player.inventory.setItem(4, ItemStack.EMPTY)

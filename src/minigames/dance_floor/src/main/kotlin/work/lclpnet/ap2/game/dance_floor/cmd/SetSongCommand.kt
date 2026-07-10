@@ -14,8 +14,10 @@ import work.lclpnet.kibu.cmd.type.CommandRegistrar
 import work.lclpnet.kibu.cmd.type.KibuCommand
 import java.util.concurrent.CompletableFuture
 
-@JvmRecord
-data class SetSongCommand(val songs: SongHandler, val skipCurrent: Runnable) : KibuCommand {
+class SetSongCommand(
+    val songs: SongHandler,
+    val skipCurrent: Runnable
+) : KibuCommand {
 
     override fun register(registrar: CommandRegistrar) {
         registrar.registerCommand(
