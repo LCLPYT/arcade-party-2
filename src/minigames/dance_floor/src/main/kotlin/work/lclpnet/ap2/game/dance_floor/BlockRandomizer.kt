@@ -47,6 +47,11 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerLevel) {
         add(Spirals(), 0.5f)
         add(PerlinNoise(), 1f)
         add(Mandelbrot(), 0.3f)
+        add(Hexagons(), 1f)
+        add(Triangles(), 1f)
+        add(EinsteinTiles(), 0.45f)
+        add(Penrose(), 0.45f)
+        add(HilbertCurve(), 0.45f)
     }
 
     val existingColors = mutableListOf<DyeColor>()
@@ -464,4 +469,237 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerLevel) {
             return iter % 8
         }
     }
+
+    class Hexagons(override val minColors: Int = 8, override val maxColors: Int = 11) : Pattern {
+        private var size = 3
+
+        override fun init() {
+            size = Random.nextInt(2, 5)
+        }
+
+        override fun group(pos: BlockPos): Int {
+            val hex = pointyHexRound(pos.x.toDouble(), pos.z.toDouble(), size.toDouble())
+            return hash(hex[0], hex[1])
+        }
+    }
+
+    class Triangles(override val minColors: Int = 8, override val maxColors: Int = 11) : Pattern {
+        private var size = 3
+
+        override fun init() {
+            size = Random.nextInt(2, 5)
+        }
+
+        override fun group(pos: BlockPos): Int {
+            val s = size.toDouble()
+            val col = floor(pos.x / s).toInt()
+            val row = floor(pos.z / s).toInt()
+            val fx = pos.x / s - col
+            val fz = pos.z / s - row
+
+            val half = if ((col + row) and 1 == 0) {
+                if (fx + fz < 1.0) 0 else 1
+            } else {
+                if (fx < fz) 0 else 1
+            }
+
+            return hash(col, row, half)
+        }
+    }
+
+    class EinsteinTiles(override val minColors: Int = 8, override val maxColors: Int = 11) : Pattern {
+        private var size = 4
+        private var phase = 0.0
+
+        override fun init() {
+            size = Random.nextInt(3, 6)
+            phase = Random.nextDouble() * PI * 2
+        }
+
+        override fun group(pos: BlockPos): Int {
+            val s = size.toDouble()
+            val hex = pointyHexRound(pos.x.toDouble(), pos.z.toDouble(), s)
+            val q = hex[0]
+            val r = hex[1]
+
+            val cx = s * sqrt(3.0) * (q + r / 2.0)
+            val cz = s * 1.5 * r
+
+            var angle = atan2(pos.z - cz, pos.x - cx) + phase
+            angle = (angle % (2 * PI) + 2 * PI) % (2 * PI)
+            val sextant = (angle / (2 * PI) * 6).toInt()
+
+            return hash(q, r, sextant)
+        }
+    }
+
+    inner class Penrose(
+        override val minColors: Int = 8,
+        override val maxColors: Int = 11,
+        val penroseDeflations: Int = 5,
+    ) : Pattern {
+        private var cells = HashMap<Long, Int>()
+
+        override fun init() {
+            val cells = HashMap<Long, Int>()
+
+            val phi = (1.0 + sqrt(5.0)) / 2.0
+            val center = floorShape.center()
+            val bounds = floorShape.bounds()
+            val cx = center.x + 0.5
+            val cz = center.z + 0.5
+            val radius = max(bounds.width(), bounds.length()).toDouble()
+
+            // initial "sun" wheel of 10 Robinson triangles around the floor center
+            var triangles = ArrayList<DoubleArray>()
+
+            for (i in 0 until 10) {
+                var b1x = cx + radius * cos((2 * i - 1) * PI / 10.0)
+                var b1z = cz + radius * sin((2 * i - 1) * PI / 10.0)
+                var b2x = cx + radius * cos((2 * i + 1) * PI / 10.0)
+                var b2z = cz + radius * sin((2 * i + 1) * PI / 10.0)
+
+                if (i % 2 == 0) {
+                    val tx = b1x; val tz = b1z
+                    b1x = b2x; b1z = b2z
+                    b2x = tx; b2z = tz
+                }
+
+                triangles.add(doubleArrayOf(0.0, cx, cz, b1x, b1z, b2x, b2z))
+            }
+
+            repeat(penroseDeflations) {
+                val next = ArrayList<DoubleArray>(triangles.size * 3)
+
+                for (t in triangles) {
+                    val type = t[0].toInt()
+                    val ax = t[1]; val az = t[2]
+                    val bx = t[3]; val bz = t[4]
+                    val ccx = t[5]; val ccz = t[6]
+
+                    if (type == 0) {
+                        val px = ax + (bx - ax) / phi
+                        val pz = az + (bz - az) / phi
+                        next.add(doubleArrayOf(0.0, ccx, ccz, px, pz, bx, bz))
+                        next.add(doubleArrayOf(1.0, px, pz, ccx, ccz, ax, az))
+                    } else {
+                        val qx = bx + (ax - bx) / phi
+                        val qz = bz + (az - bz) / phi
+                        val rx = bx + (ccx - bx) / phi
+                        val rz = bz + (ccz - bz) / phi
+                        next.add(doubleArrayOf(1.0, rx, rz, ccx, ccz, ax, az))
+                        next.add(doubleArrayOf(1.0, qx, qz, rx, rz, bx, bz))
+                        next.add(doubleArrayOf(0.0, rx, rz, qx, qz, ax, az))
+                    }
+                }
+
+                triangles = next
+            }
+
+            for (x in bounds.min().x..bounds.max().x) {
+                for (z in bounds.min().z..bounds.max().z) {
+                    val px = x + 0.5
+                    val pz = z + 0.5
+
+                    for ((idx, t) in triangles.withIndex()) {
+                        if (pointInTriangle(px, pz, t[1], t[2], t[3], t[4], t[5], t[6])) {
+                            cells[packKey(x, z)] = idx
+                            break
+                        }
+                    }
+                }
+            }
+
+            this.cells = cells
+        }
+
+        override fun group(pos: BlockPos): Int = cells[packKey(pos.x, pos.z)] ?: 0
+    }
+
+    inner class HilbertCurve(override val minColors: Int = 8, override val maxColors: Int = 12) : Pattern {
+        private var order = 16
+        private var segLen = 3
+        private var minX = 0
+        private var minZ = 0
+
+        override fun init() {
+            val bounds = floorShape.bounds()
+            minX = bounds.min().x
+            minZ = bounds.min().z
+
+            val maxDim = max(bounds.width(), bounds.length())
+            var n = 1
+            while (n < maxDim) n = n shl 1
+            order = n
+
+            segLen = Random.nextInt(2, 6)
+        }
+
+        override fun group(pos: BlockPos): Int = xy2d(order, pos.x - minX, pos.z - minZ) / segLen
+
+        private fun xy2d(n: Int, x0: Int, z0: Int): Int {
+            var d = 0
+            var x = x0
+            var y = z0
+            var s = n / 2
+
+            while (s > 0) {
+                val rx = if (x and s > 0) 1 else 0
+                val ry = if (y and s > 0) 1 else 0
+                d += s * s * ((3 * rx) xor ry)
+
+                if (ry == 0) {
+                    if (rx == 1) {
+                        x = n - 1 - x
+                        y = n - 1 - y
+                    }
+                    val t = x
+                    x = y
+                    y = t
+                }
+
+                s = s shr 1
+            }
+
+            return d
+        }
+    }
 }
+
+private fun pointyHexRound(x: Double, z: Double, size: Double): IntArray {
+    val q = (sqrt(3.0) / 3.0 * x - 1.0 / 3.0 * z) / size
+    val r = (2.0 / 3.0 * z) / size
+    val s = -q - r
+
+    var rq = round(q)
+    var rr = round(r)
+    val rs = round(s)
+
+    val dq = abs(rq - q)
+    val dr = abs(rr - r)
+    val ds = abs(rs - s)
+
+    if (dq > dr && dq > ds) rq = -rr - rs
+    else if (dr > ds) rr = -rq - rs
+
+    return intArrayOf(rq.toInt(), rr.toInt())
+}
+
+private fun pointInTriangle(
+    px: Double, pz: Double,
+    ax: Double, az: Double,
+    bx: Double, bz: Double,
+    cx: Double, cz: Double
+): Boolean {
+    val d1 = edgeSign(px, pz, ax, az, bx, bz)
+    val d2 = edgeSign(px, pz, bx, bz, cx, cz)
+    val d3 = edgeSign(px, pz, cx, cz, ax, az)
+
+    val hasNeg = d1 < 0 || d2 < 0 || d3 < 0
+    val hasPos = d1 > 0 || d2 > 0 || d3 > 0
+
+    return !(hasNeg && hasPos)
+}
+
+private fun edgeSign(px: Double, pz: Double, ax: Double, az: Double, bx: Double, bz: Double): Double =
+    (px - bx) * (az - bz) - (ax - bx) * (pz - bz)
