@@ -1,8 +1,11 @@
 package work.lclpnet.ap2.deadline
 
+import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.network.protocol.game.ClientboundSetExperiencePacket
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.sounds.SoundSource
 import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityTypes
@@ -21,6 +24,8 @@ import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.util.teleportToRandomSpawns
 import work.lclpnet.ap2.impl.util.ColorUtil
 import work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor
+import work.lclpnet.ap2.impl.util.ParticleHelper
+import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.ServerPlayConnectionHooks
@@ -113,6 +118,13 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
 
     // intentionally not calling super.onDeath -> no equipment/experience drops
     override fun onDeath(player: ServerPlayer, attacker: Entity?) {}
+
+    override fun onEliminated(player: ServerPlayer) {
+        super.onEliminated(player)
+
+        SoundHelper.playSoundAt(player, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1f, 0f)
+        ParticleHelper.spawnParticleAt(player, ParticleTypes.LAVA, 100, 0.5, 0.5, 0.5, 0.2)
+    }
 
     override fun participantRemoved(player: ServerPlayer) {
         player.vehicle?.discard()
