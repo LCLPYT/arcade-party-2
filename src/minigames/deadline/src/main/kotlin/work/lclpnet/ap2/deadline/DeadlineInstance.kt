@@ -10,15 +10,21 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.PlayerTeam
 import net.minecraft.world.scores.Team
+import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
+import work.lclpnet.ap2.api.stats.CommonStats.Kills
+import work.lclpnet.ap2.api.stats.CommonStats.TimeSurvived
+import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.deadline.item.PowerUps
 import work.lclpnet.ap2.deadline.rider.Riders
 import work.lclpnet.ap2.deadline.trail.LightTrail
 import work.lclpnet.ap2.deadline.trail.TrailSpec
+import work.lclpnet.ap2.ext.gainKill
 import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.util.teleportToRandomSpawns
+import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.game.vehicle.BikeSpec
 import work.lclpnet.ap2.game.vehicle.SpeedHud
 import work.lclpnet.ap2.impl.util.ParticleHelper
@@ -30,6 +36,8 @@ import work.lclpnet.kibu.hook.entity.EntityHealthCallback
 import work.lclpnet.kibu.scheduler.Ticks
 import java.util.Random
 
+private val PowerUpsUsed = Stat("power_ups_used", 0)
+
 private val WORLD_BORDER_DELAY = Ticks.minutes(3).toLong()
 private val WORLD_BORDER_TIME = Ticks.minutes(1).toLong()
 
@@ -39,7 +47,12 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
     private val random = Random()
     private val riders = Riders(gameHandle, random, BikeSpec.fromMap(map))
     private val trail = LightTrail(level, TrailSpec.fromMap(map))
-    private val powerUps = PowerUps(gameHandle, map, level, random, commons().debugController(), riders, schema.powerUpSpawns)
+    private val stats = useFFAStats(winManager, listOf(
+        TimeSurvived, Kills, PowerUpsUsed, DistanceMoved
+    ))
+    private val powerUps = PowerUps(gameHandle, map, level, random, commons().debugController(), riders, schema.powerUpSpawns) {
+        stats.increment(it, PowerUpsUsed)
+    }
 
     override fun teleportPlayers() {
         val spawnBox = requireNotNull(schema.spawnBox) {
@@ -56,6 +69,7 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
     override fun prepare() {
         useRemainingPlayersDisplay()
         useSmoothDeath()
+        trackSurvivalTime(stats)
         disableTeleportEliminated()
 
         gameHandle.protect { config ->
@@ -93,11 +107,19 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
             val movement = cycle.sheep.position().subtract(before)
 
             // crashing into a wall or driving into a trail. phased riders pass through trails
-            if (cycle.crashed || (!cycle.phased && trail.collides(player.boundingBox, movement, player.uuid))) {
+            val trailOwner = if (cycle.phased) null else trail.hit(player.boundingBox, movement, player.uuid)
+
+            if (cycle.crashed || trailOwner != null) {
+                // driving into another rider's trail counts as a kill for its owner
+                if (trailOwner != null && trailOwner != player.uuid) {
+                    gameHandle.participants.getParticipant(trailOwner)?.let { gainKill(it, stats) }
+                }
+
                 eliminate(player)
                 continue
             }
 
+            stats.modify(player, DistanceMoved) { it + movement.horizontalDistance() }
             trail.extend(player.uuid, cycle.sheep.position(), riders.color(player.uuid))
             SpeedHud.show(player, cycle)
         }

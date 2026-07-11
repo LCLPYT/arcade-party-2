@@ -13,7 +13,7 @@ import work.lclpnet.kibu.scheduler.Ticks
 /**
  * Turns the rider and their sheep invisible for a short duration, during which they also phase through trails.
  */
-class Invisible(riders: Riders) : PowerUp(riders) {
+class Invisible(riders: Riders, onUsed: (ServerPlayer) -> Unit) : PowerUp(riders, onUsed) {
 
     override val item: Item = Items.FERMENTED_SPIDER_EYE
     override val duration = Ticks.seconds(4)

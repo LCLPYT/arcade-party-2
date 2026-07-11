@@ -2,6 +2,7 @@ package work.lclpnet.ap2.deadline.item
 
 import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
+import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import work.lclpnet.ap2.deadline.rider.Riders
 import work.lclpnet.ap2.deadline.util.GameSound
@@ -33,12 +34,13 @@ class PowerUps(
     debugController: DebugController,
     riders: Riders,
     private val positions: List<BlockPos>,
+    onUsed: (ServerPlayer) -> Unit,
 ) {
 
     private val specialItems = SpecialItems.create(gameHandle, map, level, random, debugController) { registrar ->
-        registrar.register(SpeedBoost(riders), 1f)
-        registrar.register(Jump(riders), 1f)
-        registrar.register(Invisible(riders), 1f)
+        registrar.register(SpeedBoost(riders, onUsed), 1f)
+        registrar.register(Jump(riders, onUsed), 1f)
+        registrar.register(Invisible(riders, onUsed), 1f)
     }
 
     private val points = HashMap<BlockPos, SpecialItemObject>()

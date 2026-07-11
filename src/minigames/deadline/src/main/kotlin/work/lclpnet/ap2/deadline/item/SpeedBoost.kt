@@ -15,7 +15,7 @@ private const val BOOST_MULTIPLIER = 2f // multiplies the engine force while the
 /**
  * Temporarily gives the sheep a stronger engine at full throttle.
  */
-class SpeedBoost(riders: Riders) : PowerUp(riders) {
+class SpeedBoost(riders: Riders, onUsed: (ServerPlayer) -> Unit) : PowerUp(riders, onUsed) {
 
     override val item: Item = Items.SUGAR
     override val duration = Ticks.seconds(4)

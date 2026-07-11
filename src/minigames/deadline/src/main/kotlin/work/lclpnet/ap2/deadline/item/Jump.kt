@@ -14,7 +14,7 @@ private const val JUMP_STRENGTH = 0.7 // upward velocity in blocks per tick
 /**
  * Launches the sheep into the air, so the rider can hop over a trail.
  */
-class Jump(riders: Riders) : PowerUp(riders) {
+class Jump(riders: Riders, onUsed: (ServerPlayer) -> Unit) : PowerUp(riders, onUsed) {
 
     override val item: Item = Items.RABBIT_FOOT
     override val duration = 0 // the leap is instant

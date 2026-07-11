@@ -15,7 +15,7 @@ import work.lclpnet.ap2.impl.game.item.SpecialItemContext
 /**
  * An activatable power-up that riders collect from pickups and trigger by using its item.
  */
-abstract class PowerUp(protected val riders: Riders) : SpecialItem {
+abstract class PowerUp(protected val riders: Riders, private val onUsed: (ServerPlayer) -> Unit) : SpecialItem {
 
     protected abstract val item: Item
 
@@ -44,6 +44,7 @@ abstract class PowerUp(protected val riders: Riders) : SpecialItem {
 
         activate(player, cycle, ctx)
         sound.playTo(player)
+        onUsed(player)
 
         return InteractionResult.SUCCESS_SERVER
     }

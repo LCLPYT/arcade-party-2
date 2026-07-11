@@ -90,7 +90,8 @@ class LightTrail(level: ServerLevel, private val spec: TrailSpec) {
             .setValue(BlockStateProperties.NORTH, true)
             .setValue(BlockStateProperties.SOUTH, true)
 
-    fun collides(box: AABB, movement: Vec3, rider: UUID) = collider.collides(box, movement, rider)
+    /** The owner of the trail the rider's hitbox drove into this tick, or null. */
+    fun hit(box: AABB, movement: Vec3, rider: UUID): UUID? = collider.hit(box, movement, rider)
 
     fun discard(uuid: UUID) {
         collider.remove(uuid).forEach { it.detach() }
