@@ -2,7 +2,10 @@
   "name": "Deadline",
   "description": "Ride your light-sheep and leave a deadly trail behind you. Crash into any trail or wall and you are out. The last rider standing wins.",
   "item.invisible": "Invisibility",
+  "item.invisible.desc": "Turns you invisible and lets you phase through trails",
   "item.jump": "Jump",
+  "item.jump.desc": "Launches you into the air to hop over trails",
   "item.speed_boost": "Speed Boost",
+  "item.speed_boost.desc": "Temporarily boosts your engine",
   "stat.power_ups_used": "Power-ups used"
 }

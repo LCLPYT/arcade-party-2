@@ -2,7 +2,10 @@
   "name": "Deadline",
   "description": "Reite auf deinem Lichtschaf und ziehe eine tödliche Spur hinter dir her. Wer in eine Spur oder Wand kracht, scheidet aus. Der letzte Reiter gewinnt.",
   "item.invisible": "Unsichtbarkeit",
+  "item.invisible.desc": "Macht dich unsichtbar und lässt dich durch Spuren fahren",
   "item.jump": "Sprung",
+  "item.jump.desc": "Katapultiert dich in die Luft, um über Spuren zu springen",
   "item.speed_boost": "Geschwindigkeitsschub",
+  "item.speed_boost.desc": "Verstärkt vorübergehend deinen Motor",
   "stat.power_ups_used": "Power-Ups benutzt"
 }
