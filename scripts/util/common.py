@@ -3,7 +3,7 @@ import re
 from pathlib import Path
 from string import Template
 
-DEVS = ["person.lclp", "person.bops"]
+DEVS = ["person.lclp", "person.bops", "person.quadrubo"]
 
 BASE_DIR = Path("src/minigames")
 LIB_CONFIG_FILE = Path("src/lib/src/main/resources/configuration.json")

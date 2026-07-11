@@ -17,6 +17,7 @@
     "ServerExplosionMixin",
     "ServerGamePacketListenerImplMixin",
     "ServerLevelMixin",
+    "WorldBorderMixin",
     "ai.BrainAccessor",
     "ai.GroundPathNavigationMixin",
     "ai.MoveControlMixin",

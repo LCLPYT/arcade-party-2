@@ -44,15 +44,17 @@ public class SpecialItemObject extends Object3d implements Animatable {
         this.item = item;
         this.size = size;
 
+        double sizeScale = size / DEFAULT_SIZE;
+
         itemDisplay = new ItemDisplayObject(scene, stack);
-        itemDisplay.scale.set(size / DEFAULT_SIZE);
+        itemDisplay.scale.set(sizeScale);
         itemDisplay.setItemDisplayContext(ItemDisplayContext.GROUND);
 
         addChild(itemDisplay);
 
         textDisplay = new TranslatedTextDisplayObject(scene, translations);
-        textDisplay.position.set(0, DEFAULT_SIZE * 2, 0);
-        textDisplay.scale.set(0.6);
+        textDisplay.position.set(0, size * 2, 0);
+        textDisplay.scale.set(0.6 * sizeScale);
         textDisplay.controller().setText(name);
         textDisplay.controller().setBillboardMode(Display.BillboardConstraints.CENTER);
 
@@ -109,7 +111,7 @@ public class SpecialItemObject extends Object3d implements Animatable {
         double offsetY = (sin((float) age * 2.f + this.ageOffset) * 0.1F + 0.1F) + 0.25F * itemDisplay.scale.y;
 
         itemDisplay.position.set(0.d, offsetY, 0.d);
-        textDisplay.position.set(0.d, offsetY + 2 * DEFAULT_SIZE, 0.d);
+        textDisplay.position.set(0.d, offsetY + 2 * size, 0.d);
     }
 
     public boolean intersects(AABB box) {
