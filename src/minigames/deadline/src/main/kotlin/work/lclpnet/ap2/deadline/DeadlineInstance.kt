@@ -144,7 +144,7 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
 
     private fun createTeam(): PlayerTeam {
         val manager = gameHandle.scoreboardManager
-        val team = manager.createTeam("deadline")
+        val team = manager.createTeam("team")
         team.collisionRule = Team.CollisionRule.NEVER
         manager.joinTeam(gameHandle.participants, team)
         return team
