@@ -39,8 +39,7 @@ class Riders(private val gameHandle: MiniGameHandle, private val random: Random,
     }
 
     fun remove(player: ServerPlayer) {
-        player.vehicle?.discard()
-        cycles.remove(player.uuid)
+        cycles.remove(player.uuid)?.sheep?.discard()
     }
 
     private fun spawnSheep(player: ServerPlayer, color: DyeColor): Sheep {

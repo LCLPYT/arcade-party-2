@@ -21,7 +21,6 @@ import work.lclpnet.ap2.impl.util.ParticleHelper
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
-import work.lclpnet.kibu.hook.ServerPlayConnectionHooks
 import work.lclpnet.kibu.hook.entity.EntityDismountCallback
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback
 import work.lclpnet.kibu.scheduler.Ticks
@@ -128,11 +127,6 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
     private fun initHooks() {
         // riders cannot leave their sheep
         EntityDismountCallback.HOOK.registerWith(hooks) { entity, _ -> entity is ServerPlayer }
-
-        // clean up the mount if a rider disconnects
-        ServerPlayConnectionHooks.DISCONNECT.registerWith(hooks) { handler, _ ->
-            handler.player.vehicle?.discard()
-        }
 
         // riders caught outside the world border must not regenerate the border damage away
         EntityHealthCallback.HOOK.registerWith(hooks) { entity, health ->
