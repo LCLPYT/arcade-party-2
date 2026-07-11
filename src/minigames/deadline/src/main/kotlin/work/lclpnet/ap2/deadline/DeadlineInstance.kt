@@ -9,22 +9,18 @@ import net.minecraft.sounds.SoundSource
 import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityTypes
-import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.animal.sheep.Sheep
 import net.minecraft.world.item.DyeColor
-import net.minecraft.world.item.Items
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.PlayerTeam
 import net.minecraft.world.scores.Team
 import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.mc.isOf
-import work.lclpnet.ap2.ext.mc.unbreakable
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.util.teleportToRandomSpawns
 import work.lclpnet.ap2.impl.util.ColorUtil
-import work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor
 import work.lclpnet.ap2.impl.util.ParticleHelper
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.game.impl.prot.ProtectionTypes
@@ -176,18 +172,8 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
             val sheep = spawnSheep(player, color)
             cycles[player.uuid] = LightCycle(sheep)
             gameHandle.scoreboardManager.joinTeam(sheep, team)
-            equip(player, color)
+            RiderOutfit.equip(player, color)
         }
-    }
-
-    // dress the rider in leather armor matching their sheep and trail
-    private fun equip(player: ServerPlayer, color: DyeColor) {
-        val colorInt = color.textureDiffuseColor
-
-        player.setItemSlot(EquipmentSlot.HEAD, getLeatherArmor(Items.LEATHER_HELMET, colorInt).unbreakable())
-        player.setItemSlot(EquipmentSlot.CHEST, getLeatherArmor(Items.LEATHER_CHESTPLATE, colorInt).unbreakable())
-        player.setItemSlot(EquipmentSlot.LEGS, getLeatherArmor(Items.LEATHER_LEGGINGS, colorInt).unbreakable())
-        player.setItemSlot(EquipmentSlot.FEET, getLeatherArmor(Items.LEATHER_BOOTS, colorInt).unbreakable())
     }
 
     private fun spawnSheep(player: ServerPlayer, color: DyeColor): Sheep {
