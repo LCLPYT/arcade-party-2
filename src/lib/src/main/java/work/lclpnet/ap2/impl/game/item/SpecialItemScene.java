@@ -100,7 +100,11 @@ public class SpecialItemScene {
     }
 
     public SpecialItemObject spawnItem(Vec3 pos, SpecialItem item, ItemStack stack, Translations translations, TranslatedText name) {
-        var obj = new SpecialItemObject(scene, item, stack, translations, name);
+        return spawnItem(pos, item, stack, translations, name, SpecialItemObject.DEFAULT_SIZE);
+    }
+
+    public SpecialItemObject spawnItem(Vec3 pos, SpecialItem item, ItemStack stack, Translations translations, TranslatedText name, double itemSize) {
+        var obj = new SpecialItemObject(scene, item, stack, translations, name, itemSize);
         obj.position.set(pos.x, pos.y, pos.z);
 
         scene.add(obj);

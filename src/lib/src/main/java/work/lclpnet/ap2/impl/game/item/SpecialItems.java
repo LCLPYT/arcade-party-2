@@ -78,6 +78,8 @@ public class SpecialItems implements SpecialItemContext {
     private @Setter @Getter int spawnMaxTicks = Ticks.seconds(7);
     private @Setter @Getter int maxItems = 16;
     private @Setter @Getter boolean markGlowing = false;
+    private @Setter @Getter int itemSlot = 8;
+    private @Setter @Getter double itemSize = SpecialItemObject.DEFAULT_SIZE;
 
     public SpecialItems(MiniGameHandle gameHandle, GameMap map, ServerLevel level, Random random, SpecialItemPositions positions, SpecialItemRegistry registry) {
         this.gameHandle = gameHandle;
@@ -94,7 +96,7 @@ public class SpecialItems implements SpecialItemContext {
     }
 
     public void init() {
-        JSONObject cfg = map.requireProperty("items");
+        JSONObject cfg = map.getProperty("items") instanceof JSONObject json ? json : new JSONObject();
         JSONObject overrides = cfg.optJSONObject("overrides");
 
         weightedItems = registry.weightedItems(overrides != null ? overrides : new JSONObject());
@@ -104,9 +106,10 @@ public class SpecialItems implements SpecialItemContext {
         despawnTicks = cfg.optNumber("despawn-ticks", despawnTicks).intValue();
         maxItems = cfg.optNumber("max-items", maxItems).intValue();
 
-        BlockShape shape = getSpawnArea(map);
-
-        positions.setShape(shape);
+        // games without a spawn area in their map config spawn items at positions of their own choosing
+        if (cfg.has("spawn-area")) {
+            positions.setShape(getSpawnArea(map));
+        }
 
         scene.init(gameHandle.getRootScheduler(), gameHandle.getHooks());
     }
@@ -142,7 +145,7 @@ public class SpecialItems implements SpecialItemContext {
     }
 
     private boolean swapHands(ServerPlayer player, int i) {
-        ItemStack stack = player.getInventory().getItem(8);
+        ItemStack stack = player.getInventory().getItem(itemSlot);
         SpecialItem item = get(stack).orElse(null);
 
         if (item == null) return false;
@@ -170,7 +173,7 @@ public class SpecialItems implements SpecialItemContext {
 
         if (!item.canBeDropped(player, stack)) return true;
 
-        player.getInventory().setItem(8, ItemStack.EMPTY);
+        player.getInventory().setItem(itemSlot, ItemStack.EMPTY);
         dropSpecialItem(player, item, stack);
         item.onDropped(player);
 
@@ -182,7 +185,7 @@ public class SpecialItems implements SpecialItemContext {
 
         ItemStack dropStack = configureStack(item, item.usedItemStack(stack, level.registryAccess()));
 
-        SpecialItemObject obj = scene.spawnItem(pos, item, dropStack, gameHandle.getTranslations(), itemName(item));
+        SpecialItemObject obj = scene.spawnItem(pos, item, dropStack, gameHandle.getTranslations(), itemName(item), itemSize);
         obj.setPickupDelay(40);
 
         scheduleDespawn(obj);
@@ -253,7 +256,7 @@ public class SpecialItems implements SpecialItemContext {
         });
 
         if (item.shouldTransferToInventory(player)) {
-            player.getInventory().setItem(8, stack);
+            player.getInventory().setItem(itemSlot, stack);
         }
 
         item.onPickedUp(player, stack, this);
@@ -287,17 +290,17 @@ public class SpecialItems implements SpecialItemContext {
 
     @Override
     public boolean hasSpecialItem(ServerPlayer player, @Nullable SpecialItem item) {
-        return get(player.getInventory().getItem(8)).orElse(null) == item;
+        return get(player.getInventory().getItem(itemSlot)).orElse(null) == item;
     }
 
     @Override
     public void removeSpecialItem(ServerPlayer player, SpecialItem item) {
         if (item == null) return;
 
-        SpecialItem currentItem = get(player.getInventory().getItem(8)).orElse(null);
+        SpecialItem currentItem = get(player.getInventory().getItem(itemSlot)).orElse(null);
 
         if (currentItem == item) {
-            player.getInventory().setItem(8, ItemStack.EMPTY);
+            player.getInventory().setItem(itemSlot, ItemStack.EMPTY);
         }
     }
 
@@ -354,26 +357,38 @@ public class SpecialItems implements SpecialItemContext {
             if (blockPos == null) return;
         } while (++i < 16 && !worldBorder.isWithinBounds(blockPos));
 
+        spawnRandomItemAt(blockPos);
+    }
+
+    public @Nullable SpecialItemObject spawnRandomItemAt(BlockPos blockPos) {
+        if (scene.itemCount() >= maxItems) return null;
+
         Vec3 pos = Vec3.atBottomCenterOf(blockPos);
 
-        if (!worldBorder.isWithinBounds(pos)) return;
+        if (!level.getWorldBorder().isWithinBounds(pos)) return null;
 
         SpecialItem item = weightedItems.getRandomElement(random);
 
-        if (item == null) return;
+        if (item == null) return null;
 
         level.sendParticles(ParticleTypes.END_ROD, pos.x, pos.y, pos.z, 20, 0.1, 0.1, 0.1, 0.1);
         level.sendParticles(ParticleTypes.PORTAL, pos.x, pos.y, pos.z, 400, 0.15, 4, 0.15, 0.1);
 
         ItemStack stack = configureStack(item, item.createItemStack(level.registryAccess()));
 
-        SpecialItemObject obj = scene.spawnItem(pos, item, stack, gameHandle.getTranslations(), itemName(item));
+        SpecialItemObject obj = scene.spawnItem(pos, item, stack, gameHandle.getTranslations(), itemName(item), itemSize);
 
         if (markGlowing) {
             obj.setGlowing(true);
         }
 
         scheduleDespawn(obj);
+
+        return obj;
+    }
+
+    public boolean contains(SpecialItemObject obj) {
+        return scene.contains(obj);
     }
 
     private void scheduleDespawn(SpecialItemObject obj) {

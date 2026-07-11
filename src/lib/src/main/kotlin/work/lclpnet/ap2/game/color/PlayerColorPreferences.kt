@@ -39,8 +39,13 @@ interface PlayerColorPreferences {
      * as possible.
      * @param players The players to assign colors to.
      * @param random The source of randomness used for tie-breaking and leftover assignment.
+     * @param availableColors The colors that may be assigned. Defaults to all dye colors.
      * @return A map of player uuid to the assigned color.
      */
-    fun assign(players: Iterable<ServerPlayer>, random: Random): Map<UUID, DyeColor> =
-        DyeColorAssigner.assign(players.map { it.uuid }, this::get, random)
+    fun assign(
+        players: Iterable<ServerPlayer>,
+        random: Random,
+        availableColors: Set<DyeColor> = DyeColor.entries.toSet(),
+    ): Map<UUID, DyeColor> =
+        DyeColorAssigner.assign(players.map { it.uuid }, this::get, random, availableColors)
 }
