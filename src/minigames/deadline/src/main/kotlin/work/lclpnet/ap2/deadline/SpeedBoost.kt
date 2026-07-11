@@ -9,20 +9,19 @@ import work.lclpnet.kibu.scheduler.Ticks
 import java.util.UUID
 
 private const val BOOST_MULTIPLIER = 2f // multiplies the engine force while the boost is active
-private val ACTIVATE_SOUND = GameSound(SoundEvents.FIREWORK_ROCKET_LAUNCH, 0.8f, 1f)
 
 /**
  * Temporarily gives the sheep a stronger engine at full throttle.
  */
-class SpeedBoost(override val cycles: (UUID) -> LightCycle?) : PowerUp {
+class SpeedBoost(cycles: (UUID) -> LightCycle?) : PowerUp(cycles) {
 
     override val item: Item = Items.SUGAR
     override val duration = Ticks.seconds(4)
+    override val sound = GameSound(SoundEvents.FIREWORK_ROCKET_LAUNCH, 0.8f, 1f)
 
     override fun id() = "speed_boost"
 
     override fun activate(rider: ServerPlayer, cycle: LightCycle, ctx: SpecialItemContext) {
         cycle.overrideEngine(cycle.spec.engineForce * BOOST_MULTIPLIER, duration)
-        ACTIVATE_SOUND.playTo(rider)
     }
 }

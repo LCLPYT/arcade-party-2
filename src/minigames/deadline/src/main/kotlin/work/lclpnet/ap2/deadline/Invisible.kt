@@ -10,15 +10,14 @@ import work.lclpnet.ap2.impl.game.item.SpecialItemContext
 import work.lclpnet.kibu.scheduler.Ticks
 import java.util.UUID
 
-private val ACTIVATE_SOUND = GameSound(SoundEvents.BAT_TAKEOFF, 0.8f, 1f)
-
 /**
  * Turns the rider and their sheep invisible for a short duration, during which they also phase through trails.
  */
-class Invisible(override val cycles: (UUID) -> LightCycle?) : PowerUp {
+class Invisible(cycles: (UUID) -> LightCycle?) : PowerUp(cycles) {
 
     override val item: Item = Items.FERMENTED_SPIDER_EYE
     override val duration = Ticks.seconds(4)
+    override val sound = GameSound(SoundEvents.BAT_TAKEOFF, 0.8f, 1f)
 
     override fun id() = "invisible"
 
@@ -36,7 +35,5 @@ class Invisible(override val cycles: (UUID) -> LightCycle?) : PowerUp {
 
             RiderOutfit.equip(rider, current.sheep.color)
         }
-
-        ACTIVATE_SOUND.playTo(rider)
     }
 }

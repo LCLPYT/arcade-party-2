@@ -13,16 +13,17 @@ import java.util.UUID
 /**
  * An activatable power-up that riders collect from pickups and trigger by using its item.
  */
-interface PowerUp : SpecialItem {
-    val item: Item
+abstract class PowerUp(protected val cycles: (UUID) -> LightCycle?) : SpecialItem {
+
+    protected abstract val item: Item
 
     /** How long the effect lasts in ticks, conveyed to the rider as an item cooldown. Zero for instant effects. */
-    val duration: Int
+    protected abstract val duration: Int
 
-    /** Looks up the light cycle of a rider. */
-    val cycles: (UUID) -> LightCycle?
+    /** The sound played to the rider when the power-up activates. */
+    protected abstract val sound: GameSound
 
-    fun activate(rider: ServerPlayer, cycle: LightCycle, ctx: SpecialItemContext)
+    protected abstract fun activate(rider: ServerPlayer, cycle: LightCycle, ctx: SpecialItemContext)
 
     override fun createItemStack(registryManager: RegistryAccess): ItemStack = ItemStack(item)
 
@@ -40,6 +41,7 @@ interface PowerUp : SpecialItem {
         }
 
         activate(player, cycle, ctx)
+        sound.playTo(player)
 
         return InteractionResult.SUCCESS_SERVER
     }
