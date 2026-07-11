@@ -110,6 +110,8 @@ class DeadlineInstance(
     private fun tick() {
         trail.tick()
 
+        val crashed = mutableListOf<ServerPlayer>()
+
         for (player in gameHandle.participants) {
             val cycle = riders.cycle(player.uuid) ?: continue
 
@@ -126,13 +128,18 @@ class DeadlineInstance(
                     gameHandle.participants.getParticipant(trailOwner)?.let { gainKill(it, stats) }
                 }
 
-                eliminate(player)
+                crashed.add(player)
                 continue
             }
 
             stats.modify(player, DistanceMoved) { it + movement.horizontalDistance() }
             trail.extend(player.uuid, cycle.sheep.position(), riders.color(player.uuid))
             SpeedHud.show(player, cycle)
+        }
+
+        // riders that crash in the same tick share their rank
+        if (crashed.isNotEmpty()) {
+            eliminateAll(crashed)
         }
     }
 
