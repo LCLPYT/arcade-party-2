@@ -79,8 +79,13 @@ class SegmentCollider<T> {
         for (i in 0..steps) {
             val t = i.toDouble() / steps // 0 = position at the previous tick, 1 = current position
             val sampled = box.move(movement.scale(t - 1.0))
+            val hits = candidates.filter { it.collidesWith(sampled) }
 
-            candidates.firstOrNull { it.collidesWith(sampled) }?.let { return it.owner }
+            if (hits.isEmpty()) continue
+
+            // touching the own trail counts as a suicide, even if other trails are hit at the same
+            // time, so that nobody is credited a kill the rider caused themselves
+            return (hits.firstOrNull { it.owner == rider } ?: hits.first()).owner
         }
 
         return null
