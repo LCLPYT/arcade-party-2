@@ -23,7 +23,7 @@ data class TrailSpec(
             return TrailSpec(
                 initialSegments = json.optInt("initial-segments", defaults.initialSegments),
                 maxSegments = json.optInt("max-segments", defaults.maxSegments),
-                growthInterval = json.optInt("growth-interval", defaults.growthInterval),
+                growthInterval = json.optInt("growth-interval", defaults.growthInterval).coerceAtLeast(1),
             )
         }
     }
