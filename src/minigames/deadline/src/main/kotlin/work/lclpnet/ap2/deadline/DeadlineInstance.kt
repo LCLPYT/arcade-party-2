@@ -139,6 +139,19 @@ class DeadlineInstance(
             SpeedHud.show(player, cycle)
         }
 
+        // riders ramming into each other take each other down, so both earn the kill
+        val dying = crashed.toSet()
+
+        for ((first, second) in riders.collidingPairs()) {
+            if (first in dying || second in dying) continue
+
+            gainKill(first, stats)
+            gainKill(second, stats)
+
+            if (first !in crashed) crashed.add(first)
+            if (second !in crashed) crashed.add(second)
+        }
+
         // riders that crash in the same tick share their rank
         if (crashed.isNotEmpty()) {
             eliminateAll(crashed)
