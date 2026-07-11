@@ -24,30 +24,40 @@ private const val SAMPLE_SPACING = 0.5
 /**
  * Collision index for the trail segments: a spatial hash grid for the broad phase,
  * and a distance check against the segment's center line for the narrow phase.
+ *
+ * The collider is the single owner of a rider's segments. Each segment carries a caller
+ * attachment (e.g. its display), which is handed back when the segment is removed, so the
+ * collision data can never drift apart from what the attachments represent.
  */
-class SegmentCollider {
+class SegmentCollider<T> {
 
-    private val cells = HashMap<Long, MutableList<Segment>>()
-    private val owned = HashMap<UUID, ArrayDeque<Segment>>()
+    private val cells = HashMap<Long, MutableList<Segment<T>>>()
+    private val owned = HashMap<UUID, ArrayDeque<Segment<T>>>()
 
-    fun add(owner: UUID, start: Vec3, end: Vec3) {
+    fun add(owner: UUID, start: Vec3, end: Vec3, attachment: T) {
         val segments = owned.getOrPut(owner) { ArrayDeque() }
         // the pane is anchored at its base, so the center line runs at half height
-        val segment = Segment(start.add(0.0, HALF_HEIGHT, 0.0), end.add(0.0, HALF_HEIGHT, 0.0), owner)
+        val segment = Segment(start.add(0.0, HALF_HEIGHT, 0.0), end.add(0.0, HALF_HEIGHT, 0.0), owner, attachment)
         segments.addLast(segment)
         forEachCell(segment.bounds()) { key ->
             cells.getOrPut(key) { mutableListOf() }.add(segment)
         }
     }
 
-    fun remove(owner: UUID) {
-        val segments = owned.remove(owner) ?: return
+    fun size(owner: UUID): Int = owned[owner]?.size ?: 0
+
+    /** Removes all segments of the owner and returns their attachments. */
+    fun remove(owner: UUID): List<T> {
+        val segments = owned.remove(owner) ?: return emptyList()
         segments.forEach(::dropFromCells)
+        return segments.map { it.attachment }
     }
 
-    fun removeOldest(owner: UUID) {
-        val oldest = owned[owner]?.removeFirstOrNull() ?: return
+    /** Removes the oldest segment of the owner and returns its attachment. */
+    fun removeOldest(owner: UUID): T? {
+        val oldest = owned[owner]?.removeFirstOrNull() ?: return null
         dropFromCells(oldest)
+        return oldest.attachment
     }
 
     /** Whether the rider's hitbox touched a lethal segment anywhere along its movement of this tick. */
@@ -71,7 +81,7 @@ class SegmentCollider {
         return hit
     }
 
-    private fun isLethalTo(segment: Segment, rider: UUID): Boolean {
+    private fun isLethalTo(segment: Segment<T>, rider: UUID): Boolean {
         // other riders segments are always lethal
         if (segment.owner != rider) return true
 
@@ -85,7 +95,7 @@ class SegmentCollider {
         return true
     }
 
-    private fun dropFromCells(segment: Segment) {
+    private fun dropFromCells(segment: Segment<T>) {
         forEachCell(segment.bounds()) { key ->
             val list = cells[key] ?: return@forEachCell
             list.remove(segment)
@@ -106,7 +116,7 @@ class SegmentCollider {
         }
     }
 
-    private class Segment(val a: Vec3, val b: Vec3, val owner: UUID) {
+    private class Segment<T>(val a: Vec3, val b: Vec3, val owner: UUID, val attachment: T) {
 
         fun bounds(): AABB = AABB(a, b).inflate(HALF_THICKNESS, HALF_HEIGHT, HALF_THICKNESS)
 

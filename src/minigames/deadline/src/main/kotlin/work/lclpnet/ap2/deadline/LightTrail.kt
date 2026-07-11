@@ -29,8 +29,7 @@ class LightTrail(level: ServerLevel) {
     private val scene = Scene(ServerWorldMountContext(level))
     private val recent = HashMap<UUID, ArrayDeque<Vec3>>()
     private val anchor = HashMap<UUID, Vec3>()
-    private val trails = HashMap<UUID, MutableList<BlockDisplayObject>>()
-    private val collider = SegmentCollider()
+    private val collider = SegmentCollider<BlockDisplayObject>()
     private var maxSegments = INITIAL_SEGMENTS
     private var age = 0
 
@@ -55,22 +54,19 @@ class LightTrail(level: ServerLevel) {
             return
         }
         if (delayed.distanceToSqr(start) < SEGMENT_LENGTH * SEGMENT_LENGTH) return
-        placeSegment(uuid, start, delayed, color)
-        collider.add(uuid, start, delayed)
+        collider.add(uuid, start, delayed, placeSegment(start, delayed, color))
         anchor[uuid] = delayed
         trim(uuid)
     }
 
     // the tail of the trail disappears once the segment limit is reached
     private fun trim(uuid: UUID) {
-        val displays = trails[uuid] ?: return
-        while (displays.size > maxSegments) {
-            displays.removeFirst().detach()
-            collider.removeOldest(uuid)
+        while (collider.size(uuid) > maxSegments) {
+            collider.removeOldest(uuid)?.detach()
         }
     }
 
-    private fun placeSegment(uuid: UUID, start: Vec3, end: Vec3, color: DyeColor) {
+    private fun placeSegment(start: Vec3, end: Vec3, color: DyeColor): BlockDisplayObject {
         val dx = end.x - start.x
         val dy = end.y - start.y
         val dz = end.z - start.z
@@ -89,7 +85,7 @@ class LightTrail(level: ServerLevel) {
         display.isGlowing = true
         display.glowColorOverride = color.textureDiffuseColor
         scene.add(display)
-        trails.getOrPut(uuid) { mutableListOf() }.add(display)
+        return display
     }
 
     private fun paneState(color: DyeColor): BlockState =
@@ -100,8 +96,7 @@ class LightTrail(level: ServerLevel) {
     fun collides(box: AABB, movement: Vec3, rider: UUID) = collider.collides(box, movement, rider)
 
     fun discard(uuid: UUID) {
-        collider.remove(uuid)
-        trails.remove(uuid)?.forEach { it.detach() }
+        collider.remove(uuid).forEach { it.detach() }
         anchor.remove(uuid)
         recent.remove(uuid)
     }
