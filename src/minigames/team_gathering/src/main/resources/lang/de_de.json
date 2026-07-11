@@ -5,7 +5,7 @@
   "found": "%s hat %s gefunden",
   "dropped": "%s hat %s verloren",
   "count": "%s Gegenstände",
-  "solo_hint": "Du bist der Spieler, der alleine spielen muss. Du brauchst deine Items nicht im Inventar zu behalten und du kannst schneller Blöcke abbauen.",
+  "solo_hint": "Du bist der Solo-Spieler. Du brauchst deine Items nicht im Inventar zu behalten, bekommst doppelt so viele Items, kannst Blöcke schneller abbauen und du bist schneller.",
   "winning_team_items": "Items von %s",
   "stat.unique_items": "Verschiedene Items",
   "stat.items_crafted": "Hergestellte Items",
