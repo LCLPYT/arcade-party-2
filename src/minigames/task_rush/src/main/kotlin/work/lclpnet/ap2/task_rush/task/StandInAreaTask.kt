@@ -1,7 +1,6 @@
 package work.lclpnet.ap2.task_rush.task
 
 import net.minecraft.core.BlockPos
-import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.network.chat.Component
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.item.DyeColor
@@ -33,7 +32,7 @@ object StandInAreaTask : Task {
             (base.x + 2).toDouble(), (base.y + 3).toDouble(), (base.z + 2).toDouble()
         )
 
-        platform = AreaPlatform.create(env.level, base, DyeColor.LIME)
+        platform = AreaPlatform.create(env.level, base, DyeColor.LIME, env.chunkPersistence)
 
         env.translations.translateText("task.stand_in_area.location", Component.literal("${base.x} ${base.y} ${base.z}"))
             .sendTo(env.players)
@@ -41,17 +40,16 @@ object StandInAreaTask : Task {
         val ticksInside = HashMap<UUID, Int>()
 
         env.scheduler.interval(1) { ->
-            drawMarker(env.level, base)
-
             val inside = env.players.filter { box.intersects(it.boundingBox) }
-            if (inside.size == 1) {
-                val player = inside[0]
-                val ticks = (ticksInside[player.uuid] ?: 0) + 1
-                ticksInside[player.uuid] = ticks
 
-                if (ticks % 20 == 0) {
-                    env.feedback(player, "task.feedback.stand_in_area", ticks / 20, sound = true)
-                }
+            if (inside.size != 1) return@interval
+
+            val player = inside[0]
+            val ticks = (ticksInside[player.uuid] ?: 0) + 1
+            ticksInside[player.uuid] = ticks
+
+            if (ticks % 20 == 0) {
+                env.feedback(player, "task.feedback.stand_in_area", ticks / 20, sound = true)
             }
         }
 
@@ -79,14 +77,5 @@ object StandInAreaTask : Task {
         val y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z)
 
         return BlockPos(x, y, z)
-    }
-
-    private fun drawMarker(level: ServerLevel, base: BlockPos) {
-        val x = base.x + 0.5
-        val y = base.y + 1.5
-        val z = base.z + 0.5
-
-        level.sendParticles(ParticleTypes.END_ROD, x, y, z, 8, 1.0, 1.0, 1.0, 0.0)
-        level.sendParticles(ParticleTypes.HAPPY_VILLAGER, x, base.y + 3.0, z, 4, 0.6, 0.2, 0.6, 0.0)
     }
 }

@@ -26,7 +26,7 @@ object ReachCoordsTask : OrderTask("reach_coords", 90.seconds) {
         val target = pickTarget(env.level, env.spawnPos)
         val center = Vec3.atCenterOf(target)
 
-        platform = AreaPlatform.create(env.level, target, DyeColor.LIME)
+        platform = AreaPlatform.create(env.level, target, DyeColor.LIME, env.chunkPersistence)
 
         lateinit var progress: Progress
 

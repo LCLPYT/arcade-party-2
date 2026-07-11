@@ -20,6 +20,7 @@ import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.MiniGameInstance
 import work.lclpnet.ap2.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.game.util.*
+import work.lclpnet.ap2.impl.util.world.ChunkPersistence
 import work.lclpnet.ap2.task_rush.task.TaskManager
 import work.lclpnet.ap2.util.useGameRules
 import work.lclpnet.game.impl.prot.ProtectionTypes
@@ -36,7 +37,7 @@ class TaskRushInstance(
     val data = useDataContainer(::IntScoreDataContainer)
     override val winManager = useFFAWinManager(map = null) { data }
     override val participantListener = useLastRemainingParticipantListener(winManager)
-    val taskManager = TaskManager(gameHandle, level, data) {
+    val taskManager = TaskManager(gameHandle, level, data, ChunkPersistence(level, gameHandle)) {
         winManager.complete()
     }
     val blocksPlacedByPlayers = HashSet<BlockPos>()

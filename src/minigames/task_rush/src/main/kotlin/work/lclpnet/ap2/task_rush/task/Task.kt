@@ -12,6 +12,7 @@ import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.game.data.DataContainer
 import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.player.Participants
+import work.lclpnet.ap2.impl.util.world.ChunkPersistence
 import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.game.util.BossBarTimer
 import work.lclpnet.kibu.hook.HookContainer
@@ -46,6 +47,8 @@ interface TaskEnv {
      */
     val spawnPos: BlockPos
 
+    val chunkPersistence: ChunkPersistence
+
     fun timer(labelKey: String, duration: Duration, onEnd: () -> Unit): BossBarTimer
 
     /**
@@ -61,6 +64,7 @@ class TaskEnvImpl(
     override val level: ServerLevel,
     override val translations: Translations,
     override val scoreboardManager: CustomScoreboardManager,
+    override val chunkPersistence: ChunkPersistence,
     override val logger: Logger,
     val itemQueue: ItemQueue,
     val createTimer: (String, Duration) -> BossBarTimer,

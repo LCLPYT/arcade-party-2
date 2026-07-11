@@ -14,6 +14,7 @@ import net.minecraft.world.phys.Vec3
 import net.minecraft.world.waypoints.WaypointStyleAssets
 import org.joml.Matrix4f
 import work.lclpnet.ap2.ext.mc.setBlock
+import work.lclpnet.ap2.impl.util.world.ChunkPersistence
 import work.lclpnet.kibu.access.entity.ArmorStandAccess
 import work.lclpnet.kibu.access.entity.EntityUtil
 import java.util.*
@@ -25,7 +26,10 @@ import java.util.*
  * The clearing spans [base].x-1..[base].x+1 horizontally and [base].y..[base].y+2 vertically (set to air),
  * the bedrock floor sits at [base].y-1. Call [remove] to discard the marker entities.
  */
-class AreaPlatform private constructor(private val entities: List<Entity>) {
+class AreaPlatform private constructor(
+    private val entities: List<Entity>,
+    private val chunkPersistence: ChunkPersistence,
+) {
 
     fun remove() {
         entities.forEach(Entity::discard)
@@ -35,7 +39,7 @@ class AreaPlatform private constructor(private val entities: List<Entity>) {
 
         private const val WAYPOINT_RANGE = 500.0
 
-        fun create(level: ServerLevel, base: BlockPos, color: DyeColor): AreaPlatform {
+        fun create(level: ServerLevel, base: BlockPos, color: DyeColor, chunkPersistence: ChunkPersistence): AreaPlatform {
             buildPlatform(level, base)
 
             val display = createDisplay(level, base, color)
@@ -45,7 +49,7 @@ class AreaPlatform private constructor(private val entities: List<Entity>) {
             level.addFreshEntity(waypoint)
             level.waypointManager.trackWaypoint(waypoint)
 
-            return AreaPlatform(listOf(display, waypoint))
+            return AreaPlatform(listOf(display, waypoint), chunkPersistence)
         }
 
         private fun buildPlatform(level: ServerLevel, base: BlockPos) {

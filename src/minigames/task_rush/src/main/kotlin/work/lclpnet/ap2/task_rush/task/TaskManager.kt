@@ -17,6 +17,7 @@ import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.util.Announcer
 import work.lclpnet.ap2.game.util.ResultAnnouncement
 import work.lclpnet.ap2.game.util.createTimer
+import work.lclpnet.ap2.impl.util.world.ChunkPersistence
 import work.lclpnet.kibu.scheduler.api.TaskHandle
 import java.util.UUID
 import kotlin.collections.ArrayDeque
@@ -30,6 +31,7 @@ class TaskManager(
     val gameHandle: MiniGameHandle,
     val level: ServerLevel,
     val data: IntScoreDataContainer<ServerPlayer, PlayerRef>,
+    val chunkPersistence: ChunkPersistence,
     val onComplete: () -> Unit,
 ) {
 
@@ -118,6 +120,7 @@ class TaskManager(
             level = level,
             translations = gameHandle.translations,
             scoreboardManager = gameHandle.scoreboardManager,
+            chunkPersistence = chunkPersistence,
             logger = gameHandle.logger,
             itemQueue = itemQueue,
             createTimer = { labelKey, duration ->
