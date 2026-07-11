@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.deadline
+package work.lclpnet.ap2.deadline.trail
 
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.AABB

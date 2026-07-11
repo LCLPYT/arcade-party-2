@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.deadline
+package work.lclpnet.ap2.deadline.trail
 
 import org.json.JSONObject
 import work.lclpnet.game.map.GameMap

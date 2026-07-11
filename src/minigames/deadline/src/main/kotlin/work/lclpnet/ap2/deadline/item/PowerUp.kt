@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.deadline
+package work.lclpnet.ap2.deadline.item
 
 import net.minecraft.core.RegistryAccess
 import net.minecraft.server.level.ServerPlayer
@@ -6,6 +6,9 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
+import work.lclpnet.ap2.deadline.rider.LightCycle
+import work.lclpnet.ap2.deadline.rider.Riders
+import work.lclpnet.ap2.deadline.util.GameSound
 import work.lclpnet.ap2.impl.game.item.SpecialItem
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext
 

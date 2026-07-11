@@ -10,6 +10,10 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.PlayerTeam
 import net.minecraft.world.scores.Team
+import work.lclpnet.ap2.deadline.item.PowerUps
+import work.lclpnet.ap2.deadline.rider.Riders
+import work.lclpnet.ap2.deadline.trail.LightTrail
+import work.lclpnet.ap2.deadline.trail.TrailSpec
 import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.runEveryTick

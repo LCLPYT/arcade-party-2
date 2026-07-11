@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.deadline
+package work.lclpnet.ap2.deadline.rider
 
 import net.minecraft.world.entity.animal.sheep.Sheep
 import net.minecraft.world.entity.player.Input
