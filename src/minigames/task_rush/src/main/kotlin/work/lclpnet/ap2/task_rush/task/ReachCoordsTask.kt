@@ -3,6 +3,7 @@ package work.lclpnet.ap2.task_rush.task
 import net.minecraft.core.BlockPos
 import net.minecraft.network.chat.Component
 import net.minecraft.server.level.ServerLevel
+import net.minecraft.world.item.DyeColor
 import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.Vec3
 import kotlin.math.cos
@@ -19,9 +20,13 @@ object ReachCoordsTask : OrderTask("reach_coords", 90.seconds) {
     private const val DISTANCE = 200.0
     private const val REACH_RADIUS = 3.0
 
+    private var platform: AreaPlatform? = null
+
     override fun begin(env: TaskEnv) {
         val target = pickTarget(env.level, env.spawnPos)
         val center = Vec3.atCenterOf(target)
+
+        platform = AreaPlatform.create(env.level, target, DyeColor.LIME)
 
         lateinit var progress: Progress
 
@@ -52,6 +57,11 @@ object ReachCoordsTask : OrderTask("reach_coords", 90.seconds) {
                 }
             }
         }
+    }
+
+    override fun end(env: TaskEnv) {
+        platform?.remove()
+        platform = null
     }
 
     private fun pickTarget(level: ServerLevel, spawn: BlockPos): BlockPos {

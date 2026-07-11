@@ -4,6 +4,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.network.chat.Component
 import net.minecraft.server.level.ServerLevel
+import net.minecraft.world.item.DyeColor
 import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.AABB
 import work.lclpnet.ap2.game.data.IntScoreDataContainer
@@ -15,7 +16,7 @@ import kotlin.math.sin
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Stand the longest inside a marked 2x2x2 area near spawn. Time only counts while a player is alone in
+ * Stand the longest inside a marked 3x3x3 area near spawn. Time only counts while a player is alone in
  * the area.
  */
 object StandInAreaTask : Task {
@@ -23,20 +24,24 @@ object StandInAreaTask : Task {
     override val id = "stand_in_area"
     private const val DISTANCE = 30.0
 
+    private var platform: AreaPlatform? = null
+
     override fun begin(env: TaskEnv) {
-        val min = pickArea(env.level, env.spawnPos)
+        val base = pickArea(env.level, env.spawnPos)
         val box = AABB(
-            min.x.toDouble(), min.y.toDouble(), min.z.toDouble(),
-            (min.x + 2).toDouble(), (min.y + 2).toDouble(), (min.z + 2).toDouble()
+            (base.x - 1).toDouble(), base.y.toDouble(), (base.z - 1).toDouble(),
+            (base.x + 2).toDouble(), (base.y + 3).toDouble(), (base.z + 2).toDouble()
         )
 
-        env.translations.translateText("task.stand_in_area.location", Component.literal("${min.x} ${min.y} ${min.z}"))
+        platform = AreaPlatform.create(env.level, base, DyeColor.LIME)
+
+        env.translations.translateText("task.stand_in_area.location", Component.literal("${base.x} ${base.y} ${base.z}"))
             .sendTo(env.players)
 
         val ticksInside = HashMap<UUID, Int>()
 
         env.scheduler.interval(1) { ->
-            drawMarker(env.level, min)
+            drawMarker(env.level, base)
 
             val inside = env.players.filter { box.intersects(it.boundingBox) }
             if (inside.size == 1) {
@@ -62,6 +67,11 @@ object StandInAreaTask : Task {
         }
     }
 
+    override fun end(env: TaskEnv) {
+        platform?.remove()
+        platform = null
+    }
+
     private fun pickArea(level: ServerLevel, spawn: BlockPos): BlockPos {
         val angle = level.random.nextDouble() * 2.0 * Math.PI
         val x = spawn.x + (cos(angle) * DISTANCE).toInt()
@@ -71,12 +81,12 @@ object StandInAreaTask : Task {
         return BlockPos(x, y, z)
     }
 
-    private fun drawMarker(level: ServerLevel, min: BlockPos) {
-        val x = min.x + 1.0
-        val y = min.y + 1.0
-        val z = min.z + 1.0
+    private fun drawMarker(level: ServerLevel, base: BlockPos) {
+        val x = base.x + 0.5
+        val y = base.y + 1.5
+        val z = base.z + 0.5
 
         level.sendParticles(ParticleTypes.END_ROD, x, y, z, 8, 1.0, 1.0, 1.0, 0.0)
-        level.sendParticles(ParticleTypes.HAPPY_VILLAGER, x, min.y + 2.5, z, 4, 0.6, 0.2, 0.6, 0.0)
+        level.sendParticles(ParticleTypes.HAPPY_VILLAGER, x, base.y + 3.0, z, 4, 0.6, 0.2, 0.6, 0.0)
     }
 }
