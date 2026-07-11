@@ -1,16 +1,12 @@
 package work.lclpnet.ap2.deadline
 
 import net.minecraft.core.particles.ParticleTypes
-import net.minecraft.network.protocol.game.ClientboundSetExperiencePacket
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.EntityTypes
-import net.minecraft.world.entity.animal.sheep.Sheep
-import net.minecraft.world.item.DyeColor
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.PlayerTeam
 import net.minecraft.world.scores.Team
@@ -20,7 +16,6 @@ import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.util.teleportToRandomSpawns
-import work.lclpnet.ap2.impl.util.ColorUtil
 import work.lclpnet.ap2.impl.util.ParticleHelper
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.game.impl.prot.ProtectionTypes
@@ -30,8 +25,6 @@ import work.lclpnet.kibu.hook.entity.EntityDismountCallback
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback
 import work.lclpnet.kibu.scheduler.Ticks
 import java.util.Random
-import java.util.UUID
-import kotlin.math.roundToInt
 
 private val WORLD_BORDER_DELAY = Ticks.minutes(3).toLong()
 private val WORLD_BORDER_TIME = Ticks.minutes(1).toLong()
@@ -40,10 +33,9 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
     EliminationGameInstance(gameHandle, level, map) {
 
     private val random = Random()
-    private val colors = HashMap<UUID, DyeColor>()
-    private val cycles = HashMap<UUID, LightCycle>()
+    private val riders = Riders(gameHandle, random)
     private val trail = LightTrail(level)
-    private val powerUps = PowerUps(gameHandle, map, level, random, commons().debugController()) { cycles[it] }
+    private val powerUps = PowerUps(gameHandle, map, level, random, commons().debugController()) { riders.cycle(it) }
 
     override fun teleportPlayers() {
         val spawnBox = requireNotNull(schema.spawnBox) {
@@ -70,9 +62,9 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
         }
 
         val team = createTeam()
-        assignColors()
+        riders.assignColors()
         initHooks()
-        spawnMounts(team)
+        riders.spawnMounts(team)
     }
 
     override fun go() {
@@ -90,7 +82,7 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
         trail.tick()
 
         for (player in gameHandle.participants) {
-            val cycle = cycles[player.uuid] ?: continue
+            val cycle = riders.cycle(player.uuid) ?: continue
 
             val before = cycle.sheep.position()
             cycle.tick(player.lastClientInput)
@@ -102,20 +94,9 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
                 continue
             }
 
-            trail.extend(player.uuid, cycle.sheep.position(), colors.getValue(player.uuid))
-            showSpeed(player, cycle)
+            trail.extend(player.uuid, cycle.sheep.position(), riders.color(player.uuid))
+            SpeedHud.show(player, cycle)
         }
-    }
-
-    // show the rider's speed on the xp bar in km/h
-    private fun showSpeed(rider: ServerPlayer, cycle: LightCycle) {
-        val kmh = (cycle.speed * 3.6f).roundToInt()
-        rider.connection.send(ClientboundSetExperiencePacket(cycle.speedFraction, 0, kmh))
-    }
-
-    // reset the xp bar readout when a rider stops riding
-    private fun clearSpeed(rider: ServerPlayer) {
-        rider.connection.send(ClientboundSetExperiencePacket(0f, 0, 0))
     }
 
     // intentionally not calling super.onDeath -> no equipment/experience drops
@@ -129,15 +110,10 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
     }
 
     override fun participantRemoved(player: ServerPlayer) {
-        player.vehicle?.discard()
-        cycles.remove(player.uuid)
+        riders.remove(player)
         trail.discard(player.uuid)
-        clearSpeed(player)
+        SpeedHud.clear(player)
         super.participantRemoved(player)
-    }
-
-    private fun assignColors() {
-        colors.putAll(gameHandle.colorPreferences.assign(gameHandle.participants, random, ColorUtil.VIVID_DYE_COLORS.toSet()))
     }
 
     private fun createTeam(): PlayerTeam {
@@ -165,33 +141,4 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
         powerUps.initHooks()
     }
 
-    private fun spawnMounts(team: PlayerTeam) {
-        // players were already teleported to their spawns by the base start sequence
-        for (player in gameHandle.participants) {
-            val color = colors.getValue(player.uuid)
-            val sheep = spawnSheep(player, color)
-            cycles[player.uuid] = LightCycle(sheep)
-            gameHandle.scoreboardManager.joinTeam(sheep, team)
-            RiderOutfit.equip(player, color)
-        }
-    }
-
-    private fun spawnSheep(player: ServerPlayer, color: DyeColor): Sheep {
-        val world = player.level()
-        val sheep = Sheep(EntityTypes.SHEEP, world)
-
-        sheep.setNoAi(true)
-        sheep.isInvulnerable = true
-        sheep.isSilent = true
-        sheep.setColor(color)
-        sheep.setYRot(player.yRot)
-        sheep.setYBodyRot(player.yRot)
-        sheep.setYHeadRot(player.yRot)
-        sheep.setPosRaw(player.x, player.y, player.z)
-
-        world.addFreshEntity(sheep)
-        player.startRiding(sheep, true, false)
-
-        return sheep
-    }
 }
