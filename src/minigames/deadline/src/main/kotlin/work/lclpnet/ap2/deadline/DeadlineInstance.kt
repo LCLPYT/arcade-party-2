@@ -1,7 +1,6 @@
 package work.lclpnet.ap2.deadline
 
 import net.minecraft.core.particles.ParticleTypes
-import net.minecraft.server.dedicated.DedicatedServer
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
@@ -27,7 +26,6 @@ import work.lclpnet.ap2.ext.gainKill
 import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.inWholeTicks
 import work.lclpnet.ap2.ext.mc.isOf
-import work.lclpnet.ap2.ext.server
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.util.teleportToRandomSpawns
@@ -87,7 +85,7 @@ class DeadlineInstance(
         trackSurvivalTime(stats)
         disableTeleportEliminated()
 
-        (server as? DedicatedServer)?.setViewDistance(32)
+        gameHandle.viewDistanceManager.setViewDistance(32)
 
         val team = createTeam()
         riders.assignColors()
