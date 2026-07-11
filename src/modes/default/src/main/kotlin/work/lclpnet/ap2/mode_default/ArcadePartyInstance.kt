@@ -28,6 +28,7 @@ import work.lclpnet.ap2.mode_default.util.ApBaseArgs
 import work.lclpnet.ap2.mode_default.util.ScoreManager
 import work.lclpnet.ap2.util.FontService
 import work.lclpnet.ap2.util.MinecraftDispatcher
+import work.lclpnet.ap2.util.ServerViewDistanceManager
 import work.lclpnet.ap2.util.TablistManager
 import work.lclpnet.config.json.JsonConfigFactory
 import work.lclpnet.gaco.ds.queue.JsonFileQueuePersistence
@@ -158,6 +159,9 @@ class ArcadePartyInstance(
 
         val tablistManager = TablistManager(translations, server)
 
+        val viewDistanceManager = ServerViewDistanceManager(server)
+        viewDistanceManager.reset()
+
         val args = ApBaseArgs(
             miniGameArgs = container,
             gameQueue = queue,
@@ -172,7 +176,8 @@ class ArcadePartyInstance(
             assetManager = result.assetManager,
             activitySwitcher = { activity: Activity ->
                 environment.switchRootActivity(activity)
-            }
+            },
+            viewDistanceManager = viewDistanceManager,
         )
 
         val preparation = PreparationActivity(args)

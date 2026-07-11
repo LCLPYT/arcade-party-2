@@ -8,6 +8,7 @@ import work.lclpnet.ap2.game.player.PlayerManager
 import work.lclpnet.ap2.mode_default.ApMiniGameArgs
 import work.lclpnet.ap2.mode_default.cmd.ForceGameCommand
 import work.lclpnet.ap2.util.AssetManager
+import work.lclpnet.ap2.util.ServerViewDistanceManager
 import work.lclpnet.ap2.util.TablistManager
 import work.lclpnet.game.api.GameFinisher
 
@@ -32,5 +33,6 @@ data class ApBaseArgs(
     val stats: SessionStatsRecorder,
     val tablistManager: TablistManager,
     val assetManager: AssetManager,
-    val activitySwitcher: ActivitySwitcher
+    val activitySwitcher: ActivitySwitcher,
+    val viewDistanceManager: ServerViewDistanceManager,
 )

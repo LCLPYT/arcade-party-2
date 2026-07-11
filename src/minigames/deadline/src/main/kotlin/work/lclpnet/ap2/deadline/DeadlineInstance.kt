@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.deadline
 
 import net.minecraft.core.particles.ParticleTypes
+import net.minecraft.server.dedicated.DedicatedServer
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
@@ -26,6 +27,7 @@ import work.lclpnet.ap2.ext.gainKill
 import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.inWholeTicks
 import work.lclpnet.ap2.ext.mc.isOf
+import work.lclpnet.ap2.ext.server
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.util.teleportToRandomSpawns
@@ -36,7 +38,7 @@ import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.entity.EntityDismountCallback
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback
-import java.util.Random
+import java.util.*
 import kotlin.time.Duration.Companion.minutes
 
 private val PowerUpsUsed = Stat("power_ups_used", 0)
@@ -84,6 +86,8 @@ class DeadlineInstance(
         useSmoothDeath()
         trackSurvivalTime(stats)
         disableTeleportEliminated()
+
+        (server as? DedicatedServer)?.setViewDistance(32)
 
         val team = createTeam()
         riders.assignColors()

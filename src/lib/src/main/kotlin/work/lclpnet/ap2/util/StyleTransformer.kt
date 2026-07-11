@@ -4,6 +4,7 @@ import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Style
 import net.minecraft.network.chat.TextColor
 
+@Suppress("UNCHECKED_CAST")
 interface StyleTransformer<Self : StyleTransformer<Self>> {
 
     var style: Style

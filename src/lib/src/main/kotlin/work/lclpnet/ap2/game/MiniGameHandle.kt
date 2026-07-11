@@ -20,6 +20,7 @@ import work.lclpnet.ap2.impl.util.DeathMessages
 import work.lclpnet.ap2.impl.util.world.SubWorldManager
 import work.lclpnet.ap2.util.AssetManager
 import work.lclpnet.ap2.util.FontService
+import work.lclpnet.ap2.util.ServerViewDistanceManager
 import work.lclpnet.ap2.util.TablistManager
 import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.game.api.WorldFacade
@@ -103,6 +104,8 @@ interface MiniGameHandle {
     val startTime: Instant
 
     val rankView: PlayerRankView
+
+    val viewDistanceManager: ServerViewDistanceManager
 
     fun resetGameScheduler()
 

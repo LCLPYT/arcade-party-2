@@ -110,6 +110,8 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
     override fun start() {
         super.start()
 
+        args.viewDistanceManager.reset()
+
         activityConfigurator.configureProtector()
 
         args.tablistManager.setPreparation()

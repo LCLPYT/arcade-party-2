@@ -31,6 +31,7 @@ import work.lclpnet.ap2.mode_default.activity.MiniGameActivity
 import work.lclpnet.ap2.mode_default.activity.PreparationActivity
 import work.lclpnet.ap2.util.AssetManager
 import work.lclpnet.ap2.util.FontService
+import work.lclpnet.ap2.util.ServerViewDistanceManager
 import work.lclpnet.ap2.util.TablistManager
 import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.game.api.WorldFacade
@@ -61,6 +62,7 @@ class DefaultMiniGameHandle(
     override val scoreboardManager: CustomScoreboardManager,
     private val remake: AtomicBoolean,
     override val rankView: PlayerRankView,
+    override val viewDistanceManager: ServerViewDistanceManager,
 ) : MiniGameHandle, WorldBorderManager {
 
     override val logger: Logger = LoggerFactory.getLogger(game.id.toString())
@@ -318,6 +320,8 @@ class DefaultMiniGameHandle(
         playerUtil.updatePlayerListNames()
 
         worldContainer?.unload()
+
+        args.viewDistanceManager.reset()
     }
 
     override fun getWorldBorder(): WorldBorder =
