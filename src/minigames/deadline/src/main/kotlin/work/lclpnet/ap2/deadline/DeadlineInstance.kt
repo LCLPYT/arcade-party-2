@@ -26,9 +26,9 @@ import work.lclpnet.ap2.ext.gainKill
 import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.inWholeTicks
 import work.lclpnet.ap2.ext.mc.isOf
+import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
-import work.lclpnet.ap2.game.util.teleportToRandomSpawns
 import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.impl.util.ParticleHelper
 import work.lclpnet.ap2.impl.util.SoundHelper
@@ -71,12 +71,11 @@ class DeadlineInstance(
 
     override fun teleportPlayers() {
         val spawnBox = schema.spawnBox!!
-
-        // riders start facing the arena center, so nobody spawns aimed at a nearby wall
         val border = commons().readWorldBorderConfig()
         val center = Vec3(border.centerX + 0.5, 0.0, border.centerZ + 0.5)
 
-        teleportToRandomSpawns(spawnBox, schema.scanStarts, lookAt = center)
+        DeadlineSpawns(level, random, commons().debugController())
+            .teleport(players().toList(), spawnBox, schema.scanStarts, center)
     }
 
     override fun prepare() {
@@ -123,6 +122,10 @@ class DeadlineInstance(
             cycle.tick(player.lastClientInput)
             val movement = cycle.sheep.position().subtract(before)
 
+            // vanilla skips the ride tick of riders whose sneak dismount was cancelled, which would
+            // leave their hitbox stalled behind the moving sheep, so the rider is positioned manually
+            cycle.sheep.positionRider(player)
+
             // crashing into a wall or driving into a trail. phased riders pass through trails
             val trailOwner = if (cycle.phased) null else trail.hit(player.boundingBox, movement, player.uuid)
 
@@ -139,6 +142,19 @@ class DeadlineInstance(
             stats.modify(player, DistanceMoved) { it + movement.horizontalDistance() }
             trail.extend(player.uuid, cycle.sheep.position(), riders.color(player.uuid))
             SpeedHud.show(player, cycle)
+        }
+
+        // riders ramming into each other take each other down, so both earn the kill
+        val dying = crashed.toSet()
+
+        for ((first, second) in riders.collidingPairs()) {
+            if (first in dying || second in dying) continue
+
+            gainKill(first, stats)
+            gainKill(second, stats)
+
+            if (first !in crashed) crashed.add(first)
+            if (second !in crashed) crashed.add(second)
         }
 
         // riders that crash in the same tick share their rank

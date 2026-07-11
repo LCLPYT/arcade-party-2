@@ -57,6 +57,26 @@ class Riders(
     /** Whether the entity is the mount of one of the riders. */
     fun isMount(entity: Entity): Boolean = cycles.values.any { it.sheep === entity }
 
+    /** All pairs of riders whose mounts currently intersect. Phased riders pass through each other. */
+    fun collidingPairs(): List<Pair<ServerPlayer, ServerPlayer>> {
+        val riding = gameHandle.participants.mapNotNull { player ->
+            val cycle = cycles[player.uuid] ?: return@mapNotNull null
+            if (cycle.phased) null else player to cycle
+        }
+
+        val pairs = mutableListOf<Pair<ServerPlayer, ServerPlayer>>()
+
+        for (i in riding.indices) {
+            for (j in i + 1 until riding.size) {
+                if (riding[i].second.sheep.boundingBox.intersects(riding[j].second.sheep.boundingBox)) {
+                    pairs.add(riding[i].first to riding[j].first)
+                }
+            }
+        }
+
+        return pairs
+    }
+
     /** Turns the rider and their sheep completely invisible for the duration. */
     fun vanish(player: ServerPlayer, durationTicks: Int) {
         val cycle = cycles[player.uuid] ?: return
