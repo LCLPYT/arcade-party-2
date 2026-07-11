@@ -16,6 +16,7 @@ import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.util.teleportToRandomSpawns
+import work.lclpnet.ap2.game.vehicle.BikeSpec
 import work.lclpnet.ap2.impl.util.ParticleHelper
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.game.impl.prot.ProtectionTypes
@@ -33,7 +34,7 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
     EliminationGameInstance(gameHandle, level, map) {
 
     private val random = Random()
-    private val riders = Riders(gameHandle, random)
+    private val riders = Riders(gameHandle, random, BikeSpec.fromMap(map))
     private val trail = LightTrail(level)
     private val powerUps = PowerUps(gameHandle, map, level, random, commons().debugController()) { riders.cycle(it) }
 
