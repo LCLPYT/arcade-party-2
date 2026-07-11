@@ -14,14 +14,19 @@ import kotlin.math.*
 import kotlin.random.Random
 import kotlin.random.asJavaRandom
 
+private const val MAX_LAYOUT_ATTEMPTS = 8
+private const val LARGE_COVERAGE = Int.MAX_VALUE / 2
+
 interface Pattern {
+    val id: String
+
     val minColors: Int
         get() = 12
 
     val maxColors: Int
         get() = 12
 
-    fun init() {}
+    fun init(random: Random) {}
 
     fun group(pos: BlockPos): Int
 }
@@ -44,26 +49,181 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerLevel) {
         add(Spirals(), 0.5f)
         add(PerlinNoise(), 1f)
         add(Mandelbrot(), 0.3f)
+        add(Triangles(), 1f)
+        add(EinsteinTiles(), 0.45f)
+        add(Penrose(), 0.45f)
+        add(HilbertCurve(), 0.45f)
+        add(Waves(), 0.7f)
+        add(Ripples(), 0.6f)
+        add(Moire(), 0.7f)
+        add(Cellular(), 0.6f)
+        add(Phyllotaxis(), 0.6f)
+        add(TruchetTiles(), 0.6f)
+        add(QuasiCrystal(), 0.55f)
+        add(WarpedStripes(), 0.6f)
     }
+
+    val patternsById: Map<String, Pattern> = patterns.associateBy { it.id }
 
     val existingColors = mutableListOf<DyeColor>()
 
-    fun randomizeBlocks() {
+    // fixed 2d grid of the floor cells, keyed by (x, z), used for coverage evaluation
+    private val cellIndex = HashMap<Long, Int>()
+    private val cellX: IntArray
+    private val cellZ: IntArray
+    private var currentLayout: Layout? = null
+
+    var currentPattern: Pattern? = null
+        private set
+    var currentSeed: Long? = null
+        private set
+
+    init {
+        val xs = ArrayList<Int>()
+        val zs = ArrayList<Int>()
+
+        for (pos in floorShape) {
+            val key = packKey(pos.x, pos.z)
+
+            if (cellIndex.putIfAbsent(key, xs.size) == null) {
+                xs.add(pos.x)
+                zs.add(pos.z)
+            }
+        }
+
+        cellX = xs.toIntArray()
+        cellZ = zs.toIntArray()
+    }
+
+    private fun packKey(x: Int, z: Int): Long =
+        (x.toLong() shl 32) or (z.toLong() and 0xffffffffL)
+
+    /**
+     * The coverage radius of a set of cells: the maximum graph distance (8-connectivity)
+     * of any floor cell to the nearest cell in the set.
+     * Lower means better distributed.
+     * A floor cell that cannot reach the set (disconnected floor) yields [LARGE_COVERAGE].
+     */
+    private fun coverageRadius(seeds: IntArray): Int {
+        if (seeds.isEmpty()) return LARGE_COVERAGE
+
+        val dist = IntArray(cellX.size) { -1 }
+        val queue = ArrayDeque<Int>()
+
+        for (s in seeds) {
+            if (dist[s] == -1) {
+                dist[s] = 0
+                queue.add(s)
+            }
+        }
+
+        var maxDist = 0
+
+        while (queue.isNotEmpty()) {
+            val cur = queue.removeFirst()
+            val d = dist[cur]
+            if (d > maxDist) maxDist = d
+
+            val cx = cellX[cur]
+            val cz = cellZ[cur]
+
+            for (dx in -1..1) for (dz in -1..1) {
+                if (dx == 0 && dz == 0) continue
+
+                val ni = cellIndex[packKey(cx + dx, cz + dz)] ?: continue
+
+                if (dist[ni] == -1) {
+                    dist[ni] = d + 1
+                    queue.add(ni)
+                }
+            }
+        }
+
+        for (d in dist) if (d == -1) return LARGE_COVERAGE
+
+        return maxDist
+    }
+
+    private inner class Layout(
+        val colorPositions: Map<DyeColor, List<BlockPos>>,
+        val pattern: Pattern,
+        val seed: Long,
+    ) {
+        val coverage: Map<DyeColor, Int> = colorPositions.mapValues { (_, positions) ->
+            val idx = positions.mapNotNull { cellIndex[packKey(it.x, it.z)] }.toIntArray()
+            coverageRadius(idx)
+        }
+
+        // best achievable coverage if the fairest color were chosen as the safe one
+        val bestCoverage: Int = coverage.values.minOrNull() ?: LARGE_COVERAGE
+    }
+
+    fun randomizeBlocks(maxCoverage: Int, forced: Pattern? = null) {
         existingColors.clear()
 
-        val pattern = patterns.getRandomElement(Random.asJavaRandom())!!.apply { init() }
+        // reject layouts coarser than the round can fairly handle (each attempt re-rolls a random
+        // pattern), keeping the best-scoring attempt as a fallback so we never hard-fail
+        var chosen: Layout? = null
+        var attempts = 0
+
+        while (attempts < MAX_LAYOUT_ATTEMPTS) {
+            val layout = buildLayout(forced)
+
+            if (chosen == null || layout.bestCoverage < chosen.bestCoverage) {
+                chosen = layout
+            }
+
+            if (layout.bestCoverage <= maxCoverage) break
+
+            attempts++
+        }
+
+        val layout = chosen!!
+        currentLayout = layout
+        currentPattern = layout.pattern
+        currentSeed = layout.seed
+
+        for ((color, positions) in layout.colorPositions) {
+            if (positions.isEmpty()) continue
+
+            existingColors.add(color)
+
+            for (pos in positions) {
+                world.setBlock(pos, Blocks.WOOL.pick(color))
+            }
+        }
+    }
+
+    private fun buildLayout(forced: Pattern? = null): Layout {
+        val pattern = (forced ?: patterns.getRandomElement(Random.asJavaRandom()))!!
+
+        val seed = System.nanoTime()
+        val random = Random(seed)
+
+        pattern.init(random)
+
         val baseColors = listOf(
-            DyeColor.WHITE, DyeColor.ORANGE, DyeColor.MAGENTA, DyeColor.LIGHT_BLUE, DyeColor.YELLOW, DyeColor.LIME,
-            DyeColor.PINK, DyeColor.PURPLE, DyeColor.BLUE, DyeColor.GREEN, DyeColor.RED, DyeColor.BLACK
+            DyeColor.WHITE,
+            DyeColor.ORANGE,
+            DyeColor.MAGENTA,
+            DyeColor.LIGHT_BLUE,
+            DyeColor.YELLOW,
+            DyeColor.LIME,
+            DyeColor.PINK,
+            DyeColor.PURPLE,
+            DyeColor.BLUE,
+            DyeColor.GREEN,
+            DyeColor.RED,
+            DyeColor.BLACK
         )
 
-        val options = baseColors.shuffled().take(Random.nextInt(pattern.minColors, pattern.maxColors + 1))
+        val options = baseColors.shuffled(random).take(random.nextInt(pattern.minColors, pattern.maxColors + 1))
         val pool = mutableListOf<DyeColor>()
 
         fun randomColor(): DyeColor {
             if (pool.isEmpty()) {
                 pool.addAll(options)
-                pool.shuffle()
+                pool.shuffle(random)
             }
 
             return pool.removeFirst()
@@ -105,63 +265,99 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerLevel) {
             sortedGroups.sortBy { it.second.size }
         }
 
-        for ((color, positions) in sortedGroups) {
-            if (positions.isEmpty()) continue
+        return Layout(sortedGroups.toMap(), pattern, seed)
+    }
 
-            existingColors.add(color)
+    /**
+     * Picks the safe color for a round given how far a player can travel in the reaction window ([reachBlocks]).
+     * Prefers a random color reachable from anywhere on the floor.
+     * If none qualifies, falls back to the fairest available color.
+     * Returns the chosen color and its coverage radius.
+     */
+    fun pickSafeColor(reachBlocks: Int): Pair<DyeColor, Int> {
+        val layout = currentLayout!!
+        val coverageOf = { color: DyeColor -> layout.coverage[color] ?: LARGE_COVERAGE }
 
-            for (pos in positions) {
-                world.setBlock(pos, Blocks.WOOL.pick(color))
-            }
-        }
+        val fair = existingColors.filter { coverageOf(it) <= reachBlocks }
+        val chosen = if (fair.isNotEmpty()) fair.random() else existingColors.minBy(coverageOf)
+
+        // an unreachable (disconnected) coverage can't be fixed with more time, so report 0
+        val coverage = coverageOf(chosen).let { if (it >= LARGE_COVERAGE) 0 else it }
+
+        return chosen to coverage
     }
 
     class Uniform(override val minColors: Int = 10, override val maxColors: Int = 12) : Pattern {
-        override fun group(pos: BlockPos): Int = Random.nextInt(16)
+        override val id = "uniform"
+        private lateinit var random: Random
+
+        override fun init(random: Random) {
+            this.random = random
+        }
+
+        override fun group(pos: BlockPos): Int = random.nextInt(16)
+        override fun toString() = id
     }
 
     class CheckerBoard(override val minColors: Int = 6, override val maxColors: Int = 7) : Pattern {
+        override val id = "checkerboard"
         override fun group(pos: BlockPos): Int = hash(floor( pos.x / 3f), floor(pos.z / 3f))
+        override fun toString() = id
     }
 
     class StripesX(override val minColors: Int = 6, override val maxColors: Int = 9) : Pattern {
+        override val id = "stripes_x"
         override fun group(pos: BlockPos) = pos.x
+        override fun toString() = id
     }
 
     class StripesZ(override val minColors: Int = 6, override val maxColors: Int = 9) : Pattern {
+        override val id = "stripes_z"
         override fun group(pos: BlockPos) = pos.z
+        override fun toString() = id
     }
 
     inner class Circles(override val minColors: Int = 6, override val maxColors: Int = 8) : Pattern {
+        override val id = "circles"
         override fun group(pos: BlockPos): Int = sqrt(pos.distSqr(floorShape.center())).roundToInt()
+        override fun toString() = id
     }
 
     inner class Taxicab(override val minColors: Int = 7, override val maxColors: Int = 9) : Pattern {
+        override val id = "taxicab"
         override fun group(pos: BlockPos): Int = pos.distManhattan(floorShape.center())
+        override fun toString() = id
     }
 
     inner class Chebyshev(override val minColors: Int = 6, override val maxColors: Int = 9) : Pattern {
+        override val id = "chebyshev"
         override fun group(pos: BlockPos): Int = pos.distChessboard(floorShape.center())
+        override fun toString() = id
     }
 
     inner class Parabola(override val minColors: Int = 10, override val maxColors: Int = 12) : Pattern {
+        override val id = "parabola"
         override fun group(pos: BlockPos): Int {
             val c = Vec3.atCenterOf(floorShape.center())
             return pos.distToCenterSqr(c.x, c.y, c.z).roundToInt()
         }
+        override fun toString() = id
     }
 
     inner class Diagonal(override val minColors: Int = 6, override val maxColors: Int = 8) : Pattern {
+        override val id = "diagonal"
         override fun group(pos: BlockPos): Int = pos.distManhattan(floorShape.min())
+        override fun toString() = id
     }
 
     inner class Angled : Pattern {
+        override val id = "angled"
         var subdivisions = 5
         var refAngle = 0.0
 
-        override fun init() {
-            subdivisions = Random.nextInt(5, 12)
-            refAngle = Random.nextDouble() * PI * 2
+        override fun init(random: Random) {
+            subdivisions = random.nextInt(8, 14)
+            refAngle = random.nextDouble() * PI * 2
         }
 
         override fun group(pos: BlockPos): Int {
@@ -171,14 +367,17 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerLevel) {
 
             return (angle / (2 * PI) * subdivisions).toInt()
         }
+
+        override fun toString() = "$id(subdivisions=$subdivisions, refAngle=$refAngle)"
     }
 
     inner class Voronoi(override val minColors: Int = 6, override val maxColors: Int = 8) : Pattern {
+        override val id = "voronoi"
         private var seeds: List<Vec3> = emptyList()
 
-        override fun init() {
-            val count = Random.nextInt(65, 80)
-            seeds = List(count) { floorShape.randomPos(Random.asJavaRandom()) }
+        override fun init(random: Random) {
+            val count = random.nextInt(120, 160)
+            seeds = List(count) { floorShape.randomPos(random.asJavaRandom()) }
         }
 
         override fun group(pos: BlockPos): Int {
@@ -198,13 +397,16 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerLevel) {
 
             return closestIndex
         }
+
+        override fun toString() = "$id(count=${seeds.size})"
     }
 
     class Honeycomb(override val minColors: Int = 7, override val maxColors: Int = 10) : Pattern {
+        override val id = "honeycomb"
         private var size = 4
 
-        override fun init() {
-            size = Random.nextInt(3, 7)
+        override fun init(random: Random) {
+            size = random.nextInt(3, 7)
         }
 
         override fun group(pos: BlockPos): Int {
@@ -232,15 +434,18 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerLevel) {
 
             return ((qh + 1000).toInt() shl 16) xor ((rh + 1000).toInt() and 0xFFFF)
         }
+
+        override fun toString() = "$id(size=$size)"
     }
 
     inner class Spirals(override val minColors: Int = 8, override val maxColors: Int = 8) : Pattern {
+        override val id = "spirals"
         private var arms = 5
         private var tightness = 4.0
 
-        override fun init() {
-            arms = Random.nextInt(4, 7)
-            tightness = Random.nextDouble(3.0, 8.0)
+        override fun init(random: Random) {
+            arms = random.nextInt(5, 9)
+            tightness = random.nextDouble(3.0, 8.0)
         }
 
         override fun group(pos: BlockPos): Int {
@@ -254,14 +459,21 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerLevel) {
 
             return ((normalized / (2 * PI)) * arms).toInt()
         }
+
+        override fun toString() = "$id(arms=$arms, tightness=$tightness)"
     }
 
     class PerlinNoise : Pattern {
+        override val id = "perlin_noise"
         private var scale = 0.1
+        private var perm = IntArray(512)
 
-        override fun init() {
-            scale = Random.nextDouble(0.05, 0.2)
+        override fun init(random: Random) {
+            scale = random.nextDouble(0.1, 0.25)
+            perm = IntArray(512) { random.nextInt(0, 256) }
         }
+
+        override fun toString() = "$id(scale=$scale)"
 
         override fun group(pos: BlockPos): Int {
             val nx = pos.x * scale
@@ -283,8 +495,6 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerLevel) {
                 else -> -x - y
             }
         }
-
-        private val perm = IntArray(512) { Random.nextInt(0, 256) }
 
         private fun perlin(x: Double, y: Double): Double {
             val xs = floor(x).toInt() and 255
@@ -309,13 +519,14 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerLevel) {
     }
 
     inner class Mandelbrot : Pattern {
+        override val id = "mandelbrot"
         private var scale = 0.05
         private var maxIter = 40
         private var offsetX = 1.0
 
-        override fun init() {
-            scale = Random.nextDouble(0.01, 0.06)
-            offsetX = Random.nextDouble(0.5, 1.5)
+        override fun init(random: Random) {
+            scale = random.nextDouble(0.03, 0.08)
+            offsetX = random.nextDouble(0.5, 1.5)
         }
 
         override fun group(pos: BlockPos): Int {
@@ -335,5 +546,516 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerLevel) {
 
             return iter % 8
         }
+
+        override fun toString() = "$id(scale=$scale, offsetX=$offsetX)"
+    }
+
+    class Triangles(override val minColors: Int = 8, override val maxColors: Int = 11) : Pattern {
+        override val id = "triangles"
+        private var size = 3
+
+        override fun init(random: Random) {
+            size = random.nextInt(2, 5)
+        }
+
+        override fun group(pos: BlockPos): Int {
+            val s = size.toDouble()
+            val col = floor(pos.x / s).toInt()
+            val row = floor(pos.z / s).toInt()
+            val fx = pos.x / s - col
+            val fz = pos.z / s - row
+
+            val half = if ((col + row) and 1 == 0) {
+                if (fx + fz < 1.0) 0 else 1
+            } else {
+                if (fx < fz) 0 else 1
+            }
+
+            return hash(col, row, half)
+        }
+
+        override fun toString() = "$id(size=$size)"
+    }
+
+    class EinsteinTiles(override val minColors: Int = 8, override val maxColors: Int = 11) : Pattern {
+        override val id = "einstein_tiles"
+        private var size = 4
+        private var phase = 0.0
+
+        override fun init(random: Random) {
+            size = random.nextInt(3, 6)
+            phase = random.nextDouble() * PI * 2
+        }
+
+        override fun group(pos: BlockPos): Int {
+            val s = size.toDouble()
+            val hex = pointyHexRound(pos.x.toDouble(), pos.z.toDouble(), s)
+            val q = hex[0]
+            val r = hex[1]
+
+            val cx = s * sqrt(3.0) * (q + r / 2.0)
+            val cz = s * 1.5 * r
+
+            var angle = atan2(pos.z - cz, pos.x - cx) + phase
+            angle = (angle % (2 * PI) + 2 * PI) % (2 * PI)
+            val sextant = (angle / (2 * PI) * 6).toInt()
+
+            return hash(q, r, sextant)
+        }
+
+        override fun toString() = "$id(size=$size, phase=$phase)"
+    }
+
+    inner class Penrose(
+        override val minColors: Int = 8,
+        override val maxColors: Int = 11,
+        val penroseDeflations: Int = 5,
+    ) : Pattern {
+        override val id = "penrose"
+        private var cells = HashMap<Long, Int>()
+
+        override fun init(random: Random) {
+            val cells = HashMap<Long, Int>()
+
+            val phi = (1.0 + sqrt(5.0)) / 2.0
+            val center = floorShape.center()
+            val bounds = floorShape.bounds()
+            val cx = center.x + 0.5
+            val cz = center.z + 0.5
+            val radius = max(bounds.width(), bounds.length()).toDouble()
+
+            // initial "sun" wheel of 10 Robinson triangles around the floor center
+            var triangles = ArrayList<DoubleArray>()
+
+            for (i in 0 until 10) {
+                var b1x = cx + radius * cos((2 * i - 1) * PI / 10.0)
+                var b1z = cz + radius * sin((2 * i - 1) * PI / 10.0)
+                var b2x = cx + radius * cos((2 * i + 1) * PI / 10.0)
+                var b2z = cz + radius * sin((2 * i + 1) * PI / 10.0)
+
+                if (i % 2 == 0) {
+                    val tx = b1x; val tz = b1z
+                    b1x = b2x; b1z = b2z
+                    b2x = tx; b2z = tz
+                }
+
+                triangles.add(doubleArrayOf(0.0, cx, cz, b1x, b1z, b2x, b2z))
+            }
+
+            repeat(penroseDeflations) {
+                val next = ArrayList<DoubleArray>(triangles.size * 3)
+
+                for (t in triangles) {
+                    val type = t[0].toInt()
+                    val ax = t[1]; val az = t[2]
+                    val bx = t[3]; val bz = t[4]
+                    val ccx = t[5]; val ccz = t[6]
+
+                    if (type == 0) {
+                        val px = ax + (bx - ax) / phi
+                        val pz = az + (bz - az) / phi
+                        next.add(doubleArrayOf(0.0, ccx, ccz, px, pz, bx, bz))
+                        next.add(doubleArrayOf(1.0, px, pz, ccx, ccz, ax, az))
+                    } else {
+                        val qx = bx + (ax - bx) / phi
+                        val qz = bz + (az - bz) / phi
+                        val rx = bx + (ccx - bx) / phi
+                        val rz = bz + (ccz - bz) / phi
+                        next.add(doubleArrayOf(1.0, rx, rz, ccx, ccz, ax, az))
+                        next.add(doubleArrayOf(1.0, qx, qz, rx, rz, bx, bz))
+                        next.add(doubleArrayOf(0.0, rx, rz, qx, qz, ax, az))
+                    }
+                }
+
+                triangles = next
+            }
+
+            for (x in bounds.min().x..bounds.max().x) {
+                for (z in bounds.min().z..bounds.max().z) {
+                    val px = x + 0.5
+                    val pz = z + 0.5
+
+                    for ((idx, t) in triangles.withIndex()) {
+                        if (pointInTriangle(px, pz, t[1], t[2], t[3], t[4], t[5], t[6])) {
+                            cells[packKey(x, z)] = idx
+                            break
+                        }
+                    }
+                }
+            }
+
+            this.cells = cells
+        }
+
+        override fun group(pos: BlockPos): Int = cells[packKey(pos.x, pos.z)] ?: 0
+
+        override fun toString() = "$id(deflations=$penroseDeflations)"
+    }
+
+    inner class HilbertCurve(override val minColors: Int = 8, override val maxColors: Int = 12) : Pattern {
+        override val id = "hilbert_curve"
+        private var order = 16
+        private var segLen = 3
+        private var minX = 0
+        private var minZ = 0
+
+        override fun init(random: Random) {
+            val bounds = floorShape.bounds()
+            minX = bounds.min().x
+            minZ = bounds.min().z
+
+            val maxDim = max(bounds.width(), bounds.length())
+            var n = 1
+            while (n < maxDim) n = n shl 1
+            order = n
+
+            segLen = random.nextInt(2, 6)
+        }
+
+        override fun group(pos: BlockPos): Int = xy2d(order, pos.x - minX, pos.z - minZ) / segLen
+
+        private fun xy2d(n: Int, x0: Int, z0: Int): Int {
+            var d = 0
+            var x = x0
+            var y = z0
+            var s = n / 2
+
+            while (s > 0) {
+                val rx = if (x and s > 0) 1 else 0
+                val ry = if (y and s > 0) 1 else 0
+                d += s * s * ((3 * rx) xor ry)
+
+                if (ry == 0) {
+                    if (rx == 1) {
+                        x = n - 1 - x
+                        y = n - 1 - y
+                    }
+                    val t = x
+                    x = y
+                    y = t
+                }
+
+                s = s shr 1
+            }
+
+            return d
+        }
+
+        override fun toString() = "$id(segLen=$segLen)"
+    }
+
+    class Waves(override val minColors: Int = 8, override val maxColors: Int = 11) : Pattern {
+        override val id = "waves"
+        private var freqX = 0.5
+        private var freqZ = 0.5
+        private var phaseX = 0.0
+        private var phaseZ = 0.0
+        private var levels = 4
+
+        override fun init(random: Random) {
+            freqX = random.nextDouble(0.35, 0.7)
+            freqZ = random.nextDouble(0.35, 0.7)
+
+            phaseX = random.nextDouble() * PI * 2
+            phaseZ = random.nextDouble() * PI * 2
+
+            levels = random.nextInt(3, 5)
+        }
+
+        override fun group(pos: BlockPos): Int {
+            val a = (sin(pos.x * freqX + phaseX) + 1.0) / 2.0
+            val b = (sin(pos.z * freqZ + phaseZ) + 1.0) / 2.0
+
+            val ia = floor(a * levels).toInt().coerceIn(0, levels - 1)
+            val ib = floor(b * levels).toInt().coerceIn(0, levels - 1)
+
+            return hash(ia, ib)
+        }
+
+        override fun toString() = "$id(freqX=$freqX, freqZ=$freqZ, phaseX=$phaseX, phaseZ=$phaseZ, levels=$levels)"
+    }
+
+    inner class Ripples(override val minColors: Int = 7, override val maxColors: Int = 10) : Pattern {
+        override val id = "ripples"
+        private var sources: List<Vec3> = emptyList()
+        private var freq = 0.5
+        private var levels = 6
+
+        override fun init(random: Random) {
+            val count = random.nextInt(2, 5)
+
+            sources = List(count) { floorShape.randomPos(random.asJavaRandom()) }
+            freq = random.nextDouble(0.4, 0.9)
+            levels = random.nextInt(5, 9)
+        }
+
+        override fun group(pos: BlockPos): Int {
+            var sum = 0.0
+
+            for (s in sources) {
+                val dx = pos.x + 0.5 - s.x
+                val dz = pos.z + 0.5 - s.z
+
+                sum += sin(sqrt(dx * dx + dz * dz) * freq)
+            }
+
+            val norm = (sum / sources.size + 1.0) / 2.0
+
+            return floor(norm * levels).toInt().coerceIn(0, levels - 1)
+        }
+
+        override fun toString() = "$id(count=${sources.size}, freq=$freq, levels=$levels)"
+    }
+
+    class Moire(override val minColors: Int = 8, override val maxColors: Int = 11) : Pattern {
+        override val id = "moire"
+        private var angle = 0.3
+        private var scaleA = 3.0
+        private var scaleB = 3.0
+
+        override fun init(random: Random) {
+            angle = random.nextDouble(0.15, 0.5)
+            scaleA = random.nextDouble(2.0, 4.0)
+            scaleB = random.nextDouble(2.0, 4.0)
+        }
+
+        override fun group(pos: BlockPos): Int {
+            val x = pos.x.toDouble()
+            val z = pos.z.toDouble()
+
+            val ax = floor(x / scaleA).toInt()
+            val az = floor(z / scaleA).toInt()
+
+            val rx = x * cos(angle) - z * sin(angle)
+            val rz = x * sin(angle) + z * cos(angle)
+
+            val bx = floor(rx / scaleB).toInt()
+            val bz = floor(rz / scaleB).toInt()
+
+            return hash(ax + bx, az + bz)
+        }
+
+        override fun toString() = "$id(angle=$angle, scaleA=$scaleA, scaleB=$scaleB)"
+    }
+
+    class Cellular(override val minColors: Int = 8, override val maxColors: Int = 11) : Pattern {
+        override val id = "cellular"
+        private var size = 4
+        private var seed = 0
+
+        override fun init(random: Random) {
+            size = random.nextInt(3, 6)
+            seed = random.nextInt()
+        }
+
+        override fun group(pos: BlockPos): Int {
+            val cx = floor(pos.x.toDouble() / size).toInt()
+            val cz = floor(pos.z.toDouble() / size).toInt()
+
+            var bestId = 0
+            var best = Double.MAX_VALUE
+
+            for (dx in -1..1) for (dz in -1..1) {
+                val gx = cx + dx
+                val gz = cz + dz
+
+                val jx = (gx + jitter(gx, gz, 0)) * size
+                val jz = (gz + jitter(gx, gz, 1)) * size
+
+                val ddx = pos.x + 0.5 - jx
+                val ddz = pos.z + 0.5 - jz
+
+                val d = ddx * ddx + ddz * ddz
+
+                if (d < best) {
+                    best = d
+                    bestId = hash(gx, gz)
+                }
+            }
+
+            return bestId
+        }
+
+        private fun jitter(x: Int, z: Int, salt: Int): Double =
+            (hash(x, z, salt, seed) and 0xFFFF) / 65535.0
+
+        override fun toString() = "$id(size=$size, seed=$seed)"
+    }
+
+    inner class Phyllotaxis(override val minColors: Int = 8, override val maxColors: Int = 11) : Pattern {
+        override val id = "phyllotaxis"
+        private var seeds: List<Vec3> = emptyList()
+
+        override fun init(random: Random) {
+            val bounds = floorShape.bounds()
+            val center = floorShape.center()
+            val radius = max(bounds.width(), bounds.length()) / 2.0 + 2.0
+            val count = random.nextInt(80, 140)
+            val golden = PI * (3.0 - sqrt(5.0))
+            val c = radius / sqrt(count.toDouble())
+
+            seeds = List(count) { i ->
+                val r = c * sqrt(i.toDouble())
+                val theta = i * golden
+
+                Vec3(center.x + 0.5 + r * cos(theta), 0.0, center.z + 0.5 + r * sin(theta))
+            }
+        }
+
+        override fun group(pos: BlockPos): Int {
+            var closest = 0
+            var closestDist = Double.MAX_VALUE
+
+            for ((i, s) in seeds.withIndex()) {
+                val dx = pos.x + 0.5 - s.x
+                val dz = pos.z + 0.5 - s.z
+
+                val d = dx * dx + dz * dz
+
+                if (d < closestDist) {
+                    closestDist = d
+                    closest = i
+                }
+            }
+
+            return closest
+        }
+
+        override fun toString() = "$id(count=${seeds.size})"
+    }
+
+    class TruchetTiles(override val minColors: Int = 8, override val maxColors: Int = 11) : Pattern {
+        override val id = "truchet_tiles"
+        private var size = 4
+        private var bands = 2
+        private var seed = 0
+
+        override fun init(random: Random) {
+            size = random.nextInt(3, 6)
+            bands = random.nextInt(2, 4)
+            seed = random.nextInt()
+        }
+
+        override fun group(pos: BlockPos): Int {
+            val cx = floor(pos.x.toDouble() / size).toInt()
+            val cz = floor(pos.z.toDouble() / size).toInt()
+            val fx = pos.x.toDouble() / size - cx
+            val fz = pos.z.toDouble() / size - cz
+
+            val flip = (hash(cx, cz, seed) and 1) == 0
+
+            val centers = if (flip) {
+                arrayOf(0.0, 0.0, 1.0, 1.0)
+            } else {
+                arrayOf(1.0, 0.0, 0.0, 1.0)
+            }
+
+            val d1 = hypot(fx - centers[0], fz - centers[1])
+            val d2 = hypot(fx - centers[2], fz - centers[3])
+            val d = min(d1, d2)
+            val band = floor(d * bands * 1.4).toInt()
+
+            return hash(cx, cz, band)
+        }
+
+        override fun toString() = "$id(size=$size, bands=$bands, seed=$seed)"
+    }
+
+    class QuasiCrystal(override val minColors: Int = 7, override val maxColors: Int = 10) : Pattern {
+        override val id = "quasicrystal"
+        private var waves = 5
+        private var freq = 0.4
+        private var phase = 0.0
+        private var levels = 5
+
+        override fun init(random: Random) {
+            waves = random.nextInt(5, 8)
+            freq = random.nextDouble(0.32, 0.62)
+            phase = random.nextDouble() * PI * 2
+            levels = random.nextInt(4, 7)
+        }
+
+        override fun group(pos: BlockPos): Int {
+            var sum = 0.0
+
+            for (i in 0 until waves) {
+                val a = PI * i / waves
+
+                sum += cos((pos.x * cos(a) + pos.z * sin(a)) * freq + phase)
+            }
+
+            val norm = (sum / waves + 1.0) / 2.0
+
+            return floor(norm * levels).toInt().coerceIn(0, levels - 1)
+        }
+
+        override fun toString() = "$id(waves=$waves, freq=$freq, phase=$phase, levels=$levels)"
+    }
+
+    class WarpedStripes(override val minColors: Int = 7, override val maxColors: Int = 10) : Pattern {
+        override val id = "warped_stripes"
+        private var bandWidth = 3.0
+        private var warpAmp = 4.0
+        private var warpFreq = 0.15
+        private var phase = 0.0
+        private var vertical = true
+
+        override fun init(random: Random) {
+            bandWidth = random.nextDouble(2.0, 4.0)
+            warpAmp = random.nextDouble(3.0, 7.0)
+            warpFreq = random.nextDouble(0.1, 0.25)
+            phase = random.nextDouble() * PI * 2
+            vertical = random.nextBoolean()
+        }
+
+        override fun group(pos: BlockPos): Int {
+            val warp = sin(pos.z * warpFreq + phase) * warpAmp +
+                    sin(pos.x * warpFreq * 0.7) * warpAmp * 0.5
+
+            val v = if (vertical) pos.x + warp else pos.z + warp
+
+            return floor(v / bandWidth).toInt()
+        }
+
+        override fun toString() =
+            "$id(bandWidth=$bandWidth, warpAmp=$warpAmp, warpFreq=$warpFreq, phase=$phase, vertical=$vertical)"
     }
 }
+
+private fun pointyHexRound(x: Double, z: Double, size: Double): IntArray {
+    val q = (sqrt(3.0) / 3.0 * x - 1.0 / 3.0 * z) / size
+    val r = (2.0 / 3.0 * z) / size
+    val s = -q - r
+
+    var rq = round(q)
+    var rr = round(r)
+    val rs = round(s)
+
+    val dq = abs(rq - q)
+    val dr = abs(rr - r)
+    val ds = abs(rs - s)
+
+    if (dq > dr && dq > ds) rq = -rr - rs
+    else if (dr > ds) rr = -rq - rs
+
+    return intArrayOf(rq.toInt(), rr.toInt())
+}
+
+private fun pointInTriangle(
+    px: Double, pz: Double,
+    ax: Double, az: Double,
+    bx: Double, bz: Double,
+    cx: Double, cz: Double
+): Boolean {
+    val d1 = edgeSign(px, pz, ax, az, bx, bz)
+    val d2 = edgeSign(px, pz, bx, bz, cx, cz)
+    val d3 = edgeSign(px, pz, cx, cz, ax, az)
+
+    val hasNeg = d1 < 0 || d2 < 0 || d3 < 0
+    val hasPos = d1 > 0 || d2 > 0 || d3 > 0
+
+    return !(hasNeg && hasPos)
+}
+
+private fun edgeSign(px: Double, pz: Double, ax: Double, az: Double, bx: Double, bz: Double): Double =
+    (px - bx) * (az - bz) - (ax - bx) * (pz - bz)
