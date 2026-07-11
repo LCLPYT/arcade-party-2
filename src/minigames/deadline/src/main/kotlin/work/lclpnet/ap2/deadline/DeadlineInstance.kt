@@ -141,11 +141,7 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
     }
 
     private fun assignColors() {
-        val palette = ColorUtil.VIVID_DYE_COLORS.shuffled(random)
-        var i = 0
-        for (player in gameHandle.participants) {
-            colors[player.uuid] = palette[i++ % palette.size]
-        }
+        colors.putAll(gameHandle.colorPreferences.assign(gameHandle.participants, random, ColorUtil.VIVID_DYE_COLORS.toSet()))
     }
 
     private fun createTeam(): PlayerTeam {
