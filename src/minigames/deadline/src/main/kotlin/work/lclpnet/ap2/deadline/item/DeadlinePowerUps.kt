@@ -3,14 +3,12 @@ package work.lclpnet.ap2.deadline.item
 import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
-import net.minecraft.sounds.SoundEvents
 import work.lclpnet.ap2.deadline.rider.Riders
 import work.lclpnet.ap2.ext.inWholeTicks
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.impl.game.item.SpecialItemObject
 import work.lclpnet.ap2.impl.game.item.SpecialItems
 import work.lclpnet.ap2.impl.util.debug.DebugController
-import work.lclpnet.ap2.util.sound.GameSound
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks
@@ -42,7 +40,6 @@ class DeadlinePowerUps(
     }
 
     private val points = HashMap<BlockPos, SpecialItemObject>()
-    private val refreshSound = GameSound(SoundEvents.PLAYER_LEVELUP, 0.5f, 1.5f)
 
     init {
         specialItems.itemSlot = ITEM_SLOT
@@ -70,10 +67,6 @@ class DeadlinePowerUps(
     fun startRefreshing() {
         gameHandle.scheduler.interval(REFRESH_INTERVAL.inWholeTicks) { ->
             spawn()
-
-            for (player in gameHandle.participants) {
-                refreshSound.playTo(player)
-            }
         }
     }
 
