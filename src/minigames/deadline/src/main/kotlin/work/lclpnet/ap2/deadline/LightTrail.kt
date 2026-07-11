@@ -16,6 +16,7 @@ import kotlin.math.atan2
 import kotlin.math.sqrt
 
 private const val SEGMENT_LENGTH = 1.0 // smallest trail segment length in blocks; larger means fewer displays
+private const val DELAY_TICKS = 3 // how many ticks the trail lags behind, matching the client's mount interpolation
 private const val INITIAL_SEGMENTS = 100 // how many segments a trail keeps before its tail starts to disappear
 private const val MAX_SEGMENTS = 500 // the segment limit stops growing once it reaches this
 private const val GROWTH_INTERVAL = 9 // ticks it takes for the segment limit to grow by one
@@ -26,6 +27,7 @@ private const val GROWTH_INTERVAL = 9 // ticks it takes for the segment limit to
 class LightTrail(level: ServerLevel) {
 
     private val scene = Scene(ServerWorldMountContext(level))
+    private val recent = HashMap<UUID, ArrayDeque<Vec3>>()
     private val anchor = HashMap<UUID, Vec3>()
     private val trails = HashMap<UUID, MutableList<BlockDisplayObject>>()
     private val collider = SegmentCollider()
@@ -40,15 +42,22 @@ class LightTrail(level: ServerLevel) {
     }
 
     fun extend(uuid: UUID, position: Vec3, color: DyeColor) {
+        // clients render the ridden sheep a few ticks behind its server position, so the trail
+        // follows an equally delayed position to keep its tip visually at the sheep
+        val buffer = recent.getOrPut(uuid) { ArrayDeque() }
+        buffer.addLast(position)
+        if (buffer.size <= DELAY_TICKS) return
+        val delayed = buffer.removeFirst()
+
         val start = anchor[uuid]
         if (start == null) {
-            anchor[uuid] = position
+            anchor[uuid] = delayed
             return
         }
-        if (position.distanceToSqr(start) < SEGMENT_LENGTH * SEGMENT_LENGTH) return
-        placeSegment(uuid, start, position, color)
-        collider.add(uuid, start, position)
-        anchor[uuid] = position
+        if (delayed.distanceToSqr(start) < SEGMENT_LENGTH * SEGMENT_LENGTH) return
+        placeSegment(uuid, start, delayed, color)
+        collider.add(uuid, start, delayed)
+        anchor[uuid] = delayed
         trim(uuid)
     }
 
@@ -94,5 +103,6 @@ class LightTrail(level: ServerLevel) {
         collider.remove(uuid)
         trails.remove(uuid)?.forEach { it.detach() }
         anchor.remove(uuid)
+        recent.remove(uuid)
     }
 }
