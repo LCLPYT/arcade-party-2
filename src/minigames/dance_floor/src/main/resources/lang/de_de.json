@@ -1,5 +1,7 @@
 {
   "name": "Tanzfläche",
   "description": "Stelle dich auf die richtige Farbe, sobald die Musik aufhört!",
-  "stand_on": "Stelle dich auf %s!"
+  "stand_on": "Stelle dich auf %s!",
+  "stat.rounds_survived": "Überstandene Runden",
+  "stat.elimination_difficulty": "Schwierigkeit bei Ausscheiden"
 }

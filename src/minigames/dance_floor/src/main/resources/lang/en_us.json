@@ -1,5 +1,7 @@
 {
   "name": "Dance Floor",
   "description": "Stand on the correct color when the music stops.",
-  "stand_on": "Stand on %s!"
+  "stand_on": "Stand on %s!",
+  "stat.rounds_survived": "Rounds survived",
+  "stat.elimination_difficulty": "Elimination difficulty"
 }
