@@ -13,6 +13,8 @@ import net.minecraft.world.scores.Team
 import org.json.JSONObject
 import work.lclpnet.ap2.api.music.ConfiguredSong
 import work.lclpnet.ap2.api.music.SongWrapper
+import work.lclpnet.ap2.api.stats.CommonStats
+import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.*
 import work.lclpnet.ap2.game.MiniGameHandle
@@ -21,6 +23,7 @@ import work.lclpnet.ap2.game.dance_floor.cmd.SetPatternCommand
 import work.lclpnet.ap2.game.dance_floor.cmd.SetSongCommand
 import work.lclpnet.ap2.game.dance_floor.cmd.SkipSongCommand
 import work.lclpnet.ap2.game.util.PlayerUtil
+import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.game.util.useSurvivalMode
 import work.lclpnet.ap2.game.util.whenBelowCriticalHeight
 import work.lclpnet.ap2.impl.map.MapUtil
@@ -58,6 +61,9 @@ private const val DELAY_DECREASE_FACTOR = 30f
 
 private const val PARTICLE_AMOUNT = 3
 
+val RoundsSurvived = Stat("rounds_survived", 0)
+val EliminationDifficulty = Stat("elimination_difficulty", 0)
+
 class DanceFloorInstance(
     gameHandle: MiniGameHandle,
     level: ServerLevel,
@@ -78,11 +84,20 @@ class DanceFloorInstance(
     var delayTicks = MAX_DELAY_TICKS
     var round = 1
     val fairness = DanceFloorFairness()
+    private var currentRoundDifficulty = 0
+    private val stats = useFFAStats(winManager, listOf(
+        CommonStats.TimeSurvived, CommonStats.DistanceMoved, RoundsSurvived, EliminationDifficulty
+    ))
 
     init {
         useRemainingPlayersDisplay()
         useSurvivalMode()
         disableTeleportEliminated()
+
+        // survivors/the winner are never eliminated: credit them the last round's difficulty
+        winManager.addListener {
+            for (player in players()) stats.set(player, EliminationDifficulty, currentRoundDifficulty)
+        }
     }
 
     override fun prepare() {
@@ -97,6 +112,9 @@ class DanceFloorInstance(
         setupTeam()
 
         readSpectatorSpawns()
+
+        trackSurvivalTime(stats)
+        trackDistanceMoved(stats)
     }
 
     private fun readSpectatorSpawns() {
@@ -285,6 +303,8 @@ class DanceFloorInstance(
         val (dyeColor, coverage) = blockRandomizer!!.pickSafeColor(reach)
         val block = Blocks.WOOL.pick(dyeColor)
 
+        currentRoundDifficulty = fairness.difficulty(blockDelayTicks, coverage)
+
         // give players the correct wool to compare with the floor
         for (player in players()) {
             player.inventory.setItem(4, ItemStack(block))
@@ -326,6 +346,11 @@ class DanceFloorInstance(
     }
 
     private fun checkEliminated() {
+        // credit everyone who cleared this round (participants that did not fall)
+        for (player in players()) {
+            if (player !in eliminate) stats.increment(player, RoundsSurvived)
+        }
+
         if (!eliminate.isEmpty()) {
             eliminate.forEach { player -> gameHandle.playerUtil.setStateOverride(player, PlayerUtil.State.DEFAULT) }
             eliminateAll(eliminate)
@@ -334,5 +359,10 @@ class DanceFloorInstance(
         if (winManager.gameOver) return
 
         nextCycle()
+    }
+
+    override fun onEliminated(player: ServerPlayer) {
+        stats.set(player, EliminationDifficulty, currentRoundDifficulty)
+        super.onEliminated(player)
     }
 }

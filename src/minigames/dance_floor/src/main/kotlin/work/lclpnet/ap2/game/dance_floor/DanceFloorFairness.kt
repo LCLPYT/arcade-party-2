@@ -66,4 +66,16 @@ class DanceFloorFairness(
 
         return max(window, needed)
     }
+
+    /** Difficulty of a round (0-100, larger = harder): blends time pressure and safe-color spread. */
+    fun difficulty(window: Int, coverage: Int): Int {
+        // shorter window than the fair range -> more time pressure
+        val timePressure = 1f - ((window - capWindowLow).toFloat() / (capWindowHigh - capWindowLow))
+            .coerceIn(0f, 1f)
+        // farther to the nearest safe block -> more spread
+        val spread = ((coverage - finestCoverage).toFloat() / (coarsestCoverage - finestCoverage))
+            .coerceIn(0f, 1f)
+
+        return ((0.5f * timePressure + 0.5f * spread) * 100f).roundToInt().coerceIn(0, 100)
+    }
 }
