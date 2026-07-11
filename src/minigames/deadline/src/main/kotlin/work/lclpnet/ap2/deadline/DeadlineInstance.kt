@@ -35,7 +35,7 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
     private val random = Random()
     private val riders = Riders(gameHandle, random, BikeSpec.fromMap(map))
     private val trail = LightTrail(level)
-    private val powerUps = PowerUps(gameHandle, map, level, random, commons().debugController(), riders)
+    private val powerUps = PowerUps(gameHandle, map, level, random, commons().debugController(), riders, schema.powerUpSpawns)
 
     override fun teleportPlayers() {
         val spawnBox = requireNotNull(schema.spawnBox) {
@@ -69,8 +69,8 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
 
     override fun go() {
         eliminateBelowCriticalHeight()
-        powerUps.spawn(schema.powerUpSpawns)
-        powerUps.startRefreshing(schema.powerUpSpawns)
+        powerUps.spawn()
+        powerUps.startRefreshing()
 
         // the border closes in after a while, so the game is guaranteed to end
         commons().scheduleWorldBorderShrink(WORLD_BORDER_DELAY, WORLD_BORDER_TIME, 0)

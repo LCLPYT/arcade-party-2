@@ -30,6 +30,7 @@ class PowerUps(
     private val random: Random,
     debugController: DebugController,
     riders: Riders,
+    private val positions: List<BlockPos>,
 ) {
 
     private val specialItems = SpecialItems.create(gameHandle, map, level, random, debugController) { registrar ->
@@ -63,9 +64,9 @@ class PowerUps(
         }
     }
 
-    fun startRefreshing(positions: List<BlockPos>) {
+    fun startRefreshing() {
         gameHandle.scheduler.interval(REFRESH_INTERVAL.inWholeTicks) { ->
-            spawn(positions)
+            spawn()
 
             for (player in gameHandle.participants) {
                 REFRESH_SOUND.playTo(player)
@@ -74,7 +75,7 @@ class PowerUps(
     }
 
     /** Spawns a random power-up with [SPAWN_CHANCE] at every spawn point that no longer has one. */
-    fun spawn(positions: List<BlockPos>) {
+    fun spawn() {
         for (pos in positions) {
             val existing = points[pos]
 
