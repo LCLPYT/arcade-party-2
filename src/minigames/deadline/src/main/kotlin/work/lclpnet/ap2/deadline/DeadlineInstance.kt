@@ -121,6 +121,10 @@ class DeadlineInstance(
             cycle.tick(player.lastClientInput)
             val movement = cycle.sheep.position().subtract(before)
 
+            // vanilla skips the ride tick of riders whose sneak dismount was cancelled, which would
+            // leave their hitbox stalled behind the moving sheep, so the rider is positioned manually
+            cycle.sheep.positionRider(player)
+
             // crashing into a wall or driving into a trail. phased riders pass through trails
             val trailOwner = if (cycle.phased) null else trail.hit(player.boundingBox, movement, player.uuid)
 
