@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.vehicle
+package work.lclpnet.ap2.deadline.vehicle
 
 import net.minecraft.network.protocol.game.ClientboundSetExperiencePacket
 import net.minecraft.server.level.ServerPlayer

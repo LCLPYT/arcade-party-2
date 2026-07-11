@@ -6,14 +6,14 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import work.lclpnet.ap2.deadline.rider.LightCycle
 import work.lclpnet.ap2.deadline.rider.Riders
-import work.lclpnet.ap2.deadline.util.GameSound
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext
+import work.lclpnet.ap2.util.sound.GameSound
 import work.lclpnet.kibu.scheduler.Ticks
 
 /**
  * Turns the rider and their sheep invisible for a short duration, during which they also phase through trails.
  */
-class Invisible(riders: Riders, onUsed: (ServerPlayer) -> Unit) : PowerUp(riders, onUsed) {
+class InvisiblePowerUp(riders: Riders, onUsed: (ServerPlayer) -> Unit) : DeadlinePowerUp(riders, onUsed) {
 
     override val item: Item = Items.FERMENTED_SPIDER_EYE
     override val duration = Ticks.seconds(4)

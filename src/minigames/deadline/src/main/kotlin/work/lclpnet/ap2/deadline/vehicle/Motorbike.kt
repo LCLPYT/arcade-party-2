@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.vehicle
+package work.lclpnet.ap2.deadline.vehicle
 
 import net.minecraft.world.entity.Mob
 import net.minecraft.world.entity.MoverType
@@ -49,8 +49,8 @@ open class Motorbike(val mount: Mob, val spec: BikeSpec) {
     }
 
     fun jump(strength: Double) {
-        val dm = mount.deltaMovement
-        mount.deltaMovement = Vec3(dm.x, strength, dm.z)
+        val velocity = mount.deltaMovement
+        mount.deltaMovement = Vec3(velocity.x, strength, velocity.z)
     }
 
     open fun tick(input: Input) {
@@ -74,10 +74,10 @@ open class Motorbike(val mount: Mob, val spec: BikeSpec) {
         if (engineOverrideTicks > 0) engineOverrideTicks--
 
         val engine = when {
-            engineOverrideTicks > 0 -> engineOverride // an overridden engine forces full throttle
-            input.forward() -> spec.engineForce // throttle
-            input.backward() -> -spec.brakeForce // brake
-            else -> 0f // coasting, resistance only
+            engineOverrideTicks > 0 -> engineOverride
+            input.forward() -> spec.engineForce
+            input.backward() -> -spec.brakeForce
+            else -> 0f
         }
 
         // integrate the longitudinal forces (F = engine - drag*v^2 - roll*v) into a velocity in m/s
@@ -86,10 +86,10 @@ open class Motorbike(val mount: Mob, val spec: BikeSpec) {
 
         // drive along the heading, convert m/s to blocks per tick
         val dir = MathUtil.yaw2vec(mount.yRot)
-        val dm = mount.deltaMovement
+        val velocity = mount.deltaMovement
         val perTick = speed * TICK
         val before = mount.position()
-        mount.deltaMovement = Vec3(dir.x * perTick, dm.y, dir.z * perTick)
+        mount.deltaMovement = Vec3(dir.x * perTick, velocity.y, dir.z * perTick)
         mount.travel(Vec3.ZERO)
 
         if (slopeTicks > 0) slopeTicks--

@@ -7,8 +7,8 @@ import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.animal.sheep.Sheep
 import net.minecraft.world.item.DyeColor
 import net.minecraft.world.scores.PlayerTeam
+import work.lclpnet.ap2.deadline.vehicle.BikeSpec
 import work.lclpnet.ap2.game.MiniGameHandle
-import work.lclpnet.ap2.game.vehicle.BikeSpec
 import work.lclpnet.ap2.impl.util.ColorUtil
 import java.util.Random
 import java.util.UUID
@@ -16,7 +16,11 @@ import java.util.UUID
 /**
  * Owns the riders of the game: their assigned colors, their sheep mounts and their light cycles.
  */
-class Riders(private val gameHandle: MiniGameHandle, private val random: Random, private val spec: BikeSpec) {
+class Riders(
+    private val gameHandle: MiniGameHandle,
+    private val random: Random,
+    private val spec: BikeSpec,
+) {
 
     private val colors = HashMap<UUID, DyeColor>()
     private val cycles = HashMap<UUID, LightCycle>()
@@ -26,18 +30,23 @@ class Riders(private val gameHandle: MiniGameHandle, private val random: Random,
     fun color(uuid: UUID): DyeColor = colors.getValue(uuid)
 
     fun assignColors() {
-        colors.putAll(gameHandle.colorPreferences.assign(gameHandle.participants, random, ColorUtil.VIVID_DYE_COLORS.toSet()))
+        colors.putAll(gameHandle.colorPreferences.assign(gameHandle.participants, random, ColorUtil.vividDyeColors().toSet()))
     }
 
     fun spawnMounts(team: PlayerTeam) {
         // players were already teleported to their spawns by the base start sequence
         for (player in gameHandle.participants) {
-            val color = colors.getValue(player.uuid)
-            val sheep = spawnSheep(player, color)
-            cycles[player.uuid] = LightCycle(sheep, spec)
-            gameHandle.scoreboardManager.joinTeam(sheep, team)
-            RiderOutfit.equip(player, color)
+            spawnMount(player, team)
         }
+    }
+
+    private fun spawnMount(player: ServerPlayer, team: PlayerTeam) {
+        val color = colors.getValue(player.uuid)
+        val sheep = spawnSheep(player, color)
+
+        cycles[player.uuid] = LightCycle(sheep, spec)
+        gameHandle.scoreboardManager.joinTeam(sheep, team)
+        RiderOutfit.equip(player, color)
     }
 
     fun remove(player: ServerPlayer) {

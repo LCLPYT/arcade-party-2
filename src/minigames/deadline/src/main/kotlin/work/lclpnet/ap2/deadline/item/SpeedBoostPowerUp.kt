@@ -6,8 +6,8 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import work.lclpnet.ap2.deadline.rider.LightCycle
 import work.lclpnet.ap2.deadline.rider.Riders
-import work.lclpnet.ap2.deadline.util.GameSound
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext
+import work.lclpnet.ap2.util.sound.GameSound
 import work.lclpnet.kibu.scheduler.Ticks
 
 private const val BOOST_MULTIPLIER = 2f // multiplies the engine force while the boost is active
@@ -15,7 +15,7 @@ private const val BOOST_MULTIPLIER = 2f // multiplies the engine force while the
 /**
  * Temporarily gives the sheep a stronger engine at full throttle.
  */
-class SpeedBoost(riders: Riders, onUsed: (ServerPlayer) -> Unit) : PowerUp(riders, onUsed) {
+class SpeedBoostPowerUp(riders: Riders, onUsed: (ServerPlayer) -> Unit) : DeadlinePowerUp(riders, onUsed) {
 
     override val item: Item = Items.SUGAR
     override val duration = Ticks.seconds(4)

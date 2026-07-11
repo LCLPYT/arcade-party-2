@@ -2,8 +2,8 @@ package work.lclpnet.ap2.deadline.rider
 
 import net.minecraft.world.entity.animal.sheep.Sheep
 import net.minecraft.world.entity.player.Input
-import work.lclpnet.ap2.game.vehicle.BikeSpec
-import work.lclpnet.ap2.game.vehicle.Motorbike
+import work.lclpnet.ap2.deadline.vehicle.BikeSpec
+import work.lclpnet.ap2.deadline.vehicle.Motorbike
 
 /**
  * A rider's dyed sheep driven like a motorbike, which can temporarily phase through trails.

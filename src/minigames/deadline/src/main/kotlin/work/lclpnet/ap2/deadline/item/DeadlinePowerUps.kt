@@ -5,12 +5,12 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import work.lclpnet.ap2.deadline.rider.Riders
-import work.lclpnet.ap2.deadline.util.GameSound
 import work.lclpnet.ap2.ext.inWholeTicks
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.impl.game.item.SpecialItemObject
 import work.lclpnet.ap2.impl.game.item.SpecialItems
 import work.lclpnet.ap2.impl.util.debug.DebugController
+import work.lclpnet.ap2.util.sound.GameSound
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks
@@ -24,9 +24,7 @@ private const val SPAWN_CHANCE = 0.7f // chance that a free spawn point actually
 // the interval of power up refreshes
 private val REFRESH_INTERVAL = 30.seconds
 
-private val REFRESH_SOUND = GameSound(SoundEvents.PLAYER_LEVELUP, 0.5f, 1.5f)
-
-class PowerUps(
+class DeadlinePowerUps(
     private val gameHandle: MiniGameHandle,
     map: GameMap,
     level: ServerLevel,
@@ -38,12 +36,13 @@ class PowerUps(
 ) {
 
     private val specialItems = SpecialItems.create(gameHandle, map, level, random, debugController) { registrar ->
-        registrar.register(SpeedBoost(riders, onUsed), 1f)
-        registrar.register(Jump(riders, onUsed), 1f)
-        registrar.register(Invisible(riders, onUsed), 1f)
+        registrar.register(SpeedBoostPowerUp(riders, onUsed), 1f)
+        registrar.register(JumpPowerUp(riders, onUsed), 1f)
+        registrar.register(InvisiblePowerUp(riders, onUsed), 1f)
     }
 
     private val points = HashMap<BlockPos, SpecialItemObject>()
+    private val refreshSound = GameSound(SoundEvents.PLAYER_LEVELUP, 0.5f, 1.5f)
 
     init {
         specialItems.itemSlot = ITEM_SLOT
@@ -73,7 +72,7 @@ class PowerUps(
             spawn()
 
             for (player in gameHandle.participants) {
-                REFRESH_SOUND.playTo(player)
+                refreshSound.playTo(player)
             }
         }
     }

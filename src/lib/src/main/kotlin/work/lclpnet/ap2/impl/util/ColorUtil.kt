@@ -7,7 +7,7 @@ import kotlin.math.min
 import kotlin.math.roundToLong
 
 object ColorUtil {
-    val VIVID_DYE_COLORS: List<DyeColor> = listOf(
+    fun vividDyeColors(): List<DyeColor> = listOf(
         DyeColor.BROWN,
         DyeColor.RED,
         DyeColor.ORANGE,

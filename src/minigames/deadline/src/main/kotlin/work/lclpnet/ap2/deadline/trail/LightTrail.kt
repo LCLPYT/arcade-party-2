@@ -42,15 +42,19 @@ class LightTrail(level: ServerLevel, private val spec: TrailSpec) {
         // follows an equally delayed position to keep its tip visually at the sheep
         val buffer = recent.getOrPut(uuid) { ArrayDeque() }
         buffer.addLast(position)
-        if (buffer.size <= DELAY_TICKS) return
-        val delayed = buffer.removeFirst()
 
+        if (buffer.size <= DELAY_TICKS) return
+
+        val delayed = buffer.removeFirst()
         val start = anchor[uuid]
+
         if (start == null) {
             anchor[uuid] = delayed
             return
         }
+
         if (delayed.distanceToSqr(start) < SEGMENT_LENGTH * SEGMENT_LENGTH) return
+
         collider.add(uuid, start, delayed, placeSegment(start, delayed, color))
         anchor[uuid] = delayed
         trim(uuid)

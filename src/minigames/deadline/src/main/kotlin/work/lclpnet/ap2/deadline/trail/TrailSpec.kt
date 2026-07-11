@@ -5,11 +5,15 @@ import work.lclpnet.game.map.GameMap
 
 /**
  * Pacing of a rider's [LightTrail].
+ *
+ * @property initialSegments How many segments a trail keeps before its tail starts to disappear.
+ * @property maxSegments The segment limit stops growing once it reaches this.
+ * @property growthInterval How many ticks it takes for the segment limit to grow by one.
  */
 data class TrailSpec(
-    val initialSegments: Int = 100, // how many segments a trail keeps before its tail starts to disappear
-    val maxSegments: Int = 500, // the segment limit stops growing once it reaches this
-    val growthInterval: Int = 9, // ticks it takes for the segment limit to grow by one
+    val initialSegments: Int = 100,
+    val maxSegments: Int = 500,
+    val growthInterval: Int = 9,
 ) {
     companion object {
         /**

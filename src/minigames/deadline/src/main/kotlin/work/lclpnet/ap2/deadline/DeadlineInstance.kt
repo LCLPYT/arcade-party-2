@@ -14,35 +14,40 @@ import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
 import work.lclpnet.ap2.api.stats.CommonStats.Kills
 import work.lclpnet.ap2.api.stats.CommonStats.TimeSurvived
 import work.lclpnet.ap2.api.stats.Stat
-import work.lclpnet.ap2.deadline.item.PowerUps
+import work.lclpnet.ap2.deadline.item.DeadlinePowerUps
 import work.lclpnet.ap2.deadline.rider.Riders
 import work.lclpnet.ap2.deadline.trail.LightTrail
 import work.lclpnet.ap2.deadline.trail.TrailSpec
+import work.lclpnet.ap2.deadline.vehicle.BikeSpec
+import work.lclpnet.ap2.deadline.vehicle.SpeedHud
 import work.lclpnet.ap2.ext.gainKill
 import work.lclpnet.ap2.ext.hooks
+import work.lclpnet.ap2.ext.inWholeTicks
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.util.teleportToRandomSpawns
 import work.lclpnet.ap2.game.util.useFFAStats
-import work.lclpnet.ap2.game.vehicle.BikeSpec
-import work.lclpnet.ap2.game.vehicle.SpeedHud
 import work.lclpnet.ap2.impl.util.ParticleHelper
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.entity.EntityDismountCallback
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback
-import work.lclpnet.kibu.scheduler.Ticks
 import java.util.Random
+import kotlin.time.Duration.Companion.minutes
 
 private val PowerUpsUsed = Stat("power_ups_used", 0)
 
-private val WORLD_BORDER_DELAY = Ticks.minutes(3).toLong()
-private val WORLD_BORDER_TIME = Ticks.minutes(1).toLong()
+private val WORLD_BORDER_DELAY = 3.minutes
+private val WORLD_BORDER_TIME = 1.minutes
 
-class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap, private val schema: DeadlineMapSchema) :
-    EliminationGameInstance(gameHandle, level, map) {
+class DeadlineInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    private val schema: DeadlineMapSchema,
+) : EliminationGameInstance(gameHandle, level, map) {
 
     private val random = Random()
     private val riders = Riders(gameHandle, random, BikeSpec.fromMap(map))
@@ -50,14 +55,20 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
     private val stats = useFFAStats(winManager, listOf(
         TimeSurvived, Kills, PowerUpsUsed, DistanceMoved
     ))
-    private val powerUps = PowerUps(gameHandle, map, level, random, commons().debugController(), riders, schema.powerUpSpawns) {
+    private val powerUps = DeadlinePowerUps(
+        gameHandle,
+        map,
+        level,
+        random,
+        commons().debugController(),
+        riders,
+        schema.powerUpSpawns,
+    ) {
         stats.increment(it, PowerUpsUsed)
     }
 
     override fun teleportPlayers() {
-        val spawnBox = requireNotNull(schema.spawnBox) {
-            "Map property \"Spawn box\" is not set in the deadline schema"
-        }
+        val spawnBox = schema.spawnBox!!
 
         // riders start facing the arena center, so nobody spawns aimed at a nearby wall
         val border = commons().readWorldBorderConfig()
@@ -72,13 +83,6 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
         trackSurvivalTime(stats)
         disableTeleportEliminated()
 
-        gameHandle.protect { config ->
-            // riders caught outside the shrinking world border take damage until they die
-            ProtectionTypes.ALLOW_DAMAGE.allow(config) { _, damageSource ->
-                damageSource.isOf(DamageTypes.OUTSIDE_BORDER)
-            }
-        }
-
         val team = createTeam()
         riders.assignColors()
         initHooks()
@@ -86,12 +90,19 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
     }
 
     override fun go() {
+        gameHandle.protect { config ->
+            // riders caught outside the shrinking world border take damage until they die
+            ProtectionTypes.ALLOW_DAMAGE.allow(config) { _, damageSource ->
+                damageSource.isOf(DamageTypes.OUTSIDE_BORDER)
+            }
+        }
+
         eliminateBelowCriticalHeight()
         powerUps.spawn()
         powerUps.startRefreshing()
 
         // the border closes in after a while, so the game is guaranteed to end
-        commons().scheduleWorldBorderShrink(WORLD_BORDER_DELAY, WORLD_BORDER_TIME, 0)
+        commons().scheduleWorldBorderShrink(WORLD_BORDER_DELAY.inWholeTicks, WORLD_BORDER_TIME.inWholeTicks, 0)
 
         gameHandle.rootScheduler.interval(1) { -> tick() }
     }
@@ -161,5 +172,4 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
 
         powerUps.initHooks()
     }
-
 }

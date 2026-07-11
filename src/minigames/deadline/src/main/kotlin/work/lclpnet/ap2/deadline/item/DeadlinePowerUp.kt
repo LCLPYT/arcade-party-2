@@ -8,14 +8,14 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import work.lclpnet.ap2.deadline.rider.LightCycle
 import work.lclpnet.ap2.deadline.rider.Riders
-import work.lclpnet.ap2.deadline.util.GameSound
 import work.lclpnet.ap2.impl.game.item.SpecialItem
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext
+import work.lclpnet.ap2.util.sound.GameSound
 
 /**
  * An activatable power-up that riders collect from pickups and trigger by using its item.
  */
-abstract class PowerUp(protected val riders: Riders, private val onUsed: (ServerPlayer) -> Unit) : SpecialItem {
+abstract class DeadlinePowerUp(protected val riders: Riders, private val onUsed: (ServerPlayer) -> Unit) : SpecialItem {
 
     protected abstract val item: Item
 

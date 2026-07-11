@@ -62,25 +62,28 @@ class SegmentCollider<T> {
 
     /** The owner of the lethal segment the rider's hitbox touched anywhere along its movement of this tick, or null. */
     fun hit(box: AABB, movement: Vec3, rider: UUID): UUID? {
+        // gather the nearby lethal segments only once, from the whole area swept by this tick's movement
+        val candidates = mutableListOf<Segment<T>>()
+
+        forEachCell(box.minmax(box.move(movement.scale(-1.0)))) { key ->
+            cells[key]?.forEach { segment ->
+                if (segment !in candidates && isLethalTo(segment, rider)) candidates.add(segment)
+            }
+        }
+
+        if (candidates.isEmpty()) return null
+
         // check intermediate positions too, so fast riders cannot skip over a trail between two ticks
         val steps = ceil(movement.length() / SAMPLE_SPACING).toInt().coerceAtLeast(1)
 
         for (i in 0..steps) {
             val t = i.toDouble() / steps // 0 = position at the previous tick, 1 = current position
-            hit(box.move(movement.scale(t - 1.0)), rider)?.let { return it }
+            val sampled = box.move(movement.scale(t - 1.0))
+
+            candidates.firstOrNull { it.collidesWith(sampled) }?.let { return it.owner }
         }
 
         return null
-    }
-
-    private fun hit(box: AABB, rider: UUID): UUID? {
-        var owner: UUID? = null
-        forEachCell(box) { key ->
-            if (owner == null) {
-                owner = cells[key]?.firstOrNull { isLethalTo(it, rider) && it.collidesWith(box) }?.owner
-            }
-        }
-        return owner
     }
 
     private fun isLethalTo(segment: Segment<T>, rider: UUID): Boolean {

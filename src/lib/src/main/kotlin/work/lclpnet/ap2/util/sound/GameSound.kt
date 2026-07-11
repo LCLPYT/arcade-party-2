@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.deadline.util
+package work.lclpnet.ap2.util.sound
 
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvent
