@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.deadline.rider
 
 import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.EntityTypes
@@ -52,6 +53,9 @@ class Riders(
     fun remove(player: ServerPlayer) {
         cycles.remove(player.uuid)?.sheep?.discard()
     }
+
+    /** Whether the entity is the mount of one of the riders. */
+    fun isMount(entity: Entity): Boolean = cycles.values.any { it.sheep === entity }
 
     /** Turns the rider and their sheep completely invisible for the duration. */
     fun vanish(player: ServerPlayer, durationTicks: Int) {

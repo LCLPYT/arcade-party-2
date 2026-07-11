@@ -7,6 +7,7 @@ import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.level.border.BorderStatus
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.PlayerTeam
 import net.minecraft.world.scores.Team
@@ -14,6 +15,7 @@ import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
 import work.lclpnet.ap2.api.stats.CommonStats.Kills
 import work.lclpnet.ap2.api.stats.CommonStats.TimeSurvived
 import work.lclpnet.ap2.api.stats.Stat
+import work.lclpnet.ap2.core.hook.WorldBorderPhaseCallback
 import work.lclpnet.ap2.deadline.item.DeadlinePowerUps
 import work.lclpnet.ap2.deadline.rider.Riders
 import work.lclpnet.ap2.deadline.trail.LightTrail
@@ -175,6 +177,12 @@ class DeadlineInstance(
         // riders caught outside the world border must not regenerate the border damage away
         EntityHealthCallback.HOOK.registerWith(hooks) { entity, health ->
             entity is ServerPlayer && health > entity.health && !level.worldBorder.isWithinBounds(entity.boundingBox)
+        }
+
+        // the moving world border has no collision for the sheep: riders phase through it and take
+        // the border damage outside instead. once it stands still, it acts as a regular wall
+        WorldBorderPhaseCallback.HOOK.registerWith(hooks) { border, entity ->
+            border.status != BorderStatus.STATIONARY && riders.isMount(entity)
         }
 
         powerUps.initHooks()
