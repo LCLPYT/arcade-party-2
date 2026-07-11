@@ -34,7 +34,7 @@ class DeadlineInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
 
     private val random = Random()
     private val riders = Riders(gameHandle, random, BikeSpec.fromMap(map))
-    private val trail = LightTrail(level)
+    private val trail = LightTrail(level, TrailSpec.fromMap(map))
     private val powerUps = PowerUps(gameHandle, map, level, random, commons().debugController(), riders, schema.powerUpSpawns)
 
     override fun teleportPlayers() {

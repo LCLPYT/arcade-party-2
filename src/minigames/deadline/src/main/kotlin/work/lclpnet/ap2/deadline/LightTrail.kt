@@ -17,25 +17,22 @@ import kotlin.math.sqrt
 
 private const val SEGMENT_LENGTH = 1.0 // smallest trail segment length in blocks; larger means fewer displays
 private const val DELAY_TICKS = 3 // how many ticks the trail lags behind, matching the client's mount interpolation
-private const val INITIAL_SEGMENTS = 100 // how many segments a trail keeps before its tail starts to disappear
-private const val MAX_SEGMENTS = 500 // the segment limit stops growing once it reaches this
-private const val GROWTH_INTERVAL = 9 // ticks it takes for the segment limit to grow by one
 
 /**
  * Draws each rider's glowing glass-pane trail as stretched, heading-aligned block displays in a gaco scene.
  */
-class LightTrail(level: ServerLevel) {
+class LightTrail(level: ServerLevel, private val spec: TrailSpec) {
 
     private val scene = Scene(ServerWorldMountContext(level))
     private val recent = HashMap<UUID, ArrayDeque<Vec3>>()
     private val anchor = HashMap<UUID, Vec3>()
     private val collider = SegmentCollider<BlockDisplayObject>()
-    private var maxSegments = INITIAL_SEGMENTS
+    private var maxSegments = spec.initialSegments
     private var age = 0
 
     // trails get longer the longer the game goes on
     fun tick() {
-        if (maxSegments < MAX_SEGMENTS && ++age % GROWTH_INTERVAL == 0) {
+        if (maxSegments < spec.maxSegments && ++age % spec.growthInterval == 0) {
             maxSegments++
         }
     }
