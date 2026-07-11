@@ -1,6 +1,8 @@
 package work.lclpnet.ap2.deadline
 
 import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.effect.MobEffectInstance
+import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.animal.sheep.Sheep
 import net.minecraft.world.item.DyeColor
@@ -40,6 +42,24 @@ class Riders(private val gameHandle: MiniGameHandle, private val random: Random,
 
     fun remove(player: ServerPlayer) {
         cycles.remove(player.uuid)?.sheep?.discard()
+    }
+
+    /** Turns the rider and their sheep completely invisible for the duration. */
+    fun vanish(player: ServerPlayer, durationTicks: Int) {
+        val cycle = cycles[player.uuid] ?: return
+
+        player.addEffect(MobEffectInstance(MobEffects.INVISIBILITY, durationTicks, 0, false, false, false))
+        cycle.sheep.addEffect(MobEffectInstance(MobEffects.INVISIBILITY, durationTicks, 0, false, false, false))
+
+        // armor stays visible despite the invisibility effect, so temporarily unequip it
+        RiderOutfit.unequip(player)
+
+        gameHandle.scheduler.timeout(durationTicks) { ->
+            // eliminated riders already had their inventory reset
+            if (player.uuid !in cycles) return@timeout
+
+            RiderOutfit.equip(player, colors.getValue(player.uuid))
+        }
     }
 
     private fun spawnSheep(player: ServerPlayer, color: DyeColor): Sheep {

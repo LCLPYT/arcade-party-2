@@ -12,7 +12,6 @@ import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks
 import java.util.Random
-import java.util.UUID
 import kotlin.time.Duration.Companion.seconds
 
 private const val ITEM_SLOT = 4
@@ -30,13 +29,13 @@ class PowerUps(
     level: ServerLevel,
     private val random: Random,
     debugController: DebugController,
-    cycles: (UUID) -> LightCycle?,
+    riders: Riders,
 ) {
 
     private val specialItems = SpecialItems.create(gameHandle, map, level, random, debugController) { registrar ->
-        registrar.register(SpeedBoost(cycles), 1f)
-        registrar.register(Jump(cycles), 1f)
-        registrar.register(Invisible(cycles), 1f)
+        registrar.register(SpeedBoost(riders), 1f)
+        registrar.register(Jump(riders), 1f)
+        registrar.register(Invisible(riders), 1f)
     }
 
     private val points = HashMap<BlockPos, SpecialItemObject>()

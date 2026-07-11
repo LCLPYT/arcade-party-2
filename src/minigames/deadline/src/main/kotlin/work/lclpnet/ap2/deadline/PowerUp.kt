@@ -8,12 +8,11 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import work.lclpnet.ap2.impl.game.item.SpecialItem
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext
-import java.util.UUID
 
 /**
  * An activatable power-up that riders collect from pickups and trigger by using its item.
  */
-abstract class PowerUp(protected val cycles: (UUID) -> LightCycle?) : SpecialItem {
+abstract class PowerUp(protected val riders: Riders) : SpecialItem {
 
     protected abstract val item: Item
 
@@ -30,7 +29,7 @@ abstract class PowerUp(protected val cycles: (UUID) -> LightCycle?) : SpecialIte
     override fun canBeDropped(player: ServerPlayer, stack: ItemStack): Boolean = false
 
     override fun onUse(player: ServerPlayer, stack: ItemStack, hand: InteractionHand?, ctx: SpecialItemContext): InteractionResult {
-        val cycle = cycles(player.uuid) ?: return InteractionResult.PASS
+        val cycle = riders.cycle(player.uuid) ?: return InteractionResult.PASS
 
         if (duration > 0) {
             // the item stays in the slot with its cooldown sweep while the effect lasts, then disappears
