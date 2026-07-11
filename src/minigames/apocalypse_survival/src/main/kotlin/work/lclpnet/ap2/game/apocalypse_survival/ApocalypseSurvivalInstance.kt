@@ -28,6 +28,7 @@ import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.game.util.useTaskDisplay
 import work.lclpnet.ap2.impl.util.TimeHelper
+import work.lclpnet.ap2.util.useGameRules
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.util.PlayerReset
@@ -54,10 +55,11 @@ class ApocalypseSurvivalInstance(gameHandle: MiniGameHandle, level: ServerLevel,
         val setup = AsSetup(map, level, random, targetManager)
         spawners = setup.readSpawners()
 
-        commons().gameRuleBuilder()
-            .set(GameRules.FALL_DAMAGE, true)
-            .set(GameRules.MOB_GRIEFING, true)
-            .set(GameRules.NATURAL_HEALTH_REGENERATION, false)
+        useGameRules {
+            set(GameRules.FALL_DAMAGE, true)
+            set(GameRules.MOB_GRIEFING, true)
+            set(GameRules.NATURAL_HEALTH_REGENERATION, false)
+        }
 
         val hooks = gameHandle.hooks
 

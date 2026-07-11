@@ -29,6 +29,7 @@ import work.lclpnet.ap2.game.util.useAnnouncer
 import work.lclpnet.ap2.game.util.useSurvivalMode
 import work.lclpnet.ap2.impl.util.ParticleHelper
 import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager
+import work.lclpnet.ap2.util.useGameRules
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.util.BossBarTimer
 import work.lclpnet.kibu.access.VelocityModifier
@@ -88,7 +89,9 @@ class SpeedBuildersInstance(
         destruction = SbDestruction(level, random, aelosId)
         level.gameRules.set(GameRules.BLOCK_DROPS, true, server)
 
-        setupGameRules()
+        useGameRules {
+            set(GameRules.RANDOM_TICK_SPEED, 0)
+        }
 
         ServerLevelBehaviour.setFluidTicksEnabled(level, false)
 
@@ -146,11 +149,6 @@ class SpeedBuildersInstance(
         }
 
         super.participantRemoved(player)
-    }
-
-    private fun setupGameRules() {
-        commons().gameRuleBuilder()
-            .set(GameRules.RANDOM_TICK_SPEED, 0)
     }
 
     private fun nextRound() {

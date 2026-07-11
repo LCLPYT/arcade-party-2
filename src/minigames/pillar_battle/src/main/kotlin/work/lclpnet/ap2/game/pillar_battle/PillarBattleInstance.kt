@@ -38,6 +38,7 @@ import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
 import work.lclpnet.ap2.impl.util.world.KnockbackKillTracker
 import work.lclpnet.ap2.impl.util.world.WorldBorderUtil
+import work.lclpnet.ap2.util.useGameRules
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
@@ -92,15 +93,16 @@ class PillarBattleInstance(
         useRemainingPlayersDisplay()
         useSmoothDeath()
 
-        commons().gameRuleBuilder()
-            .set(GameRules.FALL_DAMAGE, true)
-            .set(GameRules.FIRE_SPREAD_RADIUS_AROUND_PLAYER, 128)
-            .set(GameRules.SPAWN_PHANTOMS, false)
-            .set(GameRules.NATURAL_HEALTH_REGENERATION, true)
-            .set(GameRules.MOB_GRIEFING, true)
-            .set(GameRules.SPAWN_WANDERING_TRADERS, false)
-            .set(GameRules.SPAWN_PATROLS, false)
-            .set(GameRules.KEEP_INVENTORY, false)
+        useGameRules {
+            set(GameRules.FALL_DAMAGE, true)
+            set(GameRules.FIRE_SPREAD_RADIUS_AROUND_PLAYER, 128)
+            set(GameRules.SPAWN_PHANTOMS, false)
+            set(GameRules.NATURAL_HEALTH_REGENERATION, true)
+            set(GameRules.MOB_GRIEFING, true)
+            set(GameRules.SPAWN_WANDERING_TRADERS, false)
+            set(GameRules.SPAWN_PATROLS, false)
+            set(GameRules.KEEP_INVENTORY, false)
+        }
 
         movementBlocker.init(gameHandle.hooks)
 

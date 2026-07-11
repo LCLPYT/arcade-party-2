@@ -49,6 +49,7 @@ import work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
 import work.lclpnet.ap2.impl.util.VanishManager
 import work.lclpnet.ap2.impl.util.handler.VisualCooldown
+import work.lclpnet.ap2.util.useGameRules
 import work.lclpnet.gaco.collisions.ChunkedCollisionDetector
 import work.lclpnet.gaco.collisions.movement.TickMovementObserver
 import work.lclpnet.gaco.scene.Scene
@@ -153,9 +154,10 @@ class PaintballInstance(
         setupPlayerCollisions()
         balanceTeams()
 
-        commons().gameRuleBuilder()
-            .set(GameRules.NATURAL_HEALTH_REGENERATION, false)
-            .set(GameRules.FALL_DAMAGE, false)
+        useGameRules {
+            set(GameRules.NATURAL_HEALTH_REGENERATION, false)
+            set(GameRules.FALL_DAMAGE, false)
+        }
     }
 
     private fun setupSpecialItems(world: ServerLevel, map: GameMap) {

@@ -32,6 +32,7 @@ import work.lclpnet.ap2.game.util.useTaskDisplay
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.ItemHelper
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
+import work.lclpnet.ap2.util.useGameRules
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
@@ -58,9 +59,10 @@ class TreasureHunterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
     }
 
     override fun prepare() {
-        commons().gameRuleBuilder()
-            .set(GameRules.BLOCK_DROPS, false)
-            .set(GameRules.ENTITY_DROPS, false)
+        useGameRules {
+            set(GameRules.BLOCK_DROPS, false)
+            set(GameRules.ENTITY_DROPS, false)
+        }
 
         MapUtil.readBlockStates(map.requireProperty("materials"), materials, gameHandle.logger)
 

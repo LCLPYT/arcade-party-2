@@ -47,6 +47,7 @@ import work.lclpnet.ap2.impl.util.TimeHelper
 import work.lclpnet.ap2.impl.util.math.MathUtil
 import work.lclpnet.ap2.turf_wars.Phase.*
 import work.lclpnet.ap2.turf_wars.util.*
+import work.lclpnet.ap2.util.useGameRules
 import work.lclpnet.combatctl.hook.SwordBlockDamageCallback
 import work.lclpnet.gaco.collisions.ChunkedCollisionDetector
 import work.lclpnet.gaco.collisions.movement.TickMovementObserver
@@ -135,8 +136,9 @@ class TurfWarsInstance(
             }
         }
 
-        commons().gameRuleBuilder()
-            .set(GameRules.NATURAL_HEALTH_REGENERATION, false)
+        useGameRules {
+            set(GameRules.NATURAL_HEALTH_REGENERATION, false)
+        }
     }
 
     override fun go() {
