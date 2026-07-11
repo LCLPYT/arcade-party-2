@@ -49,11 +49,18 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerLevel) {
         add(Spirals(), 0.5f)
         add(PerlinNoise(), 1f)
         add(Mandelbrot(), 0.3f)
-        add(Hexagons(), 1f)
         add(Triangles(), 1f)
         add(EinsteinTiles(), 0.45f)
         add(Penrose(), 0.45f)
         add(HilbertCurve(), 0.45f)
+        add(Waves(), 0.7f)
+        add(Ripples(), 0.6f)
+        add(Moire(), 0.7f)
+        add(Cellular(), 0.6f)
+        add(Phyllotaxis(), 0.6f)
+        add(TruchetTiles(), 0.6f)
+        add(QuasiCrystal(), 0.55f)
+        add(WarpedStripes(), 0.6f)
     }
 
     val patternsById: Map<String, Pattern> = patterns.associateBy { it.id }
@@ -338,7 +345,7 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerLevel) {
         private var seeds: List<Vec3> = emptyList()
 
         override fun init() {
-            val count = Random.nextInt(65, 80)
+            val count = Random.nextInt(120, 160)
             seeds = List(count) { floorShape.randomPos(Random.asJavaRandom()) }
         }
 
@@ -499,20 +506,6 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerLevel) {
             }
 
             return iter % 8
-        }
-    }
-
-    class Hexagons(override val minColors: Int = 8, override val maxColors: Int = 11) : Pattern {
-        override val id = "hexagons"
-        private var size = 3
-
-        override fun init() {
-            size = Random.nextInt(2, 5)
-        }
-
-        override fun group(pos: BlockPos): Int {
-            val hex = pointyHexRound(pos.x.toDouble(), pos.z.toDouble(), size.toDouble())
-            return hash(hex[0], hex[1])
         }
     }
 
@@ -699,6 +692,266 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerLevel) {
             }
 
             return d
+        }
+    }
+
+    class Waves(override val minColors: Int = 8, override val maxColors: Int = 11) : Pattern {
+        override val id = "waves"
+        private var freqX = 0.5
+        private var freqZ = 0.5
+        private var phaseX = 0.0
+        private var phaseZ = 0.0
+        private var levels = 4
+
+        override fun init() {
+            freqX = Random.nextDouble(0.35, 0.7)
+            freqZ = Random.nextDouble(0.35, 0.7)
+
+            phaseX = Random.nextDouble() * PI * 2
+            phaseZ = Random.nextDouble() * PI * 2
+
+            levels = Random.nextInt(3, 5)
+        }
+
+        override fun group(pos: BlockPos): Int {
+            val a = (sin(pos.x * freqX + phaseX) + 1.0) / 2.0
+            val b = (sin(pos.z * freqZ + phaseZ) + 1.0) / 2.0
+
+            val ia = floor(a * levels).toInt().coerceIn(0, levels - 1)
+            val ib = floor(b * levels).toInt().coerceIn(0, levels - 1)
+
+            return hash(ia, ib)
+        }
+    }
+
+    inner class Ripples(override val minColors: Int = 7, override val maxColors: Int = 10) : Pattern {
+        override val id = "ripples"
+        private var sources: List<Vec3> = emptyList()
+        private var freq = 0.5
+        private var levels = 6
+
+        override fun init() {
+            val count = Random.nextInt(2, 5)
+
+            sources = List(count) { floorShape.randomPos(Random.asJavaRandom()) }
+            freq = Random.nextDouble(0.4, 0.9)
+            levels = Random.nextInt(5, 9)
+        }
+
+        override fun group(pos: BlockPos): Int {
+            var sum = 0.0
+
+            for (s in sources) {
+                val dx = pos.x + 0.5 - s.x
+                val dz = pos.z + 0.5 - s.z
+
+                sum += sin(sqrt(dx * dx + dz * dz) * freq)
+            }
+
+            val norm = (sum / sources.size + 1.0) / 2.0
+
+            return floor(norm * levels).toInt().coerceIn(0, levels - 1)
+        }
+    }
+
+    class Moire(override val minColors: Int = 8, override val maxColors: Int = 11) : Pattern {
+        override val id = "moire"
+        private var angle = 0.3
+        private var scaleA = 3.0
+        private var scaleB = 3.0
+
+        override fun init() {
+            angle = Random.nextDouble(0.15, 0.5)
+            scaleA = Random.nextDouble(2.0, 4.0)
+            scaleB = Random.nextDouble(2.0, 4.0)
+        }
+
+        override fun group(pos: BlockPos): Int {
+            val x = pos.x.toDouble()
+            val z = pos.z.toDouble()
+
+            val ax = floor(x / scaleA).toInt()
+            val az = floor(z / scaleA).toInt()
+
+            val rx = x * cos(angle) - z * sin(angle)
+            val rz = x * sin(angle) + z * cos(angle)
+
+            val bx = floor(rx / scaleB).toInt()
+            val bz = floor(rz / scaleB).toInt()
+
+            return hash(ax + bx, az + bz)
+        }
+    }
+
+    class Cellular(override val minColors: Int = 8, override val maxColors: Int = 11) : Pattern {
+        override val id = "cellular"
+        private var size = 4
+        private var seed = 0
+
+        override fun init() {
+            size = Random.nextInt(3, 6)
+            seed = Random.nextInt()
+        }
+
+        override fun group(pos: BlockPos): Int {
+            val cx = floor(pos.x.toDouble() / size).toInt()
+            val cz = floor(pos.z.toDouble() / size).toInt()
+
+            var bestId = 0
+            var best = Double.MAX_VALUE
+
+            for (dx in -1..1) for (dz in -1..1) {
+                val gx = cx + dx
+                val gz = cz + dz
+
+                val jx = (gx + jitter(gx, gz, 0)) * size
+                val jz = (gz + jitter(gx, gz, 1)) * size
+
+                val ddx = pos.x + 0.5 - jx
+                val ddz = pos.z + 0.5 - jz
+
+                val d = ddx * ddx + ddz * ddz
+
+                if (d < best) {
+                    best = d
+                    bestId = hash(gx, gz)
+                }
+            }
+
+            return bestId
+        }
+
+        private fun jitter(x: Int, z: Int, salt: Int): Double =
+            (hash(x, z, salt, seed) and 0xFFFF) / 65535.0
+    }
+
+    inner class Phyllotaxis(override val minColors: Int = 8, override val maxColors: Int = 11) : Pattern {
+        override val id = "phyllotaxis"
+        private var seeds: List<Vec3> = emptyList()
+
+        override fun init() {
+            val bounds = floorShape.bounds()
+            val center = floorShape.center()
+            val radius = max(bounds.width(), bounds.length()) / 2.0 + 2.0
+            val count = Random.nextInt(120, 200)
+            val golden = PI * (3.0 - sqrt(5.0))
+            val c = radius / sqrt(count.toDouble())
+
+            seeds = List(count) { i ->
+                val r = c * sqrt(i.toDouble())
+                val theta = i * golden
+
+                Vec3(center.x + 0.5 + r * cos(theta), 0.0, center.z + 0.5 + r * sin(theta))
+            }
+        }
+
+        override fun group(pos: BlockPos): Int {
+            var closest = 0
+            var closestDist = Double.MAX_VALUE
+
+            for ((i, s) in seeds.withIndex()) {
+                val dx = pos.x + 0.5 - s.x
+                val dz = pos.z + 0.5 - s.z
+
+                val d = dx * dx + dz * dz
+
+                if (d < closestDist) {
+                    closestDist = d
+                    closest = i
+                }
+            }
+
+            return closest
+        }
+    }
+
+    class TruchetTiles(override val minColors: Int = 8, override val maxColors: Int = 11) : Pattern {
+        override val id = "truchet_tiles"
+        private var size = 4
+        private var bands = 2
+        private var seed = 0
+
+        override fun init() {
+            size = Random.nextInt(3, 6)
+            bands = Random.nextInt(2, 4)
+            seed = Random.nextInt()
+        }
+
+        override fun group(pos: BlockPos): Int {
+            val cx = floor(pos.x.toDouble() / size).toInt()
+            val cz = floor(pos.z.toDouble() / size).toInt()
+            val fx = pos.x.toDouble() / size - cx
+            val fz = pos.z.toDouble() / size - cz
+
+            val flip = (hash(cx, cz, seed) and 1) == 0
+
+            val centers = if (flip) {
+                arrayOf(0.0, 0.0, 1.0, 1.0)
+            } else {
+                arrayOf(1.0, 0.0, 0.0, 1.0)
+            }
+
+            val d1 = hypot(fx - centers[0], fz - centers[1])
+            val d2 = hypot(fx - centers[2], fz - centers[3])
+            val d = min(d1, d2)
+            val band = floor(d * bands * 1.4).toInt()
+
+            return hash(cx, cz, band)
+        }
+    }
+
+    class QuasiCrystal(override val minColors: Int = 7, override val maxColors: Int = 10) : Pattern {
+        override val id = "quasicrystal"
+        private var waves = 5
+        private var freq = 0.4
+        private var phase = 0.0
+        private var levels = 5
+
+        override fun init() {
+            waves = Random.nextInt(5, 8)
+            freq = Random.nextDouble(0.25, 0.5)
+            phase = Random.nextDouble() * PI * 2
+            levels = Random.nextInt(4, 7)
+        }
+
+        override fun group(pos: BlockPos): Int {
+            var sum = 0.0
+
+            for (i in 0 until waves) {
+                val a = PI * i / waves
+
+                sum += cos((pos.x * cos(a) + pos.z * sin(a)) * freq + phase)
+            }
+
+            val norm = (sum / waves + 1.0) / 2.0
+
+            return floor(norm * levels).toInt().coerceIn(0, levels - 1)
+        }
+    }
+
+    class WarpedStripes(override val minColors: Int = 7, override val maxColors: Int = 10) : Pattern {
+        override val id = "warped_stripes"
+        private var bandWidth = 3.0
+        private var warpAmp = 4.0
+        private var warpFreq = 0.15
+        private var phase = 0.0
+        private var vertical = true
+
+        override fun init() {
+            bandWidth = Random.nextDouble(2.0, 4.0)
+            warpAmp = Random.nextDouble(3.0, 7.0)
+            warpFreq = Random.nextDouble(0.1, 0.25)
+            phase = Random.nextDouble() * PI * 2
+            vertical = Random.nextBoolean()
+        }
+
+        override fun group(pos: BlockPos): Int {
+            val warp = sin(pos.z * warpFreq + phase) * warpAmp +
+                    sin(pos.x * warpFreq * 0.7) * warpAmp * 0.5
+
+            val v = if (vertical) pos.x + warp else pos.z + warp
+
+            return floor(v / bandWidth).toInt()
         }
     }
 }
