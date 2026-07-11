@@ -63,6 +63,36 @@ This will run as your UID/GID in the container while keeping the UID/GID mapping
 Alternatively you can also run as root user without the `userns=keep-id` option like with Docker Rootless; however this comes with the risk of running as root in the container.
 
 ## Developing
+### Selective builds for development
+Every minigame and mode is its own Gradle subproject, so building or running the full project compiles all of them. 
+When working on a single minigame you can restrict the build to a subset to cut compile time. 
+The shared `:lib` project is always included, and unless narrowed, all modes (currently just `default`) are included so the game is playable.
+
+Selection is controlled by two keys, `ap2.games` and `ap2.modes`, each a comma separated list of subproject names. 
+When neither is set, the full project is built (the default, also used by CI and release builds). 
+
+From the Gradle CLI, pass them per invocation with `-P`:
+```bash
+# run the server with only Task Rush
+./gradlew :runServer -Pap2.games=task_rush
+
+# multiple minigames, and narrow modes explicitly
+./gradlew :runServer -Pap2.games=task_rush,paintball -Pap2.modes=default
+```
+
+For IDEs, the "Minecraft Server" run configuration launches the server directly and does not run through Gradle, so its selection is fixed at Gradle sync time. 
+Create the `dev.local.properties` file (ignored by Git) in the project root with your selection:
+```properties
+ap2.games=task_rush
+```
+
+Then re-sync Gradle. 
+The generated "Minecraft Server" run configuration now compiles and loads only the selected minigames.
+Delete the file (or remove the key) and re-sync to restore the full project. 
+A `-P` property, when present, takes precedence over the file.
+
+>[!NOTE] Using the `dev.local.properties` file will also disable any IDE features and removed the files from the index for excluded games / modes.
+
 ### Migrating to a new Minecraft version
 When Minecraft updates and this project moves to a new default branch, update the following locations:
 
