@@ -26,9 +26,9 @@ import work.lclpnet.ap2.ext.gainKill
 import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.inWholeTicks
 import work.lclpnet.ap2.ext.mc.isOf
+import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
-import work.lclpnet.ap2.game.util.teleportToRandomSpawns
 import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.impl.util.ParticleHelper
 import work.lclpnet.ap2.impl.util.SoundHelper
@@ -71,12 +71,11 @@ class DeadlineInstance(
 
     override fun teleportPlayers() {
         val spawnBox = schema.spawnBox!!
-
-        // riders start facing the arena center, so nobody spawns aimed at a nearby wall
         val border = commons().readWorldBorderConfig()
         val center = Vec3(border.centerX + 0.5, 0.0, border.centerZ + 0.5)
 
-        teleportToRandomSpawns(spawnBox, schema.scanStarts, lookAt = center)
+        DeadlineSpawns(level, random, commons().debugController())
+            .teleport(players().toList(), spawnBox, schema.scanStarts, center)
     }
 
     override fun prepare() {
