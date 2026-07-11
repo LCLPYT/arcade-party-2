@@ -362,6 +362,11 @@ class DanceFloorInstance(
     }
 
     override fun onEliminated(player: ServerPlayer) {
+        logger.debug(
+            "Player {} eliminated on pattern {} with seed {}",
+            player.scoreboardName, blockRandomizer?.currentPattern, blockRandomizer?.currentSeed
+        )
+
         stats.set(player, EliminationDifficulty, currentRoundDifficulty)
         super.onEliminated(player)
     }
