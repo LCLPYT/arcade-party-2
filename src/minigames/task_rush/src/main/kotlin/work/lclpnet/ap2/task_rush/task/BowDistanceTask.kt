@@ -14,6 +14,9 @@ import work.lclpnet.ap2.game.data.Ordering
 import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.util.ItemHelper
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
+import work.lclpnet.ap2.task_rush.util.TRSpawns
+import work.lclpnet.ap2.task_rush.util.animals
+import work.lclpnet.ap2.task_rush.util.spawnRandomMobs
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import kotlin.time.Duration.Companion.seconds
 
@@ -25,6 +28,8 @@ object BowDistanceTask : Task {
 
     override val id = "bow_distance"
 
+    val spawns = TRSpawns()
+
     override fun begin(env: TaskEnv) {
         val data = DoubleScoreDataContainer(PlayerRef::create, Ordering.DESCENDING, "ap2.score.distance")
         val shotOrigin = HashMap<Int, Vec3>()
@@ -33,6 +38,8 @@ object BowDistanceTask : Task {
             data.setScore(player, 0.0)
             giveBow(env, player)
         }
+
+        spawns.spawnRandomMobs(env, 30, 30.0, 70.0, types = animals())
 
         ProjectileShootCallback.HOOK.registerWith(env.hooks) { shooter, projectile ->
             if (shooter is ServerPlayer && env.players.isParticipating(shooter) && projectile is AbstractArrow) {

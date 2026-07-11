@@ -1,9 +1,13 @@
 package work.lclpnet.ap2.task_rush.task
 
 import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
 import work.lclpnet.ap2.game.data.DoubleScoreDataContainer
 import work.lclpnet.ap2.game.data.Ordering
 import work.lclpnet.ap2.game.data.type.PlayerRef
+import work.lclpnet.ap2.task_rush.task.MobKillTask.spawns
+import work.lclpnet.ap2.task_rush.util.spawnRandomMobs
 import work.lclpnet.kibu.hook.entity.EntityDamageCallback
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
@@ -20,7 +24,11 @@ object EntityDamageTask : Task {
 
         for (player in env.players) {
             data.setScore(player, 0.0)
+
+            env.give(player, ItemStack(Items.STONE_SWORD))
         }
+
+        spawns.spawnRandomMobs(env, 25, minDistance = 25.0, maxDistance = 90.0)
 
         EntityDamageCallback.HOOK.registerWith(env.hooks) { victim, source, amount ->
             val attacker = source.entity as? ServerPlayer

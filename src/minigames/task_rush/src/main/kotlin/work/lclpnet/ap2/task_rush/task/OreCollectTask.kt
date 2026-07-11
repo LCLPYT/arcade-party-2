@@ -43,5 +43,7 @@ object OreCollectTask : InventoryCountTask("ore_collect", "score.ores_collected"
         for (player in env.players) {
             env.give(player, ItemStack(Items.IRON_PICKAXE))
         }
+
+        // TODO make every ore drop the same amount of items
     }
 }

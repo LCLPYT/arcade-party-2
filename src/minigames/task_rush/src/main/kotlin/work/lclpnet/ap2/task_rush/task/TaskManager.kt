@@ -20,9 +20,6 @@ import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.kibu.scheduler.api.TaskHandle
 import java.util.UUID
 import kotlin.collections.ArrayDeque
-import kotlin.collections.HashSet
-import kotlin.collections.isNotEmpty
-import kotlin.collections.setOf
 import kotlin.collections.shuffle
 import kotlin.time.Duration.Companion.seconds
 
@@ -54,11 +51,11 @@ class TaskManager(
         BreakBlocksTask,
         FlowerTypesTask,
         DarkestPlaceTask,
-//        StandInAreaTask,
+        StandInAreaTask,
         TreasureHuntTask,
         FirstOreTask,
         BreedAnimalsTask,
-//        ReachCoordsTask,
+        ReachCoordsTask,
     )
     private val taskQueue = ArrayDeque<Task>()
     private val announcer = Announcer(gameHandle.translations, gameHandle.server)

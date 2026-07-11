@@ -4,6 +4,8 @@ import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.InteractionResult
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
 import net.minecraft.world.item.MapItem
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.levelgen.Heightmap
@@ -37,6 +39,9 @@ object TreasureHuntTask : OrderTask("treasure_hunt", winnerCount = 1) {
 
         for (player in env.players) {
             giveMap(env, player, chestPos)
+
+            env.give(player, ItemStack(Items.STONE_PICKAXE))
+            env.give(player, ItemStack(Items.STONE_SHOVEL))
         }
 
         PlayerInteractionHooks.USE_BLOCK.registerWith(env.hooks) { player, world, _, hitResult ->

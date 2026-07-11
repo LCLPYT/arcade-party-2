@@ -136,6 +136,6 @@ internal fun TaskEnv.feedback(player: ServerPlayer, key: String, value: Any, sou
         .sendTo(player, true)
 
     if (sound) {
-        player.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.4f, 1.8f)
+        player.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.3f, 1.8f)
     }
 }

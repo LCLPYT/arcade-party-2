@@ -28,7 +28,7 @@ object WaterDistanceTask : Task {
             for (player in env.players) {
                 player.airSupply = player.maxAirSupply
 
-                val inWater = player.isInWater || player.isUnderWater || player.vehicle is AbstractBoat
+                val inWater = player.isInWater || player.isUnderWater || (player.vehicle is AbstractBoat && player.vehicle!!.isInWater)
                 val prev = lastPos.put(player.uuid, player.position())
 
                 if (inWater && prev != null) {

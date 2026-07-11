@@ -21,6 +21,10 @@ object DarkestPlaceTask : Task {
             entity is ServerPlayer && env.players.isParticipating(entity)
         }
 
+        BlockModificationHooks.PLACE_BLOCK.registerWith(env.hooks) { _, _, entity, _ ->
+            entity is ServerPlayer && env.players.isParticipating(entity)
+        }
+
         env.scheduler.interval(10L) { ->
             for (player in env.players) {
                 val light = env.level.getMaxLocalRawBrightness(player.blockPosition())

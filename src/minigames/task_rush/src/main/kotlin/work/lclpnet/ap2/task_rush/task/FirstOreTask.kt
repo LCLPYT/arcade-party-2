@@ -1,6 +1,8 @@
 package work.lclpnet.ap2.task_rush.task
 
 import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import work.lclpnet.ap2.ext.mc.isOf
@@ -22,7 +24,7 @@ object FirstOreTask : OrderTask("first_ore") {
     private var blocks: List<Block> = emptyList()
 
     override fun announcement(env: TaskEnv): TranslatedText {
-        blocks = ores[env.level.random.nextInt(ores.size)]
+        blocks = ores.random()
 
         return env.translations.translateText("task.first_ore", blocks.first().name)
     }
@@ -31,15 +33,22 @@ object FirstOreTask : OrderTask("first_ore") {
         val progress = start(env)
         val blocks = this.blocks
 
-        BlockModificationHooks.BLOCK_BROKEN.registerWith(env.hooks) { world, pos, entity ->
-            val breaker = entity as? ServerPlayer ?: return@registerWith
+        for (player in env.players) {
+            env.give(player, ItemStack(Items.STONE_PICKAXE))
+        }
 
-            if (!env.players.isParticipating(breaker)) return@registerWith
+        BlockModificationHooks.BREAK_BLOCK.registerWith(env.hooks) { world, pos, entity ->
+            val breaker = entity as? ServerPlayer ?: return@registerWith false
+
+            if (!env.players.isParticipating(breaker)) return@registerWith false
 
             val state = world.getBlockState(pos)
+
             if (blocks.any { state.isOf(it) }) {
                 progress.finish(breaker)
             }
+
+            false
         }
     }
 }
