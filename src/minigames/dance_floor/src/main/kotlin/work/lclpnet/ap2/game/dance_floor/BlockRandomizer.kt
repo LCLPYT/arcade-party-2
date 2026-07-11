@@ -833,7 +833,7 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerLevel) {
             val bounds = floorShape.bounds()
             val center = floorShape.center()
             val radius = max(bounds.width(), bounds.length()) / 2.0 + 2.0
-            val count = Random.nextInt(120, 200)
+            val count = Random.nextInt(80, 140)
             val golden = PI * (3.0 - sqrt(5.0))
             val c = radius / sqrt(count.toDouble())
 
@@ -909,7 +909,7 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerLevel) {
 
         override fun init() {
             waves = Random.nextInt(5, 8)
-            freq = Random.nextDouble(0.25, 0.5)
+            freq = Random.nextDouble(0.32, 0.62)
             phase = Random.nextDouble() * PI * 2
             levels = Random.nextInt(4, 7)
         }
