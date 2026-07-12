@@ -67,6 +67,12 @@ class TaskManager(
     private var pendingNext: TaskHandle? = null
     private var round = 0
 
+    val duplicateDropsEnabled: Boolean
+        get() = currentTaskEnv?.duplicateDrops ?: true
+
+    val pvpDisabled: Boolean
+        get() = currentTaskEnv?.pvpDisabled ?: true
+
     fun init() {
         itemQueue.init()
     }

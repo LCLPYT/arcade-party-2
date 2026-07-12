@@ -51,7 +51,7 @@ class TaskRushInstance(
     }
 
     override fun start() {
-        configureDefaults()
+        configureDefaults(resetPlayersOnRespawn = false)
 
         for (player in allPlayers()) {
             gameHandle.worldFacade.teleport(player)
@@ -96,7 +96,8 @@ class TaskRushInstance(
             allowAll()
 
             ProtectionTypes.ALLOW_DAMAGE.disallow(this) { victim, source ->
-                (victim is ServerPlayer && source.entity is ServerPlayer) || source.isOf(DamageTypes.FALL)
+                (taskManager.pvpDisabled && victim is ServerPlayer && source.entity is ServerPlayer)
+                        || source.isOf(DamageTypes.FALL)
             }
 
             disallow(ProtectionTypes.HUNGER)
@@ -107,7 +108,7 @@ class TaskRushInstance(
         SetTaskCommand(taskManager).register(gameHandle.commands)
         SkipTaskCommand(taskManager).register(gameHandle.commands)
 
-        ServerPlayerHooks.AFTER_RESPAWN.registerWith(hooks) { player, _, _ ->
+        ServerPlayerHooks.AFTER_RESPAWN.registerWith(hooks) { _, player, _ ->
             if (isParticipating(player)) {
                 giveEffects(player)
             }
@@ -122,6 +123,8 @@ class TaskRushInstance(
         // make block drop twice as much by dropping resources an additional time
         BlockModificationHooks.BREAK_BLOCK.registerWith(hooks) { level, pos, entity ->
             if (level != this.level || entity !is ServerPlayer || !isParticipating(entity)) return@registerWith false
+
+            if (!taskManager.duplicateDropsEnabled) return@registerWith false
 
             // don't apply for player placed blocks
             if (blocksPlacedByPlayers.remove(pos)) return@registerWith false

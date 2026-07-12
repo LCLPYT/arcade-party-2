@@ -17,6 +17,8 @@ object DarkestPlaceTask : Task {
     override val id = "darkest_place"
 
     override fun begin(env: TaskEnv) {
+        env.duplicateDrops = false
+
         BlockModificationHooks.BREAK_BLOCK.registerWith(env.hooks) { _, _, entity ->
             entity is ServerPlayer && env.players.isParticipating(entity)
         }

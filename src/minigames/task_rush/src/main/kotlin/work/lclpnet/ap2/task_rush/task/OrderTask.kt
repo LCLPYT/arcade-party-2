@@ -16,8 +16,9 @@ private val REVEAL_BEFORE = 20.seconds
 /**
  * Base class for "be the first to do X" tasks.
  * Players are ranked by the order in which they complete the objective.
- * The task ends early once the required number of players (or all participants, if fewer) have finished,
- * otherwise it ends when the timer runs out.
+ * The task ends early once the order is clear: as soon as everyone but the last player has finished,
+ * capped at [winnerCount] (2 players -> 1 finisher, 3 -> 2, 4 or more -> 3). Otherwise it ends when
+ * the timer runs out.
  *
  * The timer is hidden until the last [REVEAL_BEFORE] so players are not pressured for most of the round.
  */
@@ -29,7 +30,7 @@ abstract class OrderTask(
 
     protected fun start(env: TaskEnv, onTimeout: () -> Unit = {}): Progress {
         val container = OrderedDataContainer(PlayerRef::create)
-        val target = minOf(winnerCount, env.players.count())
+        val target = minOf(winnerCount, maxOf(1, env.players.count() - 1))
         val progress = Progress(env, container, target)
 
         val timer = env.timer("task.$id.task", duration) {

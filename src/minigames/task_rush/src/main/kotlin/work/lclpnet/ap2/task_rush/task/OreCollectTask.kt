@@ -1,7 +1,12 @@
 package work.lclpnet.ap2.task_rush.task
 
+import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.Blocks
+import work.lclpnet.ap2.ext.mc.setBlock
+import work.lclpnet.kibu.hook.level.BlockModificationHooks
 
 object OreCollectTask : InventoryCountTask("ore_collect", "score.ores_collected") {
 
@@ -40,10 +45,35 @@ object OreCollectTask : InventoryCountTask("ore_collect", "score.ores_collected"
     override fun begin(env: TaskEnv) {
         super.begin(env)
 
+        env.duplicateDrops = false
+
         for (player in env.players) {
             env.give(player, ItemStack(Items.IRON_PICKAXE))
         }
 
-        // TODO make every ore drop the same amount of items
+        // make every ore drop exactly one item, so no ore type is worth more than another
+        BlockModificationHooks.BREAK_BLOCK.registerWith(env.hooks) { level, pos, entity ->
+            if (level != env.level || entity !is ServerPlayer || !env.players.isParticipating(entity)) {
+                return@registerWith false
+            }
+
+            val state = env.level.getBlockState(pos)
+            val blockEntity = env.level.getBlockEntity(pos)
+            val tool = entity.inventory.selectedItem
+            val drops = Block.getDrops(state, env.level, pos, blockEntity, entity, tool)
+
+            // only normalize ore drops, let everything else break normally
+            if (drops.none { matches(it) }) return@registerWith false
+
+            env.level.setBlock(pos, Blocks.AIR)
+
+            for (stack in drops) {
+                if (!matches(stack)) continue
+                stack.count = 1
+                Block.popResource(env.level, pos, stack)
+            }
+
+            true
+        }
     }
 }

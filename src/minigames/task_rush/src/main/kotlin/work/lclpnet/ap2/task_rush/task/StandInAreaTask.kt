@@ -32,6 +32,8 @@ object StandInAreaTask : Task {
             (base.x + 2).toDouble(), (base.y + 3).toDouble(), (base.z + 2).toDouble()
         )
 
+        env.pvpDisabled = false
+
         platform = AreaPlatform.create(env.level, base, DyeColor.LIME, env.chunkPersistence)
 
         env.translations.translateText("task.stand_in_area.location", Component.literal("${base.x} ${base.y} ${base.z}"))

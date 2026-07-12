@@ -41,6 +41,10 @@ interface TaskEnv {
 
     val logger: Logger
 
+    var duplicateDrops: Boolean
+
+    var pvpDisabled: Boolean
+
     /**
      * The world spawn position all players are teleported to at the start of each task.
      * Used as a reference point for tasks that place things relative to spawn.
@@ -74,6 +78,8 @@ class TaskEnvImpl(
     override val hooks = HookContainer()
     override val scheduler = Scheduler(logger)
     override val spawnPos: BlockPos = level.respawnData.pos()
+    override var duplicateDrops = true
+    override var pvpDisabled = true
 
     private val timers = ArrayList<BossBarTimer>()
     private var completed = false
