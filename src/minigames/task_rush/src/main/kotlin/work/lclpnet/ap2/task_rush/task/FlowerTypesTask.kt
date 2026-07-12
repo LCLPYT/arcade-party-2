@@ -1,8 +1,11 @@
 package work.lclpnet.ap2.task_rush.task
 
+import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.level.biome.Biomes
+import net.minecraft.world.level.levelgen.Heightmap
 import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.game.data.Ordering
@@ -38,6 +41,16 @@ object FlowerTypesTask : Task {
         stack.isIn(ApItemTags.FLOWERS)
 
     override fun begin(env: TaskEnv) {
+        val pos = findFlowerBiome(env)
+
+        if (pos != null) {
+            // ensure the target chunk is loaded, otherwise getHeight falls back to the min height and players fall out of the world
+            env.level.getChunk(pos.x shr 4, pos.z shr 4)
+
+            val y = env.level.getHeight(Heightmap.Types.MOTION_BLOCKING, pos.x, pos.z) + 1
+            env.setSpawn(BlockPos(pos.x, y, pos.z))
+        }
+
         val startTypes = HashMap<UUID, Set<Item>>()
         val removed = mutableMapOf<UUID, List<ItemStack>>()
         val collected = HashMap<UUID, MutableSet<Item>>()
@@ -67,7 +80,7 @@ object FlowerTypesTask : Task {
             false
         }
 
-        env.timer("task.$id.task", 45.seconds) {
+        env.timer("task.$id.task", 30.seconds) {
             val data = IntScoreDataContainer(PlayerRef::create, Ordering.DESCENDING, "score.flower_types")
 
             for (player in env.players) {
@@ -80,6 +93,26 @@ object FlowerTypesTask : Task {
 
             env.complete(data)
         }
+    }
+
+    private fun findFlowerBiome(env: TaskEnv): BlockPos? {
+        val res = env.level.findClosestBiome3d(
+            { biome ->
+                biome.`is`(Biomes.FLOWER_FOREST)
+                        || biome.`is`(Biomes.PLAINS)
+                        || biome.`is`(Biomes.SUNFLOWER_PLAINS)
+                        || biome.`is`(Biomes.BIRCH_FOREST)
+                        || biome.`is`(Biomes.OLD_GROWTH_BIRCH_FOREST)
+                        || biome.`is`(Biomes.MEADOW)
+            },
+            env.spawnPos,
+            6400,
+            32,
+            64
+        )
+
+        val pos = res?.first
+        return pos
     }
 
     private fun removeItems(player: ServerPlayer): List<ItemStack> {

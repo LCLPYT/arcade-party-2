@@ -2,13 +2,16 @@ package work.lclpnet.ap2.task_rush.task
 
 import net.minecraft.ChatFormatting
 import net.minecraft.core.BlockPos
+import net.minecraft.core.GlobalPos
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.level.storage.LevelData
 import org.slf4j.Logger
 import work.lclpnet.ap2.ext.mc.playNotifySound
+import work.lclpnet.ap2.ext.mc.teleport
 import work.lclpnet.ap2.game.data.DataContainer
 import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.player.Participants
@@ -60,6 +63,8 @@ interface TaskEnv {
      */
     fun give(player: ServerPlayer, stack: ItemStack)
 
+    fun setSpawn(pos: BlockPos)
+
     fun complete(data: DataContainer<ServerPlayer, PlayerRef>)
 }
 
@@ -77,7 +82,12 @@ class TaskEnvImpl(
 
     override val hooks = HookContainer()
     override val scheduler = Scheduler(logger)
-    override val spawnPos: BlockPos = level.respawnData.pos()
+
+    val originalSpawnPos = level.respawnData.pos()
+
+    override val spawnPos: BlockPos
+        get() = level.respawnData.pos()
+
     override var duplicateDrops = true
     override var pvpDisabled = true
 
@@ -103,6 +113,16 @@ class TaskEnvImpl(
         itemQueue.give(player, stack)
     }
 
+    override fun setSpawn(pos: BlockPos) {
+        if (level.respawnData.pos() == pos) return
+
+        level.respawnData = LevelData.RespawnData(GlobalPos(level.dimension(), pos), 0f, 0f)
+
+        for (player in players) {
+            player.teleport(pos)
+        }
+    }
+
     override fun complete(data: DataContainer<ServerPlayer, PlayerRef>) {
         if (completed) return
         completed = true
@@ -112,6 +132,8 @@ class TaskEnvImpl(
 
     fun unload() {
         completed = true
+
+        setSpawn(originalSpawnPos)
 
         timers.forEach { it.stop() }
         timers.clear()
