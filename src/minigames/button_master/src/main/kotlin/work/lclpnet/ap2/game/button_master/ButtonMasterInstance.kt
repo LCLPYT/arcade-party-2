@@ -111,6 +111,7 @@ class ButtonMasterInstance(
     var taskBar: TranslatedBossBar? = null
     var wallBlocks: ResetWorldModifier = ResetWorldModifier(level, hooks)
     var scene: Scene? = null
+    var ejected = false
 
     override fun prepare() {
         dynamicEntityManager.init(gameHandle.scheduler, gameHandle.hooks)
@@ -230,14 +231,18 @@ class ButtonMasterInstance(
     }
 
     private fun eject(capsule: BlockFace) {
+        ejected = true
         gameState = GameState.EJECTING
+
+        ejectTimer?.stop()
+        ejectTimer = null
 
         val spawn = capsules.getCapsuleSpawn(capsule)
 
         level.setBlockAndUpdate(BlockPos.containing(spawn).below(), Blocks.AIR.defaultBlockState())
 
         val uuid = capsules.players[capsule] ?: return
-        val player = players().getParticipant(uuid).orElse(null) ?: return
+        val player = players().getParticipant(uuid) ?: return
 
         movementBlocker.enableMovement(player)
         player.resetAttribute(Attributes.GRAVITY)
@@ -258,7 +263,6 @@ class ButtonMasterInstance(
         scene?.clear()
 
         player.teleport(mapSchema.buttonMasterSpawn!!)
-        player.setAttribute(Attributes.JUMP_STRENGTH, 0.0)
 
         val otherPlayers = players().filter { it != player }
 
@@ -275,7 +279,9 @@ class ButtonMasterInstance(
         )
 
         ejectTimer.whenDone {
-            eliminateButtonMaster()
+            if (!ejected) {
+                eliminateButtonMaster()
+            }
         }
 
         translate(
@@ -292,7 +298,7 @@ class ButtonMasterInstance(
 
     private fun eliminateButtonMaster() {
         val uuid = buttonMasterUuid ?: return
-        val buttonMaster = players().getParticipant(uuid).orElse(null) ?: return
+        val buttonMaster = players().getParticipant(uuid) ?: return
 
         eliminate(buttonMaster)
 
@@ -317,11 +323,12 @@ class ButtonMasterInstance(
         scene?.clear()
         scene = null
 
+        ejected = false
+
         for (player in players()) {
             movementBlocker.enableMovement(player)
             gameHandle.worldFacade.teleport(player)
 
-            player.resetAttribute(Attributes.JUMP_STRENGTH)
             player.resetAttribute(Attributes.GRAVITY)
         }
 
@@ -396,7 +403,9 @@ class ButtonMasterInstance(
         escapesRecorded = true
 
         for (uuid in capsules.players.values) {
-            players().getParticipant(uuid).ifPresent(bmStats::escaped)
+            val player = players().getParticipant(uuid) ?: continue
+
+            bmStats.escaped(player)
         }
     }
 

@@ -35,6 +35,7 @@ import work.lclpnet.ap2.game.util.useTeamStats
 import work.lclpnet.ap2.impl.util.TeamStorage
 import work.lclpnet.ap2.impl.util.TimeHelper
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedTeamBossBar
+import work.lclpnet.ap2.util.useGameRules
 import work.lclpnet.gaco.collisions.ChunkedCollisionDetector
 import work.lclpnet.gaco.collisions.CollisionDetector
 import work.lclpnet.gaco.collisions.movement.PlayerMovementObserver
@@ -101,7 +102,12 @@ class CozyCampfireInstance(
     }
 
     override fun prepare() {
-        setupGameRules()
+        useGameRules {
+            set(GameRules.MAX_SNOW_ACCUMULATION_HEIGHT, 0)
+            set(GameRules.ADVANCE_WEATHER, false)
+            set(GameRules.ADVANCE_TIME, false)
+        }
+
         randomizeWorldConditions()
 
         teamManager.minecraftTeams.forEach { team ->
@@ -177,13 +183,6 @@ class CozyCampfireInstance(
 
         fuelPerMinute = fuelPerSecond * 60
         startingFuel = fuelPerSecond * startingFuelSeconds
-    }
-
-    private fun setupGameRules() {
-        commons(map, level).gameRuleBuilder()
-            .set(GameRules.MAX_SNOW_ACCUMULATION_HEIGHT, 0)
-            .set(GameRules.ADVANCE_WEATHER, false)
-            .set(GameRules.ADVANCE_TIME, false)
     }
 
     private fun randomizeWorldConditions() {

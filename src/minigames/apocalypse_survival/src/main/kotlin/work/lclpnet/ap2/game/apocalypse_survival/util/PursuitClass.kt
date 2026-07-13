@@ -22,7 +22,7 @@ class PursuitClass<T : Mob>(
     init {
         for (player in participants) {
             val uuid = player.uuid
-            val playerGetter: () -> LivingEntity? = { participants.getParticipant(uuid).orElse(null) }
+            val playerGetter: () -> LivingEntity? = { participants.getParticipant(uuid) }
             pursuitMap[uuid] = Pursuit(playerGetter, capacityPerPlayer)
         }
     }

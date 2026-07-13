@@ -3,10 +3,12 @@ package work.lclpnet.ap2.mode_default.util
 import work.lclpnet.ap2.api.base.GameQueue
 import work.lclpnet.ap2.api.music.SongCache
 import work.lclpnet.ap2.api.stats.SessionStatsRecorder
+import work.lclpnet.ap2.game.color.PlayerColorPreferences
 import work.lclpnet.ap2.game.player.PlayerManager
 import work.lclpnet.ap2.mode_default.ApMiniGameArgs
 import work.lclpnet.ap2.mode_default.cmd.ForceGameCommand
 import work.lclpnet.ap2.util.AssetManager
+import work.lclpnet.ap2.util.ServerViewDistanceManager
 import work.lclpnet.ap2.util.TablistManager
 import work.lclpnet.game.api.GameFinisher
 
@@ -23,6 +25,7 @@ data class ApBaseArgs(
     val miniGameArgs: ApMiniGameArgs,
     val gameQueue: GameQueue,
     val playerManager: PlayerManager,
+    val colorPreferences: PlayerColorPreferences,
     val forceGameCommand: ForceGameCommand,
     val sharedSongCache: SongCache,
     val scoreManager: ScoreManager,
@@ -30,5 +33,6 @@ data class ApBaseArgs(
     val stats: SessionStatsRecorder,
     val tablistManager: TablistManager,
     val assetManager: AssetManager,
-    val activitySwitcher: ActivitySwitcher
+    val activitySwitcher: ActivitySwitcher,
+    val viewDistanceManager: ServerViewDistanceManager,
 )

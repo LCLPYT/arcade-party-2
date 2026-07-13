@@ -30,8 +30,8 @@ import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.music.SongHandler
-import work.lclpnet.ap2.impl.util.Hints
 import work.lclpnet.ap2.impl.util.SoundHelper
+import work.lclpnet.ap2.util.Hints
 import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
@@ -107,7 +107,7 @@ class MusicalMinecartInstance(
         SetSongCommand(songs, ::skipSong).register(commands)
         SkipSongCommand(::skipSong).register(commands)
 
-        Hints(gameHandle).sendBeforeReady(gameHandle, Hints.Mod.NOTICA)
+        Hints(gameHandle).sendBeforeReady(gameHandle, Hints.Mod.Notica)
     }
 
     override fun go() {

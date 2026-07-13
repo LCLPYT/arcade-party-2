@@ -24,13 +24,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import work.lclpnet.ap2.ApConstants;
-import work.lclpnet.ap2.api.game.sink.IntDataSink;
 import work.lclpnet.ap2.api.util.action.Action;
 import work.lclpnet.ap2.core.mixin.entity.LivingEntityAccessor;
 import work.lclpnet.ap2.game.MiniGameHandle;
+import work.lclpnet.ap2.game.data.IntDataSink;
+import work.lclpnet.ap2.game.util.HealthDisplay;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.resource.ApResources;
-import work.lclpnet.ap2.impl.util.GameRuleBuilder;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.handler.Visibility;
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
@@ -62,7 +62,6 @@ public class GameCommons {
     private final ServerLevel world;
     private final DebugController debugController;
     private volatile List<PositionRotation> spawns = null;
-    private volatile GameRuleBuilder gameRuleBuilder = null;
     private volatile HealthDisplay healthDisplay = null;
 
     public GameCommons(MiniGameHandle gameHandle, GameMap map, ServerLevel world) {
@@ -155,8 +154,9 @@ public class GameCommons {
 
         boolean randomCenter = wbConfig.optBoolean("random-center", false);
         boolean alignRandomCenter = wbConfig.optBoolean("align-random-center", true);
+        double damagePerBlock = wbConfig.optDouble("damage-per-block", WorldBorderConfig.DEFAULT_DAMAGE_PER_BLOCK);
 
-        return new WorldBorderConfig(centerX, centerZ, maxRadius, minSize, randomCenter, alignRandomCenter);
+        return new WorldBorderConfig(centerX, centerZ, maxRadius, minSize, randomCenter, alignRandomCenter, damagePerBlock);
     }
 
     public WorldBorder setupWorldBorder(WorldBorderConfig config) {
@@ -164,7 +164,7 @@ public class GameCommons {
         worldBorder.setCenter(config.centerX() + 0.5, config.centerZ() + 0.5);
         worldBorder.setSize(config.maxRadius());
         worldBorder.setSafeZone(0);
-        worldBorder.setDamagePerBlock(0.8);
+        worldBorder.setDamagePerBlock(config.damagePerBlock());
 
         return worldBorder;
     }
@@ -244,18 +244,6 @@ public class GameCommons {
         return spawns;
     }
 
-    public GameRuleBuilder gameRuleBuilder() {
-        if (gameRuleBuilder != null) return gameRuleBuilder;
-
-        synchronized (this) {
-            if (gameRuleBuilder == null) {
-                gameRuleBuilder = new GameRuleBuilder(world.getGameRules(), gameHandle.getServer());
-            }
-        }
-
-        return gameRuleBuilder;
-    }
-
     public void displayHealth() {
         if (healthDisplay != null) return;
 
@@ -329,8 +317,15 @@ public class GameCommons {
             int maxRadius,
             int minSize,
             boolean randomCenter,
-            boolean alignRandomCenter
+            boolean alignRandomCenter,
+            double damagePerBlock
     ) {
+        public static final double DEFAULT_DAMAGE_PER_BLOCK = 0.8;
+
+        public WorldBorderConfig(int centerX, int centerZ, int maxRadius, int minSize, boolean randomCenter, boolean alignRandomCenter) {
+            this(centerX, centerZ, maxRadius, minSize, randomCenter, alignRandomCenter, DEFAULT_DAMAGE_PER_BLOCK);
+        }
+
         public double align(double v) {
             return alignRandomCenter ? floor(v) + 0.5 : v;
         }

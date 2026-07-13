@@ -24,9 +24,10 @@ import work.lclpnet.ap2.game.guess_it.util.SkipChallengeCommand
 import work.lclpnet.ap2.game.util.useDataContainer
 import work.lclpnet.ap2.game.util.useScoreboardStatsSync
 import work.lclpnet.ap2.impl.map.MapUtil
-import work.lclpnet.ap2.impl.util.scoreboard.ScoreHandle
-import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout
+import work.lclpnet.ap2.util.scoreboard.ScoreHandle
+import work.lclpnet.ap2.util.scoreboard.ScoreboardLayout
 import work.lclpnet.ap2.util.scoreboard.setupTranslatedSidebarObjective
+import work.lclpnet.ap2.util.useGameRules
 import work.lclpnet.gaco.ds.IndexedSet
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager
 import work.lclpnet.game.map.GameMap
@@ -87,9 +88,9 @@ class GuessItInstance(
     private var transaction = 0
 
     override fun prepare() {
-        commons().gameRuleBuilder()
-            .set(GameRules.REDUCED_DEBUG_INFO, true)
-
+        useGameRules {
+            set(GameRules.REDUCED_DEBUG_INFO, true)
+        }
 
         SetChallengeCommand(manager) { skip() }.register(commands)
         SkipChallengeCommand { skip() }.register(commands)

@@ -56,6 +56,36 @@ public class DebugController {
         visualizeBoxes(mask.greedyMeshing().generateBoxes(), pos, transformation, state);
     }
 
+    public void visualizeBlockPositions(Collection<BlockPos> positions, BlockState state) {
+        if (renderer == null || positions.isEmpty()) return;
+
+        var it = positions.iterator();
+        var minPos = it.next().mutable();
+        var maxPos = minPos.immutable().mutable();
+
+        for (BlockPos pos : positions) {
+            minPos.set(
+                    Math.min(minPos.getX(), pos.getX()),
+                    Math.min(minPos.getY(), pos.getY()),
+                    Math.min(minPos.getZ(), pos.getZ())
+            );
+
+            maxPos.set(
+                    Math.max(maxPos.getX(), pos.getX()),
+                    Math.max(maxPos.getY(), pos.getY()),
+                    Math.max(maxPos.getZ(), pos.getZ())
+            );
+        }
+
+        var mask = StructureMask.createEmpty(new BlockBox(minPos, maxPos));
+
+        for (BlockPos pos : positions) {
+            mask.setVoxelAt(pos.getX() - minPos.getX(), pos.getY() - minPos.getY(), pos.getZ() - minPos.getZ(), true);
+        }
+
+        visualizeStructureMask(mask, minPos, Matrix3i.IDENTITY, state);
+    }
+
     public void visualizeBoxes(List<BlockBox> boxes, BlockState state) {
         if (renderer == null) return;
 

@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.game.jump_and_run;
 
+import kotlin.Unit;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -22,10 +23,10 @@ import net.minecraft.world.scores.Team;
 import net.minecraft.world.scores.criteria.ObjectiveCriteria;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
-import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.core.hook.DripLeafTiltCallback;
 import work.lclpnet.ap2.game.MiniGameHandle;
 import work.lclpnet.ap2.game.base.FFAGameInstance;
+import work.lclpnet.ap2.game.data.DataContainer;
 import work.lclpnet.ap2.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.game.data.type.PlayerRef;
 import work.lclpnet.ap2.game.jump_and_run.gen.JumpAndRun;
@@ -40,6 +41,7 @@ import work.lclpnet.ap2.impl.util.checkpoint.CheckpointManager;
 import work.lclpnet.ap2.impl.util.handler.Visibility;
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager;
+import work.lclpnet.ap2.util.GameRuleBuilderKt;
 import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.gaco.collisions.ChunkedCollisionDetector;
 import work.lclpnet.gaco.collisions.CollisionDetector;
@@ -110,9 +112,13 @@ public class JumpAndRunInstance extends FFAGameInstance {
 
     @Override
     protected void prepare() {
-        commons().gameRuleBuilder()
-                .set(GameRules.RANDOM_TICK_SPEED, 0)
-                .set(GameRules.ADVANCE_TIME, false);
+        GameRuleBuilderKt.useGameRules(this, builder -> {
+            builder
+                    .set(GameRules.RANDOM_TICK_SPEED, 0)
+                    .set(GameRules.ADVANCE_TIME, false);
+
+            return Unit.INSTANCE;
+        });
 
         movementObserver.init(getGameHandle().getHooks(), getGameHandle().getServer());
 

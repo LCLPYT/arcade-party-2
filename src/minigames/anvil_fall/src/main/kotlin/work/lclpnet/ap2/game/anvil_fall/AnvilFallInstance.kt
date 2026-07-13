@@ -33,6 +33,7 @@ import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar
 import work.lclpnet.ap2.impl.util.handler.Visibility
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager
+import work.lclpnet.ap2.util.useGameRules
 import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
@@ -63,9 +64,10 @@ class AnvilFallInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
     private lateinit var playArea: BlockBox
 
     override fun prepare() {
-        commons().gameRuleBuilder()
-            .set(GameRules.ENTITY_DROPS, false)
-            .set(GameRules.FALL_DAMAGE, true)
+        useGameRules {
+            set(GameRules.ENTITY_DROPS, false)
+            set(GameRules.FALL_DAMAGE, true)
+        }
 
         trackSurvivalTime(stats)
 
@@ -191,15 +193,13 @@ class AnvilFallInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
     private fun spawnRandomAnvil() {
         if (winManager.gameOver) return
 
-        val pos = gameHandle.participants.getRandomParticipant(random)
-            .map { player ->
-                if (random.nextFloat() < DIRECT_ANVIL_CHANCE) {
-                    setup.getRandomPositionAt(player.blockX, player.blockZ)
-                } else {
-                    setup.getRandomPosition(player.blockX, player.blockZ, SPREAD_RADIUS.toDouble())
-                }
+        val pos = gameHandle.participants.getRandomParticipant(random)?.let { player ->
+            if (random.nextFloat() < DIRECT_ANVIL_CHANCE) {
+                setup.getRandomPositionAt(player.blockX, player.blockZ)
+            } else {
+                setup.getRandomPosition(player.blockX, player.blockZ, SPREAD_RADIUS.toDouble())
             }
-            .orElseGet { setup.getRandomPosition() }
+        } ?: setup.getRandomPosition()
 
         val randomDirection = directions[random.nextInt(directions.size)]
         val state = Blocks.ANVIL.defaultBlockState().setValue(AnvilBlock.FACING, randomDirection)

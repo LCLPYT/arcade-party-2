@@ -104,11 +104,13 @@ public class MonsterReveal {
         while (it.hasNext()) {
             DangerMark mark = it.next();
 
-            participants.getParticipant(mark.playerUuid).ifPresent(player -> {
+            ServerPlayer player = participants.getParticipant(mark.playerUuid);
+
+            if (player != null) {
                 if (mark.update(player)) {
                     it.remove();
                 }
-            });
+            }
         }
     }
 

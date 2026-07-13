@@ -28,6 +28,7 @@ import work.lclpnet.ap2.game.util.useOldCombat
 import work.lclpnet.ap2.game.util.whenBelowCriticalHeight
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.world.KnockbackKillTracker
+import work.lclpnet.ap2.util.useGameRules
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
@@ -65,9 +66,10 @@ class BlockDissolveInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
     }
 
     override fun prepare() {
-        commons().gameRuleBuilder()
-            .set(GameRules.RANDOM_TICK_SPEED, 0)
-            .set(GameRules.SPREAD_VINES, false)
+        useGameRules {
+            set(GameRules.RANDOM_TICK_SPEED, 0)
+            set(GameRules.SPREAD_VINES, false)
+        }
 
         useNoHealing()
         useSmoothDeath()

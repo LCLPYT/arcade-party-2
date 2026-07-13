@@ -5,7 +5,7 @@ import net.minecraft.network.chat.Component
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.Blocks
-import work.lclpnet.ap2.api.game.data.SubjectRef
+import work.lclpnet.ap2.game.data.SubjectRef
 import work.lclpnet.ap2.game.team.TeamKey
 import work.lclpnet.ap2.game.team.TeamKeyable
 import work.lclpnet.ap2.impl.util.ColorUtil

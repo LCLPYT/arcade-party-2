@@ -33,10 +33,8 @@ class PRProgress(
     fun getFurthestAbsoluteDistance(): Double = if (ranking.isEmpty()) 0.0 else ranking.first().distance
 
     @Synchronized
-    fun getRanking(): List<ServerPlayer> = ranking.stream()
-        .map { it.uuid }
-        .map { gameHandle.participants.getParticipant(it) }
-        .flatMap { it.stream() }
+    fun getRanking(): List<ServerPlayer> = ranking
+        .mapNotNull { gameHandle.participants.getParticipant(it.uuid) }
         .toList()
 
     fun getAbsoluteRemaining(player: ServerPlayer): Double {

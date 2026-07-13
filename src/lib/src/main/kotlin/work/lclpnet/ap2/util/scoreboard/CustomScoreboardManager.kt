@@ -9,10 +9,7 @@ import net.minecraft.server.players.PlayerList
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.scores.*
 import net.minecraft.world.scores.criteria.ObjectiveCriteria
-import work.lclpnet.ap2.api.util.scoreboard.VirtualScoreboardObjective
 import work.lclpnet.ap2.core.type.ApServerPlayerEntity
-import work.lclpnet.ap2.impl.util.scoreboard.DynamicScoreboardObjective
-import work.lclpnet.ap2.impl.util.scoreboard.TranslatedScoreboardObjective
 import work.lclpnet.kibu.hook.HookRegistrar
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks
 import work.lclpnet.kibu.translate.Translations
@@ -166,7 +163,7 @@ class CustomScoreboardManager(
     fun translateObjective(
         name: String,
         translationKey: String,
-        vararg args: Any?
+        vararg args: Any
     ): TranslatedScoreboardObjective {
         return translateObjective(name, ObjectiveCriteria.RenderType.INTEGER, translationKey, *args)
     }
@@ -175,7 +172,7 @@ class CustomScoreboardManager(
         name: String,
         renderType: ObjectiveCriteria.RenderType,
         translationKey: String,
-        vararg args: Any?
+        vararg args: Any
     ): TranslatedScoreboardObjective {
         val objective = TranslatedScoreboardObjective(
             translations,
@@ -183,12 +180,16 @@ class CustomScoreboardManager(
             name,
             renderType,
             translationKey,
-            args
+            arrayOf(*args)
         )
 
         virtualObjectives.add(objective)
 
         return objective
+    }
+
+    fun addVirtualObjective(objective: VirtualScoreboardObjective) {
+        virtualObjectives.add(objective)
     }
 
     fun createDynamicObjective(name: String, title: Function<ServerPlayer, Component>): DynamicScoreboardObjective {

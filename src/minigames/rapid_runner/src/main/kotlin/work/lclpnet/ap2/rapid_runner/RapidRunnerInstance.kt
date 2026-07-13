@@ -16,10 +16,10 @@ import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.MiniGameInstance
 import work.lclpnet.ap2.game.data.DoubleScoreDataContainer
 import work.lclpnet.ap2.game.util.*
+import work.lclpnet.ap2.util.disallowDropItem
 import work.lclpnet.ap2.util.scoreboard.setupTranslatedSidebarObjective
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.util.ResetWorldModifier
-import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -94,32 +94,10 @@ class RapidRunnerInstance(
             ProtectionTypes.ALLOW_DAMAGE.disallow(this) { victim, source ->
                 (victim is ServerPlayer && source.entity is ServerPlayer) || source.isOf(DamageTypes.FALL)
             }
-
-            ProtectionTypes.DROP_ITEM.disallow(this) { player, slot, inInventory ->
-                val stack = when {
-                    !inInventory -> player.inventory.getItem(slot)
-                    slot in player.containerMenu.slots.indices -> player.containerMenu.getSlot(slot).item
-                    slot == -999 -> player.containerMenu.carried
-                    else -> ItemStack.EMPTY
-                }
-
-                stack.isOf(Items.COMPASS)
-            }
         }
 
-        // prevent dropping compass items
-        ServerLivingEntityHooks.ALLOW_DEATH.registerWith(hooks) { entity, _, _ ->
-            if (entity is ServerPlayer) {
-                for (i in 0 until entity.inventory.containerSize) {
-                    val stack = entity.inventory.getItem(i)
-
-                    if (stack.isOf(Items.COMPASS)) {
-                        entity.inventory.removeItemNoUpdate(i)
-                    }
-                }
-            }
-
-            true
+        disallowDropItem(hooks) {
+            it.isOf(Items.COMPASS)
         }
 
         PlayerSpawnLocationCallback.HOOK.registerWith(hooks) { data ->

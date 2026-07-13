@@ -76,6 +76,16 @@ data class Announcer(
             }
         }
     }
+
+    fun announceInChat(text: TranslatedText) {
+        for (player in players()) {
+            text.sendTo(player)
+
+            sound?.let {
+                player.playNotifySound(it, category, volume, pitch)
+            }
+        }
+    }
 }
 
 fun MiniGameInstance.useAnnouncer() = Announcer(translations, server)

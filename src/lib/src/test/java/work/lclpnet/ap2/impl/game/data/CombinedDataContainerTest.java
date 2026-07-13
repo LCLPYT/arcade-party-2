@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.impl.game.data;
 
 import org.junit.jupiter.api.Test;
-import work.lclpnet.ap2.api.game.data.DataEntry;
 import work.lclpnet.ap2.game.data.CombinedDataContainer;
+import work.lclpnet.ap2.game.data.DataEntry;
 import work.lclpnet.ap2.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.game.data.OrderedDataContainer;
 

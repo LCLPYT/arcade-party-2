@@ -3,16 +3,19 @@ package work.lclpnet.ap2.game.minefield
 import com.mojang.math.Transformation
 import net.minecraft.ChatFormatting.*
 import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
+import net.minecraft.tags.BlockTags
 import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.Display
 import net.minecraft.world.entity.EntityTypes
+import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.item.DyeColor
 import net.minecraft.world.level.GameType
 import net.minecraft.world.level.block.Blocks
@@ -22,10 +25,7 @@ import org.joml.Matrix4f
 import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.*
-import work.lclpnet.ap2.ext.mc.isOf
-import work.lclpnet.ap2.ext.mc.setBlock
-import work.lclpnet.ap2.ext.mc.setBlocks
-import work.lclpnet.ap2.ext.mc.teleport
+import work.lclpnet.ap2.ext.mc.*
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.data.OrderedDataContainer
@@ -59,6 +59,7 @@ import kotlin.time.Duration.Companion.seconds
 
 val END_TIME = 15.seconds
 const val DEBUG_PRESSURE_PLATE_POSITIONS = false
+const val PLAYER_SCALE = 0.96
 
 val Exploded = Stat("exploded", 0, higherIsBetter = false)
 
@@ -86,6 +87,7 @@ class MinefieldInstance(
     override fun prepare() {
         for (player in players()) {
             player.teleport(spawnShape.randomPos(Random.asJavaRandom()))
+            player.setAttribute(Attributes.SCALE, PLAYER_SCALE)
         }
 
         taskBar = useTaskDisplay()
@@ -113,7 +115,7 @@ class MinefieldInstance(
     override fun go() {
         level.setBlocks(readShape("spawn-gate"), Blocks.AIR)
 
-        interval(1) {
+        runEveryTick {
             for (player in players()) {
                 if (player.isSpectator) continue
 
@@ -157,7 +159,7 @@ class MinefieldInstance(
     fun entry(player: ServerPlayer): Entry = entries.computeIfAbsent(player.uuid) { Entry() }
 
     fun onReachGoal(player: ServerPlayer) {
-        if (!inGoal.add(player.uuid) || !players().isParticipating(player)) return
+        if (!inGoal.add(player.uuid) || !isParticipating(player)) return
 
         data.add(player)
         entry(player).done()
@@ -214,9 +216,21 @@ class MinefieldInstance(
         stats.increment(player, Exploded)
 
         timeout(20) {
-            player.teleport(spawnShape.randomPos(Random.asJavaRandom()), spawnYaw)
+            val respawnPos = spawnShape.project(Vec3.atBottomCenterOf(pos))
+                .with(Direction.Axis.Y, spawnShape.min().y.toDouble())
+
+            player.teleport(respawnPos, spawnYaw)
             gameHandle.playerUtil.resetPlayer(player)
             visibility.giveItem(player)
+        }
+
+        for (direction in Direction.Plane.HORIZONTAL) {
+            val adj = pos.relative(direction)
+            val state = level.getBlockState(adj)
+
+            if (state.isIn(BlockTags.PRESSURE_PLATES)) {
+                level.setBlock(adj, Blocks.AIR)
+            }
         }
     }
 

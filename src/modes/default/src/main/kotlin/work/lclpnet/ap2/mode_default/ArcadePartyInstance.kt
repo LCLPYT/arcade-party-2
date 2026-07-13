@@ -12,11 +12,12 @@ import work.lclpnet.ap2.api.base.MiniGameManager
 import work.lclpnet.ap2.api.config.Ap2Config
 import work.lclpnet.ap2.api.stats.SessionStatsRecorder
 import work.lclpnet.ap2.game.MiniGame
+import work.lclpnet.ap2.game.color.SessionColorPreferences
 import work.lclpnet.ap2.game.player.PlayerManagerImpl
+import work.lclpnet.ap2.game.util.PlayerUtil
 import work.lclpnet.ap2.impl.base.FabricMiniGameManager
 import work.lclpnet.ap2.impl.base.VotedGameQueue
 import work.lclpnet.ap2.impl.bootstrap.ApBootstrap
-import work.lclpnet.ap2.impl.game.PlayerUtil
 import work.lclpnet.ap2.impl.i18n.DynamicLanguageManager
 import work.lclpnet.ap2.impl.i18n.VanillaTranslations
 import work.lclpnet.ap2.impl.music.MapSongCache
@@ -27,6 +28,7 @@ import work.lclpnet.ap2.mode_default.util.ApBaseArgs
 import work.lclpnet.ap2.mode_default.util.ScoreManager
 import work.lclpnet.ap2.util.FontService
 import work.lclpnet.ap2.util.MinecraftDispatcher
+import work.lclpnet.ap2.util.ServerViewDistanceManager
 import work.lclpnet.ap2.util.TablistManager
 import work.lclpnet.config.json.JsonConfigFactory
 import work.lclpnet.gaco.ds.queue.JsonFileQueuePersistence
@@ -37,7 +39,6 @@ import work.lclpnet.kibu.assets.AssetManager
 import work.lclpnet.kibu.hook.HookStack
 import work.lclpnet.kibu.translate.Translations
 import work.lclpnet.translations.DefaultLanguageTranslator
-import java.lang.Math
 import java.lang.Runnable
 
 private const val WIN_SCORE = 30
@@ -118,6 +119,8 @@ class ArcadePartyInstance(
         val playerManager = PlayerManagerImpl(server)
         val playerUtil = PlayerUtil(server, playerManager)
 
+        val colorPreferences = SessionColorPreferences()
+
         val scoreManager = ScoreManager(server.playerList, WIN_SCORE)
         val commandStack = environment.commandStack
 
@@ -156,10 +159,14 @@ class ArcadePartyInstance(
 
         val tablistManager = TablistManager(translations, server)
 
+        val viewDistanceManager = ServerViewDistanceManager(server)
+        viewDistanceManager.reset()
+
         val args = ApBaseArgs(
             miniGameArgs = container,
             gameQueue = queue,
             playerManager = playerManager,
+            colorPreferences = colorPreferences,
             forceGameCommand = forceGameCommand,
             sharedSongCache = songCache,
             scoreManager = scoreManager,
@@ -169,7 +176,8 @@ class ArcadePartyInstance(
             assetManager = result.assetManager,
             activitySwitcher = { activity: Activity ->
                 environment.switchRootActivity(activity)
-            }
+            },
+            viewDistanceManager = viewDistanceManager,
         )
 
         val preparation = PreparationActivity(args)

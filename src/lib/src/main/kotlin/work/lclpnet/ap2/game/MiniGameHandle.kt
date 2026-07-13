@@ -11,14 +11,16 @@ import work.lclpnet.ap2.api.map.MapFacade
 import work.lclpnet.ap2.api.music.SongCache
 import work.lclpnet.ap2.api.music.SongManager
 import work.lclpnet.ap2.api.stats.StatsResult
+import work.lclpnet.ap2.game.color.PlayerColorPreferences
 import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.game.player.PlayerRankView
 import work.lclpnet.ap2.game.team.TeamConfig
-import work.lclpnet.ap2.impl.game.PlayerUtil
+import work.lclpnet.ap2.game.util.PlayerUtil
 import work.lclpnet.ap2.impl.util.DeathMessages
 import work.lclpnet.ap2.impl.util.world.SubWorldManager
 import work.lclpnet.ap2.util.AssetManager
 import work.lclpnet.ap2.util.FontService
+import work.lclpnet.ap2.util.ServerViewDistanceManager
 import work.lclpnet.ap2.util.TablistManager
 import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.game.api.WorldFacade
@@ -69,6 +71,8 @@ interface MiniGameHandle {
 
     val participants: Participants
 
+    val colorPreferences: PlayerColorPreferences
+
     val worldBorderManager: WorldBorderManager
 
     val playerUtil: PlayerUtil
@@ -100,6 +104,8 @@ interface MiniGameHandle {
     val startTime: Instant
 
     val rankView: PlayerRankView
+
+    val viewDistanceManager: ServerViewDistanceManager
 
     fun resetGameScheduler()
 

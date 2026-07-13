@@ -1,14 +1,13 @@
 package work.lclpnet.ap2.game.util
 
-import it.unimi.dsi.fastutil.objects.ObjectIntPair
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.server.level.ServerPlayer
 import work.lclpnet.ap2.ApConstants
-import work.lclpnet.ap2.api.game.data.DataEntry
-import work.lclpnet.ap2.api.game.data.PlayerSubjectRefFactory
-import work.lclpnet.ap2.api.game.data.SubjectRef
+import work.lclpnet.ap2.game.data.DataEntry
+import work.lclpnet.ap2.game.data.PlayerSubjectRefFactory
+import work.lclpnet.ap2.game.data.SubjectRef
 import work.lclpnet.ap2.util.FontService
 import work.lclpnet.kibu.translate.Translations
 import work.lclpnet.kibu.translate.text.FormatWrapper
@@ -21,25 +20,29 @@ class ResultAnnouncement<Ref : SubjectRef>(
     private val translations: Translations,
     private val font: FontService,
     private val refs: PlayerSubjectRefFactory<Ref?>,
-    private val order: List<ObjectIntPair<Ref>>,
+    private val order: List<Pair<Ref, Int>>,
     entryGetter: Function<Ref, DataEntry<Ref>?>
 ) {
     private val placement = HashMap<Ref, Int>()
     private val entryByRef: HashMap<Ref, DataEntry<Ref>> = HashMap()
 
     init {
-        for (rankEntry in order) {
-            val ref = rankEntry.left()
+        for ((ref, rank) in order) {
             val entry = entryGetter.apply(ref) ?: continue
 
-            placement[ref] = rankEntry.rightInt()
+            placement[ref] = rank
             entryByRef[ref] = entry
         }
     }
 
     @JvmOverloads
-    fun sendTop(amount: Int, player: ServerPlayer, actionText: Component? = null) {
-        val results = translations.translate(player, "ap2.results")
+    fun sendTop(
+        amount: Int,
+        player: ServerPlayer,
+        actionText: Component? = null,
+        labelKey: String = "ap2.results",
+    ) {
+        val results = translations.translate(player, labelKey)
 
         val resultsText = Component.literal(results).withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD)
 
@@ -87,19 +90,18 @@ class ResultAnnouncement<Ref : SubjectRef>(
         for (i in 0..<amount) {
             if (order.size <= i) break
 
-            val rankEntry = order.get(i)
-            val subject = rankEntry.left()
+            val (subject, rank) = order[i]
 
             val entry = entryByRef.getOrDefault(subject, null)
             val text = entry?.toText(translations)
 
-            var subjectName = subject!!.getNameFor(player)
+            var subjectName = subject.getNameFor(player)
 
             if (subjectName.style.color == null) {
                 subjectName = subjectName.copy().withStyle(ChatFormatting.GRAY)
             }
 
-            val msg = Component.literal("#${rankEntry.rightInt()} ")
+            val msg = Component.literal("#$rank ")
                 .withStyle(ChatFormatting.YELLOW)
                 .append(subjectName)
 

@@ -33,6 +33,7 @@ import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.util.loot.LazyLootContainerManager
 import work.lclpnet.ap2.util.loot.LootEntry
 import work.lclpnet.ap2.util.loot.LootFiller
+import work.lclpnet.ap2.util.useGameRules
 import work.lclpnet.gaco.ds.WeightedList
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
@@ -61,7 +62,6 @@ class KilleporterInstance(
     private val loot: WeightedList<LootEntry>,
 ) : EliminationGameInstance(gameHandle, level, map) {
 
-    val announcer = useAnnouncer()
     var kitHandler: KitHandler? = null
     var itemUseAllowed = false
     lateinit var lootContainerManager: LazyLootContainerManager
@@ -79,18 +79,19 @@ class KilleporterInstance(
 
         level.setDayTime(13000 - TIME_TO_NIGHTFALL_DAYTIME_TICKS)
 
-        commons().gameRuleBuilder()
-            .set(GameRules.FALL_DAMAGE, true)
-            .set(GameRules.FIRE_SPREAD_RADIUS_AROUND_PLAYER, 0)
-            .set(GameRules.SPAWN_PHANTOMS, false)
-            .set(GameRules.NATURAL_HEALTH_REGENERATION, true)
-            .set(GameRules.KEEP_INVENTORY, false)
-            .set(GameRules.ADVANCE_TIME, false)
-            .set(GameRules.SPAWN_MOBS, true)
-            .set(GameRules.MOB_DROPS, true)
-            .set(GameRules.MOB_GRIEFING, true)
-            .set(GameRules.ENTITY_DROPS, true)
-            .set(GameRules.SHOW_ADVANCEMENT_MESSAGES, false)
+        useGameRules {
+            set(GameRules.FALL_DAMAGE, true)
+            set(GameRules.FIRE_SPREAD_RADIUS_AROUND_PLAYER, 0)
+            set(GameRules.SPAWN_PHANTOMS, false)
+            set(GameRules.NATURAL_HEALTH_REGENERATION, true)
+            set(GameRules.KEEP_INVENTORY, false)
+            set(GameRules.ADVANCE_TIME, false)
+            set(GameRules.SPAWN_MOBS, true)
+            set(GameRules.MOB_DROPS, true)
+            set(GameRules.MOB_GRIEFING, true)
+            set(GameRules.ENTITY_DROPS, true)
+            set(GameRules.SHOW_ADVANCEMENT_MESSAGES, false)
+        }
 
         useRemainingPlayersDisplay()
         useSmoothDeath()
@@ -107,9 +108,9 @@ class KilleporterInstance(
     }
 
     override fun configureStartup(sequence: GameStartSequence) {
-        sequence.beforeGo { next ->
-            kitHandler?.startKitSelectionTimer(this, announcer, 15.seconds) { next.run() }
-        }
+        val delay = 15.seconds
+        kitHandler!!.startKitSelectionTimer(this, duration = delay + sequence.initialDelay)
+        sequence.extraDelay += delay
 
         super.configureStartup(sequence)
     }
@@ -119,7 +120,9 @@ class KilleporterInstance(
 
         itemUseAllowed = true
 
-        commons().gameRuleBuilder().set(GameRules.ADVANCE_TIME, true)
+        useGameRules {
+            set(GameRules.ADVANCE_TIME, true)
+        }
 
         gameHandle.protect { config ->
             config.allowAll()

@@ -6,6 +6,7 @@ import net.minecraft.core.component.DataComponents
 import net.minecraft.core.particles.BlockParticleOption
 import net.minecraft.core.particles.DustParticleOptions
 import net.minecraft.core.particles.ParticleTypes
+import net.minecraft.network.protocol.game.ClientboundSetExperiencePacket
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
@@ -22,12 +23,13 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.shapes.CollisionContext
+import work.lclpnet.ap2.ext.inWholeTicks
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.mc.resetAttribute
 import work.lclpnet.ap2.ext.mc.setAttribute
 import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.game.team.DyeTeamKey
-import work.lclpnet.ap2.impl.game.PlayerUtil
+import work.lclpnet.ap2.game.util.PlayerUtil
 import work.lclpnet.ap2.impl.util.RayCastUtil
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.impl.util.VanishManager
@@ -40,11 +42,13 @@ import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.scheduler.api.TaskScheduler
 import java.util.*
 import kotlin.math.max
+import kotlin.time.Duration.Companion.seconds
 
 private const val DEBUG_WALL_CLIMBING = false
 private const val HEAL_PER_SECOND = 4.0f
 private val HEAL_DELAY_TICKS = Ticks.seconds(3)
 private const val SOUND_TICKS = 2
+private val DIVE_COOLDOWN = 0.5.seconds
 
 class PaintballTicker(
     private val world: ServerLevel,
@@ -103,50 +107,108 @@ class PaintballTicker(
             player.removeEffect(MobEffects.SLOWNESS)
         }
 
+        tickHandleDiving(player, onInk, entry, resolvedState)
+
+        if (onInk == OnInk.ENEMY) {
+            player.addEffect(MobEffectInstance(MobEffects.SLOWNESS, 20, 1, false, false, false))
+        }
+
+        paintGunManager.sniperCharge.tick(player)
+    }
+
+    private fun tickHandleDiving(player: ServerPlayer, onInk: OnInk, entry: Entry, resolvedState: BlockState?) {
         if (onInk == OnInk.OWN && player.isShiftKeyDown) {
-            vanishManager.vanish(player)
+            if (tickDiving(player, entry, resolvedState)) return
+        }
 
-            player.setAttribute(Attributes.MOVEMENT_SPEED, 0.14)
-            player.setAttribute(Attributes.SNEAKING_SPEED, 1.0)
-
-            if (entry.outOfCombatTicks >= HEAL_DELAY_TICKS) {
-                player.health += HEAL_PER_SECOND / 20
-            }
-
-            if (entry.nextSound-- <= 0) {
-                entry.nextSound = SOUND_TICKS
-                SoundHelper.playSoundAt(player, SoundEvents.HONEY_BLOCK_SLIDE, SoundSource.PLAYERS, 0.40f, 1.65f + Math.random().toFloat() * 0.2f)
-            }
-
-            teams.teamOf(player)?.let { team ->
-                if (resolvedState != null) {
-                    world.sendParticles(
-                        BlockParticleOption(ParticleTypes.BLOCK, resolvedState),
-                        player.x, player.y, player.z, 2, 0.2, 0.0, 0.2, 0.2
-                    )
-                } else {
-                    world.sendParticles(
-                        DustParticleOptions(team.key.color, 0.8f),
-                        player.x, player.y, player.z, 2, 0.2, 0.0, 0.2, 0.2
-                    )
-                }
-            }
-
-            paintGunManager.setReloading(player)
-            tickReload(player, entry)
-
-            return
+        if (entry.diving) {
+            onStopDiving(player, entry)
+        } else if (entry.diveCooldown >= 1) {
+            entry.diveCooldown--
+            updateDiveCooldownDisplay(entry, player)
         }
 
         vanishManager.show(player)
         player.resetAttribute(Attributes.MOVEMENT_SPEED)
         player.resetAttribute(Attributes.SNEAKING_SPEED)
+        player.resetAttribute(Attributes.JUMP_STRENGTH)
 
         paintGunManager.removeReloading(player)
+    }
 
-        if (onInk == OnInk.ENEMY) {
-            player.addEffect(MobEffectInstance(MobEffects.SLOWNESS, 20, 1, false, false, false))
+    private fun updateDiveCooldownDisplay(entry: Entry, player: ServerPlayer) {
+        val cooldownProgress = (entry.diveCooldown.toFloat() / DIVE_COOLDOWN.inWholeTicks).coerceIn(0f..1f)
+        player.connection.send(ClientboundSetExperiencePacket(cooldownProgress, 0, 0))
+    }
+
+    private fun tickDiving(player: ServerPlayer, entry: Entry, resolvedState: BlockState?): Boolean {
+        if (!entry.diving) {
+            if (!canDive(entry)) return false
+
+            startDiving(player, entry)
         }
+
+        vanishManager.vanish(player)
+
+        player.setAttribute(Attributes.MOVEMENT_SPEED, 0.14)
+        player.setAttribute(Attributes.SNEAKING_SPEED, 1.0)
+        player.setAttribute(Attributes.JUMP_STRENGTH, 0.6)
+
+        if (entry.outOfCombatTicks >= HEAL_DELAY_TICKS) {
+            player.health += HEAL_PER_SECOND / 20
+        }
+
+        if (entry.nextSound-- <= 0) {
+            entry.nextSound = SOUND_TICKS
+            SoundHelper.playSoundAt(
+                player,
+                SoundEvents.HONEY_BLOCK_SLIDE,
+                SoundSource.PLAYERS,
+                0.40f,
+                1.65f + Math.random().toFloat() * 0.2f
+            )
+        }
+
+        teams.teamOf(player)?.let { team ->
+            if (resolvedState != null) {
+                world.sendParticles(
+                    BlockParticleOption(ParticleTypes.BLOCK, resolvedState),
+                    player.x, player.y, player.z, 2, 0.2, 0.0, 0.2, 0.2
+                )
+            } else {
+                world.sendParticles(
+                    DustParticleOptions(team.key.color, 0.8f),
+                    player.x, player.y, player.z, 2, 0.2, 0.0, 0.2, 0.2
+                )
+            }
+        }
+
+        paintGunManager.setReloading(player)
+        tickReload(player, entry)
+
+        return true
+    }
+
+    private fun canDive(entry: Entry): Boolean = 
+        entry.diveCooldown <= 0
+
+    private fun startDiving(player: ServerPlayer, entry: Entry) {
+        entry.diving = true
+
+        // cooldown will only start decreasing when stopping dive
+        entry.diveCooldown = DIVE_COOLDOWN.inWholeTicks.toInt()
+
+        updateDiveCooldownDisplay(entry, player)
+
+        paintGunManager.sniperCharge.reset(player)
+
+        SoundHelper.playSoundAt(player, SoundEvents.HONEY_BLOCK_PLACE, SoundSource.PLAYERS, 0.4f, 1.2f)
+    }
+
+    private fun onStopDiving(player: ServerPlayer, entry: Entry) {
+        entry.diving = false
+
+        SoundHelper.playSoundAt(player, SoundEvents.HONEY_BLOCK_PLACE, SoundSource.PLAYERS, 0.4f, 0.8f)
     }
 
     private fun tickWallClimbing(player: ServerPlayer): BlockState? {
@@ -232,5 +294,7 @@ class PaintballTicker(
         var reloadTicks = 0
         var outOfCombatTicks = 0
         var nextSound = 0
+        var diving = false
+        var diveCooldown = 0
     }
 }

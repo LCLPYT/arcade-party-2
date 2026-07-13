@@ -26,6 +26,7 @@ import work.lclpnet.ap2.game.util.teleportToRandomSpawns
 import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
 import work.lclpnet.ap2.util.SubtitleCountdown
+import work.lclpnet.ap2.util.useGameRules
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.util.PlayerReset
@@ -64,11 +65,12 @@ class WeaponSwapInstance(
     }
 
     override fun prepare() {
-        commons().gameRuleBuilder()
-            .set(GameRules.ENTITY_DROPS, false)
-            .set(GameRules.SHOW_ADVANCEMENT_MESSAGES, false)
-            .set(GameRules.NATURAL_HEALTH_REGENERATION, false)
-            .set(GameRules.FALL_DAMAGE, false)
+        useGameRules {
+            set(GameRules.ENTITY_DROPS, false)
+            set(GameRules.SHOW_ADVANCEMENT_MESSAGES, false)
+            set(GameRules.NATURAL_HEALTH_REGENERATION, false)
+            set(GameRules.FALL_DAMAGE, false)
+        }
 
         useRemainingPlayersDisplay()
         useSmoothDeath()
@@ -182,10 +184,10 @@ class WeaponSwapInstance(
 
     private fun setHolders(newHolders: List<ServerPlayer>) {
         for (uuid in currentHolders) {
-            players().getParticipant(uuid).ifPresent { player ->
-                removeWeaponFrom(player)
-                PlayerReset.modifyWalkSpeed(player, 0.1f)
-            }
+            val player = players().getParticipant(uuid) ?: continue
+
+            removeWeaponFrom(player)
+            PlayerReset.modifyWalkSpeed(player, 0.1f)
         }
 
         currentHolders.clear()

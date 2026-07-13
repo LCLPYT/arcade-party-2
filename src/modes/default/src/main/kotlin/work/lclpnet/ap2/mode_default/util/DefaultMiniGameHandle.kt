@@ -19,10 +19,11 @@ import work.lclpnet.ap2.core.type.ApServerPlayerEntity
 import work.lclpnet.ap2.game.GameInfo
 import work.lclpnet.ap2.game.MiniGame
 import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.color.PlayerColorPreferences
 import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.game.player.PlayerRankView
 import work.lclpnet.ap2.game.team.TeamConfig
-import work.lclpnet.ap2.impl.game.PlayerUtil
+import work.lclpnet.ap2.game.util.PlayerUtil
 import work.lclpnet.ap2.impl.i18n.GameScopedTranslator
 import work.lclpnet.ap2.impl.util.DeathMessages
 import work.lclpnet.ap2.impl.util.world.SubWorldManager
@@ -30,6 +31,7 @@ import work.lclpnet.ap2.mode_default.activity.MiniGameActivity
 import work.lclpnet.ap2.mode_default.activity.PreparationActivity
 import work.lclpnet.ap2.util.AssetManager
 import work.lclpnet.ap2.util.FontService
+import work.lclpnet.ap2.util.ServerViewDistanceManager
 import work.lclpnet.ap2.util.TablistManager
 import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.game.api.WorldFacade
@@ -60,6 +62,7 @@ class DefaultMiniGameHandle(
     override val scoreboardManager: CustomScoreboardManager,
     private val remake: AtomicBoolean,
     override val rankView: PlayerRankView,
+    override val viewDistanceManager: ServerViewDistanceManager,
 ) : MiniGameHandle, WorldBorderManager {
 
     override val logger: Logger = LoggerFactory.getLogger(game.id.toString())
@@ -135,6 +138,9 @@ class DefaultMiniGameHandle(
 
     override val participants: Participants
         get() = args.playerManager
+
+    override val colorPreferences: PlayerColorPreferences
+        get() = args.colorPreferences
 
     override val worldBorderManager: WorldBorderManager
         get() = this
@@ -271,7 +277,7 @@ class DefaultMiniGameHandle(
                         scoreManager.addScore(playerResult.ref, score)
                     }
 
-                    score--
+                    score -= group.size
                 }
             }
             GameType.TEAM -> {
@@ -314,6 +320,8 @@ class DefaultMiniGameHandle(
         playerUtil.updatePlayerListNames()
 
         worldContainer?.unload()
+
+        args.viewDistanceManager.reset()
     }
 
     override fun getWorldBorder(): WorldBorder =

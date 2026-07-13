@@ -1,7 +1,6 @@
 package work.lclpnet.ap2.game.data
 
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
-import work.lclpnet.ap2.api.game.data.*
 import work.lclpnet.ap2.game.data.entry.IntScoreDataEntry
 import java.util.stream.IntStream
 import java.util.stream.Stream

@@ -3,7 +3,7 @@ package work.lclpnet.ap2.game.maze_scape.monster;
 import net.minecraft.world.entity.monster.creaking.Creaking;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.game.maze_scape.monster.behaviour.ValidPositionBehaviour;
-import work.lclpnet.ap2.impl.util.VisibilityChecker;
+import work.lclpnet.ap2.util.VisibilityChecker;
 
 import java.util.List;
 

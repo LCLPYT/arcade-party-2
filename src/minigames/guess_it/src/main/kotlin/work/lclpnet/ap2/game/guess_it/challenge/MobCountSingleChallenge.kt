@@ -11,8 +11,8 @@ import work.lclpnet.ap2.game.guess_it.util.MobRandomizer
 import work.lclpnet.ap2.game.guess_it.util.MobSpawner
 import work.lclpnet.ap2.impl.util.TextUtil
 import work.lclpnet.ap2.impl.util.world.PositionUtil.findGroundPositions
-import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
+import work.lclpnet.ap2.util.world.SizedSpaceFinder
 import work.lclpnet.gaco.ds.IndexedSet
 import work.lclpnet.game.util.WorldModifier
 import work.lclpnet.kibu.scheduler.Ticks

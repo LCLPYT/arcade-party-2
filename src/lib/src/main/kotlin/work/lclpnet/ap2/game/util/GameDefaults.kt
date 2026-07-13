@@ -5,9 +5,7 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.level.GameType
 import net.minecraft.world.scores.Objective
-import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.stats.LevelInfo
-import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective
 import work.lclpnet.ap2.ext.allPlayers
 import work.lclpnet.ap2.ext.hooks
 import work.lclpnet.ap2.ext.isParticipating
@@ -15,6 +13,7 @@ import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.game.MiniGameInstance
 import work.lclpnet.ap2.game.base.MapGameInstance
+import work.lclpnet.ap2.game.data.DataContainer
 import work.lclpnet.ap2.game.data.ScoreListenerView
 import work.lclpnet.ap2.game.data.type.FFAGameResult
 import work.lclpnet.ap2.game.data.type.PlayerRef
@@ -23,7 +22,8 @@ import work.lclpnet.ap2.game.data.type.TeamRef
 import work.lclpnet.ap2.game.player.ParticipantListener
 import work.lclpnet.ap2.game.team.Team
 import work.lclpnet.ap2.game.team.TeamManager
-import work.lclpnet.ap2.impl.util.scoreboard.TranslatedScoreboardObjective
+import work.lclpnet.ap2.util.scoreboard.CustomScoreboardObjective
+import work.lclpnet.ap2.util.scoreboard.TranslatedScoreboardObjective
 import work.lclpnet.combatctl.impl.CombatStyles
 import work.lclpnet.gaco.collisions.movement.TickMovementDetector
 import work.lclpnet.game.impl.prot.MutableProtectionConfig
@@ -38,13 +38,16 @@ import java.util.function.Consumer
 
 fun MiniGameInstance.configureDefaults(
     locatorBar: Boolean = false,
+    resetPlayersOnRespawn: Boolean = true,
 ) {
     gameHandle.protect { config ->
         config.disallowAll()
         ProtectorUtils.allowCreativeOperatorBypass(config)
     }
 
-    registerDefaultHooks()
+    registerDefaultHooks(
+        resetPlayersOnRespawn = resetPlayersOnRespawn,
+    )
 
     resetPlayers()
 
@@ -55,7 +58,9 @@ fun MiniGameInstance.configureDefaults(
     gameHandle.deathMessages.replaceVanillaDeathMessages(level, hooks)
 }
 
-private fun MiniGameInstance.registerDefaultHooks() {
+private fun MiniGameInstance.registerDefaultHooks(
+    resetPlayersOnRespawn: Boolean = true,
+) {
     val playerUtil = gameHandle.playerUtil
 
     ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks) { entity, source, _ ->
@@ -69,8 +74,10 @@ private fun MiniGameInstance.registerDefaultHooks() {
         }
     }
 
-    PlayerSpawnLocationCallback.HOOK.registerWith(hooks) { data ->
-        playerUtil.resetPlayer(data.player)
+    if (resetPlayersOnRespawn) {
+        PlayerSpawnLocationCallback.HOOK.registerWith(hooks) { data ->
+            playerUtil.resetPlayer(data.player)
+        }
     }
 }
 
@@ -143,7 +150,7 @@ private fun MiniGameInstance.createLevelInfo(map: GameMap?): LevelInfo = LevelIn
 
 /**
  * Sets the default player game mode to survival mode.
- * Player game modes are updated by [work.lclpnet.ap2.impl.game.PlayerUtil.resetPlayer].
+ * Player game modes are updated by [PlayerUtil.resetPlayer].
  * Should be called before [configureDefaults] is called.
  * Call this in the class initializer, for example.
  */
@@ -153,7 +160,7 @@ fun MiniGameInstance.useSurvivalMode() {
 
 /**
  * Sets the combat style to classic combat.
- * Player combat styles are updated by [work.lclpnet.ap2.impl.game.PlayerUtil.resetPlayer].
+ * Player combat styles are updated by [PlayerUtil.resetPlayer].
  * Should be called before [configureDefaults] is called.
  * For games extending [work.lclpnet.ap2.game.base.MapGameInstance], call this in the class initializer.
  */
@@ -230,10 +237,18 @@ fun MiniGameInstance.useScoreboardStatsSync(
         val localized = LocalizedFormat.format(format, score)
 
         objective.setNumberFormat(holder) { language ->
-            val defaultFormat = objective.defaultEntry.numberFormat.translateTo(language)
-            val defaultStyle = defaultFormat.format(0).style
+            val defaultStyle = objective.defaultEntry.numberFormat
+                ?.translateTo(language)
+                ?.format(0)
+                ?.style
 
-            FixedFormat(localized.translateTo(language).copy().withStyle(defaultStyle))
+            val text = localized.translateTo(language).copy()
+
+            if (defaultStyle != null) {
+                text.withStyle(defaultStyle)
+            }
+
+            FixedFormat(text)
         }
 
         val ordered = scores.entries.sortedByDescending { it.value }

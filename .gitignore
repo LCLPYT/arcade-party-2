@@ -40,3 +40,9 @@ logs/
 
 **/__pycache__/
 **/worktrees/
+
+# tooling
+.direnv
+
+# local development selection (selective minigame builds)
+/dev.local.properties

@@ -24,6 +24,7 @@ fun getKits(registryAccess: RegistryAccess): WeightedList<Kit> {
             set(1, ItemStack(Items.FISHING_ROD).unbreakable())
             set(2, ItemStack(Items.GOLDEN_APPLE))
             set(3, ItemStack(Items.COBBLESTONE, 32))
+            set(4, ItemStack(Items.IRON_PICKAXE))
 
             set(7, ItemStack(Items.COOKED_BEEF, 4))
             set(8, ItemStack(Items.BOW).unbreakable())
@@ -40,6 +41,7 @@ fun getKits(registryAccess: RegistryAccess): WeightedList<Kit> {
             set(0, ItemStack(Items.IRON_SWORD).unbreakable())
             set(1, ItemStack(Items.COBBLESTONE, 32))
             set(2, ItemStack(Items.GOLDEN_APPLE))
+            set(3, ItemStack(Items.IRON_PICKAXE))
 
             set(EquipmentSlot.HEAD, ItemStack(Items.IRON_HELMET).unbreakable())
             set(EquipmentSlot.CHEST, ItemStack(Items.COPPER_CHESTPLATE).unbreakable())
@@ -88,6 +90,8 @@ fun getKits(registryAccess: RegistryAccess): WeightedList<Kit> {
                 set(DataComponents.POTION_CONTENTS, PotionContents(Potions.STRONG_HEALING))
             })
 
+            set(3, ItemStack(Items.IRON_PICKAXE))
+
             set(8, ItemStack(Items.PRISMARINE, 32))
 
             set(EquipmentSlot.HEAD, ItemStack(Items.GOLDEN_HELMET).unbreakable())
@@ -115,8 +119,8 @@ fun getKits(registryAccess: RegistryAccess): WeightedList<Kit> {
         }, 0.5f)
     }
 
-    val commonWeight = 0.75f
-    val uncommonChance = 0.25f
+    val commonWeight = 0.85f
+    val uncommonChance = 0.15f
 
     return WeightedList<Kit>().apply {
         addAll(commonKits.normalized().scaleWeights(commonWeight))

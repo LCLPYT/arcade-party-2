@@ -13,16 +13,13 @@ import work.lclpnet.ap2.api.util.world.BlockPredicate;
 import work.lclpnet.ap2.api.util.world.WorldScanner;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
+import work.lclpnet.ap2.util.world.SizedSpaceFinder;
 import work.lclpnet.gaco.ds.BlockBox;
-import work.lclpnet.gaco.ds.StructureMask;
 import work.lclpnet.game.map.GameMap;
 import work.lclpnet.game.map.MapUtils;
-import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.*;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 
 public class SpawnFinder {
 
@@ -74,30 +71,7 @@ public class SpawnFinder {
             positions.add(it.next());
         }
 
-        var minPos = positions.getFirst().mutable();
-        var maxPos = positions.getFirst().mutable();
-
-        for (BlockPos pos : positions) {
-            minPos.set(
-                    min(minPos.getX(), pos.getX()),
-                    min(minPos.getY(), pos.getY()),
-                    min(minPos.getZ(), pos.getZ())
-            );
-
-            maxPos.set(
-                    max(maxPos.getX(), pos.getX()),
-                    max(maxPos.getY(), pos.getY()),
-                    max(maxPos.getZ(), pos.getZ())
-            );
-        }
-
-        var mask = StructureMask.createEmpty(new BlockBox(minPos, maxPos));
-
-        for (BlockPos pos : positions) {
-            mask.setVoxelAt(pos.getX() - minPos.getX(), pos.getY() - minPos.getY(), pos.getZ() - minPos.getZ(), true);
-        }
-
-        debugController.visualizeStructureMask(mask, minPos, Matrix3i.IDENTITY, Blocks.STAINED_GLASS.green().defaultBlockState());
+        debugController.visualizeBlockPositions(positions, Blocks.STAINED_GLASS.green().defaultBlockState());
     }
 
     public List<Vec3> generateSpacedSpawns(List<Vec3> spawns, int count, Random random) {

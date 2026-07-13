@@ -60,6 +60,7 @@ class MiniGameActivity(
             scoreboard,
             remake,
             args.scoreManager,
+            args.viewDistanceManager,
         )
 
         handle.init()  // hook stack is pushed and later popped by handle::unload in stop()

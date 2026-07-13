@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.team_gathering
 
 import net.minecraft.ChatFormatting
+import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
@@ -10,6 +11,7 @@ import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.gamerules.GameRules
 import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.Stat
@@ -33,6 +35,8 @@ import work.lclpnet.gaco.ds.WeightedList
 import work.lclpnet.game.impl.menu.PaginatedOptionMenu
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.util.ResetWorldModifier
+import work.lclpnet.kibu.hook.entity.ServerPlayerHooks
+import work.lclpnet.kibu.hook.level.BlockModificationHooks
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks
 import work.lclpnet.kibu.translate.text.FormatWrapper
 import java.util.*
@@ -75,6 +79,7 @@ class TeamGatheringInstance(
         memberStats = listOf(UniqueItems, ItemsCrafted, ItemsPickedUp, CommonStats.DistanceMoved)
     )
     val teamStates = TeamStorage.create(::TeamState)
+    val blocksPlacedByPlayers = HashSet<BlockPos>()
     var soloPlayerKey: PlayerRef? = null
     var soloTeamKey: TeamKey? = null
 
@@ -96,7 +101,7 @@ class TeamGatheringInstance(
         val soloPlayer = this.soloPlayer
 
         if (soloPlayer != null) {
-            soloPlayer.addEffect(MobEffectInstance(MobEffects.HASTE, Int.MAX_VALUE, 1, false, false, false))
+            giveSoloEffects(soloPlayer)
 
             translate("solo_hint").withStyle(ChatFormatting.AQUA).sendTo(soloPlayer)
         }
@@ -104,6 +109,12 @@ class TeamGatheringInstance(
         trackDistanceMoved(stats.players)
 
         useStartup(::go)
+    }
+
+    private fun giveSoloEffects(soloPlayer: ServerPlayer) {
+        soloPlayer.addEffect(MobEffectInstance(MobEffects.HASTE, -1, 2, false, false, false))
+        soloPlayer.addEffect(MobEffectInstance(MobEffects.SPEED, -1, 1, false, false, false))
+        soloPlayer.addEffect(MobEffectInstance(MobEffects.LUCK, -1, 2, false, false, false))
     }
 
     private fun setupTeams() {
@@ -201,6 +212,38 @@ class TeamGatheringInstance(
 
         ItemCraftedCallback.HOOK.registerWith(hooks) { player, stack, _ ->
             recordDistinct(player, stack.item, craftedBucket, pickedUpBucket)
+        }
+
+        ServerPlayerHooks.AFTER_RESPAWN.registerWith(hooks) { player, _, _ ->
+            if (player == soloPlayer) {
+                giveSoloEffects(player)
+            }
+        }
+
+        BlockModificationHooks.BLOCK_PLACED.registerWith(hooks) { level, pos, entity ->
+            if (level == this.level && entity is ServerPlayer && isParticipating(entity)) {
+                blocksPlacedByPlayers.add(pos.immutable())
+            }
+        }
+
+        // grant the solo player duplicate block drops
+        BlockModificationHooks.BREAK_BLOCK.registerWith(hooks) { level, pos, entity ->
+            if (level != this.level || entity !is ServerPlayer || !isParticipating(entity)) return@registerWith false
+
+            if (blocksPlacedByPlayers.remove(pos)) return@registerWith false
+
+            if (entity != soloPlayer) return@registerWith false
+
+            val state = level.getBlockState(pos)
+
+            if (!entity.hasCorrectToolForDrops(state)) return@registerWith false
+
+            val blockEntity = level.getBlockEntity(pos)
+            val tool = entity.inventory.selectedItem
+
+            Block.dropResources(state, level, pos, blockEntity, entity, tool)
+
+            false
         }
 
         runEveryTick {
@@ -391,5 +434,5 @@ class TeamGatheringInstance(
     }
 
     private val soloPlayer: ServerPlayer?
-        get() = soloPlayerKey?.let { players().getParticipant(it.uuid).orElse(null) }
+        get() = soloPlayerKey?.let { players().getParticipant(it.uuid) }
 }

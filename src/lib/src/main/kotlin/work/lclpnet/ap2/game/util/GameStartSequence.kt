@@ -4,8 +4,9 @@ import net.fabricmc.fabric.api.networking.v1.PlayerLookup
 import net.minecraft.server.level.ServerPlayer
 import work.lclpnet.ap2.ext.sendGo
 import work.lclpnet.ap2.game.MiniGameHandle
-import work.lclpnet.ap2.impl.game.PlayerUtil
 import work.lclpnet.ap2.util.SubtitleCountdown
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * The shared start sequence of a mini-game: an initial countdown followed by a number of optional
@@ -23,22 +24,46 @@ class GameStartSequence(
     private val players: () -> Collection<ServerPlayer> = { PlayerLookup.all(gameHandle.server) },
 ) {
     private val phases = ArrayDeque<StartupPhase>()
+    private val countdownTasks = ArrayDeque<CountdownTask>()
+    var extraDelay = 0.seconds
 
     fun interface StartupPhase {
         /** Perform work, then invoke [next] to continue the sequence (synchronously or asynchronously). */
         fun run(next: Runnable)
     }
 
-    /** Insert custom logic between the countdown and the game start. */
-    fun beforeGo(phase: StartupPhase) = apply { phases.addLast(phase) }
+    fun interface CountdownTask {
+        /** Called when the countdown begins. Returns a handle that is closed once the countdown concludes. */
+        fun start(): AutoCloseable
+    }
 
-    val initialDelay: Int
-        get() = PlayerUtil.getLoadingDelayTicks(gameHandle.participants.asSet.size)
+    /** Insert custom logic between the countdown and the game start. */
+    fun beforeGo(phase: StartupPhase) = apply {
+        phases.addLast(phase)
+    }
+
+    /** Register work that runs concurrently with the initial countdown and concludes together with it. */
+    fun duringCountdown(task: CountdownTask) = apply {
+        countdownTasks.addLast(task)
+    }
+
+    val initialDelay: Duration
+        get() = PlayerUtil.getLoadingDelay(gameHandle.participants.asSet.size) +
+                extraDelay.coerceAtLeast(0.seconds)
 
     /** Runs the initial countdown, then the registered phases, then invokes [onComplete]. */
     fun start(onComplete: Runnable) {
-        SubtitleCountdown(gameHandle.server, gameHandle.scheduler, { }, players)
-            .schedule(initialDelay) { runPhases(onComplete) }
+        val running = countdownTasks.map { it.start() }
+
+        SubtitleCountdown(
+            gameHandle.server,
+            gameHandle.scheduler,
+            { },
+            players
+        ).schedule(initialDelay) {
+            running.forEach(AutoCloseable::close)
+            runPhases(onComplete)
+        }
     }
 
     /** Like [start], but sends the "go" title and sound to every player right before invoking [onGo]. */

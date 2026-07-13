@@ -100,11 +100,11 @@ class GbManager(
         if (orderedPlayers.isEmpty()) return false
 
         playerIndex = random.nextInt(orderedPlayers.size)
-        val holder = participants.getParticipant(orderedPlayers[playerIndex])
 
-        if (holder.isEmpty) return false
+        val holder = participants.getParticipant(orderedPlayers[playerIndex]) ?: return false
 
-        bombHolder = holder.get().uuid
+        bombHolder = holder.uuid
+
         return true
     }
 
@@ -120,8 +120,8 @@ class GbManager(
         return anchors[holder]
     }
 
-    fun bombHolder(): Optional<ServerPlayer> =
-        Optional.ofNullable(bombHolder).flatMap(participants::getParticipant)
+    fun bombHolder(): ServerPlayer? =
+        bombHolder?.let { participants.getParticipant(it) }
 
     fun addCharge(anchor: GbAnchor) {
         val pos = anchor.pos
@@ -162,12 +162,10 @@ class GbManager(
 
         val nextIndex = Math.floorMod(playerIndex - 1, orderedPlayers.size)
         val uuid = orderedPlayers[nextIndex]
-        val holder = participants.getParticipant(uuid)
-
-        if (holder.isEmpty) return null
+        val holder = participants.getParticipant(uuid) ?: return null
 
         bombHolder = uuid
         playerIndex = nextIndex
-        return holder.get()
+        return holder
     }
 }

@@ -5,7 +5,7 @@ import net.minecraft.ChatFormatting
 import net.minecraft.commands.Commands
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.numbers.FixedFormat
+import net.minecraft.network.chat.numbers.StyledFormat
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
@@ -14,6 +14,9 @@ import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.Display
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.scores.DisplaySlot
+import net.minecraft.world.scores.criteria.ObjectiveCriteria
 import org.joml.Vector3d
 import org.json.JSONObject
 import org.slf4j.Logger
@@ -36,19 +39,14 @@ import work.lclpnet.ap2.impl.activity.ArcadePartyComponents
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.music.MusicHelper
 import work.lclpnet.ap2.impl.util.IconMaker
-import work.lclpnet.ap2.impl.util.scoreboard.DynamicScoreboardObjective
-import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout
 import work.lclpnet.ap2.impl.util.title.AnimatedTitle
 import work.lclpnet.ap2.impl.util.title.NextGameTitleAnimation
 import work.lclpnet.ap2.mode_default.ApMiniGameArgs
 import work.lclpnet.ap2.mode_default.api.Skippable
 import work.lclpnet.ap2.mode_default.cmd.ForceMapCommand
 import work.lclpnet.ap2.mode_default.cmd.SkipCommand
-import work.lclpnet.ap2.mode_default.util.ApBaseArgs
-import work.lclpnet.ap2.mode_default.util.BaseActivityConfigurator
-import work.lclpnet.ap2.mode_default.util.OptionChooser
-import work.lclpnet.ap2.mode_default.util.ScoreManager
-import work.lclpnet.ap2.util.scoreboard.setupDynamicSidebarObjective
+import work.lclpnet.ap2.mode_default.util.*
+import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager
 import work.lclpnet.gaco.scene.MixedMountContext
 import work.lclpnet.gaco.scene.Object3d
@@ -97,7 +95,7 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
     private var world: ServerLevel? = null
     private var map: GameMap? = null
     private var dynamicEntityManager: DynamicEntityManager? = null
-    private var gameQueueDisplay: Object3d? = null
+    private var gameQueueDisplays = mutableListOf<Object3d>()
     private var nextGameSong: WeightedSong? = null
 
     override fun registerComponents(componentBundle: ComponentBundle) {
@@ -111,6 +109,8 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
 
     override fun start() {
         super.start()
+
+        args.viewDistanceManager.reset()
 
         activityConfigurator.configureProtector()
 
@@ -189,6 +189,7 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
         dynamicEntityManager!!.init(scheduler, hooks)
 
         setupAdminItems(hooks)
+        setupSettingsMenu(hooks)
 
         showLeaderboard()
         displayGameQueue()
@@ -238,108 +239,39 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
     }
 
     private fun showLeaderboard() {
-        val translations = args.miniGameArgs.translations
         val scoreManager = args.scoreManager
-        val component = component(ArcadePartyComponents.SCORE_BOARD)
-        val scoreboard = component.scoreboardManager(args.miniGameArgs::translations)
+        val scoreboard = component(ArcadePartyComponents.SCORE_BOARD)
+            .scoreboardManager(args.miniGameArgs::translations)
 
-        val objective = setupDynamicSidebarObjective(scoreboard, "game.${ApConstants.ID}.title")
-
-        // header
-        val round = FixedFormat(
-            Component.literal(scoreManager.round.toString()).withStyle(ChatFormatting.YELLOW)
+        val leaderboard = PreparationLeaderboard(
+            server, args.miniGameArgs.translations, scoreManager, args.playerManager
         )
 
-        objective.createText(translations.translateText("ap2.prepare.round")
-            .withStyle(ChatFormatting.GREEN)
-        ).setNumberFormat(round)
+        scoreboard.addVirtualObjective(leaderboard)
 
-        if (args.playerManager.isFinale) {
-            addFinalistsToScoreboard(objective)
-        } else {
-            addPlayerScoresToScoreboard(objective)
+        for (player in PlayerLookup.all(server)) {
+            leaderboard.add(player)
         }
 
-        // footer
-        if (args.playerManager.isFinale) {
-            objective.createText({ player ->
-                val translation = if (args.playerManager.isParticipating(player))
-                    "ap2.prepare.win_finale"
-                else
-                    "ap2.prepare.spectating"
-
-                translations.translateText(player, translation).withStyle(ChatFormatting.AQUA)
-            }, ScoreboardLayout.BOTTOM)
-        } else {
-            val requiredScore = FormatWrapper.styled(scoreManager.targetScore).formatted(ChatFormatting.YELLOW)
-            val taskMsg = translations.translateText("ap2.prepare.score_required", requiredScore)
-            objective.createText(taskMsg.withStyle(ChatFormatting.AQUA), ScoreboardLayout.BOTTOM)
-        }
-
-        objective.createNewline(ScoreboardLayout.BOTTOM)
-
-        // display objective for all players
-        for (player in PlayerLookup.all(args.miniGameArgs.server)) {
-            objective.add(player)
-        }
+        setupPlayerListScoreObjective(scoreboard)
     }
 
-    private fun addFinalistsToScoreboard(objective: DynamicScoreboardObjective) {
-        val finalists = args.scoreManager.finalists
-        val translations = args.miniGameArgs.translations
+    /**
+     * Shows every participant's current score behind their name in the player list (tab list),
+     * using a dedicated vanilla objective bound to [DisplaySlot.LIST].
+     */
+    private fun setupPlayerListScoreObjective(manager: CustomScoreboardManager) {
+        val scoreManager = args.scoreManager
 
-        objective.createNewline(ScoreboardLayout.TOP)
-
-        objective.createText(
-            translations.translateText("ap2.finale").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD)
+        val objective = manager.createObjective(
+            "ap2_prep_score", ObjectiveCriteria.DUMMY, Component.empty(),
+            ObjectiveCriteria.RenderType.INTEGER, StyledFormat.PLAYER_LIST_DEFAULT
         )
 
-        val separator = Component.literal(ApConstants.SCOREBOARD_SEPARATOR_SM)
-            .withStyle(ChatFormatting.DARK_GREEN, ChatFormatting.STRIKETHROUGH)
+        manager.setDisplay(DisplaySlot.LIST, objective)
 
-        objective.createText(separator)
-
-        for (finalist in finalists) {
-            objective.createText(
-                Component.literal("• ${finalist.scoreboardName}").withStyle(ChatFormatting.GREEN)
-            )
-        }
-    }
-
-    private fun addPlayerScoresToScoreboard(objective: DynamicScoreboardObjective) {
-        val translations: Translations = args.miniGameArgs.translations
-        val scoreManager: ScoreManager = args.scoreManager
-
-        if (scoreManager.hasScores()) {
-            objective.createNewline(ScoreboardLayout.TOP)
-
-            objective.createText(
-                translations.translateText("ap2.score").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD)
-            )
-
-            val separator = Component.literal(ApConstants.SCOREBOARD_SEPARATOR_SM)
-                .withStyle(ChatFormatting.DARK_GREEN, ChatFormatting.STRIKETHROUGH)
-
-            objective.createText(separator)
-        }
-
-        // top 5 scores
-        var i = 0
-
-        for (entry in scoreManager.iterateRankedScores()) {
-            if (i++ >= 5) continue
-
-            val ref = entry.left()
-            val score = scoreManager.getScore(ref)
-            val rank = entry.rightInt()
-
-            objective.setScore(ref.name, score)
-
-            objective.setDisplayName(
-                ref.name,
-                Component.literal("#$rank ").withStyle(ChatFormatting.YELLOW)
-                    .append(Component.literal(ref.name).withStyle(ChatFormatting.GREEN))
-            )
+        for (player in args.playerManager.asSet) {
+            manager.setScore(player, objective, scoreManager.score(player))
         }
     }
 
@@ -356,15 +288,32 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
 
         removeGameQueue()
 
-        gameQueueDisplay = Object3d(scene)
-        gameQueueDisplay!!.position.set(pos.x(), pos.y(), pos.z())
-        gameQueueDisplay!!.rotation.setAngleAxis(yaw, Vector3d(0.0, 1.0, 0.0))
+        val frontDisplay = createGameQueueDisplay(scene, pos, yaw, height, translations)
+        val backDisplay = createGameQueueDisplay(scene, pos, yaw + Math.PI, height, translations)
+
+        scene.add(frontDisplay)
+        scene.add(backDisplay)
+
+        gameQueueDisplays.add(frontDisplay)
+        gameQueueDisplays.add(backDisplay)
+    }
+
+    private fun createGameQueueDisplay(
+        scene: Scene,
+        pos: Vec3,
+        yaw: Double,
+        height: Double,
+        translations: Translations
+    ): Object3d {
+        val display = Object3d(scene)
+        display.position.set(pos.x(), pos.y(), pos.z())
+        display.rotation.setAngleAxis(yaw, Vector3d(0.0, 1.0, 0.0))
 
         var offsetY = 0.0
         val textHeight = 0.25
 
         if (!args.playerManager.isFinale) {
-            offsetY = addUpcomingGames(height, translations, offsetY, textHeight)
+            offsetY = addUpcomingGames(height, translations, offsetY, textHeight, display)
         }
 
         if (miniGame != null) {
@@ -385,7 +334,7 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
 
             offsetY += textHeight
 
-            gameQueueDisplay!!.addChild(obj)
+            display.addChild(obj)
         }
 
         val title = TranslatedTextDisplayObject(scene, translations)
@@ -399,22 +348,25 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
 
         title.position.set(0.0, offsetY, 0.0)
 
-        gameQueueDisplay!!.addChild(title)
+        display.addChild(title)
 
-        scene.add(gameQueueDisplay)
+        return display
     }
 
     private fun removeGameQueue() {
-        if (gameQueueDisplay != null) {
-            gameQueueDisplay!!.detach()
+        for (display in gameQueueDisplays) {
+            display.detach()
         }
+
+        gameQueueDisplays.clear()
     }
 
     private fun addUpcomingGames(
         height: Double,
         translations: Translations,
         offsetY: Double,
-        textHeight: Double
+        textHeight: Double,
+        parent: Object3d,
     ): Double {
         var offsetY = offsetY
         var preview: MutableList<GameQueue.Entry> = args.gameQueue.preview()
@@ -426,7 +378,7 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
         preview.reverse()
 
         for (entry in preview) {
-            val obj = TranslatedTextDisplayObject(gameQueueDisplay!!.getScene(), translations)
+            val obj = TranslatedTextDisplayObject(parent.scene, translations)
 
             val color = when (entry.type) {
                 GameQueue.Type.REGULAR -> ChatFormatting.GREEN
@@ -455,8 +407,9 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
 
             offsetY += textHeight
 
-            gameQueueDisplay!!.addChild(obj)
+            parent.addChild(obj)
         }
+
         return offsetY
     }
 
@@ -710,6 +663,13 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
         }
     }
 
+    private fun setupSettingsMenu(hooks: HookRegistrar) {
+        val settingsMenu = SettingsMenu(args.miniGameArgs.translations, args.colorPreferences)
+
+        settingsMenu.init(hooks)
+        settingsMenu.giveItems(args.playerManager)
+    }
+
     private fun setupAdminItems(hooks: HookRegistrar) {
         val server = getServer()
 
@@ -721,18 +681,33 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
             if (player !is ServerPlayer || !Commands.LEVEL_GAMEMASTERS.check(server.getProfilePermissions(player.nameAndId()))) {
                 return@registerWith InteractionResult.PASS
             }
+
             val stack = player.getItemInHand(hand)
 
-            if (stack.isOf(Items.TOTEM_OF_UNDYING)) {
-                openGamePicker(player)
-            } else if (stack.isOf(Items.EMERALD_BLOCK)) {
-                isSkip = true
-                player.sendSystemMessage(Component.literal("Skipped the preparation phase"))
-            } else if (stack.isOf(Items.HEART_OF_THE_SEA)) {
-                openMapPicker(player)
-            }
+            when {
+                stack.isOf(Items.TOTEM_OF_UNDYING) -> {
+                    openGamePicker(player)
 
-            InteractionResult.SUCCESS_SERVER
+                    InteractionResult.SUCCESS_SERVER
+                }
+
+                stack.isOf(Items.EMERALD_BLOCK) -> {
+                    isSkip = true
+                    player.sendSystemMessage(Component.literal("Skipped the preparation phase"))
+
+                    InteractionResult.SUCCESS_SERVER
+                }
+
+                stack.isOf(Items.HEART_OF_THE_SEA) -> {
+                    openMapPicker(player)
+
+                    InteractionResult.SUCCESS_SERVER
+                }
+
+                else -> {
+                    InteractionResult.PASS
+                }
+            }
         }
 
         PlayerConnectionHooks.JOIN.registerWith(hooks) { player -> giveAdminItems(player) }

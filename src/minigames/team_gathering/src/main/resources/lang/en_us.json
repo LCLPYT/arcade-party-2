@@ -5,7 +5,7 @@
   "found": "%s found %s",
   "dropped": "%s lost %s",
   "count": "%s Items",
-  "solo_hint": "You are the solo player. You don't have to keep items in your inventory and you can break blocks faster.",
+  "solo_hint": "You are the solo player. You don't have to keep items in your inventory, you get double block drops, can break blocks faster and move faster.",
   "winning_team_items": "%s's Items",
   "stat.unique_items": "Unique items",
   "stat.items_crafted": "Items crafted",

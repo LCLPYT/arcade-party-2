@@ -4,9 +4,8 @@ import net.minecraft.server.level.ServerLevel
 import org.json.JSONArray
 import org.json.JSONObject
 import work.lclpnet.ap2.impl.map.MapUtil
-import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
 import work.lclpnet.game.map.GameMap
-import java.util.Random
+import java.util.*
 
 class AsSetup(
     private val map: GameMap,
@@ -25,8 +24,9 @@ class AsSetup(
         val stageJson = json.getJSONObject("stage")
         val blockShape = MapUtil.readShape(stageJson)
 
-        require(blockShape is BlockShape.WithRadius) { "Stage with radius required" }
+        val minSpawnTicks = json.getNumber("min-spawn-ticks").toInt()
+        val maxSpawnTicks = json.getNumber("max-spawn-ticks").toInt()
 
-        return MonsterSpawner(world, blockShape, random, targetManager)
+        return MonsterSpawner(world, blockShape, random, targetManager, minSpawnTicks, maxSpawnTicks)
     }
 }

@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.api.stats
 
 import net.minecraft.server.level.ServerPlayer
-import work.lclpnet.ap2.api.game.data.GenericGameResult
-import work.lclpnet.ap2.api.game.data.SubjectRefFactory
+import work.lclpnet.ap2.game.data.GenericGameResult
+import work.lclpnet.ap2.game.data.SubjectRefFactory
 import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.data.type.TeamGameResult
 import work.lclpnet.ap2.game.data.type.TeamRef
@@ -19,8 +19,8 @@ class TeamStatsManager(
     val players: BaseStatsManager<ServerPlayer, PlayerRef> = BaseStatsManager(playerStats, PlayerRef::create)
 
     override fun fillDefaults(result: GenericGameResult<TeamRef>) {
-        teams.fillDefaults(result.subjectResults.mapNotNull { it.left() })
-        players.fillDefaults(result.playerResults.mapNotNull { it.left() })
+        teams.fillDefaults(result.subjectResults.map { (ref, _) -> ref })
+        players.fillDefaults(result.playerResults.map { (ref, _) -> ref })
     }
 
     override fun freeze() {

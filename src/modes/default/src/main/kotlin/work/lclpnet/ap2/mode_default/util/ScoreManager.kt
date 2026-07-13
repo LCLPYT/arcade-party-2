@@ -1,9 +1,8 @@
 package work.lclpnet.ap2.mode_default.util
 
-import it.unimi.dsi.fastutil.objects.ObjectIntPair
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.server.players.PlayerList
-import work.lclpnet.ap2.api.game.data.DataEntry
+import work.lclpnet.ap2.game.data.DataEntry
 import work.lclpnet.ap2.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.player.PlayerRankView
@@ -54,16 +53,14 @@ class ScoreManager(
         round = max(0, round - 1)
     }
 
-    fun iterateRankedScores(): Iterable<ObjectIntPair<PlayerRef>> =
+    fun iterateRankedScores(): Iterable<Pair<PlayerRef, Int>> =
         Iterable { data.rankedEntries }
 
-    fun streamEntriesRanked(): Stream<Set<ObjectIntPair<PlayerRef>>> {
-        return data.streamEntriesRanked()
-    }
+    fun streamEntriesRanked(): Stream<Set<Pair<PlayerRef, Int>>> =
+        data.streamEntriesRanked()
 
-    fun hasScores(): Boolean {
-        return !data.isEmpty
-    }
+    fun hasScores(): Boolean =
+        !data.isEmpty
 
     /**
      * Get players with the best score, if the best score is at least the target score.
@@ -140,7 +137,7 @@ class ScoreManager(
     override fun rank(player: ServerPlayer): Int {
         val ref = PlayerRef.create(player)
 
-        val ranked: List<Set<ObjectIntPair<PlayerRef>>> = streamEntriesRanked().collect(Collectors.toList())
+        val ranked: List<Set<Pair<PlayerRef, Int>>> = streamEntriesRanked().collect(Collectors.toList())
 
         if (ranked.isEmpty()) {
             // no entries yet, everyone is first
@@ -149,8 +146,8 @@ class ScoreManager(
 
         // find ranking group of the player and return the rank of it
         val rank = ranked
-            .filter { group: Set<ObjectIntPair<PlayerRef>> -> group.any { it.left() == ref } }
-            .map { group: Set<ObjectIntPair<PlayerRef>> -> group.first().rightInt() }
+            .filter { group: Set<Pair<PlayerRef, Int>> -> group.any { (groupMemberRef, _) -> groupMemberRef == ref } }
+            .map { group: Set<Pair<PlayerRef, Int>> -> group.first().component2() }
             .firstOrNull()
 
         if (rank != null) {
@@ -158,11 +155,11 @@ class ScoreManager(
         }
 
         // no score for the player yet, but there are other scores
-        val worstGroup = ranked.maxBy { set -> set.maxOf { it.rightInt() } }
-        val worstRank = worstGroup.maxOf { it.rightInt() }
+        val worstGroup = ranked.maxBy { set -> set.maxOf { (_, rank) -> rank } }
+        val worstRank = worstGroup.maxOf { (_, rank) -> rank }
 
         // if the worst rank consists has zero points, return that rank, otherwise one rank worse
-        val worstScore = worstGroup.minOf { getScore(it.left()) }
+        val worstScore = worstGroup.minOf { (ref, _) -> getScore(ref) }
 
         return if (worstScore == 0) worstRank else worstRank + 1
     }

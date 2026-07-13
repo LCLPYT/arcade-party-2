@@ -21,14 +21,15 @@ project(':lib').projectDir = file("src/lib")
 def minigames = [
         "aim_master",
         "anvil_fall",
-        "assassins",
         "apocalypse_survival",
+        "assassins",
         "block_dissolve",
         "bow_spleef",
         "button_master",
         "chicken_shooter",
         "cozy_campfire",
         "dance_floor",
+        "deadline",
         "dragon_escape",
         "eggventure",
         "fine_tuning",
@@ -59,6 +60,7 @@ def minigames = [
         "speed_builders",
         "splashy_dropper",
         "spleef",
+        "task_rush",
         "team_gathering",
         "tnt_run",
         "treasure_hunter",
@@ -66,14 +68,61 @@ def minigames = [
         "weapon_swap",
 ]
 
+def modes = [
+        "default"
+]
+
+// Optional development selection: build/run only a subset of minigames and modes to cut compile time.
+// Resolution per key: -P gradle property, then from the dev.local.properties file if it exists.
+// See README for usage.
+
+def devProps = new Properties()
+
+def devPropsFile = file("dev.local.properties")
+
+if (devPropsFile.exists()) {
+    devPropsFile.withInputStream { devProps.load(it) }
+}
+
+def resolveSelection = { String key ->
+    def raw = providers.gradleProperty(key).getOrNull() ?: devProps.getProperty(key)
+
+    if (raw == null) {
+        return null
+    }
+
+    return raw.split(",").collect { it.trim() }.findAll { !it.isEmpty() }
+}
+
+def applyFilter = { String kind, List<String> available, List<String> selection ->
+    if (selection == null) {
+        return available
+    }
+
+    def unknown = selection.findAll { !available.contains(it) }
+
+    if (!unknown.isEmpty()) {
+        throw new GradleException("Unknown ${kind}(s) in dev selection: ${unknown.join(", ")}. " +
+                "Available: ${available.join(", ")}")
+    }
+
+    return available.findAll { selection.contains(it) }
+}
+
+def gameSelection = resolveSelection("ap2.games")
+def modeSelection = resolveSelection("ap2.modes")
+
+minigames = applyFilter("minigame", minigames, gameSelection)
+modes = applyFilter("mode", modes, modeSelection)
+
+if (gameSelection != null || modeSelection != null) {
+    println "Dev filter is active: games=${minigames}, modes=${modes}"
+}
+
 minigames.forEach {
     include(it)
     project(":$it").projectDir = file("src/minigames/$it")
 }
-
-def modes = [
-        "default"
-]
 
 modes.forEach {
     include(it)

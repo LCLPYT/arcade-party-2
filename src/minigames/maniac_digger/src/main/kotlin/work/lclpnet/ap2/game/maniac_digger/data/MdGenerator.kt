@@ -33,7 +33,9 @@ class MdGenerator(
         state.block !is FallingBlock
     }
 
-    fun generate(pipeCount: Int): List<MdPipe> {
+    fun generate(colors: List<DyeColor>): List<MdPipe> {
+        val pipeCount = colors.size
+
         val dimensions: Vec3i = MapUtil.readBlockPos(map.requireProperty("area-dimensions"))
         val areas: JSONArray = map.requireProperty("areas")
 
@@ -55,20 +57,12 @@ class MdGenerator(
         val plan = generatePipe(dimensions)
         val structure = plan.structure()
 
-        val colors = ArrayList<DyeColor>(DyeColor.entries.size)
-        colors.addAll(DyeColor.entries.toTypedArray())
-
         val pipes = ArrayList<MdPipe>(pipeCount)
 
         for (i in 0 until pipeCount) {
             val offset = offsets[i]
 
-            val wallMaterial: BlockState = if (colors.isEmpty()) {
-                GLASS.defaultBlockState()
-            } else {
-                val color = colors.removeAt(random.nextInt(colors.size))
-                STAINED_GLASS.pick(color).defaultBlockState()
-            }
+            val wallMaterial: BlockState = STAINED_GLASS.pick(colors[i]).defaultBlockState()
 
             StructureUtil.placeStructureFast(StructureUtil.replace(structure, MdPipePlan.WALL_MATERIAL, wallMaterial), world, offset)
 

@@ -4,14 +4,12 @@ import net.minecraft.SharedConstants
 import net.minecraft.server.level.ServerPlayer
 import work.lclpnet.ap2.api.game.GameOverListener
 import work.lclpnet.ap2.api.game.MiniGameResults
-import work.lclpnet.ap2.api.game.data.*
 import work.lclpnet.ap2.api.stats.GameSummary
 import work.lclpnet.ap2.api.stats.LevelInfo
 import work.lclpnet.ap2.api.stats.StatsManager
 import work.lclpnet.ap2.api.util.action.Action
 import work.lclpnet.ap2.game.MiniGameHandle
-import work.lclpnet.ap2.game.data.CombinedDataContainer
-import work.lclpnet.ap2.game.data.SupremeDataContainer
+import work.lclpnet.ap2.game.data.*
 import work.lclpnet.game.util.ProtectorUtils
 import work.lclpnet.kibu.hook.Hook
 import work.lclpnet.kibu.hook.HookFactory
@@ -122,8 +120,7 @@ class WinManager<T, Ref : SubjectRef>(
         val translations = gameHandle.translations
         val details = HashMap<Ref, TranslatedText>()
 
-        for (rank in result.subjectResults) {
-            val ref = rank.left() ?: continue
+        for ((ref, _) in result.subjectResults) {
             val detail = finalData.getEntry(ref)?.toText(translations) ?: continue
             details[ref] = detail
         }

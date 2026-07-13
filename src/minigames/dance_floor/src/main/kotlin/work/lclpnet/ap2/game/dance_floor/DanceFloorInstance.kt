@@ -13,18 +13,21 @@ import net.minecraft.world.scores.Team
 import org.json.JSONObject
 import work.lclpnet.ap2.api.music.ConfiguredSong
 import work.lclpnet.ap2.api.music.SongWrapper
+import work.lclpnet.ap2.api.stats.CommonStats
+import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.*
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
+import work.lclpnet.ap2.game.dance_floor.cmd.SetPatternCommand
 import work.lclpnet.ap2.game.dance_floor.cmd.SetSongCommand
 import work.lclpnet.ap2.game.dance_floor.cmd.SkipSongCommand
+import work.lclpnet.ap2.game.util.PlayerUtil
+import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.game.util.useSurvivalMode
 import work.lclpnet.ap2.game.util.whenBelowCriticalHeight
-import work.lclpnet.ap2.impl.game.PlayerUtil
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.music.SongHandler
-import work.lclpnet.ap2.impl.util.Hints
 import work.lclpnet.ap2.impl.util.ParticleHelper
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.impl.util.TextUtil
@@ -32,6 +35,7 @@ import work.lclpnet.ap2.impl.util.handler.Visibility
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
+import work.lclpnet.ap2.util.Hints
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.util.PositionRotation
 import work.lclpnet.kibu.scheduler.Ticks
@@ -44,16 +48,21 @@ import kotlin.random.Random
 import kotlin.random.asJavaRandom
 
 private val MIN_DELAY_TICKS = Ticks.seconds(6)
-private val MAX_DELAY_TICKS = Ticks.seconds(10)
+private val MAX_DELAY_TICKS = Ticks.seconds(8)
 
-private const val INITIAL_BLOCK_DELAY_TICKS = 66
+private const val INITIAL_BLOCK_DELAY_TICKS = 48
 private const val BLOCK_DELAY_TICKS_DECREASE_PER_MINUTE = 18
 private const val TOTAL_MIN_BLOCK_DELAY_TICKS = 5
-private const val NEXT_ROUND_INITIAL_TICKS = 80
+private const val NEXT_ROUND_INITIAL_TICKS = 55
 private const val NEXT_ROUND_TICKS_DECREASE_PER_MINUTE = 40
 private const val NEXT_ROUND_MIN_TICKS = 35
 
+private const val DELAY_DECREASE_FACTOR = 30f
+
 private const val PARTICLE_AMOUNT = 3
+
+val RoundsSurvived = Stat("rounds_survived", 0)
+val EliminationDifficulty = Stat("elimination_difficulty", 0)
 
 class DanceFloorInstance(
     gameHandle: MiniGameHandle,
@@ -74,18 +83,28 @@ class DanceFloorInstance(
     var visibilityManager: VisibilityManager? = null
     var delayTicks = MAX_DELAY_TICKS
     var round = 1
+    val fairness = DanceFloorFairness()
+    private var currentRoundDifficulty = 0
+    private val stats = useFFAStats(winManager, listOf(
+        CommonStats.TimeSurvived, CommonStats.DistanceMoved, RoundsSurvived, EliminationDifficulty
+    ))
 
     init {
         useRemainingPlayersDisplay()
         useSurvivalMode()
         disableTeleportEliminated()
+
+        // survivors/the winner are never eliminated: credit them the last round's difficulty
+        winManager.addListener {
+            for (player in players()) stats.set(player, EliminationDifficulty, currentRoundDifficulty)
+        }
     }
 
     override fun prepare() {
         SetSongCommand(songHandler, this::nextSong).register(gameHandle.commands)
         SkipSongCommand(this::nextSong).register(gameHandle.commands)
 
-        Hints(gameHandle).sendBeforeReady(gameHandle, Hints.Mod.NOTICA)
+        Hints(gameHandle).sendBeforeReady(gameHandle, Hints.Mod.Notica)
 
         blockRandomizer = BlockRandomizer(floorShape(), level)
 
@@ -93,6 +112,9 @@ class DanceFloorInstance(
         setupTeam()
 
         readSpectatorSpawns()
+
+        trackSurvivalTime(stats)
+        trackDistanceMoved(stats)
     }
 
     private fun readSpectatorSpawns() {
@@ -108,6 +130,9 @@ class DanceFloorInstance(
 
     override fun go() {
         whenBelowCriticalHeight(::softEliminate)
+
+        SetPatternCommand(blockRandomizer!!, this::setPattern).register(gameHandle.commands)
+
         nextCycle()
 
         val particleShape = MapUtil.readShape(map, "particle-shape")
@@ -171,21 +196,39 @@ class DanceFloorInstance(
         nextCycle()
     }
 
-    private fun nextCycle() {
+    @Synchronized
+    fun setPattern(pattern: Pattern) = nextCycle(pattern)
+
+    private fun nextCycle(forcedPattern: Pattern? = null) {
         task?.cancel()
 
         synchronized(this) {
-            loadingSong?.thenAccept(::playSong)
+            if (currentSong == null) {
+                loadingSong?.thenAccept(::playSong)
+            } else {
+                // music already playing (debug-forced mid-window): keep it, just restart the window
+                task = timeout(delayTicks) { stopMusic() }
+            }
         }
 
-        blockRandomizer?.randomizeBlocks()
+        blockRandomizer?.randomizeBlocks(fairness.coverageCap(blockDelayTicks()), forcedPattern)
 
         for (player in players()) {
             player.inventory.setItem(4, ItemStack.EMPTY)
         }
     }
 
-    private fun floorShape(): BlockShape = MapUtil.readShape(map, "floor")!!
+    /** Base reaction window for the current round, before any fairness adjustments. Shrinks over time */
+    private fun blockDelayTicks(): Int {
+        val decreaseTicks = (totalDurationTicks * BLOCK_DELAY_TICKS_DECREASE_PER_MINUTE / Ticks.minutes(1).toFloat())
+            .roundToInt()
+            .coerceAtLeast(0)
+
+        return max(TOTAL_MIN_BLOCK_DELAY_TICKS, INITIAL_BLOCK_DELAY_TICKS - decreaseTicks)
+    }
+
+    private fun floorShape(): BlockShape =
+        MapUtil.readShape(map, "floor")!!
 
     @Synchronized
     fun playSong(song: ConfiguredSong) {
@@ -204,7 +247,7 @@ class DanceFloorInstance(
             .coerceAtMost(remainingSongTicks)
 
         // decrease ticks
-        val decrease = round(20f / round.toFloat()).toInt()
+        val decrease = round(DELAY_DECREASE_FACTOR / round.toFloat()).toInt()
         delayTicks = max(MIN_DELAY_TICKS, delayTicks - decrease)
         round++
 
@@ -253,10 +296,16 @@ class DanceFloorInstance(
         currentSong?.stop()
         currentSong = null
 
-        // give players the correct wool to compare with the floor
-        val dyeColor = blockRandomizer!!.existingColors.random()
+        val blockDelayTicks = blockDelayTicks()
+
+        // pick a safe color reachable from anywhere within the reaction window
+        val reach = fairness.selectionReach(blockDelayTicks)
+        val (dyeColor, coverage) = blockRandomizer!!.pickSafeColor(reach)
         val block = Blocks.WOOL.pick(dyeColor)
 
+        currentRoundDifficulty = fairness.difficulty(blockDelayTicks, coverage)
+
+        // give players the correct wool to compare with the floor
         for (player in players()) {
             player.inventory.setItem(4, ItemStack(block))
             player.setSelectedSlot(4)
@@ -264,13 +313,10 @@ class DanceFloorInstance(
 
         SoundHelper.playSound(level, SoundEvents.IRON_GOLEM_HURT, SoundSource.HOSTILE, 0.9f, 0f)
 
-        val decreaseTicks = (totalDurationTicks * BLOCK_DELAY_TICKS_DECREASE_PER_MINUTE / Ticks.minutes(1).toFloat())
-            .roundToInt()
-            .coerceAtLeast(0)
+        // grant just enough extra time to keep coarse layouts survivable, without erasing the ramp
+        val fairBlockDelay = fairness.reactionTicks(blockDelayTicks, coverage)
 
-        val blockDelayTicks = max(TOTAL_MIN_BLOCK_DELAY_TICKS, INITIAL_BLOCK_DELAY_TICKS - decreaseTicks)
-
-        task = timeout(blockDelayTicks) {
+        task = timeout(fairBlockDelay) {
             SoundHelper.playSound(level, SoundEvents.WITHER_BREAK_BLOCK, SoundSource.HOSTILE, 0.4f, 0.8f)
             removeBlocks(block)
         }
@@ -300,6 +346,11 @@ class DanceFloorInstance(
     }
 
     private fun checkEliminated() {
+        // credit everyone who cleared this round (participants that did not fall)
+        for (player in players()) {
+            if (player !in eliminate) stats.increment(player, RoundsSurvived)
+        }
+
         if (!eliminate.isEmpty()) {
             eliminate.forEach { player -> gameHandle.playerUtil.setStateOverride(player, PlayerUtil.State.DEFAULT) }
             eliminateAll(eliminate)
@@ -308,5 +359,15 @@ class DanceFloorInstance(
         if (winManager.gameOver) return
 
         nextCycle()
+    }
+
+    override fun onEliminated(player: ServerPlayer) {
+        logger.debug(
+            "Player {} eliminated on pattern {} with seed {}",
+            player.scoreboardName, blockRandomizer?.currentPattern, blockRandomizer?.currentSeed
+        )
+
+        stats.set(player, EliminationDifficulty, currentRoundDifficulty)
+        super.onEliminated(player)
     }
 }

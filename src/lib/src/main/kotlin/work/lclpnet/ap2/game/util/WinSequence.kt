@@ -11,13 +11,13 @@ import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import work.lclpnet.ap2.api.game.MiniGameResults
 import work.lclpnet.ap2.api.game.MiniGameResults.PlayerResult
-import work.lclpnet.ap2.api.game.data.DataContainer
-import work.lclpnet.ap2.api.game.data.GenericGameResult
-import work.lclpnet.ap2.api.game.data.PlayerSubjectRefFactory
-import work.lclpnet.ap2.api.game.data.SubjectRef
 import work.lclpnet.ap2.api.stats.SessionStatsRecorder
 import work.lclpnet.ap2.api.util.action.Action
 import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.data.DataContainer
+import work.lclpnet.ap2.game.data.GenericGameResult
+import work.lclpnet.ap2.game.data.PlayerSubjectRefFactory
+import work.lclpnet.ap2.game.data.SubjectRef
 import work.lclpnet.ap2.game.data.type.PlayerRef.Companion.create
 import work.lclpnet.ap2.game.data.type.TeamRef
 import work.lclpnet.ap2.impl.util.SoundHelper
@@ -98,8 +98,8 @@ class WinSequence<T, Ref : SubjectRef>(
         gameHandle.rootScheduler.timeout(Ticks.seconds(POST_GAME_SECONDS)) { ->
             val resultsMap = winners.playerResults.stream().collect(
                 Collectors.toMap(
-                    Function { it.left() },
-                    Function { PlayerResult(it.left(), it.rightInt()) }
+                    Function { (ref, _) -> ref },
+                    Function { (ref, rank) -> PlayerResult(ref, rank) }
                 ))
 
             gameHandle.complete(MiniGameResults(status, resultsMap))
