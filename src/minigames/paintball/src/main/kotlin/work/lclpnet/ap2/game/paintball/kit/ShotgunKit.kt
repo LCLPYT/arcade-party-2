@@ -42,12 +42,12 @@ private fun shotgunGun() = PaintGun(
         speed = 20.0,
         gravity = 13.0,
         range = 13.0,
-        blobCount = 12,
+        blobCount = 11,
         blobRadius = 0.15,
         blobSpread = Math.toRadians(15.0),
         splatRadius = 1.5f,
         damage = 1f,
-        deficitPaintBoost = 0.1f,
+        deficitPaintBoost = 0.05f,
         trail = NO_TRAIL
     )
 )

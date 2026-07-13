@@ -67,7 +67,7 @@ private fun sniperGun() = PaintGun(
         trail = InkTrail(
             trailTicks = 1,
             maxDroplets = 60,
-            dropletRadius = 1.6f,
+            dropletRadius = 1.9f,
             subdivisions = 4
         )
     )
