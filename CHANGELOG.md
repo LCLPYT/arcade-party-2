@@ -1,5 +1,46 @@
 # Changelog
 
+## [0.8.0](https://github.com/LCLPYT/arcade-party-2/compare/v0.7.0...v0.8.0) (2026-07-13)
+
+
+### Features
+
+* add back-face game queue display in preparation activity ([9d69a33](https://github.com/LCLPYT/arcade-party-2/commit/9d69a337149bb0d2a4263af009bd547b2586d214))
+* add deadline gamemode ([#290](https://github.com/LCLPYT/arcade-party-2/issues/290)) ([0c63b13](https://github.com/LCLPYT/arcade-party-2/commit/0c63b13971ae2eecb5925c9fa6e3713030184de9))
+* add more patterns in dance floor (triangles, einstein tiles, penrose, hilbert curve, waves, ripples, moire pattern, cellular pattern, phyllotaxis, truchet tiles, quasi crystal, warped stripes) ([4e6ef81](https://github.com/LCLPYT/arcade-party-2/commit/4e6ef81223c08bbd9bfa3eb98b168f29877b1e36))
+* add server view distance manager for unified modification ([4a622fb](https://github.com/LCLPYT/arcade-party-2/commit/4a622fb70a441b84371c2743feea9dbff6f3a41e))
+* add statistics for dance floor ([4e6ef81](https://github.com/LCLPYT/arcade-party-2/commit/4e6ef81223c08bbd9bfa3eb98b168f29877b1e36))
+* add task rush minigame ([#298](https://github.com/LCLPYT/arcade-party-2/issues/298)) ([fed627f](https://github.com/LCLPYT/arcade-party-2/commit/fed627fe07265507f32493c377ec620a84069c3c))
+* added dive cooldown in paintball ([87824d7](https://github.com/LCLPYT/arcade-party-2/commit/87824d769e74985aec5d14638bc33cc8a4a08c34))
+* added multiple spawn locations in apocalypse survival ([2c7e3dd](https://github.com/LCLPYT/arcade-party-2/commit/2c7e3ddc37f609f9306e3e31db7fb3e4b9146bc3))
+* added preferred color setting ([#291](https://github.com/LCLPYT/arcade-party-2/issues/291)) ([3f506ca](https://github.com/LCLPYT/arcade-party-2/commit/3f506ca7e23b1d84ff3097dfa9af2d7d7da6c79f))
+* added super jump when diving in paintball ([87824d7](https://github.com/LCLPYT/arcade-party-2/commit/87824d769e74985aec5d14638bc33cc8a4a08c34))
+* adjust paintball weapon stats and balance player deficit boosting ([2f38886](https://github.com/LCLPYT/arcade-party-2/commit/2f388862d169d83f1b848680413ce7fd99c0272d))
+* allow jumping in button master ejection phase ([74351ea](https://github.com/LCLPYT/arcade-party-2/commit/74351ea25342077f1b0147ef2ac8f5bb779d6ea6))
+* destroy adjacent mines too when stepping on mines in minefield ([7ac5097](https://github.com/LCLPYT/arcade-party-2/commit/7ac5097e627196a97c4461d09b42cb0c518c8fec))
+* grant the solo player in team gathering duplicate item drops, higher haste and movement speed ([5832045](https://github.com/LCLPYT/arcade-party-2/commit/5832045db4e25ef7db8614ec1655eef91778c06b))
+* make dance floor faster ([4e6ef81](https://github.com/LCLPYT/arcade-party-2/commit/4e6ef81223c08bbd9bfa3eb98b168f29877b1e36))
+* make dance floor patterns more fair ([4e6ef81](https://github.com/LCLPYT/arcade-party-2/commit/4e6ef81223c08bbd9bfa3eb98b168f29877b1e36))
+* make exotic pvp tournament kits less common ([a9ebc9a](https://github.com/LCLPYT/arcade-party-2/commit/a9ebc9a41810caa07efd963e638a68aaab59eebd))
+* make players slightly smaller in minefield to make dodging mines a little easier ([7ac5097](https://github.com/LCLPYT/arcade-party-2/commit/7ac5097e627196a97c4461d09b42cb0c518c8fec))
+* make sniper rifle a charge rifle ([87824d7](https://github.com/LCLPYT/arcade-party-2/commit/87824d769e74985aec5d14638bc33cc8a4a08c34))
+* reduce tuning time in fine-tuning minigame from 36 to 30 seconds ([ec747e8](https://github.com/LCLPYT/arcade-party-2/commit/ec747e8aabed0c1a71e4466cdeb72b4f61f827c1))
+* remove kit selection time in paintball as kits may be changed at any time in the base ([87824d7](https://github.com/LCLPYT/arcade-party-2/commit/87824d769e74985aec5d14638bc33cc8a4a08c34))
+* remove the double timer for kit selection and merge it with the base start duration timer ([8abf0a6](https://github.com/LCLPYT/arcade-party-2/commit/8abf0a6b2189329b1513681cdf927ebad29a8043))
+* respawn player at the nearest spawn position towards the location of death in mine field ([7ac5097](https://github.com/LCLPYT/arcade-party-2/commit/7ac5097e627196a97c4461d09b42cb0c518c8fec))
+* show own score during preparation if not in the top 5 players ([#294](https://github.com/LCLPYT/arcade-party-2/issues/294)) ([f1b8a17](https://github.com/LCLPYT/arcade-party-2/commit/f1b8a17c0b685f6404ddbc85e0ff31ad18718b0d))
+* use flying ink blobs for paintball splatter instead of rigid body bullets ([87824d7](https://github.com/LCLPYT/arcade-party-2/commit/87824d769e74985aec5d14638bc33cc8a4a08c34))
+
+
+### Bug Fixes
+
+* **bootstrap:** fix map repository lookups on missing files short-circuiting the fallback lookups ([773fa4e](https://github.com/LCLPYT/arcade-party-2/commit/773fa4e0d038fb69ebd873777a1135bd9efb9edb))
+* conclude eggventure tutorial together with start countdown ([7c53414](https://github.com/LCLPYT/arcade-party-2/commit/7c534141d4fda774ade1b9426e2a34f91d9d1200))
+* draw in semi-finals no longer leads to win of all remaining players when there is a bye in the semi-finals round ([2565040](https://github.com/LCLPYT/arcade-party-2/commit/256504029d518cb92513c4d2d03d1098c685882e))
+* score attribution after winning minigames now works correctly if multiple players scored the same rank ([16064d0](https://github.com/LCLPYT/arcade-party-2/commit/16064d0b5763081fc428165ed09d19c736c79f5b))
+* special item spawning in paintball ([87824d7](https://github.com/LCLPYT/arcade-party-2/commit/87824d769e74985aec5d14638bc33cc8a4a08c34))
+* stop timer once player is ejected in button master ([4ae26da](https://github.com/LCLPYT/arcade-party-2/commit/4ae26daea57c4397991288fb057d564f8d8079d1))
+
 ## [0.7.0](https://github.com/LCLPYT/arcade-party-2/compare/v0.6.0...v0.7.0) (2026-06-28)
 
 
