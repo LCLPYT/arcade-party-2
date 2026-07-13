@@ -25,7 +25,7 @@ object EntityDamageTask : Task {
         for (player in env.players) {
             data.setScore(player, 0.0)
 
-            env.give(player, ItemStack(Items.STONE_SWORD))
+            env.giveIfMissing(player, ItemStack(Items.STONE_SWORD))
         }
 
         spawns.spawnRandomMobs(env, 25, minDistance = 25.0, maxDistance = 90.0)

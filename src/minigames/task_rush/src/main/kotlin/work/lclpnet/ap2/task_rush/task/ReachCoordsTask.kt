@@ -1,11 +1,18 @@
 package work.lclpnet.ap2.task_rush.task
 
 import net.minecraft.core.BlockPos
+import net.minecraft.core.GlobalPos
+import net.minecraft.core.component.DataComponents
 import net.minecraft.network.chat.Component
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.item.DyeColor
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.component.LodestoneTracker
 import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.Vec3
+import work.lclpnet.ap2.impl.util.TextUtil
+import java.util.*
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -38,6 +45,22 @@ object ReachCoordsTask : OrderTask("reach_coords", 90.seconds) {
             }
 
             progress.rankRemaining(remaining)
+        }
+
+        for (player in env.players) {
+            env.give(player, ItemStack(Items.COMPASS).apply {
+                set(DataComponents.LODESTONE_TRACKER, LodestoneTracker(
+                    Optional.of(GlobalPos(env.level.dimension(), target)),
+                    false
+                ))
+
+                set(DataComponents.CUSTOM_NAME, TextUtil.getVanillaName(Items.COMPASS)
+                    .withStyle { style -> style.withItalic(false) })
+
+                set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, false)
+
+                env.markTemporary(this)
+            })
         }
 
         env.translations.translateText("task.reach_coords.target", Component.literal("${target.x} ${target.y} ${target.z}"))

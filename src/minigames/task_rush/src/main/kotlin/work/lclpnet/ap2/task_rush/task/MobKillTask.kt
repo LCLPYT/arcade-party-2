@@ -28,7 +28,7 @@ object MobKillTask : Task {
         for (player in env.players) {
             data.identityIfAbsent(player)
 
-            env.give(player, ItemStack(Items.STONE_SWORD))
+            env.giveIfMissing(player, ItemStack(Items.STONE_SWORD))
         }
 
         spawns.spawnRandomMobs(env, 35, minDistance = 10.0, maxDistance = 100.0)

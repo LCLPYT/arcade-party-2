@@ -10,8 +10,10 @@ import work.lclpnet.kibu.translate.text.FormatWrapper
 import java.util.UUID
 import kotlin.collections.ArrayDeque
 import kotlin.collections.HashMap
+import kotlin.collections.any
 import kotlin.collections.component1
 import kotlin.collections.component2
+import kotlin.collections.emptyList
 import kotlin.collections.getOrPut
 import kotlin.collections.isNotEmpty
 import kotlin.collections.iterator
@@ -43,6 +45,14 @@ class ItemQueue(
 
         if (!stack.isEmpty) {
             pending.getOrPut(player.uuid) { ArrayDeque() }.add(stack)
+        }
+    }
+
+    fun contains(player: ServerPlayer, searchStack: ItemStack): Boolean {
+        val items = pending[player.uuid] ?: emptyList()
+
+        return items.any { stack ->
+            !stack.isEmpty && ItemStack.isSameItemSameComponents(stack, searchStack)
         }
     }
 

@@ -48,7 +48,7 @@ object OreCollectTask : InventoryCountTask("ore_collect", "score.ores_collected"
         env.duplicateDrops = false
 
         for (player in env.players) {
-            env.give(player, ItemStack(Items.IRON_PICKAXE))
+            env.giveIfMissing(player, ItemStack(Items.IRON_PICKAXE))
         }
 
         // make every ore drop exactly one item, so no ore type is worth more than another

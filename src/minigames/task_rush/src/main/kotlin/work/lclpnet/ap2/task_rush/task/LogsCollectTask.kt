@@ -13,7 +13,7 @@ object LogsCollectTask : InventoryCountTask("logs_collect", "score.logs_collecte
         super.begin(env)
 
         for (player in env.players) {
-            env.give(player, ItemStack(Items.STONE_AXE))
+            env.giveIfMissing(player, ItemStack(Items.STONE_AXE))
         }
     }
 }

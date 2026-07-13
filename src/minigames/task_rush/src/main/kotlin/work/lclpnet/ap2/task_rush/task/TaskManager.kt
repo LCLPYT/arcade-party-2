@@ -7,6 +7,7 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
+import net.minecraft.world.level.gamerules.GameRules
 import work.lclpnet.ap2.ext.inWholeTicks
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.game.MiniGameHandle
@@ -58,6 +59,7 @@ class TaskManager(
         FirstOreTask,
         BreedAnimalsTask,
         ReachCoordsTask,
+        DieTask,
     )
     private val taskQueue = ArrayDeque<Task>()
     private val announcer = Announcer(gameHandle.translations, gameHandle.server)
@@ -72,6 +74,9 @@ class TaskManager(
 
     val pvpDisabled: Boolean
         get() = currentTaskEnv?.pvpDisabled ?: true
+
+    val fallDamageDisabled: Boolean
+        get() = currentTaskEnv?.fallDamageDisabled ?: true
 
     fun init() {
         itemQueue.init()
@@ -231,5 +236,11 @@ class TaskManager(
 
         currentTask = null
         currentTaskEnv = null
+
+        restoreDefaults()
+    }
+
+    private fun restoreDefaults() {
+        level.gameRules.set(GameRules.NATURAL_HEALTH_REGENERATION, true, level.server)
     }
 }

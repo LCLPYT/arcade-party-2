@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.task_rush.task
 
+import com.mojang.serialization.Codec
+import com.mojang.serialization.MapCodec
 import net.minecraft.ChatFormatting
 import net.minecraft.core.BlockPos
 import net.minecraft.core.GlobalPos
@@ -16,8 +18,10 @@ import work.lclpnet.ap2.game.data.DataContainer
 import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.impl.util.world.ChunkPersistence
+import work.lclpnet.ap2.util.disallowDropItem
 import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.game.util.BossBarTimer
+import work.lclpnet.kibu.access.misc.CustomNbt
 import work.lclpnet.kibu.hook.HookContainer
 import work.lclpnet.kibu.hook.HookRegistrar
 import work.lclpnet.kibu.scheduler.KibuScheduling
@@ -48,6 +52,8 @@ interface TaskEnv {
 
     var pvpDisabled: Boolean
 
+    var fallDamageDisabled: Boolean
+
     /**
      * The world spawn position all players are teleported to at the start of each task.
      * Used as a reference point for tasks that place things relative to spawn.
@@ -63,7 +69,11 @@ interface TaskEnv {
      */
     fun give(player: ServerPlayer, stack: ItemStack)
 
+    fun giveIfMissing(player: ServerPlayer, stack: ItemStack)
+
     fun setSpawn(pos: BlockPos)
+
+    fun markTemporary(stack: ItemStack)
 
     fun complete(data: DataContainer<ServerPlayer, PlayerRef>)
 }
@@ -80,6 +90,10 @@ class TaskEnvImpl(
     val onComplete: (DataContainer<ServerPlayer, PlayerRef>, TaskEnvImpl) -> Unit,
 ) : TaskEnv {
 
+    companion object {
+        val TEMPORARY_CODEC: MapCodec<Boolean> = Codec.BOOL.fieldOf("reach_coords")
+    }
+
     override val hooks = HookContainer()
     override val scheduler = Scheduler(logger)
 
@@ -90,12 +104,17 @@ class TaskEnvImpl(
 
     override var duplicateDrops = true
     override var pvpDisabled = true
+    override var fallDamageDisabled = true
 
     private val timers = ArrayList<BossBarTimer>()
     private var completed = false
 
     fun init() {
         KibuScheduling.getRootScheduler().addChild(scheduler)
+
+        disallowDropItem(hooks) {
+            isTemporary(it)
+        }
     }
 
     override fun timer(labelKey: String, duration: Duration, onEnd: () -> Unit): BossBarTimer {
@@ -113,6 +132,12 @@ class TaskEnvImpl(
         itemQueue.give(player, stack)
     }
 
+    override fun giveIfMissing(player: ServerPlayer, stack: ItemStack) {
+        if (player.inventory.contains(stack) || itemQueue.contains(player, stack)) return
+
+        give(player, stack)
+    }
+
     override fun setSpawn(pos: BlockPos) {
         if (level.respawnData.pos() == pos) return
 
@@ -121,6 +146,10 @@ class TaskEnvImpl(
         for (player in players) {
             player.teleport(pos)
         }
+    }
+
+    override fun markTemporary(stack: ItemStack) {
+        CustomNbt.set(stack, TEMPORARY_CODEC, true)
     }
 
     override fun complete(data: DataContainer<ServerPlayer, PlayerRef>) {
@@ -139,7 +168,20 @@ class TaskEnvImpl(
         timers.clear()
         hooks.unload()
         KibuScheduling.getRootScheduler().removeChild(scheduler)
+
+        for (player in players) {
+            for (i in 0 until player.inventory.containerSize) {
+                val stack = player.inventory.getItem(i)
+
+                if (isTemporary(stack)) {
+                    player.inventory.setItem(i, ItemStack.EMPTY)
+                }
+            }
+        }
     }
+
+    private fun isTemporary(stack: ItemStack): Boolean =
+        CustomNbt.get(stack, TEMPORARY_CODEC).orElse(false) ?: false
 }
 
 interface Task {

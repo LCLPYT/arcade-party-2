@@ -36,7 +36,6 @@ fun animals() = setOf(
     EntityTypes.BEE,
     EntityTypes.FROG,
     EntityTypes.RABBIT,
-    EntityTypes.ZOMBIE_HORSE,
 )
 
 fun monsters() = setOf(

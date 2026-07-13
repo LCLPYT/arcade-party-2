@@ -89,6 +89,6 @@ object BowDistanceTask : Task {
         inventory.setItem(slot, bow)
         PlayerInventoryAccess.setSelectedSlot(player, slot)
 
-        env.give(player, ItemStack(Items.ARROW, 8))
+        env.giveIfMissing(player, ItemStack(Items.ARROW))
     }
 }

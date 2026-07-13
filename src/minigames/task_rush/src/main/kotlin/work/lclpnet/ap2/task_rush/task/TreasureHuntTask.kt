@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.task_rush.task
 
+import com.mojang.serialization.Codec
 import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
@@ -25,6 +26,8 @@ import kotlin.math.sin
  */
 object TreasureHuntTask : OrderTask("treasure_hunt", winnerCount = 1) {
 
+    private val MAP_CODEC = Codec.BOOL.fieldOf("reach_coords")
+
     override fun begin(env: TaskEnv) {
         val chestPos = placeChest(env.level, env.spawnPos, env)
         val center = Vec3.atCenterOf(chestPos)
@@ -40,8 +43,8 @@ object TreasureHuntTask : OrderTask("treasure_hunt", winnerCount = 1) {
         for (player in env.players) {
             giveMap(env, player, chestPos)
 
-            env.give(player, ItemStack(Items.STONE_PICKAXE))
-            env.give(player, ItemStack(Items.STONE_SHOVEL))
+            env.giveIfMissing(player, ItemStack(Items.STONE_PICKAXE))
+            env.giveIfMissing(player, ItemStack(Items.STONE_SHOVEL))
         }
 
         PlayerInteractionHooks.USE_BLOCK.registerWith(env.hooks) { player, world, _, hitResult ->
@@ -77,6 +80,8 @@ object TreasureHuntTask : OrderTask("treasure_hunt", winnerCount = 1) {
     private fun giveMap(env: TaskEnv, player: ServerPlayer, chestPos: BlockPos) {
         val map = MapItem.create(env.level, chestPos.x, chestPos.z, 0.toByte(), true, true)
         MapItemSavedData.addTargetDecoration(map, chestPos, "+", MapDecorationTypes.RED_X)
+
+        env.markTemporary(map)
 
         env.give(player, map)
     }

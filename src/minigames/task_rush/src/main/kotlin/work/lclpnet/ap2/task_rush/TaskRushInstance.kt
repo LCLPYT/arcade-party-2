@@ -96,8 +96,10 @@ class TaskRushInstance(
             allowAll()
 
             ProtectionTypes.ALLOW_DAMAGE.disallow(this) { victim, source ->
-                (taskManager.pvpDisabled && victim is ServerPlayer && source.entity is ServerPlayer)
-                        || source.isOf(DamageTypes.FALL)
+                if (victim !is ServerPlayer) return@disallow false
+
+                ((taskManager.pvpDisabled && source.entity is ServerPlayer)
+                        || (taskManager.fallDamageDisabled && source.isOf(DamageTypes.FALL)))
             }
 
             disallow(ProtectionTypes.HUNGER)

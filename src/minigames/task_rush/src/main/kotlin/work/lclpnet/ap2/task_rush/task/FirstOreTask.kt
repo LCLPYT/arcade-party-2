@@ -34,7 +34,7 @@ object FirstOreTask : OrderTask("first_ore") {
         val blocks = this.blocks
 
         for (player in env.players) {
-            env.give(player, ItemStack(Items.STONE_PICKAXE))
+            env.giveIfMissing(player, ItemStack(Items.STONE_PICKAXE))
         }
 
         BlockModificationHooks.BREAK_BLOCK.registerWith(env.hooks) { world, pos, entity ->
