@@ -24,6 +24,7 @@ class GameStartSequence(
     private val players: () -> Collection<ServerPlayer> = { PlayerLookup.all(gameHandle.server) },
 ) {
     private val phases = ArrayDeque<StartupPhase>()
+    private val countdownTasks = ArrayDeque<CountdownTask>()
     var extraDelay = 0.seconds
 
     fun interface StartupPhase {
@@ -31,8 +32,20 @@ class GameStartSequence(
         fun run(next: Runnable)
     }
 
+    fun interface CountdownTask {
+        /** Called when the countdown begins. Returns a handle that is closed once the countdown concludes. */
+        fun start(): AutoCloseable
+    }
+
     /** Insert custom logic between the countdown and the game start. */
-    fun beforeGo(phase: StartupPhase) = apply { phases.addLast(phase) }
+    fun beforeGo(phase: StartupPhase) = apply {
+        phases.addLast(phase)
+    }
+
+    /** Register work that runs concurrently with the initial countdown and concludes together with it. */
+    fun duringCountdown(task: CountdownTask) = apply {
+        countdownTasks.addLast(task)
+    }
 
     val initialDelay: Duration
         get() = PlayerUtil.getLoadingDelay(gameHandle.participants.asSet.size) +
@@ -40,12 +53,15 @@ class GameStartSequence(
 
     /** Runs the initial countdown, then the registered phases, then invokes [onComplete]. */
     fun start(onComplete: Runnable) {
+        val running = countdownTasks.map { it.start() }
+
         SubtitleCountdown(
             gameHandle.server,
             gameHandle.scheduler,
             { },
             players
         ).schedule(initialDelay) {
+            running.forEach(AutoCloseable::close)
             runPhases(onComplete)
         }
     }

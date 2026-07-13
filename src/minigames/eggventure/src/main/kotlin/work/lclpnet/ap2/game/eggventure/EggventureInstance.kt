@@ -139,12 +139,12 @@ class EggventureInstance(
     }
 
     override fun configureStartup(sequence: GameStartSequence) {
-        sequence.beforeGo { next ->
+        sequence.duringCountdown {
             val dynamicEntityManager = DynamicEntityManager(level)
             val tutorial = EggventureTutorial(level, dynamicEntityManager, random, translations)
 
             dynamicEntityManager.init(scheduler, hooks)
-            tutorial.start(scheduler, players()).thenRun { next.run() }
+            tutorial.start(scheduler, players())
         }
 
         super.configureStartup(sequence)

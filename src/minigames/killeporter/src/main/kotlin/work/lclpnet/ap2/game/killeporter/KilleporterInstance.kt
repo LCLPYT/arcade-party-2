@@ -62,7 +62,6 @@ class KilleporterInstance(
     private val loot: WeightedList<LootEntry>,
 ) : EliminationGameInstance(gameHandle, level, map) {
 
-    val announcer = useAnnouncer()
     var kitHandler: KitHandler? = null
     var itemUseAllowed = false
     lateinit var lootContainerManager: LazyLootContainerManager

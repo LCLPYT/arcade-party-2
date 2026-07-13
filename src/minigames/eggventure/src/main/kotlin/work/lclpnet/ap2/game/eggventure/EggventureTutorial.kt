@@ -22,13 +22,10 @@ import work.lclpnet.gaco.scene.animation.AnimationContext
 import work.lclpnet.gaco.scene.`object`.ItemDisplayObject
 import work.lclpnet.gaco.scene.`object`.PlayerTextDisplayObject
 import work.lclpnet.gaco.scene.util.WorldPosSync
-import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.scheduler.api.TaskScheduler
 import work.lclpnet.kibu.translate.Translations
 import java.util.*
-import java.util.concurrent.CompletableFuture
 
-private val DURATION_TICKS = Ticks.seconds(4)
 private const val EGG_SWITCH_TICKS = 10
 private const val PLAYER_DIST = 2.5
 private const val EGG_RADIUS = 0.25
@@ -43,7 +40,7 @@ class EggventureTutorial(
     private val variants = eggVariants(world.registryAccess())
     private val eggs = ArrayList<TutorialEgg>()
 
-    fun start(scheduler: TaskScheduler, participants: Participants): CompletableFuture<Void> {
+    fun start(scheduler: TaskScheduler, participants: Participants): AutoCloseable {
         if (variants.isEmpty()) {
             throw IllegalStateException("There are no egg variants defined")
         }
@@ -55,8 +52,6 @@ class EggventureTutorial(
 
         scene.animate(1, scheduler)
 
-        val future = CompletableFuture<Void>()
-
         var t = 0
         val switcher = scheduler.interval(Runnable {
             if (++t % EGG_SWITCH_TICKS == 0) {
@@ -64,14 +59,11 @@ class EggventureTutorial(
             }
         }, 1)
 
-        scheduler.timeout(DURATION_TICKS) { ->
+        return AutoCloseable {
             switcher.cancel()
             scene.clear()
             scene.stopAnimation()
-            future.complete(null)
         }
-
-        return future
     }
 
     private fun switchEggVariants() {
