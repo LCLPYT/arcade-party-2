@@ -111,6 +111,7 @@ class ButtonMasterInstance(
     var taskBar: TranslatedBossBar? = null
     var wallBlocks: ResetWorldModifier = ResetWorldModifier(level, hooks)
     var scene: Scene? = null
+    var ejected = false
 
     override fun prepare() {
         dynamicEntityManager.init(gameHandle.scheduler, gameHandle.hooks)
@@ -230,7 +231,11 @@ class ButtonMasterInstance(
     }
 
     private fun eject(capsule: BlockFace) {
+        ejected = true
         gameState = GameState.EJECTING
+
+        ejectTimer?.stop()
+        ejectTimer = null
 
         val spawn = capsules.getCapsuleSpawn(capsule)
 
@@ -274,7 +279,9 @@ class ButtonMasterInstance(
         )
 
         ejectTimer.whenDone {
-            eliminateButtonMaster()
+            if (!ejected) {
+                eliminateButtonMaster()
+            }
         }
 
         translate(
@@ -315,6 +322,8 @@ class ButtonMasterInstance(
 
         scene?.clear()
         scene = null
+
+        ejected = false
 
         for (player in players()) {
             movementBlocker.enableMovement(player)
