@@ -180,12 +180,10 @@ class TaskManager(
 
         val heard = HashSet<UUID>()
 
-        for (pair: ObjectIntPair<PlayerRef> in order) {
-            val player = gameHandle.server.playerList.getPlayer(pair.left().uuid) ?: continue
+        for ((ref, rank) in order) {
+            val player = gameHandle.server.playerList.getPlayer(ref.uuid) ?: continue
 
             heard.add(player.uuid)
-
-            val rank = pair.rightInt()
 
             when (rank) {
                 1 -> player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.UI, 0.5f, 2f)
