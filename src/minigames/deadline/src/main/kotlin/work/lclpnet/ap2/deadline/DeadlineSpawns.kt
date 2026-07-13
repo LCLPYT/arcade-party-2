@@ -15,6 +15,7 @@ import work.lclpnet.ap2.impl.util.world.SpawnFinder
 import work.lclpnet.gaco.ds.BlockBox
 import java.util.Random
 
+private const val DEBUG_DEADLINE_SPAWN_BOX = false
 private const val SPACING = 8.0
 private const val CLEARANCE_RADIUS = 1.5
 private const val CLEARANCE_HEIGHT = 2.0
@@ -33,7 +34,9 @@ class DeadlineSpawns(
     fun teleport(players: List<ServerPlayer>, scanBox: BlockBox, scanStarts: List<BlockPos>, center: Vec3) {
         val pool = finder.findSpawns(level, scanBox, scanStarts.toSet()).filter(::hasClearance)
 
-        visualize(pool)
+        if (DEBUG_DEADLINE_SPAWN_BOX) {
+            visualize(pool)
+        }
 
         val spawns = finder.generateSpacedSpawns(pool, players.size, random)
 
