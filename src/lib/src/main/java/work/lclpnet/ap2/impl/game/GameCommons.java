@@ -31,7 +31,6 @@ import work.lclpnet.ap2.game.data.IntDataSink;
 import work.lclpnet.ap2.game.util.HealthDisplay;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.resource.ApResources;
-import work.lclpnet.ap2.impl.util.GameRuleBuilder;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.handler.Visibility;
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
@@ -63,7 +62,6 @@ public class GameCommons {
     private final ServerLevel world;
     private final DebugController debugController;
     private volatile List<PositionRotation> spawns = null;
-    private volatile GameRuleBuilder gameRuleBuilder = null;
     private volatile HealthDisplay healthDisplay = null;
 
     public GameCommons(MiniGameHandle gameHandle, GameMap map, ServerLevel world) {
@@ -244,18 +242,6 @@ public class GameCommons {
         }
 
         return spawns;
-    }
-
-    public GameRuleBuilder gameRuleBuilder() {
-        if (gameRuleBuilder != null) return gameRuleBuilder;
-
-        synchronized (this) {
-            if (gameRuleBuilder == null) {
-                gameRuleBuilder = new GameRuleBuilder(world.getGameRules(), gameHandle.getServer());
-            }
-        }
-
-        return gameRuleBuilder;
     }
 
     public void displayHealth() {

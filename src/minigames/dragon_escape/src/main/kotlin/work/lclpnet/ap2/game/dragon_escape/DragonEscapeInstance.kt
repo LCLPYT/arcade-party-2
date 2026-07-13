@@ -42,6 +42,7 @@ import work.lclpnet.ap2.impl.util.math.MathUtil
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
 import work.lclpnet.ap2.impl.util.world.ChunkPersistence
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
+import work.lclpnet.ap2.util.useGameRules
 import work.lclpnet.gaco.math.SplinePath
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
@@ -110,9 +111,10 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
 
         setupKits(visibilityHandler)
 
-        commons().gameRuleBuilder()
-            .set(GameRules.FALL_DAMAGE, false)
-            .set(GameRules.SPAWN_MOBS, false)
+        useGameRules {
+            set(GameRules.FALL_DAMAGE, false)
+            set(GameRules.SPAWN_MOBS, false)
+        }
 
         if (DEBUG_PATH) {
             debugPath()

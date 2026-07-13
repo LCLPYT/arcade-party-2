@@ -36,8 +36,13 @@ class ResultAnnouncement<Ref : SubjectRef>(
     }
 
     @JvmOverloads
-    fun sendTop(amount: Int, player: ServerPlayer, actionText: Component? = null) {
-        val results = translations.translate(player, "ap2.results")
+    fun sendTop(
+        amount: Int,
+        player: ServerPlayer,
+        actionText: Component? = null,
+        labelKey: String = "ap2.results",
+    ) {
+        val results = translations.translate(player, labelKey)
 
         val resultsText = Component.literal(results).withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD)
 

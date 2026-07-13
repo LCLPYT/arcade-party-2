@@ -60,6 +60,7 @@ def minigames = [
         "speed_builders",
         "splashy_dropper",
         "spleef",
+        "task_rush",
         "team_gathering",
         "tnt_run",
         "treasure_hunter",

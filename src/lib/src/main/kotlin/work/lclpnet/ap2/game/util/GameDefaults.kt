@@ -38,13 +38,16 @@ import java.util.function.Consumer
 
 fun MiniGameInstance.configureDefaults(
     locatorBar: Boolean = false,
+    resetPlayersOnRespawn: Boolean = true,
 ) {
     gameHandle.protect { config ->
         config.disallowAll()
         ProtectorUtils.allowCreativeOperatorBypass(config)
     }
 
-    registerDefaultHooks()
+    registerDefaultHooks(
+        resetPlayersOnRespawn = resetPlayersOnRespawn,
+    )
 
     resetPlayers()
 
@@ -55,7 +58,9 @@ fun MiniGameInstance.configureDefaults(
     gameHandle.deathMessages.replaceVanillaDeathMessages(level, hooks)
 }
 
-private fun MiniGameInstance.registerDefaultHooks() {
+private fun MiniGameInstance.registerDefaultHooks(
+    resetPlayersOnRespawn: Boolean = true,
+) {
     val playerUtil = gameHandle.playerUtil
 
     ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks) { entity, source, _ ->
@@ -69,8 +74,10 @@ private fun MiniGameInstance.registerDefaultHooks() {
         }
     }
 
-    PlayerSpawnLocationCallback.HOOK.registerWith(hooks) { data ->
-        playerUtil.resetPlayer(data.player)
+    if (resetPlayersOnRespawn) {
+        PlayerSpawnLocationCallback.HOOK.registerWith(hooks) { data ->
+            playerUtil.resetPlayer(data.player)
+        }
     }
 }
 

@@ -5,7 +5,7 @@ import net.minecraft.world.BossEvent
 import work.lclpnet.ap2.api.util.action.Action
 import work.lclpnet.ap2.ext.inWholeTicks
 import work.lclpnet.ap2.ext.scheduler
-import work.lclpnet.ap2.ext.translations
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.MiniGameInstance
 import work.lclpnet.game.util.BossBarTimer
 import work.lclpnet.kibu.hook.HookFactory
@@ -43,6 +43,16 @@ fun MiniGameInstance.createTimer(
     subject: Any,
     duration: Duration,
     color: BossEvent.BossBarColor = BossEvent.BossBarColor.RED,
+): BossBarTimer = gameHandle.createTimer(
+    subject = subject,
+    duration = duration,
+    color = color,
+)
+
+fun MiniGameHandle.createTimer(
+    subject: Any,
+    duration: Duration,
+    color: BossEvent.BossBarColor = BossEvent.BossBarColor.RED,
 ): BossBarTimer {
     val timer = BossBarTimer.builder(translations, subject)
         .withAlertSound(false)
@@ -50,8 +60,8 @@ fun MiniGameInstance.createTimer(
         .withDurationTicks(duration.inWholeTicks.toInt())
         .build()
 
-    timer.addPlayers(PlayerLookup.all(gameHandle.server))
-    timer.start(gameHandle.bossBarProvider, gameHandle.scheduler)
+    timer.addPlayers(PlayerLookup.all(server))
+    timer.start(bossBarProvider, scheduler)
 
     return timer
 }

@@ -37,6 +37,7 @@ import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
 import work.lclpnet.ap2.impl.util.TextUtil
 import work.lclpnet.ap2.impl.util.handler.VisualCooldown
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
+import work.lclpnet.ap2.util.useGameRules
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
@@ -76,11 +77,12 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle, level: ServerLevel, ma
     }
 
     override fun prepare() {
-        commons().gameRuleBuilder()
-            .set(GameRules.ENTITY_DROPS, false)
-            .set(GameRules.NATURAL_HEALTH_REGENERATION, false)
-            .set(GameRules.SHOW_ADVANCEMENT_MESSAGES, false)
-            .set(GameRules.FALL_DAMAGE, false)
+        useGameRules {
+            set(GameRules.ENTITY_DROPS, false)
+            set(GameRules.NATURAL_HEALTH_REGENERATION, false)
+            set(GameRules.SHOW_ADVANCEMENT_MESSAGES, false)
+            set(GameRules.FALL_DAMAGE, false)
+        }
 
         val spawnsJson: JSONArray = map.requireProperty("random-spawns")
         respawn.loadSpawnPoints(spawnsJson)

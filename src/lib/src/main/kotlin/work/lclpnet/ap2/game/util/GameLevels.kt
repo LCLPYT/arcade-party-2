@@ -13,14 +13,19 @@ import net.minecraft.world.level.ChunkPos
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.biome.MultiNoiseBiomeSource
 import net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterLists
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.dimension.BuiltinDimensionTypes
 import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings
 import net.minecraft.world.level.storage.LevelData
+import work.lclpnet.ap2.ext.mc.setBlock
 import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.game.api.WorldOptions
+import work.lclpnet.game.util.ResetWorldModifier
 import work.lclpnet.kibu.hook.util.PositionRotation
 import xyz.nucleoid.fantasy.Fantasy
 import xyz.nucleoid.fantasy.RuntimeLevelConfig
@@ -150,4 +155,81 @@ fun overworldGenerator(server: MinecraftServer): NoiseBasedChunkGenerator {
     val biomeSource = MultiNoiseBiomeSource.createFromPreset(preset)
 
     return NoiseBasedChunkGenerator(biomeSource, overworldNoiseSettings)
+}
+
+fun MiniGameHandle.placeBarrierAtSpawnFloor(level: ServerLevel, radius: Int = 4, height: Int = 4): ResetWorldModifier {
+    val walls = ResetWorldModifier(level, hooks)
+
+    val spawn = level.respawnData.pos()
+
+    val box = BlockBox(spawn.offset(-radius, -1, -radius), spawn.offset(radius, height, radius))
+    val flags = Block.UPDATE_SUPPRESS_DROPS or Block.UPDATE_KNOWN_SHAPE
+
+    for (pos in box) {
+        if (box.isBorder(pos)) {
+            val state = level.getBlockState(pos)
+
+            if (state.isCollisionShapeFullBlock(level, pos)) continue
+
+            walls.setBlockState(pos, Blocks.BARRIER.defaultBlockState(), flags)
+        } else {
+            if (!level.getFluidState(pos).isEmpty) {
+                walls.setBlockState(pos, Blocks.AIR.defaultBlockState(), flags)
+            }
+        }
+    }
+
+    return walls
+}
+
+fun MiniGameHandle.createBarrierPlatformAboveSpawnGround(
+    level: ServerLevel,
+    radius: Int = 4,
+    height: Int = 4,
+    groundOffset: Int = 40
+): ResetWorldModifier {
+    val walls = ResetWorldModifier(level, hooks)
+
+    val pos = findPlatformPos(level, level.respawnData.pos(), height, groundOffset)
+
+    val box = BlockBox(
+        pos.offset(-radius, -1, -radius),
+        pos.offset(radius, height, radius)
+    )
+
+    val flags = Block.UPDATE_SUPPRESS_DROPS or Block.UPDATE_KNOWN_SHAPE
+
+    for (pos in box) {
+        if (box.isBorder(pos)) {
+            val state = level.getBlockState(pos)
+
+            if (state.isCollisionShapeFullBlock(level, pos)) continue
+
+            walls.setBlockState(pos, Blocks.BARRIER.defaultBlockState(), flags)
+        } else {
+            level.setBlock(pos, Blocks.AIR)
+        }
+    }
+
+    level.respawnData = LevelData.RespawnData(
+        GlobalPos(level.dimension(), pos),
+        0f,
+        0f
+    )
+
+    return walls
+}
+
+private fun findPlatformPos(
+    level: ServerLevel,
+    spawnPos: BlockPos,
+    height: Int,
+    groundOffset: Int
+): BlockPos {
+    val maxY = level.maxY - height
+    val highestY = level.getHeight(Heightmap.Types.MOTION_BLOCKING, spawnPos)
+
+    val platformY = (highestY + groundOffset).coerceAtMost(maxY)
+
+    return spawnPos.atY(platformY)
 }

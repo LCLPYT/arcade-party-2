@@ -30,6 +30,7 @@
     "block.BigDripLeafBlockMixin",
     "block.SkullBlockEntityAccessor",
     "block.WebBlockMixin",
+    "entity.AnimalMixin",
     "entity.AxolotlMixin",
     "entity.CatMixin",
     "entity.ChickenMixin",

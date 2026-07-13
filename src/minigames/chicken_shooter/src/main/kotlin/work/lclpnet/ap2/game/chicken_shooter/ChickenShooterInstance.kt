@@ -40,6 +40,7 @@ import work.lclpnet.ap2.impl.util.ItemHelper
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
 import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
 import work.lclpnet.ap2.impl.util.world.CardinalAdjacentBlocks
+import work.lclpnet.ap2.util.useGameRules
 import work.lclpnet.ap2.util.world.SizedSpaceFinder
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
@@ -80,9 +81,10 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
     override fun prepare() {
         val world = level
 
-        commons().gameRuleBuilder()
-            .set(GameRules.ENTITY_DROPS, false)
-            .set(GameRules.SHOW_ADVANCEMENT_MESSAGES, false)
+        useGameRules {
+            set(GameRules.ENTITY_DROPS, false)
+            set(GameRules.SHOW_ADVANCEMENT_MESSAGES, false)
+        }
 
         despawnHeight = map.requireProperty("despawn-height")
 
