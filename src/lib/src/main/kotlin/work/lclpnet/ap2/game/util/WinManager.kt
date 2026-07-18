@@ -2,7 +2,6 @@ package work.lclpnet.ap2.game.util
 
 import net.minecraft.SharedConstants
 import net.minecraft.server.level.ServerPlayer
-import work.lclpnet.ap2.api.game.GameOverListener
 import work.lclpnet.ap2.api.game.MiniGameResults
 import work.lclpnet.ap2.api.stats.GameSummary
 import work.lclpnet.ap2.api.stats.LevelInfo

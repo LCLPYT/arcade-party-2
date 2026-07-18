@@ -40,6 +40,7 @@ import work.lclpnet.kibu.hook.entity.EntityDamageCallback
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.scheduler.Ticks
+import work.lclpnet.kibu.translate.text.TranslatedText
 import java.util.*
 import kotlin.math.abs
 import kotlin.time.Clock
@@ -159,10 +160,17 @@ class SnowballFightInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
         freezingManager.enable(hooks)
     }
 
-    override fun eliminate(player: ServerPlayer, source: DamageSource?) {
+    override fun eliminate(player: ServerPlayer, source: DamageSource?, customMsg: TranslatedText?) {
         if (source != null) {
             val world = level
-            world.playSound(null, player.blockPosition(), SoundEvents.PLAYER_DEATH, SoundSource.PLAYERS, 0.5f, 1f)
+            world.playSound(
+                null,
+                player.blockPosition(),
+                SoundEvents.PLAYER_DEATH,
+                SoundSource.PLAYERS,
+                0.5f,
+                1f
+            )
 
             val x = player.x
             val y = player.y + 1
@@ -173,7 +181,7 @@ class SnowballFightInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
             world.sendParticles(ParticleTypes.SNOWFLAKE, x, y, z, 50, 0.2, 1.0, 0.2, 0.05)
         }
 
-        super.eliminate(player, source)
+        super.eliminate(player, source, customMsg)
     }
 
     override fun participantRemoved(player: ServerPlayer) {

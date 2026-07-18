@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game
 
-import work.lclpnet.ap2.api.game.GameStartContext
+import work.lclpnet.ap2.api.base.GameStartContext
 
 interface MiniGame : GameInfo {
 

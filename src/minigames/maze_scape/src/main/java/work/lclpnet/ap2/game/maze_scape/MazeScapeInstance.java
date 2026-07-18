@@ -17,6 +17,7 @@ import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
 import work.lclpnet.ap2.ApConstants;
@@ -43,6 +44,7 @@ import work.lclpnet.game.map.MapUtils;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
+import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.Random;
@@ -136,8 +138,8 @@ public class MazeScapeInstance extends EliminationGameInstance {
     }
 
     @Override
-    public void eliminate(ServerPlayer player, @Nullable DamageSource source) {
-        super.eliminate(player, source);
+    public void eliminate(@NotNull ServerPlayer player, @Nullable DamageSource source, @Nullable TranslatedText customMsg) {
+        super.eliminate(player, source, customMsg);
 
         if (source == null || manager == null) return;
 
@@ -222,7 +224,7 @@ public class MazeScapeInstance extends EliminationGameInstance {
         // hit the ground within a pit
         DeathMessages msg = getGameHandle().getDeathMessages();
 
-        eliminate(player, msg.root(FELL_INTO_PIT, msg.wrap(player)));
+        eliminate(player, null, msg.root(FELL_INTO_PIT, msg.wrap(player)));
     }
 
     private static boolean collides(BlockPos pos, ServerLevel world, CollisionContext context, AABB collisionBox, VoxelShape boxShape) {

@@ -28,7 +28,7 @@ import work.lclpnet.activity.component.builtin.BuiltinComponents
 import work.lclpnet.ap2.ApConstants
 import work.lclpnet.ap2.impl.base.GameQueue
 import work.lclpnet.ap2.impl.data.DataManager
-import work.lclpnet.ap2.api.game.GameStartContext
+import work.lclpnet.ap2.api.base.GameStartContext
 import work.lclpnet.ap2.api.map.MapFacade
 import work.lclpnet.ap2.api.music.SongWrapper
 import work.lclpnet.ap2.api.music.WeightedSong
@@ -97,6 +97,9 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
     private var dynamicEntityManager: DynamicEntityManager? = null
     private var gameQueueDisplays = mutableListOf<Object3d>()
     private var nextGameSong: WeightedSong? = null
+
+    override val participants: Set<ServerPlayer>
+        get() = args.playerManager.asSet
 
     override fun registerComponents(componentBundle: ComponentBundle) {
         componentBundle.add(BuiltinComponents.SCHEDULER)
@@ -786,9 +789,6 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
             mapChooser?.open(player, maps)
         }
     }
-
-    override fun getParticipants(): Set<ServerPlayer> =
-        args.playerManager.asSet
 
     data class SetupResult(val world: ServerLevel, val map: GameMap)
 

@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 import work.lclpnet.activity.util.BossBarHandler
 import work.lclpnet.ap2.api.WorldBorderManager
 import work.lclpnet.ap2.impl.data.DataManager
-import work.lclpnet.ap2.api.game.GameType
+import work.lclpnet.ap2.game.GameType
 import work.lclpnet.ap2.api.game.MiniGameResults
 import work.lclpnet.ap2.api.map.MapFacade
 import work.lclpnet.ap2.api.music.SongCache

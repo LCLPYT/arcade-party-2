@@ -4,7 +4,7 @@ import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.api.game.MapReady;
+import work.lclpnet.ap2.game.util.MapReady;
 import work.lclpnet.gaco.asset.AssetRepository;
 import work.lclpnet.game.api.WorldOptions;
 import work.lclpnet.game.map.GameMap;

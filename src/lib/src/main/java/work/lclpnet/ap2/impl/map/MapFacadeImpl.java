@@ -13,7 +13,7 @@ import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
-import work.lclpnet.ap2.api.game.MapReady;
+import work.lclpnet.ap2.game.util.MapReady;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.map.MapRandomizer;
 import work.lclpnet.ap2.game.util.GameLevelsKt;
