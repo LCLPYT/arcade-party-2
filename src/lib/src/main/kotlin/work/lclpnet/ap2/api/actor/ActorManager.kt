@@ -2,19 +2,16 @@ package work.lclpnet.ap2.api.actor
 
 import com.mojang.serialization.Codec
 import com.mojang.serialization.MapCodec
-import com.mojang.serialization.MapLike
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.NbtOps
 import net.minecraft.nbt.Tag
 import net.minecraft.resources.Identifier
-import net.minecraft.util.Util
 import net.minecraft.world.entity.Marker
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import work.lclpnet.ap2.core.type.ApMarkerEntity
 import work.lclpnet.kibu.access.misc.CustomNbt
 import java.util.*
-import java.util.function.Consumer
 import java.util.function.Function
 
 class ActorManager : Tickable {

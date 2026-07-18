@@ -2,7 +2,6 @@ package work.lclpnet.ap2.api.actor
 
 import work.lclpnet.kibu.hook.Hook
 import work.lclpnet.kibu.hook.HookFactory
-import java.util.function.Function
 
 fun interface ActorSpawnedCallback {
     fun onSpawned(actor: Actor)

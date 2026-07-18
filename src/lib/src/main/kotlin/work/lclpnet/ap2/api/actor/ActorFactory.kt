@@ -1,9 +1,6 @@
 package work.lclpnet.ap2.api.actor
 
 import com.mojang.serialization.Codec
-import java.util.*
-import java.util.function.Consumer
-import java.util.function.Function
 
 fun interface ActorFactory<A : Actor> {
 

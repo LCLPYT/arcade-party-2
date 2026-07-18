@@ -3,10 +3,7 @@ package work.lclpnet.ap2.impl.actor
 import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import it.unimi.dsi.fastutil.objects.ObjectArraySet
-import lombok.Getter
-import lombok.Setter
 import net.minecraft.core.particles.ParticleTypes
-import net.minecraft.core.particles.SimpleParticleType
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
@@ -20,13 +17,9 @@ import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShapes
 import work.lclpnet.gaco.collisions.movement.MovementObserver
 import work.lclpnet.kibu.access.entity.EntityUtil
-import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.hook.HookRegistrar
 import work.lclpnet.kibu.hook.player.PlayerJumpCallback
 import java.util.*
-import java.util.function.BiFunction
-import java.util.function.Consumer
-import java.util.function.Function
 import kotlin.math.abs
 
 class GravityFieldActor(init: ActorInit, data: Data) : BaseActor(init) {
