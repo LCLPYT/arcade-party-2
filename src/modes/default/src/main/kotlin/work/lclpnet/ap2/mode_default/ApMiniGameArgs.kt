@@ -2,7 +2,7 @@ package work.lclpnet.ap2.mode_default
 
 import net.minecraft.server.MinecraftServer
 import org.slf4j.Logger
-import work.lclpnet.ap2.api.base.MiniGameManager
+import work.lclpnet.ap2.impl.base.MiniGameManager
 import work.lclpnet.ap2.api.data.DataManager
 import work.lclpnet.ap2.api.map.MapFacade
 import work.lclpnet.ap2.api.music.SongManager

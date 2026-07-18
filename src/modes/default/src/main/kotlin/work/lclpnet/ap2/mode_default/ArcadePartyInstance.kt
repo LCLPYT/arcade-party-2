@@ -8,7 +8,7 @@ import org.slf4j.Logger
 import work.lclpnet.activity.Activity
 import work.lclpnet.ap2.ApConstants
 import work.lclpnet.ap2.impl.base.GameQueue
-import work.lclpnet.ap2.api.base.MiniGameManager
+import work.lclpnet.ap2.impl.base.MiniGameManager
 import work.lclpnet.ap2.api.config.Ap2Config
 import work.lclpnet.ap2.api.stats.SessionStatsRecorder
 import work.lclpnet.ap2.game.MiniGame
@@ -102,11 +102,11 @@ class ArcadePartyInstance(
         val gameQueuePersistence = JsonFileQueuePersistence.create(
             ApConstants.RUNTIME_CONFIG_ID,
             ApConstants.identifier("game_queue"),
-            gameManager.getGameCodec(),
+            gameManager.gameCodec,
             logger
         )
 
-        val miniGames = gameManager.getGames()
+        val miniGames = gameManager.games
         val minQueueSize = Math.clamp(miniGames.size.toLong(), 1, 10)
 
         return VotedGameQueue(miniGames, votedGames, minQueueSize, gameQueuePersistence)
@@ -195,7 +195,7 @@ class ArcadePartyInstance(
             .sortedBy { it.key }  // sort by grouped vote count descending
             .reversed()
             .flatMap { it.value.shuffled() }  // shuffle order of games with the same vote count
-            .mapNotNull { gameManager.getGame(it.id).orElse(null) }
+            .mapNotNull { gameManager.getGame(it.id) }
     }
 
     private fun initDynamicLanguages(hookStack: HookStack, translations: Translations, server: MinecraftServer) {

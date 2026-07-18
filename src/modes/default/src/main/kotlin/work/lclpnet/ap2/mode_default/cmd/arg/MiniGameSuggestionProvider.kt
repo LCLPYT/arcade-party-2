@@ -5,7 +5,7 @@ import com.mojang.brigadier.suggestion.SuggestionProvider
 import com.mojang.brigadier.suggestion.Suggestions
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import net.minecraft.commands.CommandSourceStack
-import work.lclpnet.ap2.api.base.MiniGameManager
+import work.lclpnet.ap2.impl.base.MiniGameManager
 import java.util.concurrent.CompletableFuture
 
 class MiniGameSuggestionProvider(

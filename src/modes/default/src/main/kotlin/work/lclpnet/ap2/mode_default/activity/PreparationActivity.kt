@@ -524,7 +524,7 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
             return requireNotNull(queue.pollNextGame()) { "Could not determine next game" }
         }
 
-        val maxTries = args.miniGameArgs.miniGames.getGames().size  // cycle through every registered game once
+        val maxTries = args.miniGameArgs.miniGames.games.size  // cycle through every registered game once
 
         repeat(maxTries) {
             val game = requireNotNull(queue.pollNextGame()) { "Next game from queue is null" }
