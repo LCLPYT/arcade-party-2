@@ -49,13 +49,12 @@ class ArcadePartyInit : ModInitializer {
         ServerEntityHooks.ENTITY_LOAD.register(ServerEntityEvents.Load { entity, level ->
             if (entity !is Marker) return@Load
 
-            val data = ActorManager.getActorNbt(entity).orElse(null) ?: return@Load
+            val data = ActorManager.getActorNbt(entity) ?: return@Load
+            val type = actorRegistry.getType(data.type)
 
-            actorRegistry.getType(data.type).ifPresentOrElse(
-                Consumer { type ->
-                    createActor(level, entity, type, data.nbt)
-                }
-            ) {
+            if (type != null) {
+                createActor(level, entity, type, data.nbt)
+            } else {
                 ApConstants.logger.warn(
                     "Unknown actor type {} in level {} at {}",
                     data.type,
@@ -77,10 +76,9 @@ class ArcadePartyInit : ModInitializer {
     private fun createActor(world: ServerLevel, marker: Marker, type: ActorType<*>, data: CompoundTag) {
         val dataSource = Dynamic(NbtOps.INSTANCE, data)
         val init = ActorInit(world, type, dataSource)
+        val actor = type.factory.create(init) ?: return
 
-        type.factory.create(init).ifPresent { actor ->
-            ActorManagerAccess.get(world).spawn(actor, marker)
-        }
+        ActorManagerAccess.get(world).spawn(actor, marker)
     }
 
     private fun registerDynamicRegistries() {

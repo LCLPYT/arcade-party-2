@@ -17,12 +17,12 @@ class ApActors : ActorProvider {
     }
 
     companion object {
-        val GRAVITY_FIELD: ActorType<GravityFieldActor> = ActorType<GravityFieldActor>(
+        val GRAVITY_FIELD: ActorType<GravityFieldActor> = ActorType(
             identifier("gravity_field"),
             ActorFactory.withData(
                 GravityFieldActor.Data.CODEC,
-                Util.prefix("Parse GravityField data: ") { msg ->
-                    ApConstants.logger.error(msg)
+                { msg ->
+                    ApConstants.logger.error("Parse GravityField data: $msg")
                 }
             ) { init, data ->
                 GravityFieldActor(init, data)
