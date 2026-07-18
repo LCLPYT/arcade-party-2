@@ -8,8 +8,8 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import work.lclpnet.ap2.deadline.rider.LightCycle
 import work.lclpnet.ap2.deadline.rider.Riders
-import work.lclpnet.ap2.impl.game.item.SpecialItem
-import work.lclpnet.ap2.impl.game.item.SpecialItemContext
+import work.lclpnet.ap2.game.item.SpecialItem
+import work.lclpnet.ap2.game.item.SpecialItemContext
 import work.lclpnet.ap2.util.sound.GameSound
 
 /**
@@ -37,7 +37,7 @@ abstract class DeadlinePowerUp(protected val riders: Riders, private val onUsed:
         if (duration > 0) {
             // the item stays in the slot with its cooldown sweep while the effect lasts, then disappears
             player.cooldowns.addCooldown(stack, duration)
-            ctx.scheduler().timeout(duration) { -> ctx.removeSpecialItem(player, this) }
+            ctx.scheduler.timeout(duration) { -> ctx.removeSpecialItem(player, this) }
         } else {
             ctx.removeSpecialItem(player, this)
         }

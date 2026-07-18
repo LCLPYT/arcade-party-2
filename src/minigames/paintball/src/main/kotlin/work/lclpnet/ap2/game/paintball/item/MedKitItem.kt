@@ -12,8 +12,8 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.item.alchemy.PotionContents
 import net.minecraft.world.item.alchemy.Potions
 import work.lclpnet.ap2.ext.mc.setAttribute
-import work.lclpnet.ap2.impl.game.item.SpecialItem
-import work.lclpnet.ap2.impl.game.item.SpecialItemContext
+import work.lclpnet.ap2.game.item.SpecialItem
+import work.lclpnet.ap2.game.item.SpecialItemContext
 import work.lclpnet.ap2.impl.util.ParticleHelper
 import work.lclpnet.ap2.impl.util.SoundHelper
 
@@ -22,7 +22,7 @@ private const val ABSORPTION_AMOUNT = 2f
 
 class MedKitItem(private val onUsed: (ServerPlayer) -> Unit) : SpecialItem {
 
-    override fun id() = "med_kit"
+    override val id = "med_kit"
 
     override fun createItemStack(registryManager: RegistryAccess): ItemStack {
         val stack = ItemStack(Items.POTION)

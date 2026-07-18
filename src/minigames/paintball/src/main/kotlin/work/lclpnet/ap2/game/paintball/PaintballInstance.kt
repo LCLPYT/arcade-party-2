@@ -30,6 +30,7 @@ import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.TeamGameInstance
 import work.lclpnet.ap2.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.game.data.Ordering
+import work.lclpnet.ap2.game.item.SpecialItems
 import work.lclpnet.ap2.game.kit.KitHandler
 import work.lclpnet.ap2.game.paintball.item.InkGrenadeItem
 import work.lclpnet.ap2.game.paintball.item.InkPackItem
@@ -44,7 +45,6 @@ import work.lclpnet.ap2.game.team.TeamManager
 import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.game.util.useAnnouncer
 import work.lclpnet.ap2.game.util.useTeamStats
-import work.lclpnet.ap2.impl.game.item.SpecialItems
 import work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
 import work.lclpnet.ap2.impl.util.VanishManager
@@ -183,7 +183,7 @@ class PaintballInstance(
             register(TripWireItem(gameHandle.translations, gameHandle.participants, world, teams, paintManager, stats::specialItemUsed), 0.15f)
         }}
 
-        specialItems.isMarkGlowing = true
+        specialItems.markGlowing = true
         specialItems.setup()
     }
 

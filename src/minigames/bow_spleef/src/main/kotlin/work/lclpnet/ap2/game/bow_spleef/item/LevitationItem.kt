@@ -10,15 +10,15 @@ import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
-import work.lclpnet.ap2.impl.game.item.SpecialItem
-import work.lclpnet.ap2.impl.game.item.SpecialItemContext
+import work.lclpnet.ap2.game.item.SpecialItem
+import work.lclpnet.ap2.game.item.SpecialItemContext
 import work.lclpnet.kibu.scheduler.Ticks
 
 private val DURATION = Ticks.seconds(3)
 
 class LevitationItem : SpecialItem {
 
-    override fun id(): String = "levitation"
+    override val id = "levitation"
 
     override fun createItemStack(registryManager: RegistryAccess): ItemStack = ItemStack(Items.BREEZE_ROD)
 
@@ -28,7 +28,7 @@ class LevitationItem : SpecialItem {
         player.cooldowns.addCooldown(stack, DURATION)
         player.addEffect(MobEffectInstance(MobEffects.LEVITATION, DURATION, 4))
 
-        ctx.scheduler().timeout(DURATION) { ->
+        ctx.scheduler.timeout(DURATION) { ->
             ctx.removeSpecialItem(player, this)
         }
 

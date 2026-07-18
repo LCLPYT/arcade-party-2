@@ -7,8 +7,8 @@ import net.minecraft.sounds.SoundSource
 import net.minecraft.world.entity.ai.attributes.Attributes.GRAVITY
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
-import work.lclpnet.ap2.impl.game.item.SpecialItem
-import work.lclpnet.ap2.impl.game.item.SpecialItemContext
+import work.lclpnet.ap2.game.item.SpecialItem
+import work.lclpnet.ap2.game.item.SpecialItemContext
 import work.lclpnet.kibu.access.entity.EntityUtil.resetAttribute
 import work.lclpnet.kibu.access.entity.EntityUtil.setAttribute
 import work.lclpnet.kibu.scheduler.Ticks
@@ -17,7 +17,7 @@ private val DURATION = Ticks.seconds(5)
 
 class LightWeightItem : SpecialItem {
 
-    override fun id(): String = "light_weight"
+    override val id = "light_weight"
 
     override fun createItemStack(registryManager: RegistryAccess): ItemStack = ItemStack(Items.FEATHER)
 
@@ -27,7 +27,7 @@ class LightWeightItem : SpecialItem {
         player.cooldowns.addCooldown(stack, DURATION)
         setAttribute(player, GRAVITY, 0.035)
 
-        ctx.scheduler().timeout(DURATION) { ->
+        ctx.scheduler.timeout(DURATION) { ->
             resetAttribute(player, GRAVITY)
             ctx.removeSpecialItem(player, this)
         }

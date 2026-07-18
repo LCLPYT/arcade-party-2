@@ -33,9 +33,9 @@ import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.bow_spleef.item.*
+import work.lclpnet.ap2.game.item.SpecialItems
 import work.lclpnet.ap2.game.util.useFFAStats
 import work.lclpnet.ap2.game.util.whenBelowCriticalHeight
-import work.lclpnet.ap2.impl.game.item.SpecialItems
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.FallKillTracker
 import work.lclpnet.ap2.impl.util.ItemHelper

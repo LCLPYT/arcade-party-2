@@ -14,12 +14,12 @@ import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.game.MiniGameFactory
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.MiniGameInstance
+import work.lclpnet.ap2.game.item.SpecialItems
 import work.lclpnet.ap2.game.paintball.util.PaintManager
 import work.lclpnet.ap2.game.paintball.util.PaintballTeams
 import work.lclpnet.ap2.game.team.DyeTeamKey
 import work.lclpnet.ap2.game.util.createTeamManager
 import work.lclpnet.ap2.game.util.openRandomMap
-import work.lclpnet.ap2.impl.game.item.SpecialItems
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
 import work.lclpnet.ap2.impl.util.world.ResetBlockWorldModifier

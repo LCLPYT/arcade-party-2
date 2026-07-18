@@ -7,8 +7,8 @@ import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
-import work.lclpnet.ap2.impl.game.item.SpecialItem
-import work.lclpnet.ap2.impl.game.item.SpecialItemContext
+import work.lclpnet.ap2.game.item.SpecialItem
+import work.lclpnet.ap2.game.item.SpecialItemContext
 import work.lclpnet.kibu.hook.util.PlayerUtils
 import java.util.*
 import kotlin.math.ceil
@@ -19,7 +19,7 @@ class TripleJumpItem : SpecialItem {
 
     private val tripleJump = mutableSetOf<UUID>()
 
-    override fun id(): String = "triple_jump"
+    override val id = "triple_jump"
 
     override fun createItemStack(registryManager: RegistryAccess): ItemStack = ItemStack(Items.GOLDEN_BOOTS, 3)
 

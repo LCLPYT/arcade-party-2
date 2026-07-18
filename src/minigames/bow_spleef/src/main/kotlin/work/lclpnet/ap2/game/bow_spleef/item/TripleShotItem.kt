@@ -11,14 +11,14 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper
 import net.minecraft.world.item.enchantment.Enchantments
 import work.lclpnet.ap2.core.hook.RangedWeaponUsedCallback
 import work.lclpnet.ap2.ext.mc.playNotifySound
-import work.lclpnet.ap2.impl.game.item.SpecialItem
-import work.lclpnet.ap2.impl.game.item.SpecialItemContext
+import work.lclpnet.ap2.game.item.SpecialItem
+import work.lclpnet.ap2.game.item.SpecialItemContext
 import work.lclpnet.ap2.impl.util.ItemHelper
 import work.lclpnet.kibu.hook.HookRegistrar
 
 class TripleShotItem : SpecialItem {
 
-    override fun id(): String = "triple_shot"
+    override val id = "triple_shot"
 
     override fun createItemStack(registryManager: RegistryAccess): ItemStack = ItemStack(Items.ARROW, 3)
 
