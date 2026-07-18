@@ -27,7 +27,7 @@ import work.lclpnet.activity.component.builtin.BossBarComponent
 import work.lclpnet.activity.component.builtin.BuiltinComponents
 import work.lclpnet.ap2.ApConstants
 import work.lclpnet.ap2.impl.base.GameQueue
-import work.lclpnet.ap2.api.data.DataManager
+import work.lclpnet.ap2.impl.data.DataManager
 import work.lclpnet.ap2.api.game.GameStartContext
 import work.lclpnet.ap2.api.map.MapFacade
 import work.lclpnet.ap2.api.music.SongWrapper
