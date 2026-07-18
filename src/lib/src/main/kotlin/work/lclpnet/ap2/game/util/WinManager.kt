@@ -2,12 +2,12 @@ package work.lclpnet.ap2.game.util
 
 import net.minecraft.SharedConstants
 import net.minecraft.server.level.ServerPlayer
-import work.lclpnet.ap2.api.game.MiniGameResults
 import work.lclpnet.ap2.api.stats.GameSummary
 import work.lclpnet.ap2.api.stats.LevelInfo
 import work.lclpnet.ap2.api.stats.StatsManager
 import work.lclpnet.ap2.api.util.action.Action
 import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.MiniGameResults
 import work.lclpnet.ap2.game.data.*
 import work.lclpnet.game.util.ProtectorUtils
 import work.lclpnet.kibu.hook.Hook

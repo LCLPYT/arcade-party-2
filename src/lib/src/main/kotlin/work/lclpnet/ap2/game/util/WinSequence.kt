@@ -9,11 +9,11 @@ import net.minecraft.network.chat.HoverEvent
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
-import work.lclpnet.ap2.api.game.MiniGameResults
-import work.lclpnet.ap2.api.game.MiniGameResults.PlayerResult
 import work.lclpnet.ap2.api.stats.SessionStatsRecorder
 import work.lclpnet.ap2.api.util.action.Action
 import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.MiniGameResults
+import work.lclpnet.ap2.game.MiniGameResults.PlayerResult
 import work.lclpnet.ap2.game.data.DataContainer
 import work.lclpnet.ap2.game.data.GenericGameResult
 import work.lclpnet.ap2.game.data.PlayerSubjectRefFactory

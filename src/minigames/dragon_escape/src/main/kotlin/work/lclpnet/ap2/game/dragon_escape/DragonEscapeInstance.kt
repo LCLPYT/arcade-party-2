@@ -19,9 +19,9 @@ import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.Objective
 import net.minecraft.world.scores.criteria.ObjectiveCriteria
-import work.lclpnet.ap2.api.game.MiniGameResults
 import work.lclpnet.ap2.core.mixin.entity.LivingEntityAccessor
 import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.MiniGameResults
 import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.data.CombinedDataContainer
 import work.lclpnet.ap2.game.data.DoubleScoreDataContainer

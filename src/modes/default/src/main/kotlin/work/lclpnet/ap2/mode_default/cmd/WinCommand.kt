@@ -6,10 +6,10 @@ import net.minecraft.commands.Commands
 import net.minecraft.commands.arguments.EntityArgument
 import net.minecraft.network.chat.Component
 import net.minecraft.server.level.ServerPlayer
-import work.lclpnet.ap2.api.game.MiniGameResults
-import work.lclpnet.ap2.api.game.MiniGameResults.PlayerResult
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.MiniGameInstance
+import work.lclpnet.ap2.game.MiniGameResults
+import work.lclpnet.ap2.game.MiniGameResults.PlayerResult
 import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.data.type.PlayerRef.Companion.create
 import work.lclpnet.kibu.cmd.type.CommandRegistrar
