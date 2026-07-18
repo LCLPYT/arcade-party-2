@@ -7,7 +7,7 @@ import net.minecraft.world.level.border.WorldBorder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import work.lclpnet.activity.util.BossBarHandler
-import work.lclpnet.ap2.api.base.WorldBorderManager
+import work.lclpnet.ap2.api.WorldBorderManager
 import work.lclpnet.ap2.api.data.DataManager
 import work.lclpnet.ap2.api.game.GameType
 import work.lclpnet.ap2.api.game.MiniGameResults
@@ -86,7 +86,7 @@ class DefaultMiniGameHandle(
     @Volatile
     private var worldContainer: WorldContainer? = null
 
-    private var world: ServerLevel? = null
+    private var level: ServerLevel? = null
 
     private var startTimeOrNull: Instant? = null
 
@@ -324,11 +324,11 @@ class DefaultMiniGameHandle(
         args.viewDistanceManager.reset()
     }
 
-    override fun getWorldBorder(): WorldBorder =
-        checkNotNull(world) { "World is not set yet" }.worldBorder
+    override val worldBorder: WorldBorder
+        get() = checkNotNull(level) { "World is not set yet" }.worldBorder
 
-    override fun setWorld(world: ServerLevel) {
-        this.world = world
+    override fun setLevel(level: ServerLevel) {
+        this.level = level
     }
 
     override val isFinale: Boolean

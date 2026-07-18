@@ -16,7 +16,7 @@ suspend fun MiniGameHandle.openRandomMap(): Pair<ServerLevel, GameMap> {
     return suspendCancellableCoroutine { continuation ->
         mapFacade.openRandomMap(gameInfo.id, GameLevels.TemporaryNoTeleport) { level, map ->
             // executed on the server thread
-            setWorld(level)
+            setLevel(level)
 
             continuation.resume(level to map)
         }

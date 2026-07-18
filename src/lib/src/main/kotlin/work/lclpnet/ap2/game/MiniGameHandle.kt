@@ -4,7 +4,7 @@ import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerLevel
 import org.slf4j.Logger
 import work.lclpnet.activity.util.BossBarHandler
-import work.lclpnet.ap2.api.base.WorldBorderManager
+import work.lclpnet.ap2.api.WorldBorderManager
 import work.lclpnet.ap2.api.data.DataManager
 import work.lclpnet.ap2.api.game.MiniGameResults
 import work.lclpnet.ap2.api.map.MapFacade
@@ -117,7 +117,7 @@ interface MiniGameHandle {
 
     val isFinale: Boolean
 
-    fun setWorld(world: ServerLevel)
+    fun setLevel(level: ServerLevel)
 
     /**
      * Submit the game stats to the stats backend.
