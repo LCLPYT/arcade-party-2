@@ -26,7 +26,7 @@ import work.lclpnet.activity.component.ComponentBundle
 import work.lclpnet.activity.component.builtin.BossBarComponent
 import work.lclpnet.activity.component.builtin.BuiltinComponents
 import work.lclpnet.ap2.ApConstants
-import work.lclpnet.ap2.api.base.GameQueue
+import work.lclpnet.ap2.impl.base.GameQueue
 import work.lclpnet.ap2.api.data.DataManager
 import work.lclpnet.ap2.api.game.GameStartContext
 import work.lclpnet.ap2.api.map.MapFacade
@@ -206,8 +206,8 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
     private fun restartActivity() {
         args.scoreManager.decrementRound()
 
-        if (this.miniGame != null) {
-            args.gameQueue.shiftGame(this.miniGame)
+        miniGame?.let {
+            args.gameQueue.shiftGame(it)
         }
 
         switchActivity(PreparationActivity(args))
@@ -369,27 +369,26 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
         parent: Object3d,
     ): Double {
         var offsetY = offsetY
-        var preview: MutableList<GameQueue.Entry> = args.gameQueue.preview()
+        var preview = args.gameQueue.preview()
 
         val reservedSpace = if (miniGame != null) 2 else 1
         val amount = Math.clamp((floor(height / textHeight).toInt() - reservedSpace).toLong(), 0, preview.size)
-        preview = preview.subList(0, amount)
+        preview = preview.subList(0, amount).reversed()
 
-        preview.reverse()
-
-        for (entry in preview) {
+        for ((game, type) in preview) {
             val obj = TranslatedTextDisplayObject(parent.scene, translations)
 
-            val color = when (entry.type) {
+            val color = when (type) {
                 GameQueue.Type.REGULAR -> ChatFormatting.GREEN
                 GameQueue.Type.VOTED -> ChatFormatting.GOLD
                 GameQueue.Type.PRIORITY -> ChatFormatting.LIGHT_PURPLE
             }
 
-            val mayPossiblyNotBePlayed = !entry.game.canBePlayed(this)
+            val mayPossiblyNotBePlayed = !game.canBePlayed(this)
 
             obj.controller().configure { controller ->
-                val text = translations.translateText(entry.game.titleKey).withStyle(color)
+                val text = translations.translateText(game.titleKey).withStyle(color)
+
                 if (mayPossiblyNotBePlayed) {
                     controller.text = { lang ->
                         Component.literal("⏳ ")
@@ -545,8 +544,8 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
 
         val queue: GameQueue = args.gameQueue
 
-        if (this.miniGame != null) {
-            queue.shiftGame(this.miniGame)
+        this.miniGame?.let {
+            queue.shiftGame(it)
         }
 
         queue.shiftGame(miniGame)

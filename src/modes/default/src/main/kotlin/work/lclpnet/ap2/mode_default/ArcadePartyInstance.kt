@@ -7,7 +7,7 @@ import net.minecraft.server.MinecraftServer
 import org.slf4j.Logger
 import work.lclpnet.activity.Activity
 import work.lclpnet.ap2.ApConstants
-import work.lclpnet.ap2.api.base.GameQueue
+import work.lclpnet.ap2.impl.base.GameQueue
 import work.lclpnet.ap2.api.base.MiniGameManager
 import work.lclpnet.ap2.api.config.Ap2Config
 import work.lclpnet.ap2.api.stats.SessionStatsRecorder
