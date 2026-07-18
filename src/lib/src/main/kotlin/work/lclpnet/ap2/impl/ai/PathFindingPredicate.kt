@@ -1,10 +1,9 @@
-package work.lclpnet.ap2.api.ai;
+package work.lclpnet.ap2.impl.ai
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.entity.Mob;
+import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.Mob
 
-public interface PathFindingPredicate {
-
+fun interface PathFindingPredicate {
     /**
      * Checks whether a block can be reached from another block.
      * This influences the A* pathfinding algorithm of configured entities.
@@ -15,5 +14,5 @@ public interface PathFindingPredicate {
      * @param from The parent position in the path to be constructed.
      * @return Whether the way from the previous position towards the next is passable by the entity.
      */
-    boolean canReach(int x, int y, int z, Mob entity, BlockPos from);
+    fun canReach(x: Int, y: Int, z: Int, entity: Mob, from: BlockPos): Boolean
 }

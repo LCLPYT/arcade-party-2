@@ -2,7 +2,7 @@ package work.lclpnet.ap2.game.maze_scape.util;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Mob;
-import work.lclpnet.ap2.api.ai.PathFindingPredicate;
+import work.lclpnet.ap2.impl.ai.PathFindingPredicate;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
 
 public class PitPathFindingPredicate implements PathFindingPredicate {
