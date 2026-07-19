@@ -14,7 +14,6 @@ import work.lclpnet.ap2.game.data.type.PlayerRef
 import work.lclpnet.ap2.game.data.type.PlayerRef.Companion.create
 import work.lclpnet.kibu.cmd.type.CommandRegistrar
 import work.lclpnet.kibu.cmd.type.KibuCommand
-import java.util.Map
 
 class WinCommand(
     private val gameHandle: MiniGameHandle,
@@ -84,7 +83,7 @@ class WinCommand(
         gameHandle.complete(
             MiniGameResults(
                 MiniGameResults.Status.SUCCESS,
-                Map.of<PlayerRef?, PlayerResult?>(ref, res)
+                mapOf(ref to res)
             )
         )
     }
