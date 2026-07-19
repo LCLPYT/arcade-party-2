@@ -5,8 +5,8 @@ import net.minecraft.commands.CommandSourceStack
 import net.minecraft.commands.Commands
 import net.minecraft.commands.arguments.IdentifierArgument
 import net.minecraft.network.chat.Component
-import work.lclpnet.ap2.api.map.MapFacade
 import work.lclpnet.ap2.game.MiniGame
+import work.lclpnet.ap2.impl.map.MapFacade
 import work.lclpnet.ap2.mode_default.cmd.arg.MapSuggestionProvider
 import work.lclpnet.kibu.cmd.type.CommandRegistrar
 import work.lclpnet.kibu.cmd.type.KibuCommand

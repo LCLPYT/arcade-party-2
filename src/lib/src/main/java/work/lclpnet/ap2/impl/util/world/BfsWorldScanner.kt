@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.impl.util.world
 
 import net.minecraft.core.BlockPos
-import work.lclpnet.ap2.api.util.world.AdjacentBlocks
-import work.lclpnet.ap2.api.util.world.WorldScanner
+import work.lclpnet.ap2.util.world.AdjacentBlocks
+import work.lclpnet.ap2.util.world.WorldScanner
 
 class BfsWorldScanner(private val adjacentBlocks: AdjacentBlocks) : WorldScanner {
 

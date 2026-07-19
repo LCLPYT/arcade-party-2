@@ -1,7 +1,6 @@
 package work.lclpnet.ap2.util.world
 
 import net.minecraft.core.BlockPos
-import work.lclpnet.ap2.api.util.world.AdjacentBlocks
 
 data class ScannerNode(
     val pos: BlockPos,

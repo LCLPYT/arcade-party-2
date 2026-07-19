@@ -7,9 +7,7 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
-import work.lclpnet.ap2.api.util.world.AdjacentBlocks
 import work.lclpnet.ap2.api.util.world.BlockPredicate
-import work.lclpnet.ap2.api.util.world.WorldScanner
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.game.MiniGameFactory
 import work.lclpnet.ap2.game.MiniGameHandle
@@ -26,6 +24,8 @@ import work.lclpnet.ap2.impl.util.world.ResetBlockWorldModifier
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks
 import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
+import work.lclpnet.ap2.util.world.AdjacentBlocks
+import work.lclpnet.ap2.util.world.WorldScanner
 import work.lclpnet.gaco.core.util.ThreadUtil.submitOn
 import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.game.map.GameMap

@@ -8,7 +8,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import work.lclpnet.activity.util.BossBarHandler
 import work.lclpnet.ap2.api.WorldBorderManager
-import work.lclpnet.ap2.api.map.MapFacade
 import work.lclpnet.ap2.api.music.SongCache
 import work.lclpnet.ap2.api.music.SongManager
 import work.lclpnet.ap2.api.stats.StatsResult
@@ -21,6 +20,7 @@ import work.lclpnet.ap2.game.team.TeamConfig
 import work.lclpnet.ap2.game.util.PlayerUtil
 import work.lclpnet.ap2.impl.data.DataManager
 import work.lclpnet.ap2.impl.i18n.GameScopedTranslator
+import work.lclpnet.ap2.impl.map.MapFacade
 import work.lclpnet.ap2.impl.util.DeathMessages
 import work.lclpnet.ap2.impl.util.world.SubWorldManager
 import work.lclpnet.ap2.mode_default.activity.MiniGameActivity

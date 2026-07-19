@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.api.util.world
+package work.lclpnet.ap2.util.world
 
 import net.minecraft.core.BlockPos
 

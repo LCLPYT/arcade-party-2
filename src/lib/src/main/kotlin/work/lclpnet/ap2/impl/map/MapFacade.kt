@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.api.map
+package work.lclpnet.ap2.impl.map
 
 import net.minecraft.resources.Identifier
 import net.minecraft.server.level.ServerLevel
