@@ -2,11 +2,9 @@ package work.lclpnet.ap2.impl.map
 
 import net.minecraft.resources.Identifier
 import net.minecraft.server.level.ServerLevel
-import work.lclpnet.ap2.game.util.MapReady
 import work.lclpnet.gaco.asset.AssetRepository
 import work.lclpnet.game.api.WorldOptions
 import work.lclpnet.game.map.GameMap
-import java.util.concurrent.CompletableFuture
 
 interface MapFacade {
 
@@ -19,48 +17,40 @@ interface MapFacade {
      * Newly joining players will be moved to the new map as well.
      * @param identifier The map id.
      * @param options The world options to specify loading behavior.
-     * @return A future of the loaded map level.
+     * @return The loaded map level.
      */
-    fun changeMap(identifier: Identifier, options: WorldOptions): CompletableFuture<ServerLevel>
+    suspend fun changeMap(identifier: Identifier, options: WorldOptions): ServerLevel
 
     /**
      * Opens a random map that matches a given game identifier.
      * For example, if `ap:spleef` is given, this method will open a random map for the "spleef" mini-game.
      * @param gameId The game identifier.
      * @param mapOptions The map options.
-     * @return A future that completes if the map was opened.
+     * @return The opened map level and its map data.
      */
-    fun openRandomMap(gameId: Identifier, mapOptions: WorldOptions): CompletableFuture<Pair<ServerLevel, GameMap>>
+    suspend fun openRandomMap(gameId: Identifier, mapOptions: WorldOptions): Pair<ServerLevel, GameMap>
 
-    fun openRandomMap(gameId: Identifier, options: WorldOptions, onReady: MapReady)
+    suspend fun getMapIds(gameId: Identifier): List<Identifier>
 
-    fun getMapIds(gameId: Identifier): CompletableFuture<List<Identifier>>
+    suspend fun getMaps(gameId: Identifier): List<GameMap>
 
-    fun getMaps(gameId: Identifier): CompletableFuture<List<GameMap>>
+    suspend fun getMap(mapId: Identifier): GameMap?
 
-    fun getMap(mapId: Identifier): CompletableFuture<GameMap?>
-
-    fun reloadMaps(gameId: Identifier): CompletableFuture<Void>
+    suspend fun reloadMaps(gameId: Identifier)
 
     fun forceMap(mapId: Identifier?)
 
-    fun findMapIdByPrefix(prefix: Identifier): CompletableFuture<Identifier?> {
-        return getMapIds(prefix).thenApply { ids ->
-            ids.firstOrNull()
-        }
-    }
-
-    fun openRandomMap(gameId: Identifier, onReady: MapReady) {
-        openRandomMap(gameId, WorldOptions.TEMPORARY, onReady)
+    suspend fun findMapIdByPrefix(prefix: Identifier): Identifier? {
+        return getMapIds(prefix).firstOrNull()
     }
 
     /**
      * Opens a random map that matches a given game identifier.
      * For example, if `ap:spleef` is given, this method will open a random map for the "spleef" mini-game.
      * @param gameId The game identifier.
-     * @return A future that completes if the map was opened.
+     * @return The opened map level and its map data.
      */
-    fun openRandomMap(gameId: Identifier): CompletableFuture<Pair<ServerLevel, GameMap>> {
+    suspend fun openRandomMap(gameId: Identifier): Pair<ServerLevel, GameMap> {
         return openRandomMap(gameId, WorldOptions.TEMPORARY)
     }
 }

@@ -1,5 +1,8 @@
 package work.lclpnet.ap2.impl.map
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.future.await
+import kotlinx.coroutines.withContext
 import net.minecraft.resources.Identifier
 import net.minecraft.resources.ResourceKey
 import net.minecraft.server.MinecraftServer
@@ -7,7 +10,6 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.level.Level
 import org.apache.commons.io.FileUtils
 import org.slf4j.Logger
-import work.lclpnet.ap2.game.util.MapReady
 import work.lclpnet.ap2.game.util.setupGameLevel
 import work.lclpnet.gaco.asset.AssetRepository
 import work.lclpnet.game.api.WorldFacade
@@ -35,14 +37,9 @@ class MapFacadeImpl(
     private val logger: Logger,
 ) : MapFacade {
 
-    override fun changeMap(identifier: Identifier, options: WorldOptions): CompletableFuture<ServerLevel> {
-        val optMap = mapManager.collection().getMap(identifier)
-
-        if (optMap.isEmpty) {
-            return CompletableFuture.failedFuture(IllegalStateException("Unknown map $identifier"))
-        }
-
-        val map = optMap.get()
+    override suspend fun changeMap(identifier: Identifier, options: WorldOptions): ServerLevel {
+        val map = mapManager.collection().getMap(identifier).orElse(null)
+            ?: throw IllegalStateException("Unknown map $identifier")
 
         return worldFacade.changeLevel(
             identifier,
@@ -56,7 +53,7 @@ class MapFacadeImpl(
             { key ->
                 changeToYetUnloadedMap(map, key)
             }
-        )
+        ).await()
     }
 
     private fun changeToYetUnloadedMap(
@@ -89,67 +86,43 @@ class MapFacadeImpl(
             .orElseThrow { IllegalStateException("Failed to load map") }
     }
 
-    override fun openRandomMap(
+    override suspend fun openRandomMap(
         gameId: Identifier,
         mapOptions: WorldOptions,
-    ): CompletableFuture<Pair<ServerLevel, GameMap>> = mapRandomizer.nextMap(gameId)
-        .thenCompose { map: GameMap ->
-            val id = map.descriptor.identifier
-            changeMap(id, mapOptions).thenApply { world ->
-                world to map
-            }
-        }
-        .thenApply { pair ->
-            setupGameLevel(pair.first)
-            pair
-        }
+    ): Pair<ServerLevel, GameMap> {
+        val map = mapRandomizer.nextMap(gameId)
+        val world = changeMap(map.descriptor.identifier, mapOptions)
 
-    override fun openRandomMap(gameId: Identifier, options: WorldOptions, onReady: MapReady) {
-        openRandomMap(gameId, options)
-            .thenCompose { (level, map) ->
-                server.submit {
-                    onReady.onReady(level, map)
-                }
-            }
-            .exceptionally { throwable ->
-                logger.error("Failed to open a random map for game {}", gameId, throwable)
-                null
-            }
+        setupGameLevel(world)
+
+        return world to map
     }
 
-    override fun getMapIds(gameId: Identifier): CompletableFuture<List<Identifier>> {
-        val mapIds = mapManager.collection()
+    override suspend fun getMapIds(gameId: Identifier): List<Identifier> {
+        return mapManager.collection()
             .mapIdsWithPrefix(gameId)
             .sorted()
             .toList()
-
-        return CompletableFuture.completedFuture(mapIds)
     }
 
-    override fun getMaps(gameId: Identifier): CompletableFuture<List<GameMap>> {
-        val maps = mapManager.collection()
+    override suspend fun getMaps(gameId: Identifier): List<GameMap> {
+        return mapManager.collection()
             .mapsWithPrefix(gameId)
             .sorted(Comparator.comparing { map: GameMap ->
                 map.descriptor.identifier
             })
             .toList()
-
-        return CompletableFuture.completedFuture(maps)
     }
 
-    override fun getMap(mapId: Identifier): CompletableFuture<GameMap?> {
-        val optMap = mapManager.collection().getMap(mapId).orElse(null)
-
-        return CompletableFuture.completedFuture(optMap)
+    override suspend fun getMap(mapId: Identifier): GameMap? {
+        return mapManager.collection().getMap(mapId).orElse(null)
     }
 
-    override fun reloadMaps(gameId: Identifier): CompletableFuture<Void> {
-        return CompletableFuture.runAsync {
-            try {
-                mapManager.loadAll(MapDescriptor(gameId))
-            } catch (e: IOException) {
-                throw RuntimeException("Failed to reload maps for game id $gameId", e)
-            }
+    override suspend fun reloadMaps(gameId: Identifier) = withContext(Dispatchers.IO) {
+        try {
+            mapManager.loadAll(MapDescriptor(gameId))
+        } catch (e: IOException) {
+            throw RuntimeException("Failed to reload maps for game id $gameId", e)
         }
     }
 

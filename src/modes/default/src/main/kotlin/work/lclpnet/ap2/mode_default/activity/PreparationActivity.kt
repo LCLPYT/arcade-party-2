@@ -1,5 +1,12 @@
 package work.lclpnet.ap2.mode_default.activity
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.future.await
+import kotlinx.coroutines.launch
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup
 import net.minecraft.ChatFormatting
 import net.minecraft.commands.Commands
@@ -46,6 +53,7 @@ import work.lclpnet.ap2.mode_default.api.Skippable
 import work.lclpnet.ap2.mode_default.cmd.ForceMapCommand
 import work.lclpnet.ap2.mode_default.cmd.SkipCommand
 import work.lclpnet.ap2.mode_default.util.*
+import work.lclpnet.ap2.util.MinecraftDispatcher
 import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager
 import work.lclpnet.gaco.scene.MixedMountContext
@@ -65,7 +73,8 @@ import work.lclpnet.kibu.scheduler.api.TaskHandle
 import work.lclpnet.kibu.scheduler.api.TaskScheduler
 import work.lclpnet.kibu.translate.Translations
 import work.lclpnet.kibu.translate.text.FormatWrapper
-import java.util.concurrent.CompletableFuture
+import java.lang.Math
+import java.lang.Runnable
 import kotlin.math.floor
 import kotlin.math.max
 
@@ -90,8 +99,9 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
     private var bossBarTimer: BossBarTimer? = null
     private var animatedTitle: AnimatedTitle? = null
     private var song: SongWrapper? = null
-    private var whenTasksDone: CompletableFuture<Void?>? = null
+    private var reloadJob: Job? = null
     private var onScoreUpdate: Runnable? = null
+    private val scope = CoroutineScope(MinecraftDispatcher(args.miniGameArgs.server) + SupervisorJob())
     private var world: ServerLevel? = null
     private var map: GameMap? = null
     private var dynamicEntityManager: DynamicEntityManager? = null
@@ -120,28 +130,32 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
         args.tablistManager.setPreparation()
         args.tablistManager.update()
 
-        CompletableFuture.supplyAsync {
-            val setupFuture = setupMap(args.miniGameArgs)
-            val assetFuture = loadAssets()
+        scope.launch {
+            try {
+                val setup = async { setupMap(args.miniGameArgs) }
+                val assets = async { loadAssets() }
 
-            assetFuture.join()
-            setupFuture.join()
-        }.whenComplete { res: SetupResult?, err: Throwable? ->
-            if (err != null) {
-                args.miniGameArgs.logger.error("Failed to setup preparation activity", err)
-            } else if (res != null) {
+                assets.await()
+                val res = setup.await()
+
                 onReady(res.world, res.map)
+            } catch (t: Throwable) {
+                args.miniGameArgs.logger.error("Failed to setup preparation activity", t)
             }
         }
     }
 
-    private fun loadAssets(): CompletableFuture<Void> {
-        return args.miniGameArgs.songManager
+    private suspend fun loadAssets() {
+        val song = args.miniGameArgs.songManager
             .getSongAndCache(MusicHelper.ARCADE_PARTY_GAME_TAG, GAME_SONG_ID)
-            .thenAccept { song -> nextGameSong = song.orElse(null) }
+            .await()
+
+        nextGameSong = song.orElse(null)
     }
 
     override fun stop() {
+        scope.cancel()
+
         args.forceGameCommand.gameEnforcer = { game -> args.gameQueue.setNextGame(game) }
 
         if (onScoreUpdate != null) {
@@ -224,9 +238,12 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
         val gameId = miniGame!!.id
 
         if (miniGame!!.usesMaps) {
-            whenTasksDone = args.miniGameArgs.mapFacade.reloadMaps(gameId).exceptionally { err ->
-                args.miniGameArgs.logger.error("Failed to reload maps for {}", gameId, err)
-                null
+            reloadJob = scope.launch {
+                try {
+                    args.miniGameArgs.mapFacade.reloadMaps(gameId)
+                } catch (err: Throwable) {
+                    args.miniGameArgs.logger.error("Failed to reload maps for {}", gameId, err)
+                }
             }
         }
 
@@ -479,12 +496,17 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
             return
         }
 
-        if (whenTasksDone == null) {
+        val job = reloadJob
+
+        if (job == null) {
             startGame()
             return
         }
 
-        whenTasksDone!!.thenRun(::startGame)
+        scope.launch {
+            job.join()
+            startGame()
+        }
     }
 
     private fun startGame() {
@@ -785,7 +807,8 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
             return
         }
 
-        args.miniGameArgs.mapFacade.getMaps(miniGame!!.id).thenAccept { maps ->
+        scope.launch {
+            val maps = args.miniGameArgs.mapFacade.getMaps(miniGame!!.id)
             mapChooser?.open(player, maps)
         }
     }
@@ -794,27 +817,17 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
 
     companion object {
 
-        fun setupMap(miniGameArgs: ApMiniGameArgs): CompletableFuture<SetupResult> {
+        suspend fun setupMap(miniGameArgs: ApMiniGameArgs): SetupResult {
             val prefix = ApConstants.identifier("preparation")
 
-            return miniGameArgs.mapFacade
-                .findMapIdByPrefix(prefix)
-                .thenApply { mapId ->
-                    checkNotNull(mapId) {
-                        "No map found for prefix $prefix"
-                    }
-                }
-                .thenCompose { mapId ->
-                    miniGameArgs.mapFacade.changeMap(mapId, WorldOptions.REUSABLE)
-                        .thenCompose { world ->
-                            miniGameArgs.mapFacade.getMap(mapId).thenApply { map ->
-                                SetupResult(
-                                    world,
-                                    checkNotNull(map) { "Map $mapId not found" }
-                                )
-                            }
-                        }
-                }
+            val mapId = checkNotNull(miniGameArgs.mapFacade.findMapIdByPrefix(prefix)) {
+                "No map found for prefix $prefix"
+            }
+
+            val world = miniGameArgs.mapFacade.changeMap(mapId, WorldOptions.REUSABLE)
+            val map = checkNotNull(miniGameArgs.mapFacade.getMap(mapId)) { "Map $mapId not found" }
+
+            return SetupResult(world, map)
         }
     }
 }

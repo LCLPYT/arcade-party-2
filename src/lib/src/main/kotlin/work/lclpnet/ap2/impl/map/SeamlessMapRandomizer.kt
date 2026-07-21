@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.impl.map
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.minecraft.resources.Identifier
 import org.slf4j.Logger
 import work.lclpnet.ap2.ApConstants
@@ -8,7 +10,6 @@ import work.lclpnet.gaco.ds.queue.SeamlessQueue
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.map.MapManager
 import java.util.*
-import java.util.concurrent.CompletableFuture
 import java.util.stream.Collectors
 import kotlin.math.floor
 import kotlin.math.max
@@ -20,7 +21,7 @@ class SeamlessMapRandomizer(
 ) : MapRandomizer {
     private var forcedMap: Identifier? = null
 
-    override fun nextMap(gameId: Identifier): CompletableFuture<GameMap> {
+    override suspend fun nextMap(gameId: Identifier): GameMap {
         val mapIds = mapManager.collection()
             .mapIdsWithPrefix(gameId)
             .collect(Collectors.toSet())
@@ -39,12 +40,12 @@ class SeamlessMapRandomizer(
         return getRandomMap(gameId, mapIds)
     }
 
-    private fun getRandomMap(gameId: Identifier, mapIds: Set<Identifier>): CompletableFuture<GameMap> {
+    private suspend fun getRandomMap(gameId: Identifier, mapIds: Set<Identifier>): GameMap {
         require(mapIds.isNotEmpty()) { "Map IDs must not be empty" }
 
         val margin = max(0, floor((mapIds.size * MARGIN_PERCENT).toDouble()).toInt())
 
-        return CompletableFuture.supplyAsync {
+        return withContext(Dispatchers.IO) {
             val queueId = gameId.withSuffix("/map_queue")
 
             val queuePersistence = JsonFileQueuePersistence.create(
@@ -60,7 +61,7 @@ class SeamlessMapRandomizer(
 
             val next = queue.next()
 
-            val map = getMapById(next).join()
+            val map = getMapById(next)
             queue.pushElement(next)
             queuePersistence.store(queue.transfer())
 
@@ -72,17 +73,11 @@ class SeamlessMapRandomizer(
         this.forcedMap = mapId
     }
 
-    private fun getMapById(mapId: Identifier): CompletableFuture<GameMap> {
-        val map = mapManager.collection()
+    private fun getMapById(mapId: Identifier): GameMap {
+        return mapManager.collection()
             .getMap(mapId)
             .orElse(null)
-
-        if (map == null) {
-            val err = NoSuchElementException("Map '$mapId' not found")
-            return CompletableFuture.failedFuture(err)
-        }
-
-        return CompletableFuture.completedFuture(map)
+            ?: throw NoSuchElementException("Map '$mapId' not found")
     }
 
     companion object {

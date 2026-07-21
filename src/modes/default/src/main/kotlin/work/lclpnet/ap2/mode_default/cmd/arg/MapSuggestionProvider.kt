@@ -4,6 +4,9 @@ import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.suggestion.SuggestionProvider
 import com.mojang.brigadier.suggestion.Suggestions
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.future.future
 import net.minecraft.commands.CommandSourceStack
 import work.lclpnet.ap2.game.MiniGame
 import work.lclpnet.ap2.impl.map.MapFacade
@@ -21,13 +24,12 @@ class MapSuggestionProvider(
     ): CompletableFuture<Suggestions> {
         val miniGame = gameSupplier.get() ?: return builder.buildFuture()
 
-        return mapFacade.getMapIds(miniGame.id)
-            .thenApply { mapIds ->
-                for (identifier in mapIds) {
-                    builder.suggest(identifier.toString())
-                }
-
-                builder.build()
+        return CoroutineScope(Dispatchers.Default).future {
+            for (identifier in mapFacade.getMapIds(miniGame.id)) {
+                builder.suggest(identifier.toString())
             }
+
+            builder.build()
+        }
     }
 }

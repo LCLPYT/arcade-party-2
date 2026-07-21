@@ -13,14 +13,12 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 suspend fun MiniGameHandle.openRandomMap(): Pair<ServerLevel, GameMap> {
-    return suspendCancellableCoroutine { continuation ->
-        mapFacade.openRandomMap(gameInfo.id, GameLevels.TemporaryNoTeleport) { level, map ->
-            // executed on the server thread
-            setLevel(level)
+    val (level, map) = mapFacade.openRandomMap(gameInfo.id, GameLevels.TemporaryNoTeleport)
 
-            continuation.resume(level to map)
-        }
-    }
+    // resumes on the server thread via the mini-game coroutine dispatcher
+    setLevel(level)
+
+    return level to map
 }
 
 /**
