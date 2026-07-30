@@ -52,6 +52,7 @@ import work.lclpnet.ap2.mode_default.ApMiniGameArgs
 import work.lclpnet.ap2.mode_default.api.Skippable
 import work.lclpnet.ap2.mode_default.cmd.ForceMapCommand
 import work.lclpnet.ap2.mode_default.cmd.SkipCommand
+import work.lclpnet.ap2.mode_default.cmd.SpectatorCommand
 import work.lclpnet.ap2.mode_default.util.*
 import work.lclpnet.ap2.util.MinecraftDispatcher
 import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager
@@ -216,6 +217,11 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
 
         SkipCommand(this).register(commandRegistrar)
         ForceMapCommand(mapFacade) { miniGame }.register(commandRegistrar)
+
+        SpectatorCommand(args.playerManager, args.miniGameArgs.translations, immediate = true) { player ->
+            args.miniGameArgs.playerUtil.resetPlayer(player)
+            args.miniGameArgs.worldFacade.teleport(player)
+        }.register(commandRegistrar)
 
         args.forceGameCommand.gameEnforcer = { miniGame -> forceGame(miniGame) }
     }
