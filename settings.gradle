@@ -26,6 +26,7 @@ def minigames = [
         "block_dissolve",
         "bow_spleef",
         "button_master",
+        "capture_the_flag",
         "chicken_shooter",
         "cozy_campfire",
         "dance_floor",
