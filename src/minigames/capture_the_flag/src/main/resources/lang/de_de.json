@@ -7,5 +7,11 @@
   "flag_captured": "%s hat die %s Flagge erobert!",
   "flag_dropped": "%s hat die %s Flagge fallen lassen!",
   "flag_returned": "%s hat die %s Flagge zurückgebracht.",
-  "flag_returned_timeout": "Die %s Flagge ist in ihre Basis zurückgekehrt."
+  "flag_returned_timeout": "Die %s Flagge ist in ihre Basis zurückgekehrt.",
+  "stat.flags_stolen": "Flaggen gestohlen",
+  "stat.flags_captured": "Flaggen erobert",
+  "stat.flags_rescued": "Flaggen gerettet",
+  "stat.arrows_shot": "Pfeile verschossen",
+  "stat.arrows_hit": "Pfeile getroffen",
+  "stat.arrow_accuracy": "Pfeilgenauigkeit"
 }

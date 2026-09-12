@@ -2,7 +2,6 @@ package work.lclpnet.ap2.capture_the_flag
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup
 import net.minecraft.core.BlockPos
-import net.minecraft.network.protocol.game.ServerPacketListener
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
@@ -12,29 +11,36 @@ import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.decoration.ItemFrame
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow
 import net.minecraft.world.level.GameType
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.scores.Team.CollisionRule
+import work.lclpnet.ap2.api.stats.CommonStats.DamageDealt
+import work.lclpnet.ap2.api.stats.CommonStats.Deaths
+import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
+import work.lclpnet.ap2.api.stats.CommonStats.IntScore
+import work.lclpnet.ap2.api.stats.CommonStats.KillDeathRatio
+import work.lclpnet.ap2.api.stats.CommonStats.Kills
 import work.lclpnet.ap2.capture_the_flag.flag.Flag
 import work.lclpnet.ap2.capture_the_flag.flag.ItemFrameFlag
+import work.lclpnet.ap2.core.hook.ProjectileShootCallback
 import work.lclpnet.ap2.core.hook.SpectatePlayerCallback
 import work.lclpnet.ap2.ext.allPlayers
-import work.lclpnet.ap2.ext.interval
-import work.lclpnet.ap2.ext.isParticipating
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.setBlocks
 import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.runEveryTick
+import work.lclpnet.ap2.ext.trackDistanceMoved
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.TeamGameInstance
 import work.lclpnet.ap2.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.game.team.DyeTeamKey
 import work.lclpnet.ap2.game.team.Team
 import work.lclpnet.ap2.game.team.TeamManager
-import work.lclpnet.ap2.game.util.createTimer
 import work.lclpnet.ap2.game.util.useOldCombat
 import work.lclpnet.ap2.game.util.useSurvivalMode
 import work.lclpnet.ap2.game.util.useTaskTimer
+import work.lclpnet.ap2.game.util.useTeamStats
 import work.lclpnet.ap2.impl.util.handler.VisualCooldown
 import work.lclpnet.ap2.util.scoreboard.TranslatedScoreboardObjective
 import work.lclpnet.ap2.util.scoreboard.setupTranslatedSidebarObjective
@@ -43,7 +49,7 @@ import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.hook.util.PositionRotation
 import work.lclpnet.kibu.scheduler.Ticks
-import java.util.Random
+import java.util.*
 import kotlin.time.Duration.Companion.minutes
 
 private const val CAPTURES_TO_WIN = 3
@@ -65,6 +71,33 @@ class CaptureTheFlagInstance(
 ) : TeamGameInstance(gameHandle, level, map, teamManager) {
 
     override val data = IntScoreDataContainer(this::createTeamReference)
+    private val stats = CtfStats(useTeamStats(
+        winManager, data, IntScore,
+        teamStats = listOf(
+            FlagsStolen,
+            FlagsCaptured,
+            FlagsRescued,
+            Kills,
+            Deaths,
+            DamageDealt,
+            ArrowsShot,
+            ArrowsHit,
+            ArrowAccuracy
+        ),
+        memberStats = listOf(
+            FlagsStolen,
+            FlagsCaptured,
+            FlagsRescued,
+            Kills,
+            Deaths,
+            KillDeathRatio,
+            DamageDealt,
+            DistanceMoved,
+            ArrowsShot,
+            ArrowsHit,
+            ArrowAccuracy
+        )
+    ), teamManager, gameHandle.translations)
     private val respawnCooldown = VisualCooldown(gameHandle.scheduler)
     private val random = Random()
     private val kit = CtfKit(teamManager, level)
@@ -83,7 +116,7 @@ class CaptureTheFlagInstance(
     override fun prepare() {
         teamInfo = setupTeams()
 
-        flagManager = CtfFlagManager(gameHandle, level, teamManager, teamInfo, random, ::onCapture)
+        flagManager = CtfFlagManager(gameHandle, level, teamManager, teamInfo, random, stats, ::onCapture)
         flagManager.setup()
 
         teleportTeamsToSpawns()
@@ -204,6 +237,15 @@ class CaptureTheFlagInstance(
         }
 
         ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks, ::onDamage)
+
+        ProjectileShootCallback.HOOK.registerWith(hooks) { shooter, projectile ->
+            if (shooter is ServerPlayer && projectile is AbstractArrow
+                && gameHandle.participants.isParticipating(shooter)) {
+                stats.arrowShot(shooter)
+            }
+        }
+
+        trackDistanceMoved(stats.players)
     }
 
     private fun isFlagFrame(itemFrame: ItemFrame) =
@@ -224,15 +266,40 @@ class CaptureTheFlagInstance(
         if (attacker != null && attacker !== player && teamManager.areTeamMates(attacker, player)) return false
 
         if (player.health - amount <= 0) {
+            trackDamage(player, source, player.health)
             onLethalDamage(player, source, amount)
             return false
         }
 
+        trackDamage(player, source, amount)
+
         return true
+    }
+
+    private fun trackDamage(victim: ServerPlayer, source: DamageSource, applied: Float) {
+        val attacker = source.entity as? ServerPlayer ?: return
+
+        if (attacker === victim || teamManager.areTeamMates(attacker, victim)) return
+
+        if (source.isOf(DamageTypes.ARROW)) {
+            stats.arrowHit(attacker)
+        }
+
+        if (applied <= 0f) return
+
+        stats.damageDealt(attacker, applied)
     }
 
     private fun onLethalDamage(player: ServerPlayer, source: DamageSource, amount: Float) {
         player.combatTracker.recordDamage(source, amount)
+
+        val killer = source.entity as? ServerPlayer
+
+        if (killer != null && killer !== player && !teamManager.areTeamMates(killer, player)) {
+            stats.onKill(player, killer)
+        } else {
+            stats.onDeath(player)
+        }
 
         gameHandle.deathMessages.getDeathMessage(player, source)
             .sendTo(PlayerLookup.all(gameHandle.server))

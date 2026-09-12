@@ -33,6 +33,7 @@ class CtfFlagManager(
     private val teamManager: TeamManager,
     private val teamInfo: List<CtfTeamInfo>,
     random: Random,
+    private val stats: CtfStats,
     private val onCapture: (Team, CtfTeamInfo) -> Unit,
 ) {
 
@@ -132,6 +133,7 @@ class CtfFlagManager(
         state.atHome = false
 
         setCarrier(state, player)
+        stats.flagStolen(player)
 
         announce(info, "flag_stolen", player.name)
         playSound(SoundEvents.RAID_HORN.value(), 0.7f)
@@ -142,6 +144,8 @@ class CtfFlagManager(
 
         state.info.flag.placeAtHome()
         state.atHome = true
+
+        stats.flagCaptured(carrier)
 
         announce(state.info, "flag_captured", carrier.name)
         playSound(SoundEvents.PLAYER_LEVELUP, 0.6f)
@@ -175,6 +179,8 @@ class CtfFlagManager(
         state.atHome = true
 
         if (player != null) {
+            stats.flagRescued(player)
+
             announce(state.info, "flag_returned", player.name)
         } else {
             announce(state.info, "flag_returned_timeout")

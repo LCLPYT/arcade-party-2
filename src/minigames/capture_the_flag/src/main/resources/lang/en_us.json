@@ -7,5 +7,11 @@
   "flag_captured": "%s captured the %s flag!",
   "flag_dropped": "%s dropped the %s flag!",
   "flag_returned": "%s returned the %s flag.",
-  "flag_returned_timeout": "The %s flag returned to its base."
+  "flag_returned_timeout": "The %s flag returned to its base.",
+  "stat.flags_stolen": "Flags stolen",
+  "stat.flags_captured": "Flags captured",
+  "stat.flags_rescued": "Flags rescued",
+  "stat.arrows_shot": "Arrows shot",
+  "stat.arrows_hit": "Arrows hit",
+  "stat.arrow_accuracy": "Arrow accuracy"
 }
