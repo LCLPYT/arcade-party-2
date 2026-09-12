@@ -19,7 +19,6 @@ import net.minecraft.world.entity.projectile.arrow.AbstractArrow
 import net.minecraft.world.level.GameType
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.level.gamerules.GameRule
 import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.scores.Team.CollisionRule
 import net.minecraft.world.scores.Team.Visibility

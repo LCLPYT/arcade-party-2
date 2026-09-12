@@ -4,11 +4,13 @@ import kotlinx.coroutines.future.await
 import net.minecraft.core.BlockPos
 import net.minecraft.core.GlobalPos
 import net.minecraft.core.registries.Registries
+import net.minecraft.network.protocol.game.ClientboundChangeDifficultyPacket
 import net.minecraft.resources.ResourceKey
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.PlayerSpawnFinder
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.util.Mth
+import net.minecraft.world.Difficulty
 import net.minecraft.world.level.ChunkPos
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.biome.MultiNoiseBiomeSource
@@ -27,8 +29,10 @@ import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.game.api.WorldOptions
 import work.lclpnet.game.util.ResetWorldModifier
 import work.lclpnet.kibu.hook.util.PositionRotation
+import work.lclpnet.kibu.world.mixin.fantasy.RuntimeLevelDataAccessor
 import xyz.nucleoid.fantasy.Fantasy
 import xyz.nucleoid.fantasy.RuntimeLevelConfig
+import xyz.nucleoid.fantasy.RuntimeLevelData
 import xyz.nucleoid.fantasy.RuntimeLevelHandle
 import java.util.concurrent.CompletableFuture
 import java.util.function.Supplier
@@ -50,6 +54,28 @@ fun setupGameLevel(level: ServerLevel) {
         set(GameRules.SHOW_ADVANCEMENT_MESSAGES, false, server)
         set(GameRules.PVP, true, server)
     }
+
+    level.setDifficulty(Difficulty.NORMAL)
+}
+
+/**
+ * Overrides the difficulty of a fantasy level, ignoring the difficulty stored in its level data.
+ * Maps ship their own level.dat, so without this the difficulty depends on the map.
+ * On peaceful, damage types that scale with difficulty (e.g. explosions) deal no damage at all.
+ */
+fun ServerLevel.setDifficulty(difficulty: Difficulty) {
+    val levelData = levelData
+
+    if (levelData !is RuntimeLevelData) return
+
+    val config = (levelData as RuntimeLevelDataAccessor).config
+
+    config.setMirrorOverworldDifficulty(false)
+    config.setDifficulty(difficulty)
+
+    val packet = ClientboundChangeDifficultyPacket(difficulty, levelData.isDifficultyLocked)
+
+    players().forEach { it.connection.send(packet) }
 }
 
 suspend fun MiniGameHandle.generateRandomLevel(
