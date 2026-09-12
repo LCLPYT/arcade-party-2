@@ -24,7 +24,7 @@ abstract class TeamEliminationGameInstance(
 ) : TeamGameInstance(gameHandle, world, map, teamManager) {
 
     override val data = EliminationDataContainer { team: Team ->
-        createReference(team)
+        createTeamReference(team)
     }
 
     /**

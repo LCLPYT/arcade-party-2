@@ -76,7 +76,7 @@ abstract class TeamGameInstance(
             return teamSpawns!!
         }
 
-    protected fun createReference(team: Team): TeamRef {
+    protected fun createTeamReference(team: Team): TeamRef {
         return TeamRef(team.key, gameHandle.translations)
     }
 

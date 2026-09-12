@@ -1,4 +1,11 @@
 {
   "name": "Capture the Flag",
-  "description": "Steal the flag of the enemy team and bring it back to your base. Steal the most flags to win."
+  "description": "Steal the flag of the enemy team and bring it back to your base. Steal the most flags to win.",
+  "task": "Capture 3 flags",
+  "captures": "Captures",
+  "flag_stolen": "%s stole the %s flag!",
+  "flag_captured": "%s captured the %s flag!",
+  "flag_dropped": "%s dropped the %s flag!",
+  "flag_returned": "%s returned the %s flag.",
+  "flag_returned_timeout": "The %s flag returned to its base."
 }

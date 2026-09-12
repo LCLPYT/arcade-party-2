@@ -1,0 +1,11 @@
+{
+  "name": "Capture the Flag",
+  "description": "Stiehl die Flagge des gegnerischen Teams und bringe sie zurück in deine Basis. Wer die meisten Flaggen stiehlt, gewinnt.",
+  "task": "Erobere 3 Flaggen",
+  "captures": "Eroberungen",
+  "flag_stolen": "%s hat die %s Flagge gestohlen!",
+  "flag_captured": "%s hat die %s Flagge erobert!",
+  "flag_dropped": "%s hat die %s Flagge fallen lassen!",
+  "flag_returned": "%s hat die %s Flagge zurückgebracht.",
+  "flag_returned_timeout": "Die %s Flagge ist in ihre Basis zurückgekehrt."
+}
