@@ -173,7 +173,9 @@ class CtfFlagManager(
 
         announce(state.info, "flag_captured", carrier.displayName)
         playSound(SoundEvents.PLAYER_LEVELUP, 0.6f, carrierTeam.players)
-        playSound(SoundEvents.BLAZE_HURT, 0.6f, teamManager.getTeam(home)?.players.orEmpty())
+
+        val opponentTeam = teamManager.teams.firstOrNull { it != carrierTeam }
+        playSound(SoundEvents.BLAZE_HURT, 0.6f, opponentTeam?.players.orEmpty())
 
         onCapture(carrierTeam, home)
     }
