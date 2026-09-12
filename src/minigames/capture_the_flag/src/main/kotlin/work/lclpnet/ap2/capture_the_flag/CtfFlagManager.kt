@@ -45,7 +45,7 @@ class CtfFlagManager(
         scene.onPickup().register(::onPickup)
 
         for (info in teamInfo) {
-            info.flag.init(gameHandle.hooks) { player -> steal(info, player) }
+            info.flag.init(gameHandle) { player -> steal(info, player) }
         }
     }
 

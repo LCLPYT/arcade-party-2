@@ -5,7 +5,7 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.Vec3
-import work.lclpnet.kibu.hook.HookRegistrar
+import work.lclpnet.ap2.game.MiniGameHandle
 
 /**
  * The flag of a team, resting at a fixed home position until it is stolen.
@@ -26,7 +26,7 @@ interface Flag {
      * Registers the hooks that detect a player taking this flag from its home position.
      * The callback is only invoked for attempts, it is up to the caller to accept or ignore them.
      */
-    fun init(hooks: HookRegistrar, onSteal: (ServerPlayer) -> Unit)
+    fun init(gameHandle: MiniGameHandle, onSteal: (ServerPlayer) -> Unit)
 }
 
 fun interface FlagFactory {
