@@ -17,6 +17,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.decoration.ItemFrame
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow
 import net.minecraft.world.level.GameType
+import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.gamerules.GameRule
 import net.minecraft.world.level.gamerules.GameRules
@@ -32,17 +33,12 @@ import work.lclpnet.ap2.capture_the_flag.flag.Flag
 import work.lclpnet.ap2.capture_the_flag.flag.ItemFrameFlag
 import work.lclpnet.ap2.core.hook.ProjectileShootCallback
 import work.lclpnet.ap2.core.hook.SpectatePlayerCallback
-import work.lclpnet.ap2.ext.allPlayers
-import work.lclpnet.ap2.ext.inWholeTicks
-import work.lclpnet.ap2.ext.interval
+import work.lclpnet.ap2.core.hook.TripWireTriggerCallback
+import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.setAttribute
+import work.lclpnet.ap2.ext.mc.setBlock
 import work.lclpnet.ap2.ext.mc.setBlocks
-import work.lclpnet.ap2.ext.players
-import work.lclpnet.ap2.ext.runEveryTick
-import work.lclpnet.ap2.ext.trackDistanceMoved
-import work.lclpnet.ap2.ext.translate
-import work.lclpnet.ap2.ext.translations
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.TeamGameInstance
 import work.lclpnet.ap2.game.data.IntScoreDataContainer
@@ -60,8 +56,8 @@ import work.lclpnet.ap2.util.useGameRules
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
+import work.lclpnet.kibu.hook.level.PressurePlateCallback
 import work.lclpnet.kibu.hook.util.PositionRotation
-import work.lclpnet.kibu.scheduler.Ticks
 import java.util.*
 import kotlin.math.abs
 import kotlin.time.Duration.Companion.minutes
@@ -75,6 +71,7 @@ private const val CROSSBOW_DAMAGE = 12.0
 private const val CROSSBOW_ARROW_VELOCITY = 3.15
 private const val COBWEB_DAMAGE = 1f
 private val WATER_POISON_DURATION = 8.seconds
+private const val TRAP_EXPLOSION_POWER = 2.5f
 
 private const val SCOREBOARD_KEY = "game.ap2.capture_the_flag.captures"
 
@@ -122,6 +119,7 @@ class CaptureTheFlagInstance(
     private val random = Random()
     private val kit = CtfKit(teamManager, level)
     private var started = false
+    private var mortar: CtfMortar? = null
 
     lateinit var teamInfo: List<CtfTeamInfo>
     private lateinit var flagManager: CtfFlagManager
@@ -140,6 +138,8 @@ class CaptureTheFlagInstance(
 
     override fun prepare() {
         teamInfo = setupTeams()
+
+        mortar = createMortar()
 
         flagManager = CtfFlagManager(gameHandle, level, teamManager, teamInfo, random, stats, translations, ::onCapture)
         flagManager.setup()
@@ -215,6 +215,8 @@ class CaptureTheFlagInstance(
         }
 
         setupWaterPoison()
+        setupMortar()
+        setupExplosiveTraps()
 
         translate("waypoint.enemy_flag")
             .withStyle(ChatFormatting.YELLOW)
@@ -233,6 +235,75 @@ class CaptureTheFlagInstance(
                 }
             }
         }
+    }
+
+    private fun createMortar(): CtfMortar? {
+        if (!map.properties.optBoolean("mortarFire", false)) return null
+
+        val bases = teamInfo.map { it.spawn.asVec3d() } + teamInfo.map { it.flag.homePosition }
+        val mortar = CtfMortar.create(level, schema, bases, random)
+
+        if (mortar == null) {
+            gameHandle.logger.warn("Mortar fire is enabled, but no play area could be scanned")
+        }
+
+        return mortar
+    }
+
+    private fun setupMortar() {
+        val mortar = mortar ?: return
+
+        repeat(CtfMortar.TUBES) { scheduleMortarShot(mortar) }
+    }
+
+    private fun scheduleMortarShot(mortar: CtfMortar) {
+        runAfter(mortar.nextDelay()) {
+            if (winManager.gameOver) return@runAfter
+
+            mortar.fire()
+            scheduleMortarShot(mortar)
+        }
+    }
+
+    private fun setupExplosiveTraps() {
+        val hooks = gameHandle.hooks
+
+        if (map.properties.optBoolean("pressurePlatesExplosive", false)) {
+            PressurePlateCallback.HOOK.registerWith(hooks) { _, pos, entity ->
+                detonateTrap(pos, entity)
+            }
+        }
+
+        if (map.properties.optBoolean("tripWireExplosive", false)) {
+            TripWireTriggerCallback.HOOK.registerWith(hooks) { _, pos, entity ->
+                detonateTrap(pos, entity)
+            }
+        }
+    }
+
+    /**
+     * @return Whether the trap was detonated
+     */
+    private fun detonateTrap(pos: BlockPos, entity: Entity): Boolean {
+        if (winManager.gameOver) return false
+
+        val player = entity as? ServerPlayer ?: return false
+
+        if (player.isSpectator || !gameHandle.participants.isParticipating(player)) return false
+
+        level.setBlock(pos, Blocks.AIR)
+
+        val origin = player.position()
+
+        // defer the explosion, as the trap is triggered in the middle of block collision handling
+        gameHandle.scheduler.immediate(Runnable {
+            level.explode(
+                null, null, null, origin.x, origin.y + 0.5, origin.z,
+                TRAP_EXPLOSION_POWER, true, Level.ExplosionInteraction.TNT
+            )
+        })
+
+        return true
     }
 
     private fun setupScoreboard() {
@@ -273,6 +344,10 @@ class CaptureTheFlagInstance(
             // players should be able to recover the arrows they shot
             ProtectionTypes.PICKUP_PROJECTILE.allow(config)
             ProtectionTypes.PICKUP_ITEM.allow(config)
+
+            if (usesExplosives()) {
+                ProtectionTypes.EXPLOSION.allow(config)
+            }
         }
     }
 
@@ -303,13 +378,25 @@ class CaptureTheFlagInstance(
         teamInfo.any { (it.flag as? ItemFrameFlag)?.isFlagFrame(itemFrame) == true }
 
     private fun isAllowedDamage(source: DamageSource) =
-        source.isOf(DamageTypes.ARROW) || source.isOf(DamageTypes.PLAYER_ATTACK)
-                || source.isOf(DamageTypes.SWEET_BERRY_BUSH) || source.isOf(DamageTypes.MAGIC)
+        source.isOf(DamageTypes.ARROW)
+                || source.isOf(DamageTypes.PLAYER_ATTACK)
+                || source.isOf(DamageTypes.SWEET_BERRY_BUSH)
+                || source.isOf(DamageTypes.MAGIC)
+                || source.isOf(DamageTypes.EXPLOSION)
+                || source.isOf(DamageTypes.PLAYER_EXPLOSION)
+                || source.isOf(DamageTypes.IN_FIRE)
+                || source.isOf(DamageTypes.ON_FIRE)
+
+    private fun usesExplosives() = mortar != null
+            || map.properties.optBoolean("pressurePlatesExplosive", false)
+            || map.properties.optBoolean("tripWireExplosive", false)
 
     /**
      * Makes cobwebs act like barbed wire.
      */
     private fun tickBarbedWire() {
+        if (!map.properties.optBoolean("barbedWire", false)) return
+
         for (player in gameHandle.participants) {
             if (player.isSpectator || !isInCobweb(player)) continue
 
