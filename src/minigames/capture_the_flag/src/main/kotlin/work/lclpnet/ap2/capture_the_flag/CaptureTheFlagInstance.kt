@@ -51,9 +51,10 @@ import work.lclpnet.kibu.hook.util.PositionRotation
 import work.lclpnet.kibu.scheduler.Ticks
 import java.util.*
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 private const val CAPTURES_TO_WIN = 3
-private val ROUND_DURATION = 8.minutes
+private val ROUND_DURATION = 3.minutes + 20.seconds
 private val RESPAWN_DELAY = Ticks.seconds(10)
 
 private const val SCOREBOARD_KEY = "game.ap2.capture_the_flag.captures"

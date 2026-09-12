@@ -18,6 +18,7 @@ import work.lclpnet.ap2.game.item.SpecialItemObject
 import work.lclpnet.ap2.game.item.SpecialItemScene
 import work.lclpnet.ap2.game.team.Team
 import work.lclpnet.ap2.game.team.TeamManager
+import work.lclpnet.ap2.game.util.DynamicWaypoint
 import java.util.Random
 
 private const val CAPTURE_RADIUS = 2.5
@@ -29,7 +30,7 @@ private const val DROP_SCALE = 2.0
 
 class CtfFlagManager(
     private val gameHandle: MiniGameHandle,
-    level: ServerLevel,
+    private val level: ServerLevel,
     private val teamManager: TeamManager,
     private val teamInfo: List<CtfTeamInfo>,
     random: Random,
@@ -39,6 +40,7 @@ class CtfFlagManager(
 
     private val scene = SpecialItemScene(random, level)
     private val states = teamInfo.associateWith { FlagState(it) }
+    private val waypoints = states.values.associateWith(::createWaypoint)
 
     fun setup() {
         scene.init(gameHandle.rootScheduler, gameHandle.hooks)
@@ -47,6 +49,8 @@ class CtfFlagManager(
         for (info in teamInfo) {
             info.flag.init(gameHandle) { player -> steal(info, player) }
         }
+
+        waypoints.values.forEach(DynamicWaypoint::track)
     }
 
     fun tick() {
@@ -54,8 +58,9 @@ class CtfFlagManager(
             scene.tickPickUp(player)
         }
 
-        for (state in states.values) {
+        for ((state, waypoint) in waypoints) {
             tickState(state)
+            waypoint.update()
         }
     }
 
@@ -74,6 +79,8 @@ class CtfFlagManager(
 
     /** Returns every flag to its home position, used when the game ends. */
     fun reset() {
+        waypoints.values.forEach(DynamicWaypoint::untrack)
+
         for (state in states.values) {
             clearCarrier(state)
             removeDrop(state)
@@ -244,6 +251,24 @@ class CtfFlagManager(
         for (player in PlayerLookup.all(gameHandle.server)) {
             player.playNotifySound(sound, SoundSource.PLAYERS, volume, 1f)
         }
+    }
+
+    /**
+     * The flag is always revealed to the opposing team.
+     * The owning team only sees it while it is away from its home position.
+     */
+    private fun createWaypoint(state: FlagState) = DynamicWaypoint(
+        level,
+        color = state.info.key.color,
+        visibleTo = { player -> !state.atHome || teamManager.getTeam(player) !== teamManager.getTeam(state.info) }
+    ) { flagPosition(state) }
+
+    private fun flagPosition(state: FlagState): Vec3 {
+        state.carrier?.let { return it.position() }
+
+        state.dropped?.let { return Vec3(it.position.x, it.position.y, it.position.z) }
+
+        return state.info.flag.homePosition
     }
 
     private class FlagState(val info: CtfTeamInfo) {
