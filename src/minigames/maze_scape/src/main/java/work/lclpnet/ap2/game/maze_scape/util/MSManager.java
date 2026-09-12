@@ -98,7 +98,7 @@ public class MSManager {
         BrainCreationCallback.Warden.HOOK.registerWith(hooks, this::createWardenBrain);
         BrainCreationCallback.Creaking.HOOK.registerWith(hooks, this::createCreakingBrain);
         EntityPathFindingCallback.HOOK.registerWith(hooks, this::modifyPathFinding);
-        CobwebEntityInsideCallback.HOOK.registerWith(hooks, this::cancelCobwebSlow);
+        CobwebSlowCallback.HOOK.registerWith(hooks, this::cancelCobwebSlow);
         EntityAfterMoveCallback.HOOK.registerWith(hooks, this::afterMoveTick);
         CreakingLookedAtCheckCallback.HOOK.registerWith(hooks, this::isCreakingBeingLookedAt);
     }

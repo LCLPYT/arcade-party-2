@@ -49,7 +49,7 @@ class CtfKit(private val teamManager: TeamManager, level: ServerLevel) {
 
         inventory.clearContent()
 
-        inventory.setItem(0, ItemStack(Items.STONE_SWORD).unbreakable())
+        inventory.setItem(0, ItemStack(Items.IRON_SWORD).unbreakable())
         inventory.setItem(1, ItemStack(Items.CROSSBOW).unbreakable()
             .enchant(Enchantments.QUICK_CHARGE, QUICK_CHARGE_LEVEL, registryAccess))
         inventory.setItem(8, ItemStack(Items.ARROW, ARROW_COUNT))

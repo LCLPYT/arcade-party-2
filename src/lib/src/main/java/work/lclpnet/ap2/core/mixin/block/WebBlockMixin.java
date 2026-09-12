@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import work.lclpnet.ap2.core.hook.CobwebEntityInsideCallback;
+import work.lclpnet.ap2.core.hook.CobwebSlowCallback;
 
 @Mixin(WebBlock.class)
 public class WebBlockMixin {
@@ -21,7 +21,7 @@ public class WebBlockMixin {
             cancellable = true
     )
     public void ap2$onCobwebCollision(BlockState state, Level level, BlockPos pos, Entity entity, InsideBlockEffectApplier effectApplier, boolean isPrecise, CallbackInfo ci) {
-        if (CobwebEntityInsideCallback.HOOK.invoker().onEntityInside(entity, pos)) {
+        if (CobwebSlowCallback.HOOK.invoker().cancelSlow(entity, pos)) {
             ci.cancel();
         }
     }

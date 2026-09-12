@@ -9,6 +9,8 @@ import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.damagesource.DamageTypes
+import net.minecraft.world.effect.MobEffectInstance
+import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.ai.attributes.Attributes
@@ -16,6 +18,8 @@ import net.minecraft.world.entity.decoration.ItemFrame
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow
 import net.minecraft.world.level.GameType
 import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.gamerules.GameRule
+import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.scores.Team.CollisionRule
 import net.minecraft.world.scores.Team.Visibility
 import work.lclpnet.ap2.api.stats.CommonStats.DamageDealt
@@ -26,10 +30,11 @@ import work.lclpnet.ap2.api.stats.CommonStats.KillDeathRatio
 import work.lclpnet.ap2.api.stats.CommonStats.Kills
 import work.lclpnet.ap2.capture_the_flag.flag.Flag
 import work.lclpnet.ap2.capture_the_flag.flag.ItemFrameFlag
-import work.lclpnet.ap2.core.hook.CobwebEntityInsideCallback
 import work.lclpnet.ap2.core.hook.ProjectileShootCallback
 import work.lclpnet.ap2.core.hook.SpectatePlayerCallback
 import work.lclpnet.ap2.ext.allPlayers
+import work.lclpnet.ap2.ext.inWholeTicks
+import work.lclpnet.ap2.ext.interval
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.setAttribute
 import work.lclpnet.ap2.ext.mc.setBlocks
@@ -51,6 +56,7 @@ import work.lclpnet.ap2.game.util.useTeamStats
 import work.lclpnet.ap2.impl.util.handler.VisualCooldown
 import work.lclpnet.ap2.util.scoreboard.TranslatedScoreboardObjective
 import work.lclpnet.ap2.util.scoreboard.setupTranslatedSidebarObjective
+import work.lclpnet.ap2.util.useGameRules
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
@@ -62,12 +68,13 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 private const val CAPTURES_TO_WIN = 3
-internal val ROUND_DURATION = 3.minutes + 20.seconds
-private val RESPAWN_DELAY = Ticks.seconds(10)
+internal val ROUND_DURATION = 3.minutes
+private val RESPAWN_DELAY = 13.seconds
 
 private const val CROSSBOW_DAMAGE = 12.0
 private const val CROSSBOW_ARROW_VELOCITY = 3.15
 private const val COBWEB_DAMAGE = 1f
+private val WATER_POISON_DURATION = 8.seconds
 
 private const val SCOREBOARD_KEY = "game.ap2.capture_the_flag.captures"
 
@@ -125,6 +132,10 @@ class CaptureTheFlagInstance(
         useSurvivalMode()
 
         teamManager.setUseColorCodes(true)
+
+        useGameRules {
+            set(GameRules.NATURAL_HEALTH_REGENERATION, false)
+        }
     }
 
     override fun prepare() {
@@ -200,13 +211,28 @@ class CaptureTheFlagInstance(
 
         runEveryTick {
             flagManager.tick()
+            tickBarbedWire()
         }
+
+        setupWaterPoison()
 
         translate("waypoint.enemy_flag")
             .withStyle(ChatFormatting.YELLOW)
             .sendTo(players())
 
         useTaskTimer(ROUND_DURATION).whenDone(::endGame)
+    }
+
+    private fun setupWaterPoison() {
+        if (!map.properties.optBoolean("waterPoison", false)) return
+
+        interval(1) {
+            for (player in players()) {
+                if (player.isInWater) {
+                    player.addEffect(MobEffectInstance(MobEffects.POISON, WATER_POISON_DURATION.inWholeTicks.toInt()))
+                }
+            }
+        }
     }
 
     private fun setupScoreboard() {
@@ -270,11 +296,6 @@ class CaptureTheFlagInstance(
             }
         }
 
-        CobwebEntityInsideCallback.HOOK.registerWith(hooks) { entity, _ ->
-            hurtInCobweb(entity)
-            false
-        }
-
         trackDistanceMoved(stats.players)
     }
 
@@ -283,21 +304,26 @@ class CaptureTheFlagInstance(
 
     private fun isAllowedDamage(source: DamageSource) =
         source.isOf(DamageTypes.ARROW) || source.isOf(DamageTypes.PLAYER_ATTACK)
-                || source.isOf(DamageTypes.CACTUS)
+                || source.isOf(DamageTypes.SWEET_BERRY_BUSH) || source.isOf(DamageTypes.MAGIC)
 
     /**
      * Makes cobwebs act like barbed wire.
      */
-    private fun hurtInCobweb(entity: Entity) {
-        if (entity !is ServerPlayer || !gameHandle.participants.isParticipating(entity)) return
+    private fun tickBarbedWire() {
+        for (player in gameHandle.participants) {
+            if (player.isSpectator || !isInCobweb(player)) continue
 
-        val movement = if (entity.isClientAuthoritative) entity.knownMovement
-            else entity.oldPosition().subtract(entity.position())
+            val movement = if (player.isClientAuthoritative) player.knownMovement
+                else player.oldPosition().subtract(player.position())
 
-        if (abs(movement.x) < 0.003 && abs(movement.z) < 0.003) return
+            if (abs(movement.x) < 0.003 && abs(movement.z) < 0.003) continue
 
-        entity.hurtServer(level, level.damageSources().cactus(), COBWEB_DAMAGE)
+            player.hurtServer(level, level.damageSources().sweetBerryBush(), COBWEB_DAMAGE)
+        }
     }
+
+    private fun isInCobweb(player: ServerPlayer) =
+        level.getBlockStates(player.boundingBox).anyMatch { it.isOf(Blocks.COBWEB) }
 
     private fun onDamage(entity: LivingEntity, source: DamageSource, amount: Float): Boolean {
         if (winManager.gameOver) return false
@@ -356,7 +382,7 @@ class CaptureTheFlagInstance(
         player.setGameMode(GameType.SPECTATOR)
         player.health = player.maxHealth
 
-        respawnCooldown.setCooldown(player, RESPAWN_DELAY)
+        respawnCooldown.setCooldown(player, RESPAWN_DELAY.inWholeTicks.toInt())
     }
 
     private fun respawnPlayer(player: ServerPlayer) {
