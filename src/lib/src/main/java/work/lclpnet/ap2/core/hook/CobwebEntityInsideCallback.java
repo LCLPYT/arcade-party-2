@@ -5,14 +5,14 @@ import net.minecraft.world.entity.Entity;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
 
-public interface CobwebSlowCallback {
+public interface CobwebEntityInsideCallback {
 
-    Hook<CobwebSlowCallback> HOOK = HookFactory.createArrayBacked(CobwebSlowCallback.class, callbacks ->
+    Hook<CobwebEntityInsideCallback> HOOK = HookFactory.createArrayBacked(CobwebEntityInsideCallback.class, callbacks ->
             (entity, pos) -> {
                 boolean cancel = false;
 
                 for (var cb : callbacks) {
-                    if (cb.cancelSlow(entity, pos)) {
+                    if (cb.onEntityInside(entity, pos)) {
                         cancel = true;
                     }
                 }
@@ -20,5 +20,10 @@ public interface CobwebSlowCallback {
                 return cancel;
             });
 
-    boolean cancelSlow(Entity entity, BlockPos pos);
+    /**
+     * Called every tick an entity is inside a cobweb block.
+     *
+     * @return true to cancel the cobweb effects for that entity
+     */
+    boolean onEntityInside(Entity entity, BlockPos pos);
 }

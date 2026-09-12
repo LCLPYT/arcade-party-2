@@ -23,7 +23,7 @@ import work.lclpnet.ap2.game.team.TeamManager
 import work.lclpnet.ap2.impl.util.ItemHelper
 
 private const val ARROW_COUNT = 32
-private const val QUICK_CHARGE_LEVEL = 2
+private const val QUICK_CHARGE_LEVEL = 3
 
 private val TRIM_MATERIALS = mapOf(
     DyeTeamKey.RED to TrimMaterials.REDSTONE,
@@ -49,10 +49,10 @@ class CtfKit(private val teamManager: TeamManager, level: ServerLevel) {
 
         inventory.clearContent()
 
-        inventory.setItem(0, ItemStack(Items.CROSSBOW).unbreakable()
+        inventory.setItem(0, ItemStack(Items.STONE_SWORD).unbreakable())
+        inventory.setItem(1, ItemStack(Items.CROSSBOW).unbreakable()
             .enchant(Enchantments.QUICK_CHARGE, QUICK_CHARGE_LEVEL, registryAccess))
-        inventory.setItem(1, ItemStack(Items.STONE_SWORD).unbreakable())
-        inventory.setItem(2, ItemStack(Items.ARROW, ARROW_COUNT))
+        inventory.setItem(8, ItemStack(Items.ARROW, ARROW_COUNT))
 
         val trim = armorTrim(teamManager.getTeam(player)?.key)
 

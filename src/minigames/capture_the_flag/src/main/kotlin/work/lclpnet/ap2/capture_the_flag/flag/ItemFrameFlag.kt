@@ -12,6 +12,7 @@ import org.slf4j.Logger
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.gaco.core.api.EntityRef
 import work.lclpnet.kibu.hook.entity.ItemFrameRemoveItemCallback
+import work.lclpnet.kibu.hook.entity.ItemFrameRotateCallback
 
 /**
  * A flag represented by the item inside an item frame, e.g. a map.
@@ -48,6 +49,14 @@ class ItemFrameFlag(private val level: ServerLevel, private val pos: BlockPos) :
             onSteal(attacker)
 
             // never let the frame drop its item, the flag state decides what happens
+            true
+        }
+
+        ItemFrameRotateCallback.HOOK.registerWith(gameHandle.hooks) { frame, player, _ ->
+            if (!isFlagFrame(frame) || player !is ServerPlayer) return@registerWith false
+
+            onSteal(player)
+
             true
         }
     }
