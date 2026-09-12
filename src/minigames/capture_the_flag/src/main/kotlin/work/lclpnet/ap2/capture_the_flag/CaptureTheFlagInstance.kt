@@ -368,6 +368,7 @@ class CaptureTheFlagInstance(
 
         if (killer != null && killer !== player && !teamManager.areTeamMates(killer, player)) {
             stats.onKill(player, killer)
+            killer.heal(killer.maxHealth * 0.5f)
         } else {
             stats.onDeath(player)
         }

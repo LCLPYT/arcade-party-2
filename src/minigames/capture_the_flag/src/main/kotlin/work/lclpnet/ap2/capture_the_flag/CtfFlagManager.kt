@@ -158,6 +158,9 @@ class CtfFlagManager(
         translations.translateText("waypoint.bring_target")
             .withColor(TextColor.YELLOW)
             .sendTo(player)
+
+        // heal carrier completely to empower them to actually bring the flag to their base
+        player.health = player.maxHealth
     }
 
     private fun capture(state: FlagState, carrier: ServerPlayer, carrierTeam: Team, home: CtfTeamInfo) {
