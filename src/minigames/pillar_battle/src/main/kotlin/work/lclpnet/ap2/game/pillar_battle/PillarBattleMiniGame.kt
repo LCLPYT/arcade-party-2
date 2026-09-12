@@ -8,6 +8,7 @@ import work.lclpnet.ap2.api.base.GameStartContext
 import work.lclpnet.ap2.game.GameType
 import work.lclpnet.ap2.game.MiniGame
 import work.lclpnet.ap2.game.MiniGameFactory
+import work.lclpnet.kibu.translate.Translations
 import work.lclpnet.kibu.translate.text.LocalizedFormat
 
 class PillarBattleMiniGame : MiniGame {
@@ -17,6 +18,7 @@ class PillarBattleMiniGame : MiniGame {
     override fun getIcon(manager: RegistryAccess): ItemStack = ItemStack(Items.PURPUR_PILLAR)
     override fun canBeFinale(context: GameStartContext): Boolean = true
     override fun canBePlayed(context: GameStartContext): Boolean = true
-    override val descriptionArguments: Array<Any> = arrayOf(LocalizedFormat.format("%.1f", RANDOM_ITEM_DELAY_TICKS / 20f))
+    override fun descriptionArguments(translations: Translations): Array<Any> =
+        arrayOf(LocalizedFormat.format("%.1f", RANDOM_ITEM_DELAY_TICKS / 20f))
     override fun createFactory(): MiniGameFactory = PillarBattleFactory()
 }

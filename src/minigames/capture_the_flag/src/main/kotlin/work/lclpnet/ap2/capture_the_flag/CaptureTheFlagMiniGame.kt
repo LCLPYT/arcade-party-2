@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.capture_the_flag
 
 import net.minecraft.core.RegistryAccess
+import net.minecraft.network.chat.TextColor
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import work.lclpnet.ap2.ApConstants
@@ -9,6 +10,8 @@ import work.lclpnet.ap2.game.GameType
 import work.lclpnet.ap2.game.MiniGame
 import work.lclpnet.ap2.game.MiniGameFactory
 import work.lclpnet.ap2.game.util.MapLevelTeamSchemaGameFactory
+import work.lclpnet.ap2.impl.util.TimeHelper
+import work.lclpnet.kibu.translate.Translations
 
 class CaptureTheFlagMiniGame : MiniGame {
     override val id = ApConstants.identifier("capture_the_flag")
@@ -18,4 +21,6 @@ class CaptureTheFlagMiniGame : MiniGame {
     override fun canBeFinale(context: GameStartContext): Boolean = false
     override fun canBePlayed(context: GameStartContext): Boolean = true
     override fun createFactory(): MiniGameFactory = MapLevelTeamSchemaGameFactory(CtfSchema::class.java, ::CaptureTheFlagInstance)
+    override fun descriptionArguments(translations: Translations): Array<Any> =
+        arrayOf(TimeHelper.formatTime(translations, ROUND_DURATION.inWholeSeconds.toInt()).withColor(TextColor.YELLOW))
 }

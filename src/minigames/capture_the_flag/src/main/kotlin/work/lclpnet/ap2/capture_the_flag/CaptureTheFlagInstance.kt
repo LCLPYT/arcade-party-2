@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.capture_the_flag
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup
+import net.minecraft.ChatFormatting
 import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
@@ -31,6 +32,8 @@ import work.lclpnet.ap2.ext.mc.setBlocks
 import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.ext.trackDistanceMoved
+import work.lclpnet.ap2.ext.translate
+import work.lclpnet.ap2.ext.translations
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.TeamGameInstance
 import work.lclpnet.ap2.game.data.IntScoreDataContainer
@@ -54,7 +57,7 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 private const val CAPTURES_TO_WIN = 3
-private val ROUND_DURATION = 3.minutes + 20.seconds
+internal val ROUND_DURATION = 3.minutes + 20.seconds
 private val RESPAWN_DELAY = Ticks.seconds(10)
 
 private const val SCOREBOARD_KEY = "game.ap2.capture_the_flag.captures"
@@ -117,7 +120,7 @@ class CaptureTheFlagInstance(
     override fun prepare() {
         teamInfo = setupTeams()
 
-        flagManager = CtfFlagManager(gameHandle, level, teamManager, teamInfo, random, stats, ::onCapture)
+        flagManager = CtfFlagManager(gameHandle, level, teamManager, teamInfo, random, stats, translations, ::onCapture)
         flagManager.setup()
 
         teleportTeamsToSpawns()
@@ -184,6 +187,10 @@ class CaptureTheFlagInstance(
         runEveryTick {
             flagManager.tick()
         }
+
+        translate("waypoint.enemy_flag")
+            .withStyle(ChatFormatting.YELLOW)
+            .sendTo(players())
 
         useTaskTimer(ROUND_DURATION).whenDone(::endGame)
     }

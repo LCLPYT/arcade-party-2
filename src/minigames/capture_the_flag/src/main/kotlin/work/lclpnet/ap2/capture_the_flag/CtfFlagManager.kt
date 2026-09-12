@@ -1,6 +1,9 @@
 package work.lclpnet.ap2.capture_the_flag
 
+import io.ktor.http.content.TextContent
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup
+import net.minecraft.network.chat.TextColor
+import net.minecraft.network.protocol.game.ServerPacketListener
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvent
@@ -19,7 +22,8 @@ import work.lclpnet.ap2.game.item.SpecialItemScene
 import work.lclpnet.ap2.game.team.Team
 import work.lclpnet.ap2.game.team.TeamManager
 import work.lclpnet.ap2.game.util.DynamicWaypoint
-import java.util.Random
+import work.lclpnet.kibu.translate.Translations
+import java.util.*
 
 private const val CAPTURE_RADIUS = 2.5
 private const val DROP_TIMEOUT_TICKS = 15 * 20
@@ -35,6 +39,7 @@ class CtfFlagManager(
     private val teamInfo: List<CtfTeamInfo>,
     random: Random,
     private val stats: CtfStats,
+    private val translations: Translations,
     private val onCapture: (Team, CtfTeamInfo) -> Unit,
 ) {
 
@@ -74,7 +79,7 @@ class CtfFlagManager(
         state.dropped = spawnDrop(state, pos)
         state.droppedTicks = 0
 
-        announce(state.info, "flag_dropped", player.name)
+        announce(state.info, "flag_dropped", player.displayName)
     }
 
     /** Returns every flag to its home position, used when the game ends. */
@@ -120,7 +125,7 @@ class CtfFlagManager(
         }
 
         val carrierTeam = teamManager.getTeam(carrier) ?: return
-        val home = teamInfo.find { teamManager.getTeam(it) === carrierTeam } ?: return
+        val home = homeOf(carrier) ?: return
 
         if (carrier.position().distanceToSqr(home.flag.homePosition) > CAPTURE_RADIUS * CAPTURE_RADIUS) return
 
@@ -142,8 +147,17 @@ class CtfFlagManager(
         setCarrier(state, player)
         stats.flagStolen(player)
 
-        announce(info, "flag_stolen", player.name)
-        playSound(SoundEvents.RAID_HORN.value(), 0.7f)
+        announce(info, "flag_stolen", player.displayName)
+        playSound(SoundEvents.GOAT_HORN_SOUND_VARIANTS[2].value(), 0.7f)
+        player.playNotifySound(SoundEvents.ZOMBIE_VILLAGER_CONVERTED, SoundSource.PLAYERS, 0.5f, 1f)
+
+        translations.translateText("waypoint.own_flag")
+            .withColor(TextColor.YELLOW)
+            .sendTo(teamManager.getTeam(info)?.players.orEmpty())
+
+        translations.translateText("waypoint.bring_target")
+            .withColor(TextColor.YELLOW)
+            .sendTo(player)
     }
 
     private fun capture(state: FlagState, carrier: ServerPlayer, carrierTeam: Team, home: CtfTeamInfo) {
@@ -154,8 +168,9 @@ class CtfFlagManager(
 
         stats.flagCaptured(carrier)
 
-        announce(state.info, "flag_captured", carrier.name)
-        playSound(SoundEvents.PLAYER_LEVELUP, 0.6f)
+        announce(state.info, "flag_captured", carrier.displayName)
+        playSound(SoundEvents.PLAYER_LEVELUP, 0.6f, carrierTeam.players)
+        playSound(SoundEvents.BLAZE_HURT, 0.6f, teamManager.getTeam(home)?.players.orEmpty())
 
         onCapture(carrierTeam, home)
     }
@@ -173,7 +188,7 @@ class CtfFlagManager(
             returnHome(state, player)
         } else {
             setCarrier(state, player)
-            announce(state.info, "flag_stolen", player.name)
+            announce(state.info, "flag_stolen", player.displayName)
         }
 
         return true
@@ -188,7 +203,7 @@ class CtfFlagManager(
         if (player != null) {
             stats.flagRescued(player)
 
-            announce(state.info, "flag_returned", player.name)
+            announce(state.info, "flag_returned", player.displayName)
         } else {
             announce(state.info, "flag_returned_timeout")
         }
@@ -214,15 +229,24 @@ class CtfFlagManager(
     }
 
     private fun spawnDrop(state: FlagState, pos: Vec3): SpecialItemObject {
-        val name = state.info.key.getDisplayName(gameHandle.translations)
+        val name = translations.translateText(
+            "flag_of",
+            state.info.key.getDisplayName(gameHandle.translations)
+        ).withColor(state.info.key.color)
+
         val size = DROP_SCALE * SpecialItemObject.DEFAULT_SIZE
 
         val obj = scene.spawnItem(
-            pos, CtfFlagItem(state.info.flag), state.info.flag.carryStack.copy(),
-            gameHandle.translations, name, size
+            pos,
+            CtfFlagItem(state.info.flag),
+            state.info.flag.carryStack.copy(),
+            gameHandle.translations,
+            name,
+            size
         )
 
         obj.setPickupDelay(DROP_PICKUP_DELAY_TICKS)
+        obj.setGlowColorOverride(state.info.key.color)
         obj.setGlowing(true)
 
         scene.velocity(obj).set(0.0, 4.0, 0.0)
@@ -244,11 +268,16 @@ class CtfFlagManager(
         val flagName = info.key.getDisplayName(gameHandle.translations)
 
         gameHandle.translations.translateText(key, *args, flagName)
+            .withColor(TextColor.GRAY)
             .sendTo(PlayerLookup.all(gameHandle.server))
     }
 
-    private fun playSound(sound: SoundEvent, volume: Float) {
-        for (player in PlayerLookup.all(gameHandle.server)) {
+    private fun playSound(
+        sound: SoundEvent,
+        volume: Float,
+        players: Collection<ServerPlayer> = PlayerLookup.all(gameHandle.server),
+    ) {
+        for (player in players) {
             player.playNotifySound(sound, SoundSource.PLAYERS, volume, 1f)
         }
     }
@@ -261,14 +290,27 @@ class CtfFlagManager(
         level,
         color = state.info.key.color,
         visibleTo = { player -> !state.atHome || teamManager.getTeam(player) !== teamManager.getTeam(state.info) }
-    ) { flagPosition(state) }
+    ) { receiver -> flagPosition(state, receiver) }
 
-    private fun flagPosition(state: FlagState): Vec3 {
-        state.carrier?.let { return it.position() }
+    /** The carrier is pointed at the position the flag has to be brought to, everyone else at the flag itself. */
+    private fun flagPosition(state: FlagState, receiver: ServerPlayer): Vec3 {
+        state.carrier?.let { carrier ->
+            if (carrier === receiver) {
+                return homeOf(carrier)?.flag?.homePosition ?: carrier.position()
+            }
+
+            return carrier.position()
+        }
 
         state.dropped?.let { return Vec3(it.position.x, it.position.y, it.position.z) }
 
         return state.info.flag.homePosition
+    }
+
+    private fun homeOf(player: ServerPlayer): CtfTeamInfo? {
+        val team = teamManager.getTeam(player) ?: return null
+
+        return teamInfo.find { teamManager.getTeam(it) === team }
     }
 
     private class FlagState(val info: CtfTeamInfo) {

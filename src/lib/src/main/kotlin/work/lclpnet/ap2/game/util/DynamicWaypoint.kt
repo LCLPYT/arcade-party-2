@@ -16,8 +16,8 @@ import java.util.UUID
 /**
  * A locator bar waypoint that is not backed by an entity.
  *
- * The waypoint position is queried from [position] and may change at any time.
- * When position is `null` the waypoint is hidden.
+ * The waypoint position is queried from [position] for each receiving player and may change at any time.
+ * When position is `null` the waypoint is hidden from that player.
  * Unlike entity waypoints, the position is transmitted exactly, regardless of the distance to the receiver.
  * The [visibleTo] param decides which players receive the waypoint.
  *
@@ -28,7 +28,7 @@ class DynamicWaypoint(
     color: Int? = null,
     style: ResourceKey<WaypointStyleAsset> = WaypointStyleAssets.DEFAULT,
     private val visibleTo: (ServerPlayer) -> Boolean = { true },
-    private val position: () -> Vec3?,
+    private val position: (ServerPlayer) -> Vec3?,
 ) : WaypointTransmitter {
 
     private val id: UUID = UUID.randomUUID()
@@ -65,12 +65,12 @@ class DynamicWaypoint(
     override fun makeWaypointConnectionWith(player: ServerPlayer): Optional<WaypointTransmitter.Connection> {
         if (!visibleTo(player)) return Optional.empty()
 
-        val pos = blockPosition() ?: return Optional.empty()
+        val pos = blockPosition(player) ?: return Optional.empty()
 
         return Optional.of(Connection(player, pos))
     }
 
-    private fun blockPosition() = position()?.let(BlockPos::containing)
+    private fun blockPosition(receiver: ServerPlayer) = position(receiver)?.let(BlockPos::containing)
 
     private inner class Connection(
         private val receiver: ServerPlayer,
@@ -86,7 +86,7 @@ class DynamicWaypoint(
         }
 
         override fun update() {
-            val pos = blockPosition() ?: return
+            val pos = blockPosition(receiver) ?: return
 
             if (pos == lastPos) return
 
@@ -95,6 +95,6 @@ class DynamicWaypoint(
             receiver.connection.send(ClientboundTrackedWaypointPacket.updateWaypointPosition(id, icon, pos))
         }
 
-        override fun isBroken() = !visibleTo(receiver) || blockPosition() == null
+        override fun isBroken() = !visibleTo(receiver) || blockPosition(receiver) == null
     }
 }

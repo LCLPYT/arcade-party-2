@@ -633,7 +633,7 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
             player.sendSystemMessage(gameTitle)
 
             val descriptionKey = miniGame!!.descriptionKey
-            val descArgs = miniGame!!.descriptionArguments
+            val descArgs = miniGame!!.descriptionArguments(translations)
 
             val description = translations.translateText(player, descriptionKey, *descArgs)
                 .withStyle(ChatFormatting.GREEN)
