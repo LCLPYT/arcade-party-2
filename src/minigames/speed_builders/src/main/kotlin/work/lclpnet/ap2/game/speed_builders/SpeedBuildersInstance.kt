@@ -41,7 +41,6 @@ import java.util.*
 import kotlin.time.Duration.Companion.seconds
 
 private val LOOK_DURATION = 8.seconds
-const val FAST_MODE_MIN_PLAYERS = 6
 private val JUDGE_DURATION = 5.seconds
 private val JUDGE_ANNOUNCEMENT_DELAY = 3.seconds
 private val DESTROY_DELAY_TICKS = Ticks.seconds(4)
@@ -72,7 +71,7 @@ class SpeedBuildersInstance(
     override fun prepare() {
         val aelosId = setup.getAelosId()
 
-        val fastMode = gameHandle.participants.count() >= FAST_MODE_MIN_PLAYERS
+        val fastMode = true
         val random = Random()
 
         manager = SbManager(
