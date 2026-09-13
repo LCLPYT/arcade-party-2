@@ -25,6 +25,7 @@ import kotlin.collections.shuffle
 import kotlin.time.Duration.Companion.seconds
 
 private val NEXT_TASK_DELAY = 4.seconds
+private val TASK_PREPARE_DELAY = 5.seconds
 private const val TARGET_ROUNDS = 5
 
 class TaskManager(
@@ -152,7 +153,12 @@ class TaskManager(
 
         announcer.announceInChat(msg)
 
-        task.begin(env)
+        gameHandle.createTimer(
+            subject = gameHandle.translations.translateText("next_task"),
+            duration = TASK_PREPARE_DELAY,
+        ).whenDone {
+            task.begin(env)
+        }
     }
 
     /**

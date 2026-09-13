@@ -1,6 +1,7 @@
 {
   "name": "Task Rush",
   "description": "Compete in random short challenges. The player who does best overall wins!",
+  "next_task": "Next task",
   "task_results": "Task Results",
   "task.highest_pos": "Reach the highest position in the world you can.",
   "task.highest_pos.task": "Reach a high position",

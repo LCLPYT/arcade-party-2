@@ -1,6 +1,7 @@
 {
   "name": "Aufgabenflut",
   "description": "Trete in kurzen Aufgaben gegen andere Spieler an. Wer die Aufgaben insgesamt am besten erledigt, gewinnt!",
+  "next_task": "Nächste Aufgabe",
   "task_results": "Aufgabenergebnisse",
   "task.highest_pos": "Erreiche eine möglichst hohe Position in der Welt.",
   "task.highest_pos.task": "Hohe Position erreichen",
