@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.task_rush.task
 
-import it.unimi.dsi.fastutil.objects.ObjectIntPair
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup
 import net.minecraft.ChatFormatting
 import net.minecraft.server.level.ServerLevel
@@ -53,7 +52,6 @@ class TaskManager(
         EntityDamageTask,
         BreakBlocksTask,
         FlowerTypesTask,
-        DarkestPlaceTask,
         StandInAreaTask,
         TreasureHuntTask,
         FirstOreTask,
