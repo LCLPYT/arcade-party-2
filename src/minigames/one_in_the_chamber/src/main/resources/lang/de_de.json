@@ -2,6 +2,7 @@
   "name": "Einen im Lauf",
   "description": "Deine Armbrust tötet sofort, aber du hast nur einen Schuss! Du erhältst einen neuen Schuss, wenn du jemanden tötest. Es gewinnt der Spieler, der zuerst %s Kills erreicht!",
   "task": "Erreiche %s Kills",
+  "weapon": "Ausgewählte Waffe: %s",
   "stat.deaths": "Tode",
   "stat.arrows_shot": "Pfeile verschossen",
   "stat.arrows_hit": "Pfeile getroffen",
