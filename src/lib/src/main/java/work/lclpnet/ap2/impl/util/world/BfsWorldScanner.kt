@@ -12,7 +12,7 @@ class BfsWorldScanner(private val adjacentBlocks: AdjacentBlocks) : WorldScanner
 
         return object : Iterator<BlockPos> {
 
-            override fun hasNext(): Boolean = !queue.isEmpty()
+            override fun hasNext(): Boolean = queue.isNotEmpty()
 
             override fun next(): BlockPos {
                 val current = queue.removeFirst()
