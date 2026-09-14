@@ -2,12 +2,13 @@ package work.lclpnet.ap2.game.item
 
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.ItemStack
+import work.lclpnet.ap2.api.SchedulerHolder
 import work.lclpnet.kibu.scheduler.api.TaskScheduler
 import work.lclpnet.kibu.translate.Translations
 
-interface SpecialItemContext {
+interface SpecialItemContext : SchedulerHolder {
 
-    val scheduler: TaskScheduler
+    override val scheduler: TaskScheduler
 
     val translations: Translations
 

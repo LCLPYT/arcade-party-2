@@ -4,6 +4,7 @@ import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerLevel
 import org.slf4j.Logger
 import work.lclpnet.activity.util.BossBarHandler
+import work.lclpnet.ap2.api.SchedulerHolder
 import work.lclpnet.ap2.api.WorldBorderManager
 import work.lclpnet.ap2.api.music.SongCache
 import work.lclpnet.ap2.api.music.SongManager
@@ -34,7 +35,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
 import kotlin.time.Instant
 
-interface MiniGameHandle {
+interface MiniGameHandle : SchedulerHolder {
 
     val server: MinecraftServer
 
@@ -64,7 +65,7 @@ interface MiniGameHandle {
      * In contrast, the game root scheduler is only stopped when the mini-game terminates.
      * @return The game scheduler for game logic.
      */
-    val scheduler: TaskScheduler
+    override val scheduler: TaskScheduler
 
     val translations: Translations
 

@@ -21,6 +21,7 @@ import net.minecraft.world.item.component.ItemLore
 import net.minecraft.world.phys.Vec3
 import org.json.JSONObject
 import work.lclpnet.ap2.api.util.world.BlockPredicate
+import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.IconMaker
@@ -113,7 +114,7 @@ class SpecialItems(
             item.scheduleTasks(scheduler, this)
         }
 
-        scheduler.interval(1) { ->
+        runEveryTick {
             tickPickup()
         }
     }
