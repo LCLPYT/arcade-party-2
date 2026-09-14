@@ -92,7 +92,7 @@ class PaintballInstance(
     )
 
     override val data = IntScoreDataContainer(
-        ::createReference,
+        ::createTeamReference,
         Ordering.DESCENDING,
         "blocks_painted"
     )
@@ -139,7 +139,7 @@ class PaintballInstance(
 
         results = PaintballResults(gameHandle, announcer, level, resultSpot, data, winManager) {
             teams.mapNotNull { teamManager.getTeam(it) }
-                .map { createReference(it) }
+                .map { createTeamReference(it) }
         }
 
         teamManager.partitionIntoTeams(gameHandle.participants, teams.map { it.key }.toHashSet())

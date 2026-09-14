@@ -48,7 +48,7 @@ public class IconMaker {
                 .withStyle(style -> style.withItalic(false).applyFormat(AQUA)));
 
         String descriptionKey = game.getDescriptionKey();
-        Object[] descArgs = game.getDescriptionArguments();
+        Object[] descArgs = game.descriptionArguments(translations);
 
         setLore(icon, wrapText(translations.translateText(player, descriptionKey, descArgs)
                 .withStyle(GREEN), 32));

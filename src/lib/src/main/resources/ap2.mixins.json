@@ -29,6 +29,7 @@
     "ai.WalkNodeEvaluatorMixin",
     "block.BigDripLeafBlockMixin",
     "block.SkullBlockEntityAccessor",
+    "block.TripWireBlockMixin",
     "block.WebBlockMixin",
     "entity.AnimalMixin",
     "entity.AxolotlMixin",

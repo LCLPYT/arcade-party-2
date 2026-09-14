@@ -3,6 +3,7 @@ package work.lclpnet.ap2.game
 import net.minecraft.core.RegistryAccess
 import net.minecraft.resources.Identifier
 import net.minecraft.world.item.ItemStack
+import work.lclpnet.kibu.translate.Translations
 
 interface GameInfo {
 
@@ -34,8 +35,7 @@ interface GameInfo {
             return "game.${id.namespace}.${id.path}.description"
         }
 
-    val descriptionArguments: Array<Any>
-        get() = emptyArray()
+    fun descriptionArguments(translations: Translations): Array<Any> = emptyArray()
 
     val taskKey: String
         get() {

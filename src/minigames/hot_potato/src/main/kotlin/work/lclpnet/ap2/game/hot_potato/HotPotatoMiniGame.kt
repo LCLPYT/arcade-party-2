@@ -9,6 +9,7 @@ import work.lclpnet.ap2.game.GameType
 import work.lclpnet.ap2.game.MiniGame
 import work.lclpnet.ap2.game.MiniGameFactory
 import work.lclpnet.ap2.game.util.MapLevelGameFactory
+import work.lclpnet.kibu.translate.Translations
 
 class HotPotatoMiniGame : MiniGame {
     override val id = ApConstants.identifier("hot_potato")
@@ -18,5 +19,5 @@ class HotPotatoMiniGame : MiniGame {
     override fun canBeFinale(context: GameStartContext): Boolean = true
     override fun canBePlayed(context: GameStartContext): Boolean = true
     override fun createFactory(): MiniGameFactory = MapLevelGameFactory(::HotPotatoInstance)
-    override val descriptionArguments: Array<Any> = arrayOf(DURATION_SECONDS)
+    override fun descriptionArguments(translations: Translations): Array<Any> = arrayOf(DURATION_SECONDS)
 }

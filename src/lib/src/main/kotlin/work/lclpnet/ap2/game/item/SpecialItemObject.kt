@@ -133,6 +133,10 @@ class SpecialItemObject @JvmOverloads constructor(
         itemDisplay.setGlowing(glowing)
     }
 
+    fun setGlowColorOverride(color: Int) {
+        itemDisplay.glowColorOverride = color
+    }
+
     companion object {
         const val DEFAULT_SIZE: Double = 0.25
     }
