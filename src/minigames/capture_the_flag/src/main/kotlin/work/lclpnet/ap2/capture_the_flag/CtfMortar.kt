@@ -5,10 +5,12 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.projectile.hurtingprojectile.Fireball
 import net.minecraft.world.level.Level
+import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import work.lclpnet.ap2.api.util.world.BlockPredicate
 import work.lclpnet.ap2.ext.random
+import work.lclpnet.ap2.impl.util.debug.DebugController
 import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks
 import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate
@@ -22,6 +24,8 @@ private const val LAUNCH_HEIGHT = 50
 private const val BASE_SAFE_RADIUS = 15.0
 private const val SPEED = 3.0
 private const val EXPLOSION_POWER = 3.5f
+private const val DEBUG_SCANNER = false
+private const val DEBUG_FINAL_POSITIONS = true
 
 // a hurting projectile approaches 19 times its acceleration power as terminal velocity
 private const val ACCELERATION_POWER = SPEED / 19.0
@@ -53,7 +57,13 @@ class CtfMortar(
 
         const val TUBES = 3
 
-        fun create(level: ServerLevel, schema: CtfSchema, bases: List<Vec3>, random: Random): CtfMortar? {
+        fun create(
+            level: ServerLevel,
+            schema: CtfSchema,
+            bases: List<Vec3>,
+            random: Random,
+            debugController: DebugController,
+        ): CtfMortar? {
             val bounds = schema.scannerBounds ?: return null
             val starts = schema.scannerStarts.toSet()
 
@@ -69,6 +79,10 @@ class CtfMortar(
 
             if (playArea.isEmpty()) return null
 
+            if (DEBUG_SCANNER) {
+                debugController.visualizeBlockPositions(playArea, Blocks.STAINED_GLASS.blue.defaultBlockState())
+            }
+
             val safeRadiusSquared = BASE_SAFE_RADIUS * BASE_SAFE_RADIUS
 
             val targets = playArea.filter { pos ->
@@ -77,6 +91,10 @@ class CtfMortar(
             }
 
             if (targets.isEmpty()) return null
+
+            if (DEBUG_FINAL_POSITIONS) {
+                debugController.visualizeBlockPositions(targets, Blocks.STAINED_GLASS.green.defaultBlockState())
+            }
 
             val launchY = playArea.maxOf { it.y } + LAUNCH_HEIGHT + 0.5
 

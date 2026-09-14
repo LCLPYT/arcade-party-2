@@ -19,6 +19,7 @@ import net.minecraft.world.entity.projectile.arrow.AbstractArrow
 import net.minecraft.world.level.GameType
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.gamerules.GameRule
 import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.scores.Team.CollisionRule
 import net.minecraft.world.scores.Team.Visibility
@@ -44,6 +45,7 @@ import work.lclpnet.ap2.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.game.team.DyeTeamKey
 import work.lclpnet.ap2.game.team.Team
 import work.lclpnet.ap2.game.team.TeamManager
+import work.lclpnet.ap2.game.util.useDebugController
 import work.lclpnet.ap2.game.util.useOldCombat
 import work.lclpnet.ap2.game.util.useSurvivalMode
 import work.lclpnet.ap2.game.util.useTaskTimer
@@ -132,6 +134,8 @@ class CaptureTheFlagInstance(
 
         useGameRules {
             set(GameRules.NATURAL_HEALTH_REGENERATION, false)
+            set(GameRules.SPAWN_MOBS, false)
+            set(GameRules.SPAWN_MONSTERS, false)
         }
     }
 
@@ -240,7 +244,7 @@ class CaptureTheFlagInstance(
         if (!map.properties.optBoolean("mortarFire", false)) return null
 
         val bases = teamInfo.map { it.spawn.asVec3d() } + teamInfo.map { it.flag.homePosition }
-        val mortar = CtfMortar.create(level, schema, bases, random)
+        val mortar = CtfMortar.create(level, schema, bases, random, useDebugController(level))
 
         if (mortar == null) {
             gameHandle.logger.warn("Mortar fire is enabled, but no play area could be scanned")
