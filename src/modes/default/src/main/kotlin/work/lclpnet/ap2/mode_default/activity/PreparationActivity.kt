@@ -38,6 +38,7 @@ import work.lclpnet.ap2.api.music.SongWrapper
 import work.lclpnet.ap2.api.music.WeightedSong
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.playNotifySound
+import work.lclpnet.ap2.game.GameType
 import work.lclpnet.ap2.game.MiniGame
 import work.lclpnet.ap2.impl.activity.ArcadePartyComponents
 import work.lclpnet.ap2.impl.base.GameQueue
@@ -74,7 +75,6 @@ import work.lclpnet.kibu.scheduler.api.TaskHandle
 import work.lclpnet.kibu.scheduler.api.TaskScheduler
 import work.lclpnet.kibu.translate.Translations
 import work.lclpnet.kibu.translate.text.FormatWrapper
-import java.lang.Math
 import java.lang.Runnable
 import kotlin.math.floor
 import kotlin.math.max
@@ -108,6 +108,7 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
     private var dynamicEntityManager: DynamicEntityManager? = null
     private var gameQueueDisplays = mutableListOf<Object3d>()
     private var nextGameSong: WeightedSong? = null
+    private var teamGamesAllowed = true
 
     override val participants: Set<ServerPlayer>
         get() = args.playerManager.asSet
@@ -184,10 +185,13 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
 
         if (scoreManager.hasMultipleWinners()) {
             args.playerManager.enterFinale(scoreManager.finalists)
-
-            // remove games from the queue that cannot be played in a finale
-            args.gameQueue.setFilter { game -> game.canBeFinale(this) }
         }
+
+        // players close to winning could be sabotaged by their teammates
+        teamGamesAllowed = !scoreManager.hasPotentialWinner()
+
+        // remove games from the queue that are not eligible right now
+        args.gameQueue.setFilter(::isGameEligible)
 
         args.playerManager.startPreparation()
 
@@ -560,7 +564,7 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
         repeat(maxTries) {
             val game = requireNotNull(queue.pollNextGame()) { "Next game from queue is null" }
 
-            if (args.playerManager.isFinale && !game.canBeFinale(this)) return@repeat
+            if (!isGameEligible(game)) return@repeat
 
             if (game.canBePlayed(this)) {
                 return game
@@ -568,6 +572,21 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
         }
 
         throw IllegalStateException("No game was found that can be played")
+    }
+
+    /**
+     * Checks whether a game is eligible to be played in the current situation.
+     * This does not consider dynamic conditions like the participant count, see [MiniGame.canBePlayed].
+     * @param game The game to check.
+     * @return Whether the game may be played next.
+     */
+    private fun isGameEligible(game: MiniGame): Boolean {
+        if (args.playerManager.isFinale && !game.canBeFinale(this)) return false
+
+        // teammates of a player who is about to win could sabotage them on purpose
+        if (!teamGamesAllowed && game.type == GameType.TEAM) return false
+
+        return true
     }
 
     private fun forceGame(miniGame: MiniGame) {

@@ -12,6 +12,11 @@ import java.util.stream.Collectors
 import java.util.stream.Stream
 import kotlin.math.max
 
+/**
+ * The maximum amount of points a player can gain from a single mini-game.
+ */
+private const val MAX_GAME_SCORE = 3
+
 class ScoreManager(
     private val playerManager: PlayerList,
     val targetScore: Int
@@ -127,6 +132,16 @@ class ScoreManager(
      */
     fun hasMultipleWinners(): Boolean =
         finalists.count() >= 2
+
+    /**
+     * Checks whether at least one player is about to win, meaning that they could reach the target score next minigame.
+     * @return Whether at least one player is about to win.
+     */
+    fun hasPotentialWinner(): Boolean {
+        val bestScore = data.bestScore ?: return false
+
+        return bestScore >= targetScore - MAX_GAME_SCORE
+    }
 
     fun getEntry(ref: PlayerRef): DataEntry<PlayerRef>? =
         data.getEntry(ref)
