@@ -11,8 +11,8 @@ import net.minecraft.world.item.BowItem
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import work.lclpnet.ap2.core.hook.RangedWeaponUsedCallback
-import work.lclpnet.ap2.impl.game.item.SpecialItem
-import work.lclpnet.ap2.impl.game.item.SpecialItemContext
+import work.lclpnet.ap2.game.item.SpecialItem
+import work.lclpnet.ap2.game.item.SpecialItemContext
 import work.lclpnet.kibu.hook.HookRegistrar
 
 private const val BURST_COUNT = 4
@@ -20,7 +20,7 @@ private const val BURST_INTERVAL_TICKS = 2
 
 class BurstShotItem : SpecialItem {
 
-    override fun id(): String = "burst_shot"
+    override val id = "burst_shot"
 
     override fun createItemStack(registryManager: RegistryAccess): ItemStack = ItemStack(Items.BLAZE_POWDER)
 
@@ -39,7 +39,7 @@ class BurstShotItem : SpecialItem {
             val useTicks = bow.getUseDuration(stack, player) - remainingUseTicks
 
             for (i in 1 until BURST_COUNT) {
-                ctx.scheduler().timeout(BURST_INTERVAL_TICKS * i) { ->
+                ctx.scheduler.timeout(BURST_INTERVAL_TICKS * i) { ->
                     shoot(player, stack, useTicks)
                 }
             }

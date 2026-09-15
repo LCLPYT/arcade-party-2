@@ -1,5 +1,12 @@
 package work.lclpnet.ap2.mode_default.activity
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.future.await
+import kotlinx.coroutines.launch
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup
 import net.minecraft.ChatFormatting
 import net.minecraft.commands.Commands
@@ -26,16 +33,17 @@ import work.lclpnet.activity.component.ComponentBundle
 import work.lclpnet.activity.component.builtin.BossBarComponent
 import work.lclpnet.activity.component.builtin.BuiltinComponents
 import work.lclpnet.ap2.ApConstants
-import work.lclpnet.ap2.api.base.GameQueue
-import work.lclpnet.ap2.api.data.DataManager
-import work.lclpnet.ap2.api.game.GameStartContext
-import work.lclpnet.ap2.api.map.MapFacade
+import work.lclpnet.ap2.api.base.GameStartContext
 import work.lclpnet.ap2.api.music.SongWrapper
 import work.lclpnet.ap2.api.music.WeightedSong
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.playNotifySound
+import work.lclpnet.ap2.game.GameType
 import work.lclpnet.ap2.game.MiniGame
 import work.lclpnet.ap2.impl.activity.ArcadePartyComponents
+import work.lclpnet.ap2.impl.base.GameQueue
+import work.lclpnet.ap2.impl.data.DataManager
+import work.lclpnet.ap2.impl.map.MapFacade
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.music.MusicHelper
 import work.lclpnet.ap2.impl.util.IconMaker
@@ -45,7 +53,9 @@ import work.lclpnet.ap2.mode_default.ApMiniGameArgs
 import work.lclpnet.ap2.mode_default.api.Skippable
 import work.lclpnet.ap2.mode_default.cmd.ForceMapCommand
 import work.lclpnet.ap2.mode_default.cmd.SkipCommand
+import work.lclpnet.ap2.mode_default.cmd.SpectatorCommand
 import work.lclpnet.ap2.mode_default.util.*
+import work.lclpnet.ap2.util.MinecraftDispatcher
 import work.lclpnet.ap2.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager
 import work.lclpnet.gaco.scene.MixedMountContext
@@ -65,7 +75,7 @@ import work.lclpnet.kibu.scheduler.api.TaskHandle
 import work.lclpnet.kibu.scheduler.api.TaskScheduler
 import work.lclpnet.kibu.translate.Translations
 import work.lclpnet.kibu.translate.text.FormatWrapper
-import java.util.concurrent.CompletableFuture
+import java.lang.Runnable
 import kotlin.math.floor
 import kotlin.math.max
 
@@ -90,13 +100,18 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
     private var bossBarTimer: BossBarTimer? = null
     private var animatedTitle: AnimatedTitle? = null
     private var song: SongWrapper? = null
-    private var whenTasksDone: CompletableFuture<Void?>? = null
+    private var reloadJob: Job? = null
     private var onScoreUpdate: Runnable? = null
+    private val scope = CoroutineScope(MinecraftDispatcher(args.miniGameArgs.server) + SupervisorJob())
     private var world: ServerLevel? = null
     private var map: GameMap? = null
     private var dynamicEntityManager: DynamicEntityManager? = null
     private var gameQueueDisplays = mutableListOf<Object3d>()
     private var nextGameSong: WeightedSong? = null
+    private var teamGamesAllowed = true
+
+    override val participants: Set<ServerPlayer>
+        get() = args.playerManager.asSet
 
     override fun registerComponents(componentBundle: ComponentBundle) {
         componentBundle.add(BuiltinComponents.SCHEDULER)
@@ -117,28 +132,32 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
         args.tablistManager.setPreparation()
         args.tablistManager.update()
 
-        CompletableFuture.supplyAsync {
-            val setupFuture = setupMap(args.miniGameArgs)
-            val assetFuture = loadAssets()
+        scope.launch {
+            try {
+                val setup = async { setupMap(args.miniGameArgs) }
+                val assets = async { loadAssets() }
 
-            assetFuture.join()
-            setupFuture.join()
-        }.whenComplete { res: SetupResult?, err: Throwable? ->
-            if (err != null) {
-                args.miniGameArgs.logger.error("Failed to setup preparation activity", err)
-            } else if (res != null) {
+                assets.await()
+                val res = setup.await()
+
                 onReady(res.world, res.map)
+            } catch (t: Throwable) {
+                args.miniGameArgs.logger.error("Failed to setup preparation activity", t)
             }
         }
     }
 
-    private fun loadAssets(): CompletableFuture<Void> {
-        return args.miniGameArgs.songManager
+    private suspend fun loadAssets() {
+        val song = args.miniGameArgs.songManager
             .getSongAndCache(MusicHelper.ARCADE_PARTY_GAME_TAG, GAME_SONG_ID)
-            .thenAccept { song -> nextGameSong = song.orElse(null) }
+            .await()
+
+        nextGameSong = song.orElse(null)
     }
 
     override fun stop() {
+        scope.cancel()
+
         args.forceGameCommand.gameEnforcer = { game -> args.gameQueue.setNextGame(game) }
 
         if (onScoreUpdate != null) {
@@ -166,10 +185,13 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
 
         if (scoreManager.hasMultipleWinners()) {
             args.playerManager.enterFinale(scoreManager.finalists)
-
-            // remove games from the queue that cannot be played in a finale
-            args.gameQueue.setFilter { game -> game.canBeFinale(this) }
         }
+
+        // players close to winning could be sabotaged by their teammates
+        teamGamesAllowed = !scoreManager.hasPotentialWinner()
+
+        // remove games from the queue that are not eligible right now
+        args.gameQueue.setFilter(::isGameEligible)
 
         args.playerManager.startPreparation()
 
@@ -200,14 +222,19 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
         SkipCommand(this).register(commandRegistrar)
         ForceMapCommand(mapFacade) { miniGame }.register(commandRegistrar)
 
+        SpectatorCommand(args.playerManager, args.miniGameArgs.translations, immediate = true) { player ->
+            args.miniGameArgs.playerUtil.resetPlayer(player)
+            args.miniGameArgs.worldFacade.teleport(player)
+        }.register(commandRegistrar)
+
         args.forceGameCommand.gameEnforcer = { miniGame -> forceGame(miniGame) }
     }
 
     private fun restartActivity() {
         args.scoreManager.decrementRound()
 
-        if (this.miniGame != null) {
-            args.gameQueue.shiftGame(this.miniGame)
+        miniGame?.let {
+            args.gameQueue.shiftGame(it)
         }
 
         switchActivity(PreparationActivity(args))
@@ -221,9 +248,12 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
         val gameId = miniGame!!.id
 
         if (miniGame!!.usesMaps) {
-            whenTasksDone = args.miniGameArgs.mapFacade.reloadMaps(gameId).exceptionally { err ->
-                args.miniGameArgs.logger.error("Failed to reload maps for {}", gameId, err)
-                null
+            reloadJob = scope.launch {
+                try {
+                    args.miniGameArgs.mapFacade.reloadMaps(gameId)
+                } catch (err: Throwable) {
+                    args.miniGameArgs.logger.error("Failed to reload maps for {}", gameId, err)
+                }
             }
         }
 
@@ -369,27 +399,26 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
         parent: Object3d,
     ): Double {
         var offsetY = offsetY
-        var preview: MutableList<GameQueue.Entry> = args.gameQueue.preview()
+        var preview = args.gameQueue.preview()
 
         val reservedSpace = if (miniGame != null) 2 else 1
         val amount = Math.clamp((floor(height / textHeight).toInt() - reservedSpace).toLong(), 0, preview.size)
-        preview = preview.subList(0, amount)
+        preview = preview.subList(0, amount).reversed()
 
-        preview.reverse()
-
-        for (entry in preview) {
+        for ((game, type) in preview) {
             val obj = TranslatedTextDisplayObject(parent.scene, translations)
 
-            val color = when (entry.type) {
+            val color = when (type) {
                 GameQueue.Type.REGULAR -> ChatFormatting.GREEN
                 GameQueue.Type.VOTED -> ChatFormatting.GOLD
                 GameQueue.Type.PRIORITY -> ChatFormatting.LIGHT_PURPLE
             }
 
-            val mayPossiblyNotBePlayed = !entry.game.canBePlayed(this)
+            val mayPossiblyNotBePlayed = !game.canBePlayed(this)
 
             obj.controller().configure { controller ->
-                val text = translations.translateText(entry.game.titleKey).withStyle(color)
+                val text = translations.translateText(game.titleKey).withStyle(color)
+
                 if (mayPossiblyNotBePlayed) {
                     controller.text = { lang ->
                         Component.literal("⏳ ")
@@ -477,12 +506,17 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
             return
         }
 
-        if (whenTasksDone == null) {
+        val job = reloadJob
+
+        if (job == null) {
             startGame()
             return
         }
 
-        whenTasksDone!!.thenRun(::startGame)
+        scope.launch {
+            job.join()
+            startGame()
+        }
     }
 
     private fun startGame() {
@@ -525,12 +559,12 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
             return requireNotNull(queue.pollNextGame()) { "Could not determine next game" }
         }
 
-        val maxTries = args.miniGameArgs.miniGames.getGames().size  // cycle through every registered game once
+        val maxTries = args.miniGameArgs.miniGames.games.size  // cycle through every registered game once
 
         repeat(maxTries) {
             val game = requireNotNull(queue.pollNextGame()) { "Next game from queue is null" }
 
-            if (args.playerManager.isFinale && !game.canBeFinale(this)) return@repeat
+            if (!isGameEligible(game)) return@repeat
 
             if (game.canBePlayed(this)) {
                 return game
@@ -540,13 +574,28 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
         throw IllegalStateException("No game was found that can be played")
     }
 
+    /**
+     * Checks whether a game is eligible to be played in the current situation.
+     * This does not consider dynamic conditions like the participant count, see [MiniGame.canBePlayed].
+     * @param game The game to check.
+     * @return Whether the game may be played next.
+     */
+    private fun isGameEligible(game: MiniGame): Boolean {
+        if (args.playerManager.isFinale && !game.canBeFinale(this)) return false
+
+        // teammates of a player who is about to win could sabotage them on purpose
+        if (!teamGamesAllowed && game.type == GameType.TEAM) return false
+
+        return true
+    }
+
     private fun forceGame(miniGame: MiniGame) {
         if (this.miniGame === miniGame) return
 
         val queue: GameQueue = args.gameQueue
 
-        if (this.miniGame != null) {
-            queue.shiftGame(this.miniGame)
+        this.miniGame?.let {
+            queue.shiftGame(it)
         }
 
         queue.shiftGame(miniGame)
@@ -603,7 +652,7 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
             player.sendSystemMessage(gameTitle)
 
             val descriptionKey = miniGame!!.descriptionKey
-            val descArgs = miniGame!!.descriptionArguments
+            val descArgs = miniGame!!.descriptionArguments(translations)
 
             val description = translations.translateText(player, descriptionKey, *descArgs)
                 .withStyle(ChatFormatting.GREEN)
@@ -783,39 +832,27 @@ class PreparationActivity(private val args: ApBaseArgs) : ComponentActivity(
             return
         }
 
-        args.miniGameArgs.mapFacade.getMaps(miniGame!!.id).thenAccept { maps ->
+        scope.launch {
+            val maps = args.miniGameArgs.mapFacade.getMaps(miniGame!!.id)
             mapChooser?.open(player, maps)
         }
     }
-
-    override fun getParticipants(): Set<ServerPlayer> =
-        args.playerManager.asSet
 
     data class SetupResult(val world: ServerLevel, val map: GameMap)
 
     companion object {
 
-        fun setupMap(miniGameArgs: ApMiniGameArgs): CompletableFuture<SetupResult> {
+        suspend fun setupMap(miniGameArgs: ApMiniGameArgs): SetupResult {
             val prefix = ApConstants.identifier("preparation")
 
-            return miniGameArgs.mapFacade
-                .findMapIdByPrefix(prefix)
-                .thenApply { mapId ->
-                    checkNotNull(mapId.orElse(null)) {
-                        "No map found for prefix $prefix"
-                    }
-                }
-                .thenCompose { mapId ->
-                    miniGameArgs.mapFacade.changeMap(mapId, WorldOptions.REUSABLE)
-                        .thenCompose { world ->
-                            miniGameArgs.mapFacade.getMap(mapId).thenApply { map ->
-                                SetupResult(
-                                    world,
-                                    map.orElseThrow { IllegalStateException("Map $mapId not found") }
-                                )
-                            }
-                        }
-                }
+            val mapId = checkNotNull(miniGameArgs.mapFacade.findMapIdByPrefix(prefix)) {
+                "No map found for prefix $prefix"
+            }
+
+            val world = miniGameArgs.mapFacade.changeMap(mapId, WorldOptions.REUSABLE)
+            val map = checkNotNull(miniGameArgs.mapFacade.getMap(mapId)) { "Map $mapId not found" }
+
+            return SetupResult(world, map)
         }
     }
 }

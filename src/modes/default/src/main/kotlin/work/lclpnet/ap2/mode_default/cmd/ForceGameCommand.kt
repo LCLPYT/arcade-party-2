@@ -6,7 +6,7 @@ import net.minecraft.commands.CommandSourceStack
 import net.minecraft.commands.Commands
 import net.minecraft.commands.arguments.IdentifierArgument
 import net.minecraft.network.chat.Component
-import work.lclpnet.ap2.api.base.MiniGameManager
+import work.lclpnet.ap2.impl.base.MiniGameManager
 import work.lclpnet.ap2.game.MiniGame
 import work.lclpnet.ap2.mode_default.cmd.arg.MiniGameSuggestionProvider
 import work.lclpnet.kibu.cmd.type.CommandRegistrar
@@ -34,7 +34,7 @@ class ForceGameCommand(
     private fun forceGame(ctx: CommandContext<CommandSourceStack>): Int {
         val gameId = IdentifierArgument.getId(ctx, "gameId")
 
-        val game = miniGameManager.getGame(gameId).orElseThrow { UNKNOWN_GAME.create(gameId) }
+        val game = miniGameManager.getGame(gameId) ?: throw UNKNOWN_GAME.create(gameId)
 
         gameEnforcer.accept(game)
         ctx.getSource().sendSystemMessage(Component.literal("Forcing \"$gameId\" as next game"))

@@ -5,11 +5,12 @@ import net.minecraft.core.RegistryAccess
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import work.lclpnet.ap2.ApConstants
-import work.lclpnet.ap2.api.game.GameStartContext
-import work.lclpnet.ap2.api.game.GameType
+import work.lclpnet.ap2.api.base.GameStartContext
+import work.lclpnet.ap2.game.GameType
 import work.lclpnet.ap2.game.MiniGame
 import work.lclpnet.ap2.game.MiniGameFactory
 import work.lclpnet.ap2.game.util.MapLevelGameFactory
+import work.lclpnet.kibu.translate.Translations
 import work.lclpnet.kibu.translate.text.FormatWrapper
 
 class OneInTheChamberMiniGame : MiniGame {
@@ -20,7 +21,7 @@ class OneInTheChamberMiniGame : MiniGame {
     override fun canBeFinale(context: GameStartContext): Boolean = true
     override fun canBePlayed(context: GameStartContext): Boolean = true
     override fun createFactory(): MiniGameFactory = MapLevelGameFactory(::OneInTheChamberInstance)
-    override val descriptionArguments: Array<Any> = arrayOf(SCORE_LIMIT)
+    override fun descriptionArguments(translations: Translations): Array<Any> = arrayOf(SCORE_LIMIT)
     override val taskArguments: Array<Any> = arrayOf(
         FormatWrapper.styled(SCORE_LIMIT, ChatFormatting.YELLOW)
     )

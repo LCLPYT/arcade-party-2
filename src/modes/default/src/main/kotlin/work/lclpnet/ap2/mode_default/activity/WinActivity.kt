@@ -1,5 +1,9 @@
 package work.lclpnet.ap2.mode_default.activity
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
@@ -19,6 +23,7 @@ import work.lclpnet.ap2.impl.util.Fireworks
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.mode_default.util.ApBaseArgs
 import work.lclpnet.ap2.mode_default.util.BaseActivityConfigurator
+import work.lclpnet.ap2.util.MinecraftDispatcher
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.map.MapUtils
 import work.lclpnet.game.util.ProtectorComponent
@@ -46,6 +51,7 @@ class WinActivity(
     private lateinit var scheduler: Scheduler
     private lateinit var world: ServerLevel
     private lateinit var map: GameMap
+    private val scope = CoroutineScope(MinecraftDispatcher(args.miniGameArgs.server) + SupervisorJob())
 
     init {
         this.announcer = Announcer(translations, ::players)
@@ -66,13 +72,20 @@ class WinActivity(
         args.tablistManager.status = translations.translateText("ap2.status.game_over")
         args.tablistManager.update()
 
-        PreparationActivity.setupMap(args.miniGameArgs).whenComplete { res, err ->
-            if (err != null) {
-                args.miniGameArgs.logger.error("Failed to setup win activity map", err)
-            } else {
+        scope.launch {
+            try {
+                val res = PreparationActivity.setupMap(args.miniGameArgs)
                 onReady(res.world, res.map)
+            } catch (t: Throwable) {
+                args.miniGameArgs.logger.error("Failed to setup win activity map", t)
             }
         }
+    }
+
+    override fun stop() {
+        scope.cancel()
+
+        super.stop()
     }
 
     private fun onReady(world: ServerLevel, map: GameMap) {

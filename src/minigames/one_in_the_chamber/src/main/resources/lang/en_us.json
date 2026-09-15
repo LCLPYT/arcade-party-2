@@ -2,6 +2,7 @@
   "name": "One in the Chamber",
   "description": "Your crossbow one hits, but you only have one shot! Gain another by killing someone. First reaching %s kills wins!",
   "task": "Reach %s kills",
+  "weapon": "Selected weapon: %s",
   "stat.deaths": "Deaths",
   "stat.arrows_shot": "Arrows shot",
   "stat.arrows_hit": "Arrows hit",

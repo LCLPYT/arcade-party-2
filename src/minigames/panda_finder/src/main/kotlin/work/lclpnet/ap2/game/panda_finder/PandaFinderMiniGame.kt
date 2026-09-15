@@ -5,10 +5,11 @@ import net.minecraft.core.RegistryAccess
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import work.lclpnet.ap2.ApConstants
-import work.lclpnet.ap2.api.game.GameStartContext
-import work.lclpnet.ap2.api.game.GameType
+import work.lclpnet.ap2.api.base.GameStartContext
+import work.lclpnet.ap2.game.GameType
 import work.lclpnet.ap2.game.MiniGame
 import work.lclpnet.ap2.game.util.MapLevelGameFactory
+import work.lclpnet.kibu.translate.Translations
 import work.lclpnet.kibu.translate.text.FormatWrapper
 
 class PandaFinderMiniGame : MiniGame {
@@ -19,7 +20,7 @@ class PandaFinderMiniGame : MiniGame {
     override fun canBeFinale(context: GameStartContext) = true
     override fun canBePlayed(context: GameStartContext) = true
     override fun createFactory() = MapLevelGameFactory(::PandaFinderInstance)
-    override val descriptionArguments: Array<Any> = arrayOf(
+    override fun descriptionArguments(translations: Translations): Array<Any> = arrayOf(
         FormatWrapper.styled(WIN_SCORE, ChatFormatting.YELLOW)
     )
 }

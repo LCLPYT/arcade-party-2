@@ -7,7 +7,6 @@ import net.minecraft.world.item.DyeColor
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
-import work.lclpnet.ap2.api.util.world.AdjacentBlocks
 import work.lclpnet.ap2.ext.mc.displayName
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.guess_it.data.*
@@ -16,6 +15,7 @@ import work.lclpnet.ap2.impl.util.TextUtil
 import work.lclpnet.ap2.impl.util.world.PositionUtil.findGroundPositions
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
+import work.lclpnet.ap2.util.world.AdjacentBlocks
 import work.lclpnet.game.util.WorldModifier
 import work.lclpnet.kibu.scheduler.Ticks
 import java.util.*

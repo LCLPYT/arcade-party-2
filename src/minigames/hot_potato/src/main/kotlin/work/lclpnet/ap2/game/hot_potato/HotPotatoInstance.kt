@@ -10,6 +10,7 @@ import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.util.Mth
 import net.minecraft.world.InteractionResult
+import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.EquipmentSlot
@@ -21,7 +22,7 @@ import net.minecraft.world.item.component.Fireworks
 import net.minecraft.world.level.GameType
 import net.minecraft.world.scores.PlayerTeam
 import net.minecraft.world.scores.TeamColor
-import work.lclpnet.ap2.api.game.GameOverListener
+import work.lclpnet.ap2.game.util.GameOverListener
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.playNotifySound
@@ -37,6 +38,7 @@ import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.scheduler.api.TaskHandle
 import work.lclpnet.kibu.scheduler.api.TaskScheduler
 import work.lclpnet.kibu.title.Title
+import work.lclpnet.kibu.translate.text.TranslatedText
 import work.lclpnet.pal.event.AllowTeleporterCallback
 import java.util.*
 import kotlin.time.Duration
@@ -184,8 +186,8 @@ class HotPotatoInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
         }
     }
 
-    override fun eliminate(player: ServerPlayer) {
-        super.eliminate(player)
+    override fun eliminate(player: ServerPlayer, source: DamageSource?, customMsg: TranslatedText?) {
+        super.eliminate(player, source, customMsg)
         removePotato(player)
         player.setGameMode(GameType.SPECTATOR)
         if (markedPlayer == player) markedPlayer = null

@@ -10,15 +10,15 @@ import org.slf4j.Logger
 import work.lclpnet.ap2.ApConstants
 import work.lclpnet.ap2.api.config.Ap2Config
 import work.lclpnet.ap2.api.config.ConfigManager
-import work.lclpnet.ap2.api.data.DataManager
-import work.lclpnet.ap2.api.map.MapFacade
-import work.lclpnet.ap2.api.map.MapRandomizer
 import work.lclpnet.ap2.api.music.SongManager
+import work.lclpnet.ap2.impl.data.DataManager
 import work.lclpnet.ap2.impl.data.JsonDataSource
 import work.lclpnet.ap2.impl.data.MapDynamicData
 import work.lclpnet.ap2.impl.data.MutableDataManager
 import work.lclpnet.ap2.impl.i18n.VanillaTranslations
+import work.lclpnet.ap2.impl.map.MapFacade
 import work.lclpnet.ap2.impl.map.MapFacadeImpl
+import work.lclpnet.ap2.impl.map.MapRandomizer
 import work.lclpnet.ap2.impl.map.SeamlessMapRandomizer
 import work.lclpnet.ap2.impl.music.AssetSongManager
 import work.lclpnet.ap2.util.AssetManager
@@ -226,7 +226,7 @@ class ApBootstrap(
     suspend fun loadContainer(dataManager: MutableDataManager) =
         withContext(Dispatchers.IO) {
             val data = MapDynamicData.builder()
-                .addSource(JsonDataSource({ openConfigurationFile() }, logger))
+                .addSource(JsonDataSource(logger) { openConfigurationFile() })
                 .build()
 
             dataManager.setData(data)

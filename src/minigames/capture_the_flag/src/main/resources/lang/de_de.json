@@ -1,0 +1,21 @@
+{
+  "name": "Capture the Flag",
+  "description": "Stiehl die Flagge des gegnerischen Teams und bringe sie zurück in deine Basis. Stehle 3 Flaggen oder die meisten Flaggen nach %s um zu gewinnen.",
+  "task": "Erobere 3 Flaggen",
+  "captures": "Eroberungen",
+  "waypoint.enemy_flag": "Stiehl die Flagge des gegnerischen Teams! Der Standort der Flagge ist in deiner Ortungsleiste markiert.",
+  "waypoint.own_flag": "Eure Flagge wurde gestohlen. Sie ist in deiner Ortungsleiste markiert. Hol sie zurück!",
+  "waypoint.bring_target": "Du hast die gegnerische Flagge gestohlen! Bring sie zum markierten Ort!",
+  "flag_of": "Flagge von %s",
+  "flag_stolen": "%s hat die Flagge von %s gestohlen!",
+  "flag_captured": "%s hat die Flagge von %s erobert!",
+  "flag_dropped": "%s hat die Flagge von %s fallen lassen!",
+  "flag_returned": "%s hat die Flagge von %s zurückgebracht.",
+  "flag_returned_timeout": "Die Flagge von %s ist in ihre Basis zurückgekehrt.",
+  "stat.flags_stolen": "Flaggen gestohlen",
+  "stat.flags_captured": "Flaggen erobert",
+  "stat.flags_rescued": "Flaggen gerettet",
+  "stat.arrows_shot": "Pfeile verschossen",
+  "stat.arrows_hit": "Pfeile getroffen",
+  "stat.arrow_accuracy": "Pfeilgenauigkeit"
+}

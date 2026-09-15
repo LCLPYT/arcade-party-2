@@ -1,6 +1,7 @@
 {
   "name": "Aufgabenflut",
   "description": "Trete in kurzen Aufgaben gegen andere Spieler an. Wer die Aufgaben insgesamt am besten erledigt, gewinnt!",
+  "next_task": "Nächste Aufgabe",
   "task_results": "Aufgabenergebnisse",
   "task.highest_pos": "Erreiche eine möglichst hohe Position in der Welt.",
   "task.highest_pos.task": "Hohe Position erreichen",
@@ -30,8 +31,6 @@
   "task.break_blocks.task": "Blöcke abbauen",
   "task.flower_types": "Sammle die meisten verschiedenen Blumenarten.",
   "task.flower_types.task": "Blumen sammeln",
-  "task.darkest_place": "Finde den dunkelsten Ort. Blöcke abbauen ist deaktiviert.",
-  "task.darkest_place.task": "Dunkelheit finden",
   "task.stand_in_area": "Stehe möglichst lange allein im markierten Bereich.",
   "task.stand_in_area.task": "Bereich halten",
   "task.stand_in_area.location": "Der Bereich ist in der Nähe von %s.",

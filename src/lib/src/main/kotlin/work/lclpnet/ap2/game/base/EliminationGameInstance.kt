@@ -7,7 +7,6 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.BossEvent
 import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.entity.Entity
-import work.lclpnet.ap2.api.game.EliminationController
 import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.FFAStatsManager
 import work.lclpnet.ap2.core.hook.PlayerEliminatedCallback
@@ -18,6 +17,7 @@ import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.server
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.data.EliminationDataContainer
+import work.lclpnet.ap2.game.util.EliminationController
 import work.lclpnet.ap2.game.util.GameStartSequence
 import work.lclpnet.ap2.game.util.useDataContainer
 import work.lclpnet.ap2.game.util.whenBelowCriticalHeight

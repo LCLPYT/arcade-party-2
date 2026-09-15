@@ -6,13 +6,13 @@ import net.minecraft.server.level.ServerPlayer
 import work.lclpnet.ap2.deadline.rider.Riders
 import work.lclpnet.ap2.ext.inWholeTicks
 import work.lclpnet.ap2.game.MiniGameHandle
-import work.lclpnet.ap2.impl.game.item.SpecialItemObject
-import work.lclpnet.ap2.impl.game.item.SpecialItems
+import work.lclpnet.ap2.game.item.SpecialItemObject
+import work.lclpnet.ap2.game.item.SpecialItems
 import work.lclpnet.ap2.impl.util.debug.DebugController
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks
-import java.util.Random
+import java.util.*
 import kotlin.time.Duration.Companion.seconds
 
 private const val ITEM_SLOT = 4
@@ -44,7 +44,7 @@ class DeadlinePowerUps(
     init {
         specialItems.itemSlot = ITEM_SLOT
         specialItems.itemSize = 0.4 // a little bigger than the default 0.25, so pickups read at driving speed
-        specialItems.isMarkGlowing = true
+        specialItems.markGlowing= true
         specialItems.despawnTicks = 0 // power-ups stay until they are collected
         specialItems.setup()
     }

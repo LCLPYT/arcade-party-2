@@ -1,6 +1,6 @@
 {
   "name": "Jump 'n' Run",
-  "description": "Schaffe möglichst schnell die zufällig generierten Jump 'n' Runs. Je früher du es schaffst, desto mehr Punkte erhältst du!",
+  "description": "Schaffe möglichst schnell die Jump 'n' Runs. Je früher du es schaffst, desto mehr Punkte erhältst du!",
   "task": "Schaffe das Jump 'n' Run %s/%s",
   "completed_room": "Glückwunsch! Du hast den %s Raum geschafft",
   "last_not_completed": "Der %s Raum wurde übersprungen, weil du als Letztes übrig warst",

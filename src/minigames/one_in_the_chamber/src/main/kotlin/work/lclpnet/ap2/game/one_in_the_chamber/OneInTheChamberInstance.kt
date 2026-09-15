@@ -8,10 +8,14 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.InteractionResult
 import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.projectile.Projectile
+import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.ItemStackTemplate
 import net.minecraft.world.item.Items
@@ -28,6 +32,8 @@ import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.core.hook.ProjectileShootCallback
 import work.lclpnet.ap2.core.hook.SpectatePlayerCallback
 import work.lclpnet.ap2.ext.mc.isOf
+import work.lclpnet.ap2.ext.mc.playNotifySound
+import work.lclpnet.ap2.ext.mc.unbreakable
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.data.IntScoreDataContainer
@@ -42,20 +48,30 @@ import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
+import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.entity.ProjectileHooks
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks
 import java.util.*
-import kotlin.random.asKotlinRandom
 
 const val SCORE_LIMIT = 15
 const val RESPAWN_SPACING = 20.0
+private const val SWORD_SLOT = 0
+private const val WEAPON_SLOT = 1
+private const val ARROW_SLOT = 7
+private const val WEAPON_TOGGLE_SLOT = 8
+private const val WEAPON_TOGGLE_COOLDOWN = 5
 
 private val ArrowsShot = Stat("arrows_shot", 0)
 private val ArrowsHit = Stat("arrows_hit", 0)
 private val Killstreak = Stat("killstreak", 0)
 
-enum class BowType { Bow, CrossBow }
+enum class WeaponType(val item: Item) {
+    CrossBow(Items.CROSSBOW),
+    Bow(Items.BOW);
+
+    fun opposite() = if (this == CrossBow) Bow else CrossBow
+}
 
 class OneInTheChamberInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
 
@@ -66,11 +82,11 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle, level: ServerLevel, ma
         it.setModifySpeedAttribute(false)
     }
     private val respawnCooldown = VisualCooldown(gameHandle.scheduler)
-    private val bowType = BowType.entries.random(random.asKotlinRandom())
     private val stats = useFFAStats(winManager, data, CommonStats.IntScore, listOf(
         DamageDealt, Deaths, ArrowsShot, ArrowsHit, Killstreak
     ))
     private val currentKillstreak = HashMap<UUID, Int>()
+    private val playerWeaponTypes = HashMap<UUID, WeaponType>()
 
     init {
         useOldCombat()
@@ -120,6 +136,14 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle, level: ServerLevel, ma
             }
         }
 
+        PlayerInteractionHooks.USE_ITEM.registerWith(hooks) { player, _, hand ->
+            onUseItem(player, hand)
+        }
+
+        PlayerInteractionHooks.USE_BLOCK.registerWith(hooks) { player, _, hand, _ ->
+            onUseItem(player, hand)
+        }
+
         ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks, this::onDamage)
 
         SpectatePlayerCallback.HOOK.registerWith(hooks) { spectator, _ ->
@@ -131,7 +155,8 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle, level: ServerLevel, ma
         respawnCooldown.setOnCooldownOver { player ->
             val randomSpawn = respawn.getRandomSpawn()
             player.teleportTo(level, randomSpawn.x + 0.5, randomSpawn.y.toDouble(), randomSpawn.z + 0.5, setOf(), player.yRot, player.xRot, true)
-            giveBowToPlayer(player)
+            giveWeaponToPlayer(player, true)
+            giveWeaponToggleItem(player)
 
             player.abilities.flyingSpeed = 0f
             player.onUpdateAbilities()
@@ -154,7 +179,8 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle, level: ServerLevel, ma
         }
 
         for (player in gameHandle.participants) {
-            giveBowToPlayer(player)
+            giveWeaponToPlayer(player, true)
+            giveWeaponToggleItem(player)
             giveSwordToPlayer(player)
             movementBlocker.enableMovement(player)
         }
@@ -194,26 +220,69 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle, level: ServerLevel, ma
         respawnCooldown.setCooldown(player, 50)
     }
 
-    private fun giveBowToPlayer(player: ServerPlayer) {
-        val stack = when (bowType) {
-            BowType.Bow -> ItemStack(Items.BOW)
+    private fun weaponTypeOf(player: ServerPlayer) = playerWeaponTypes[player.uuid] ?: WeaponType.CrossBow
 
-            BowType.CrossBow -> ItemStack(Items.CROSSBOW).also { stack ->
-                unbreakable(stack)
+    private fun giveWeaponToPlayer(player: ServerPlayer, loaded: Boolean) {
+        val weaponType = weaponTypeOf(player)
+        val stack = ItemStack(weaponType.item).unbreakable()
 
-                stack.set(DataComponents.CHARGED_PROJECTILES, ChargedProjectiles.of(ItemStackTemplate(Items.ARROW)))
-            }
+        if (weaponType == WeaponType.CrossBow && loaded) {
+            stack.set(DataComponents.CHARGED_PROJECTILES, ChargedProjectiles.of(ItemStackTemplate(Items.ARROW)))
         }
-
-        unbreakable(stack)
 
         stack.set(DataComponents.CUSTOM_NAME, TextUtil.getVanillaName(stack)
             .withStyle { it.withItalic(false).applyFormat(ChatFormatting.GOLD) })
 
-        player.inventory.setItem(1, stack)
+        player.inventory.setItem(WEAPON_SLOT, stack)
 
-        if (bowType == BowType.Bow) {
-            player.inventory.setItem(8, ItemStack(Items.ARROW))
+        val arrow = if (weaponType == WeaponType.Bow && loaded) ItemStack(Items.ARROW) else ItemStack.EMPTY
+        player.inventory.setItem(ARROW_SLOT, arrow)
+    }
+
+    private fun giveWeaponToggleItem(player: ServerPlayer) {
+        val stack = ItemStack(Items.COMMAND_BLOCK_MINECART)
+
+        val weaponName = TextUtil.getVanillaName(weaponTypeOf(player).item).withStyle(ChatFormatting.YELLOW)
+
+        stack.set(DataComponents.CUSTOM_NAME, gameHandle.translations.translateText(player, "weapon", weaponName)
+            .withStyle { it.withItalic(false).applyFormat(ChatFormatting.AQUA) })
+
+        player.inventory.setItem(WEAPON_TOGGLE_SLOT, stack)
+    }
+
+    private fun onUseItem(player: Player, hand: InteractionHand): InteractionResult {
+        if (player !is ServerPlayer || !gameHandle.participants.isParticipating(player)) return InteractionResult.PASS
+
+        val stack = player.getItemInHand(hand)
+
+        if (!stack.isOf(Items.COMMAND_BLOCK_MINECART)) return InteractionResult.PASS
+
+        if (!player.cooldowns.isOnCooldown(stack)) {
+            toggleWeapon(player)
+            player.cooldowns.addCooldown(stack, WEAPON_TOGGLE_COOLDOWN)
+        }
+
+        return InteractionResult.SUCCESS_SERVER
+    }
+
+    private fun toggleWeapon(player: ServerPlayer) {
+        val loaded = hasArrow(player)
+
+        playerWeaponTypes[player.uuid] = weaponTypeOf(player).opposite()
+
+        giveWeaponToPlayer(player, loaded)
+        giveWeaponToggleItem(player)
+
+        player.playNotifySound(SoundEvents.UI_BUTTON_CLICK.value(), SoundSource.PLAYERS, 0.5f, 1.4f)
+    }
+
+    private fun hasArrow(player: ServerPlayer): Boolean {
+        val stack = player.inventory.getItem(WEAPON_SLOT)
+
+        return when {
+            stack.isOf(Items.CROSSBOW) -> stack.get(DataComponents.CHARGED_PROJECTILES)?.contains(Items.ARROW) == true
+            stack.isOf(Items.BOW) -> player.inventory.getItem(ARROW_SLOT).isOf(Items.ARROW)
+            else -> false
         }
     }
 
@@ -222,8 +291,8 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle, level: ServerLevel, ma
         stack.set(DataComponents.CUSTOM_NAME, TextUtil.getVanillaName(stack)
             .withStyle { style -> style.withItalic(false).applyFormat(ChatFormatting.GOLD) })
 
-        player.inventory.setItem(0, stack)
-        PlayerInventoryAccess.setSelectedSlot(player, 0)
+        player.inventory.setItem(SWORD_SLOT, stack)
+        PlayerInventoryAccess.setSelectedSlot(player, SWORD_SLOT)
     }
 
     private fun onDamage(entity: LivingEntity, source: DamageSource, amount: Float): Boolean {
@@ -271,7 +340,7 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle, level: ServerLevel, ma
         val owner = projectile.owner as? ServerPlayer ?: return
 
         if (owner == player) {
-            giveBowToPlayer(owner)
+            giveWeaponToPlayer(owner, true)
             return
         }
 
@@ -291,7 +360,7 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle, level: ServerLevel, ma
         currentKillstreak[killer.uuid] = streak
         stats.modify(killer, Killstreak) { maxOf(it, streak) }
 
-        giveBowToPlayer(killer)
+        giveWeaponToPlayer(killer, true)
         killer.health = 20f
         data.addScore(killer, 1)
 

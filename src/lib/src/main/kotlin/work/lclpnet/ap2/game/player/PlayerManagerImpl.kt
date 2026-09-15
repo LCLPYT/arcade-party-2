@@ -85,10 +85,18 @@ class PlayerManagerImpl(private val server: MinecraftServer) : PlayerManager {
 
     override fun addPermanentSpectator(player: ServerPlayer): Unit = synchronized(lock) {
         permanentSpectators.add(player.uuid)
+
+        if (prepare && !finale && participants.remove(player.uuid)) {
+            listener?.participantRemoved(player)
+        }
     }
 
     override fun removePermanentSpectator(player: ServerPlayer): Unit = synchronized(lock) {
         permanentSpectators.remove(player.uuid)
+
+        if (prepare && !finale) {
+            participants.add(player.uuid)
+        }
     }
 
     override fun remove(player: ServerPlayer): Unit = synchronized(lock) {

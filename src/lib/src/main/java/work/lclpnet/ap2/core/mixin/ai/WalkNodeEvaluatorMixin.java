@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import work.lclpnet.ap2.api.ai.PathFindingPredicate;
+import work.lclpnet.ap2.impl.ai.PathFindingPredicate;
 import work.lclpnet.ap2.core.type.ApLandPathNodeMaker;
 
 import java.util.ArrayList;

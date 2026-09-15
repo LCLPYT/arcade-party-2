@@ -13,8 +13,8 @@ import net.minecraft.world.item.Items
 import work.lclpnet.ap2.core.hook.ProjectileHitEntityCallback
 import work.lclpnet.ap2.core.hook.ProjectileShootCallback
 import work.lclpnet.ap2.ext.mc.playNotifySound
-import work.lclpnet.ap2.impl.game.item.SpecialItem
-import work.lclpnet.ap2.impl.game.item.SpecialItemContext
+import work.lclpnet.ap2.game.item.SpecialItem
+import work.lclpnet.ap2.game.item.SpecialItemContext
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.hook.HookRegistrar
 
@@ -22,7 +22,7 @@ const val TAG_SWITCHER = "ap2:switcher"
 
 class SwitcherItem : SpecialItem {
 
-    override fun id(): String = "switcher"
+    override val id = "switcher"
 
     override fun createItemStack(registryManager: RegistryAccess): ItemStack = ItemStack(Items.SNOWBALL)
 

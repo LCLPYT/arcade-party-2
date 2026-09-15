@@ -5,8 +5,8 @@ import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
-import work.lclpnet.ap2.impl.game.item.SpecialItem
-import work.lclpnet.ap2.impl.game.item.SpecialItemContext
+import work.lclpnet.ap2.game.item.SpecialItem
+import work.lclpnet.ap2.game.item.SpecialItemContext
 import work.lclpnet.kibu.hook.HookRegistrar
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks
 
@@ -14,7 +14,7 @@ private const val USES = 3
 
 class FishingRodItem : SpecialItem {
 
-    override fun id(): String = "fishing_rod"
+    override val id = "fishing_rod"
 
     override fun createItemStack(registryManager: RegistryAccess): ItemStack {
         val stack = ItemStack(Items.FISHING_ROD)

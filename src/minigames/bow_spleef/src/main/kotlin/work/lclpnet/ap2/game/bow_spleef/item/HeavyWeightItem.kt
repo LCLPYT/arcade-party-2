@@ -15,8 +15,8 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import work.lclpnet.ap2.core.hook.ProjectileHitEntityCallback
 import work.lclpnet.ap2.core.hook.ProjectileShootCallback
-import work.lclpnet.ap2.impl.game.item.SpecialItem
-import work.lclpnet.ap2.impl.game.item.SpecialItemContext
+import work.lclpnet.ap2.game.item.SpecialItem
+import work.lclpnet.ap2.game.item.SpecialItemContext
 import work.lclpnet.ap2.impl.util.handler.DoubleJumpHandler
 import work.lclpnet.kibu.access.entity.EntityUtil.resetAttribute
 import work.lclpnet.kibu.access.entity.EntityUtil.setAttribute
@@ -33,7 +33,7 @@ class HeavyWeightItem : SpecialItem {
     private val heavyWeighted = mutableSetOf<UUID>()
     var doubleJumpHandler: DoubleJumpHandler? = null
 
-    override fun id(): String = "heavy_weight_egg"
+    override val id = "heavy_weight_egg"
 
     override fun createItemStack(registryManager: RegistryAccess): ItemStack = ItemStack(Items.EGG)
 
@@ -62,11 +62,11 @@ class HeavyWeightItem : SpecialItem {
             world.playSound(null, pos.x, pos.y, pos.z, SoundEvents.BLAZE_HURT, SoundSource.HOSTILE, 0.5f, 0.65f)
             world.sendParticles(ParticleTypes.FALLING_NECTAR, pos.x, pos.y + 1, pos.z, 100, 0.25, 0.5, 0.25, 1.0)
 
-            ctx.translations().translateText("heavy_weighted")
+            ctx.translations.translateText("heavy_weighted")
                 .withColor(0xff0000)
                 .sendTo(player, true)
 
-            ctx.scheduler().timeout(DURATION_TICKS) { ->
+            ctx.scheduler.timeout(DURATION_TICKS) { ->
                 removeHeavyWeighted(player)
             }
         }

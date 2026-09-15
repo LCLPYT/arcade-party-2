@@ -15,8 +15,8 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.phys.Vec3
 import work.lclpnet.ap2.core.hook.ProjectileShootCallback
 import work.lclpnet.ap2.game.bow_spleef.Impact
-import work.lclpnet.ap2.impl.game.item.SpecialItem
-import work.lclpnet.ap2.impl.game.item.SpecialItemContext
+import work.lclpnet.ap2.game.item.SpecialItem
+import work.lclpnet.ap2.game.item.SpecialItemContext
 import work.lclpnet.ap2.impl.util.world.ExplosionUtil
 import work.lclpnet.kibu.hook.Hook
 import work.lclpnet.kibu.hook.HookRegistrar
@@ -25,7 +25,7 @@ const val TAG_EXPLOSIVE = "ap2:explosive"
 
 class ExplodeAmmoItem(private val impactHook: Hook<Impact>) : SpecialItem {
 
-    override fun id(): String = "explode_ammo"
+    override val id = "explode_ammo"
 
     override fun createItemStack(registryManager: RegistryAccess): ItemStack = ItemStack(Items.TNT)
 

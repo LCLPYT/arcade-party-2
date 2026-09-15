@@ -6,7 +6,7 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import work.lclpnet.ap2.deadline.rider.LightCycle
 import work.lclpnet.ap2.deadline.rider.Riders
-import work.lclpnet.ap2.impl.game.item.SpecialItemContext
+import work.lclpnet.ap2.game.item.SpecialItemContext
 import work.lclpnet.ap2.util.sound.GameSound
 import work.lclpnet.kibu.scheduler.Ticks
 
@@ -19,7 +19,7 @@ class InvisiblePowerUp(riders: Riders, onUsed: (ServerPlayer) -> Unit) : Deadlin
     override val duration = Ticks.seconds(4)
     override val sound = GameSound(SoundEvents.BAT_TAKEOFF, 0.8f, 1f)
 
-    override fun id() = "invisible"
+    override val id = "invisible"
 
     override fun activate(rider: ServerPlayer, cycle: LightCycle, ctx: SpecialItemContext) {
         cycle.phase(duration)

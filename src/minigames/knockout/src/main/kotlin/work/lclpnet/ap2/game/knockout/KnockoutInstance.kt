@@ -115,7 +115,7 @@ class KnockoutInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Game
                 gainKill(killer, stats)
             }
 
-            eliminate(player, killTracker.killMessage(player, gameHandle.deathMessages))
+            eliminate(player, customMsg = killTracker.killMessage(player, gameHandle.deathMessages))
         }
 
         crumble = KnockoutWorldCrumble(level, map)

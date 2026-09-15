@@ -18,7 +18,6 @@ import net.minecraft.world.item.component.Fireworks
 import net.minecraft.world.level.block.*
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.state.properties.RailShape
-import work.lclpnet.ap2.api.util.world.AdjacentBlocks
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.guess_it.data.*
@@ -26,6 +25,7 @@ import work.lclpnet.ap2.game.guess_it.util.MobSpawner
 import work.lclpnet.ap2.impl.util.world.PositionUtil.findGroundPositions
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
+import work.lclpnet.ap2.util.world.AdjacentBlocks
 import work.lclpnet.gaco.ds.IndexedSet
 import work.lclpnet.game.util.WorldModifier
 import work.lclpnet.kibu.access.entity.FireworkEntityAccess

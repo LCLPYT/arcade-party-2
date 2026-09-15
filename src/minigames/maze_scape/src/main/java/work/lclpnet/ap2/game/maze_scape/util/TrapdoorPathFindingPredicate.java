@@ -6,7 +6,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import work.lclpnet.ap2.api.ai.PathFindingPredicate;
+import work.lclpnet.ap2.impl.ai.PathFindingPredicate;
 
 import static net.minecraft.world.level.block.TrapDoorBlock.OPEN;
 

@@ -14,6 +14,7 @@ import work.lclpnet.ap2.game.MiniGameInstance
 import work.lclpnet.ap2.impl.activity.ArcadePartyComponents
 import work.lclpnet.ap2.mode_default.cmd.DrawCommand
 import work.lclpnet.ap2.mode_default.cmd.RemakeCommand
+import work.lclpnet.ap2.mode_default.cmd.SpectatorCommand
 import work.lclpnet.ap2.mode_default.cmd.WinCommand
 import work.lclpnet.ap2.mode_default.util.ApBaseArgs
 import work.lclpnet.ap2.mode_default.util.DefaultMiniGameHandle
@@ -67,6 +68,9 @@ class MiniGameActivity(
 
         args.playerManager.startMiniGame()
         registerHooks(args.miniGameArgs.hookStack)
+
+        val commands = component(BuiltinComponents.COMMANDS).commands()
+        SpectatorCommand(args.playerManager, args.miniGameArgs.translations).register(commands)
 
         val hooks = component(BuiltinComponents.HOOKS).hooks()
 

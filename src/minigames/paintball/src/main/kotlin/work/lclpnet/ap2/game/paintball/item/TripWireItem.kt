@@ -19,13 +19,13 @@ import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
 import work.lclpnet.ap2.ext.mc.playNotifySound
+import work.lclpnet.ap2.game.item.SpecialItem
+import work.lclpnet.ap2.game.item.SpecialItemContext
 import work.lclpnet.ap2.game.paintball.util.PaintManager
 import work.lclpnet.ap2.game.paintball.util.PaintballTeam
 import work.lclpnet.ap2.game.paintball.util.PaintballTeams
 import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.game.team.Team
-import work.lclpnet.ap2.impl.game.item.SpecialItem
-import work.lclpnet.ap2.impl.game.item.SpecialItemContext
 import work.lclpnet.ap2.impl.util.ParticleHelper.spawnParticleFor
 import work.lclpnet.ap2.impl.util.RayCastUtil.*
 import work.lclpnet.ap2.impl.util.SoundHelper.playSound
@@ -53,7 +53,7 @@ class TripWireItem(
 
     private val tripwires = HashSet<Tripwire>()
 
-    override fun id() = "tripwire"
+    override val id = "tripwire"
 
     override fun createItemStack(registryManager: RegistryAccess): ItemStack = ItemStack(Items.TRIPWIRE_HOOK)
 

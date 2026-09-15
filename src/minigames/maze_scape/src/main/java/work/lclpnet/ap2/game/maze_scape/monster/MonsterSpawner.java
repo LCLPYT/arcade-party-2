@@ -225,7 +225,7 @@ public class MonsterSpawner {
         NodeEvaluator nodeMaker = ((PathNavigationAccessor) navigation).getNodeEvaluator();
 
         if (nodeMaker instanceof ApLandPathNodeMaker apPathMaker) {
-            apPathMaker.ap2$addCustomBlockedPredicate(BlockedPathFindingPredicate.getInstance());
+            apPathMaker.ap2$addCustomBlockedPredicate(BlockedPathFindingPredicate.INSTANCE);
             apPathMaker.ap2$addCustomBlockedPredicate(new PitPathFindingPredicate(manager.struct()));
             apPathMaker.ap2$addCustomInvalidPredicate(TrapdoorPathFindingPredicate.getInstance());
         }

@@ -102,7 +102,7 @@ class BlockDissolveInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
                 gainKill(killer, stats)
             }
 
-            eliminate(player, killTracker.killMessage(player, gameHandle.deathMessages))
+            eliminate(player, customMsg = killTracker.killMessage(player, gameHandle.deathMessages))
         }
     }
 

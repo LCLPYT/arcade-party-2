@@ -3,8 +3,8 @@ package work.lclpnet.ap2.game.eggventure
 import net.minecraft.core.RegistryAccess
 import net.minecraft.world.item.ItemStack
 import work.lclpnet.ap2.ApConstants
-import work.lclpnet.ap2.api.game.GameStartContext
-import work.lclpnet.ap2.api.game.GameType
+import work.lclpnet.ap2.api.base.GameStartContext
+import work.lclpnet.ap2.game.GameType
 import work.lclpnet.ap2.game.MiniGame
 import work.lclpnet.ap2.game.MiniGameFactory
 import work.lclpnet.ap2.impl.util.ApRegistries

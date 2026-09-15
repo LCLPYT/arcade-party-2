@@ -1,6 +1,6 @@
 {
   "name": "Jump 'n' Run",
-  "description": "Complete randomly generated jump 'n' run segments. The sooner you make it to the goal, the more points you get!",
+  "description": "Complete jump 'n' run segments. The sooner you make it to the goal, the more points you get!",
   "task": "Complete the Jump 'n' Run %s/%s",
   "completed_room": "Congratulations, you completed room %s",
   "last_not_completed": "Room %s was skipped as you were the last one remaining",

@@ -3,8 +3,8 @@ package work.lclpnet.ap2.impl.util.world;
 import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.api.util.world.AdjacentBlocks;
 import work.lclpnet.ap2.api.util.world.BlockPredicate;
+import work.lclpnet.ap2.util.world.AdjacentBlocks;
 
 import java.util.Iterator;
 

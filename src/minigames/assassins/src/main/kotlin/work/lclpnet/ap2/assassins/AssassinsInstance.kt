@@ -246,7 +246,7 @@ class AssassinsInstance(
     }
 
     private fun resetWorldBorder() {
-        val worldBorder = gameHandle.worldBorderManager.getWorldBorder()
+        val worldBorder = gameHandle.worldBorderManager.worldBorder
         worldBorder.setCenter(0.0, 0.0)
         worldBorder.size = WorldBorder.MAX_SIZE
     }

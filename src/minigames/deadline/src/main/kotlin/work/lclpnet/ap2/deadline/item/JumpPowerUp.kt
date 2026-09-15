@@ -6,7 +6,7 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import work.lclpnet.ap2.deadline.rider.LightCycle
 import work.lclpnet.ap2.deadline.rider.Riders
-import work.lclpnet.ap2.impl.game.item.SpecialItemContext
+import work.lclpnet.ap2.game.item.SpecialItemContext
 import work.lclpnet.ap2.util.sound.GameSound
 
 private const val JUMP_STRENGTH = 0.7 // upward velocity in blocks per tick
@@ -20,7 +20,7 @@ class JumpPowerUp(riders: Riders, onUsed: (ServerPlayer) -> Unit) : DeadlinePowe
     override val duration = 0 // the leap is instant
     override val sound = GameSound(SoundEvents.HORSE_JUMP, 0.8f, 1f)
 
-    override fun id() = "jump"
+    override val id = "jump"
 
     override fun activate(rider: ServerPlayer, cycle: LightCycle, ctx: SpecialItemContext) {
         cycle.jump(JUMP_STRENGTH)

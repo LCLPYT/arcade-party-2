@@ -7,24 +7,20 @@ import net.minecraft.world.level.border.WorldBorder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import work.lclpnet.activity.util.BossBarHandler
-import work.lclpnet.ap2.api.base.WorldBorderManager
-import work.lclpnet.ap2.api.data.DataManager
-import work.lclpnet.ap2.api.game.GameType
-import work.lclpnet.ap2.api.game.MiniGameResults
-import work.lclpnet.ap2.api.map.MapFacade
+import work.lclpnet.ap2.api.WorldBorderManager
 import work.lclpnet.ap2.api.music.SongCache
 import work.lclpnet.ap2.api.music.SongManager
 import work.lclpnet.ap2.api.stats.StatsResult
 import work.lclpnet.ap2.core.type.ApServerPlayerEntity
-import work.lclpnet.ap2.game.GameInfo
-import work.lclpnet.ap2.game.MiniGame
-import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.*
 import work.lclpnet.ap2.game.color.PlayerColorPreferences
 import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.game.player.PlayerRankView
 import work.lclpnet.ap2.game.team.TeamConfig
 import work.lclpnet.ap2.game.util.PlayerUtil
+import work.lclpnet.ap2.impl.data.DataManager
 import work.lclpnet.ap2.impl.i18n.GameScopedTranslator
+import work.lclpnet.ap2.impl.map.MapFacade
 import work.lclpnet.ap2.impl.util.DeathMessages
 import work.lclpnet.ap2.impl.util.world.SubWorldManager
 import work.lclpnet.ap2.mode_default.activity.MiniGameActivity
@@ -86,7 +82,7 @@ class DefaultMiniGameHandle(
     @Volatile
     private var worldContainer: WorldContainer? = null
 
-    private var world: ServerLevel? = null
+    private var level: ServerLevel? = null
 
     private var startTimeOrNull: Instant? = null
 
@@ -324,11 +320,11 @@ class DefaultMiniGameHandle(
         args.viewDistanceManager.reset()
     }
 
-    override fun getWorldBorder(): WorldBorder =
-        checkNotNull(world) { "World is not set yet" }.worldBorder
+    override val worldBorder: WorldBorder
+        get() = checkNotNull(level) { "World is not set yet" }.worldBorder
 
-    override fun setWorld(world: ServerLevel) {
-        this.world = world
+    override fun setLevel(level: ServerLevel) {
+        this.level = level
     }
 
     override val isFinale: Boolean

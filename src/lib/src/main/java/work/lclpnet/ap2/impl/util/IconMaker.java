@@ -7,7 +7,7 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.TooltipDisplay;
-import work.lclpnet.ap2.api.data.DataManager;
+import work.lclpnet.ap2.impl.data.DataManager;
 import work.lclpnet.ap2.game.MiniGame;
 import work.lclpnet.game.map.GameMap;
 import work.lclpnet.kibu.translate.Translations;
@@ -48,7 +48,7 @@ public class IconMaker {
                 .withStyle(style -> style.withItalic(false).applyFormat(AQUA)));
 
         String descriptionKey = game.getDescriptionKey();
-        Object[] descArgs = game.getDescriptionArguments();
+        Object[] descArgs = game.descriptionArguments(translations);
 
         setLore(icon, wrapText(translations.translateText(player, descriptionKey, descArgs)
                 .withStyle(GREEN), 32));

@@ -13,9 +13,9 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.Vec3
 import work.lclpnet.ap2.core.hook.DeathMessageItemCallback
+import work.lclpnet.ap2.game.item.SpecialItem
+import work.lclpnet.ap2.game.item.SpecialItemContext
 import work.lclpnet.ap2.game.paintball.util.*
-import work.lclpnet.ap2.impl.game.item.SpecialItem
-import work.lclpnet.ap2.impl.game.item.SpecialItemContext
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.impl.util.math.MathUtil
 import work.lclpnet.ap2.impl.util.math.MathUtil.randomUnitVec3d
@@ -59,7 +59,7 @@ class InkGrenadeItem(
         trail = NO_TRAIL
     )
 
-    override fun id() = "ink_grenade"
+    override val id = "ink_grenade"
 
     override fun createItemStack(registryManager: RegistryAccess): ItemStack = ItemStack(Items.TNT)
 

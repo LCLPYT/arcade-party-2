@@ -3,7 +3,7 @@ package work.lclpnet.ap2.impl.util.world;
 import com.google.common.collect.AbstractIterator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import work.lclpnet.ap2.api.util.world.AdjacentBlocks;
+import work.lclpnet.ap2.util.world.AdjacentBlocks;
 
 import java.util.Iterator;
 import java.util.function.Predicate;
