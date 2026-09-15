@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.9.0](https://github.com/LCLPYT/arcade-party-2/compare/v0.8.0...v0.9.0) (2026-09-15)
+
+
+### Features
+
+* add /spectator command to toggle permanent spectator for oneself ([76b5229](https://github.com/LCLPYT/arcade-party-2/commit/76b522911a07c8971bbb3708d843e7fafd461493))
+* add capture the flag minigame ([#300](https://github.com/LCLPYT/arcade-party-2/issues/300)) ([3182e9b](https://github.com/LCLPYT/arcade-party-2/commit/3182e9b76c01966b89379dc46c0b9e14333abccc))
+* **one in the chamber:** add a toggle to switch between bow and crossbow per player preference ([be6f342](https://github.com/LCLPYT/arcade-party-2/commit/be6f3429672c1057f1817a375d63e6bb1c6babe0))
+* prevent team minigames from being played when someone is about to win ([e889ea9](https://github.com/LCLPYT/arcade-party-2/commit/e889ea9c8c247609e85f20804671dd7f086e9f85))
+* **speed builders:** make fast mode the default ([5f5d61f](https://github.com/LCLPYT/arcade-party-2/commit/5f5d61f4b4b84e9b05c565a6702a12ff9fac2109))
+* **task rush:** add short preparation delay before starting each task ([8d701b8](https://github.com/LCLPYT/arcade-party-2/commit/8d701b8b6c18bd9074d8fa83bbfb30d544de3488))
+* **task rush:** remove darkest place task ([b94c2c9](https://github.com/LCLPYT/arcade-party-2/commit/b94c2c9c4b0d820e42dd2161cd0e3badb50e0b6c))
+
+
+### Bug Fixes
+
+* **jump and run:** adjust description to better match new game flow ([60204d7](https://github.com/LCLPYT/arcade-party-2/commit/60204d739d243ae3d5be98b94374fb7b6da6ce2b))
+
 ## [0.8.0](https://github.com/LCLPYT/arcade-party-2/compare/v0.7.0...v0.8.0) (2026-07-13)
 
 
