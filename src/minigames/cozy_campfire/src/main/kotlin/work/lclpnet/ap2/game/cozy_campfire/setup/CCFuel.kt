@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game.cozy_campfire.setup
 
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import net.minecraft.core.BlockPos
+import net.minecraft.core.component.DataComponents
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
@@ -13,11 +14,12 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.level.block.entity.FuelValues
+import net.minecraft.world.level.storage.loot.LootContext
 import net.minecraft.world.level.storage.loot.LootParams
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams
 import net.minecraft.world.phys.Vec3
-import work.lclpnet.ap2.core.type.ApFuelRegistry
+import java.util.Optional
 
 class CCFuel(
     private val world: ServerLevel,
@@ -28,11 +30,13 @@ class CCFuel(
     private val fuel = Object2IntOpenHashMap<Item>()
 
     fun registerFuel(fuelPerSecond: Int) {
-        val fuelRegistry: FuelValues = world.fuelValues()
-        val fuelAccess = fuelRegistry as ApFuelRegistry
+        // an empty loot context resolves the vanilla cooking providers to their plain furnace burn time
+        val lootContext = LootContext.Builder(LootParams.Builder(world).create(LootContextParamSets.EMPTY))
+            .create(Optional.empty())
 
-        for (item in fuelRegistry.fuelItems()) {
-            val ticks = fuelAccess.`ap2$getFuelTicks`(item)
+        for (item in BuiltInRegistries.ITEM) {
+            val cookingFuel = item.components().get(DataComponents.COOKING_FUEL) ?: continue
+            val ticks = cookingFuel.burnTime().get(lootContext, 0)
             if (ticks > 0) fuel.put(item, ticks)
         }
 

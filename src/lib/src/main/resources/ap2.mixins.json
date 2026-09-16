@@ -8,7 +8,6 @@
   },
   "mixins": [
     "DamageSourceMixin",
-    "FuelValuesMixin",
     "MinecraftServerMixin",
     "PlayerListMixin",
     "ResultSlotMixin",
@@ -41,7 +40,7 @@
     "entity.CreakingMixin",
     "entity.EnderDragonFightMixin",
     "entity.EnderDragonMixin",
-    "entity.EnderManAccessor",
+    "entity.EndermanAccessor",
     "entity.EntityMixin",
     "entity.EntityTrackerMixin",
     "entity.EntityTypeMixin",

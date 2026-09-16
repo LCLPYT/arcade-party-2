@@ -27,7 +27,7 @@ public class ResetBlockWorldModifier implements WorldModifier {
                 BlockState prevState = world.getBlockState(pos);
 
                 if (prevState != state) {
-                    states.put(new BlockPos(pos), prevState);
+                    states.put(pos.immutable(), prevState);
                 }
             }
         }

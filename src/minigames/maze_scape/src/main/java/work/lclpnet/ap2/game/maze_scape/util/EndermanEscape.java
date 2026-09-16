@@ -3,7 +3,7 @@ package work.lclpnet.ap2.game.maze_scape.util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.monster.EnderMan;
+import net.minecraft.world.entity.monster.Enderman;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
@@ -40,7 +40,7 @@ public class EndermanEscape {
         this.debugController = debugController;
     }
 
-    public Optional<Path> findEscapePath(EnderMan mob) {
+    public Optional<Path> findEscapePath(Enderman mob) {
         Vec3 mobPos = mob.position();
         var entityNode = struct.nodeAt(mobPos);
 
@@ -100,7 +100,7 @@ public class EndermanEscape {
         return paths.stream().min(Comparator.comparingInt(Path::getNodeCount));
     }
 
-    private @Nullable Path escapePath(Vec3 pos, EnderMan mob) {
+    private @Nullable Path escapePath(Vec3 pos, Enderman mob) {
         if (visibilityChecker.isAnyoneLookingAt(mob, pos, participants)) {
             return null;
         }

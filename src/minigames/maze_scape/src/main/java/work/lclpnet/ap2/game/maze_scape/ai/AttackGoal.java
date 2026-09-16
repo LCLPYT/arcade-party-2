@@ -84,7 +84,7 @@ public class AttackGoal extends Goal {
 
         if (cooldown == 0 && mob.isWithinMeleeAttackRange(target) && mob.getSensing().hasLineOfSight(target)) {
             cooldown = adjustedTickDelay(ATTACK_TIME_TICKS);
-            mob.swing(InteractionHand.MAIN_HAND);
+            mob.swingForAttack(InteractionHand.MAIN_HAND);
             mob.doHurtTarget(getServerLevel(mob), target);
         }
     }

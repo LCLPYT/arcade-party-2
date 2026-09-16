@@ -9,7 +9,7 @@ import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
-import net.minecraft.world.entity.monster.EnderMan;
+import net.minecraft.world.entity.monster.Enderman;
 import net.minecraft.world.entity.monster.creaking.Creaking;
 import net.minecraft.world.entity.monster.spider.Spider;
 import net.minecraft.world.entity.monster.warden.Warden;
@@ -135,7 +135,7 @@ public class MonsterSpawner {
     }
 
     private void spawnEnderman(Vec3 pos, Partial<MonsterArgs, UUID> args, Registrar registrar) {
-        var enderman = new EnderMan(EntityTypes.ENDERMAN, world);
+        var enderman = new Enderman(EntityTypes.ENDERMAN, world);
 
         configureMobCommon(pos, enderman);
 
@@ -184,7 +184,7 @@ public class MonsterSpawner {
 
     private void configureMobCommon(Vec3 pos, Mob entity) {
         entity.setPos(pos);
-        entity.setInvulnerable(true);
+        entity.setPermanentlyInvulnerable(true);
         entity.setPersistenceRequired();
         entity.setOnGround(true);  // required to perform path finding immediately
 

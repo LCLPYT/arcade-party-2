@@ -99,11 +99,11 @@ class Riders(
         val world = player.level()
         val sheep = Sheep(EntityTypes.SHEEP, world)
 
-        sheep.setNoAi(true)
-        sheep.isInvulnerable = true
+        sheep.isNoAi = true
+        sheep.isPermanentlyInvulnerable = true
         sheep.isSilent = true
-        sheep.setColor(color)
-        sheep.setYRot(player.yRot)
+        sheep.color = color
+        sheep.yRot = player.yRot
         sheep.setYBodyRot(player.yRot)
         sheep.setYHeadRot(player.yRot)
         sheep.setPosRaw(player.x, player.y, player.z)

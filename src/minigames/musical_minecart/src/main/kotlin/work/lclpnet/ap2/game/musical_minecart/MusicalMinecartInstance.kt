@@ -265,7 +265,7 @@ class MusicalMinecartInstance(
 
             val minecart = Minecart(EntityTypes.MINECART, world)
             minecart.setPosRaw(pos.x + 0.5, pos.y.toDouble(), pos.z + 0.5)
-            minecart.isInvulnerable = true
+            minecart.isPermanentlyInvulnerable = true
 
             world.addFreshEntity(minecart)
             minecartEntities.add(minecart)

@@ -17,7 +17,7 @@ import net.minecraft.world.entity.ai.behavior.MeleeAttack;
 import net.minecraft.world.entity.ai.behavior.SetEntityLookTarget;
 import net.minecraft.world.entity.ai.behavior.SetWalkTargetFromAttackTargetIfTargetOutOfReach;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
-import net.minecraft.world.entity.monster.EnderMan;
+import net.minecraft.world.entity.monster.Enderman;
 import net.minecraft.world.entity.monster.creaking.Creaking;
 import net.minecraft.world.entity.monster.spider.Spider;
 import net.minecraft.world.entity.monster.warden.Warden;
@@ -191,7 +191,7 @@ public class MSManager {
     private static boolean isMonsterType(LivingEntity entity) {
         return entity instanceof Warden
                 || entity instanceof Spider
-                || entity instanceof EnderMan
+                || entity instanceof Enderman
                 || entity instanceof Creaking;
     }
 

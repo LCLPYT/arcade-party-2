@@ -8,10 +8,10 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
-import net.minecraft.world.entity.monster.EnderMan;
+import net.minecraft.world.entity.monster.Enderman;
 import net.minecraft.world.entity.monster.creaking.Creaking;
 import net.minecraft.world.entity.monster.warden.Warden;
-import work.lclpnet.ap2.core.mixin.entity.EnderManAccessor;
+import work.lclpnet.ap2.core.mixin.entity.EndermanAccessor;
 import work.lclpnet.ap2.game.maze_scape.monster.EndermanData;
 import work.lclpnet.ap2.game.maze_scape.monster.MonsterData;
 import work.lclpnet.ap2.game.player.Participants;
@@ -95,7 +95,7 @@ public class MSTargetManager {
 
         switch (mob) {
             case Warden warden -> warden.setAttackTarget(player);
-            case EnderMan enderman when monster instanceof EndermanData data -> {
+            case Enderman enderman when monster instanceof EndermanData data -> {
                 AttributeInstance instance = enderman.getAttribute(Attributes.MOVEMENT_SPEED);
 
                 if (instance != null) {
@@ -103,9 +103,9 @@ public class MSTargetManager {
                 }
 
                 SynchedEntityData dataTracker = enderman.getEntityData();
-                dataTracker.set(EnderManAccessor.DATA_CREEPY(), data.isScreaming());  // angry attribute differs from data.isAngry()
+                dataTracker.set(EndermanAccessor.DATA_CREEPY(), data.isScreaming());  // angry attribute differs from data.isAngry()
 
-                dataTracker.set(EnderManAccessor.DATA_STARED_AT(), data.isAngry());
+                dataTracker.set(EndermanAccessor.DATA_STARED_AT(), data.isAngry());
             }
             case Creaking creaking -> creaking.getBrain().setMemory(MemoryModuleType.ATTACK_TARGET, player);
             default -> {}

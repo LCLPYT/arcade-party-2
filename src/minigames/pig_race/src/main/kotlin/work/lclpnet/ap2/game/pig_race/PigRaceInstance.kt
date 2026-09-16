@@ -468,7 +468,7 @@ class PigRaceInstance(
             val level = player.level()
             val entity = factory(level)
 
-            entity.isInvulnerable = true
+            entity.isPermanentlyInvulnerable = true
             entity.setYBodyRot(yaw)
             entity.setPosRaw(x, y + 0.1, z)
             entity.setItemSlot(EquipmentSlot.SADDLE, ItemStack(Items.SADDLE))

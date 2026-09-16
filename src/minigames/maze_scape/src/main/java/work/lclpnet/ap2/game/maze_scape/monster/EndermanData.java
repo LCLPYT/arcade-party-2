@@ -7,7 +7,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.monster.EnderMan;
+import net.minecraft.world.entity.monster.Enderman;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.pathfinder.Path;
@@ -15,7 +15,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.ApConstants;
-import work.lclpnet.ap2.core.mixin.entity.EnderManAccessor;
+import work.lclpnet.ap2.core.mixin.entity.EndermanAccessor;
 import work.lclpnet.ap2.game.maze_scape.monster.behaviour.AccelerationBehaviour;
 import work.lclpnet.ap2.game.maze_scape.monster.behaviour.UnstuckBehaviour;
 import work.lclpnet.ap2.game.maze_scape.monster.behaviour.ValidPositionBehaviour;
@@ -36,7 +36,7 @@ import static net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED
 import static work.lclpnet.kibu.access.entity.EntityUtil.addAttributeModifier;
 import static work.lclpnet.kibu.access.entity.EntityUtil.removeAttributeModifier;
 
-public class EndermanData implements MonsterData<EnderMan> {
+public class EndermanData implements MonsterData<Enderman> {
 
     private static final int
             VISIBLE_CHECK_INTERVAL_TICKS = 5,
@@ -89,13 +89,13 @@ public class EndermanData implements MonsterData<EnderMan> {
     }
 
     @Override
-    public void init(EnderMan mob) {
+    public void init(Enderman mob) {
         common.init(mob);
         unstuck.init(mob);
     }
 
     @Override
-    public void tick(EnderMan mob) {
+    public void tick(Enderman mob) {
         unstuck.setEnabled(fleeTargetPos == null);
 
         common.tick(mob);
@@ -140,15 +140,15 @@ public class EndermanData implements MonsterData<EnderMan> {
     }
 
     @Override
-    public void onKillAcquired(EnderMan mob) {
+    public void onKillAcquired(Enderman mob) {
         common.onKillAcquired(mob);
         setAnger(0, null);
         stopFleeing(mob);
     }
 
     @Override
-    public @Nullable EnderMan mob() {
-        if (common.mob() instanceof EnderMan enderman) {
+    public @Nullable Enderman mob() {
+        if (common.mob() instanceof Enderman enderman) {
             return enderman;
         }
 
@@ -167,7 +167,7 @@ public class EndermanData implements MonsterData<EnderMan> {
         }
     }
 
-    private void onLookedAt(EnderMan mob, ServerPlayer player) {
+    private void onLookedAt(Enderman mob, ServerPlayer player) {
         if (isAngry()) return;
 
         boolean wasFleeing = isFleeing();
@@ -227,7 +227,7 @@ public class EndermanData implements MonsterData<EnderMan> {
             scaredTimer = 0;
         }
 
-        EnderMan mob = mob();
+        Enderman mob = mob();
 
         if (mob == null) return;
 
@@ -235,7 +235,7 @@ public class EndermanData implements MonsterData<EnderMan> {
         unfreeze(mob);
 
         mob.setSilent(!angry);
-        mob.getEntityData().set(EnderManAccessor.DATA_STARED_AT(), angry);
+        mob.getEntityData().set(EndermanAccessor.DATA_STARED_AT(), angry);
 
         if (angry) {
             addAttributeModifier(mob, MOVEMENT_SPEED, ANGER_BONUS_ID, ANGER_SPEED_BONUS, ADD_VALUE);
@@ -248,7 +248,7 @@ public class EndermanData implements MonsterData<EnderMan> {
         }
     }
 
-    private void playSoundFar(@NotNull ServerPlayer player, EnderMan mob, SoundEvent sound, float volume, float pitch) {
+    private void playSoundFar(@NotNull ServerPlayer player, Enderman mob, SoundEvent sound, float volume, float pitch) {
         Level world = mob.level();
 
         double dist = 16 * volume;
@@ -261,7 +261,7 @@ public class EndermanData implements MonsterData<EnderMan> {
         }
     }
 
-    private void flee(EnderMan mob, Path path) {
+    private void flee(Enderman mob, Path path) {
         fleeTargetTimeout = 0;
         fleeTargetPos = path.getTarget();
         mob.getNavigation().moveTo(path, 1);
@@ -269,7 +269,7 @@ public class EndermanData implements MonsterData<EnderMan> {
         addAttributeModifier(mob, MOVEMENT_SPEED, FLEE_BONUS_ID, FLEE_SPEED_BONUS, ADD_VALUE);
     }
 
-    private void stopFleeing(EnderMan mob) {
+    private void stopFleeing(Enderman mob) {
         fleeTargetPos = null;
         fleeTargetTimeout = 0;
         frozenTimer = 0;
@@ -292,10 +292,10 @@ public class EndermanData implements MonsterData<EnderMan> {
     private void setScreaming(boolean screaming) {
         this.screaming = screaming;
 
-        EnderMan mob = mob();
+        Enderman mob = mob();
 
         if (mob != null) {
-            mob.getEntityData().set(EnderManAccessor.DATA_CREEPY(), screaming);
+            mob.getEntityData().set(EndermanAccessor.DATA_CREEPY(), screaming);
         }
     }
 
@@ -316,7 +316,7 @@ public class EndermanData implements MonsterData<EnderMan> {
             return fleeTargetPos;
         }
 
-        EnderMan mob = mob();
+        Enderman mob = mob();
 
         if (mob == null) {
             return null;

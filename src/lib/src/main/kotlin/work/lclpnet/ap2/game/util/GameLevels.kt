@@ -104,12 +104,12 @@ suspend fun MiniGameHandle.generateRandomLevel(
 /**
  * Determines the initial spawn position of a freshly generated level.
  * Mirrors the vanilla logic in {@code MinecraftServer.setInitialSpawn}: first the spawn chunk
- * is located via the climate sampler, then a valid block position is searched in a spiral of
+ * is located via the generator origin, then a valid block position is searched in a spiral of
  * chunks around it. This must run on the server thread, since it triggers chunk generation.
  */
 fun findInitialSpawn(level: ServerLevel): BlockPos {
     val chunkSource = level.chunkSource
-    val spawnChunk = ChunkPos.containing(chunkSource.randomState().sampler().findSpawnPosition())
+    val spawnChunk = chunkSource.generator.getOrigin(chunkSource.randomState())
 
     var height = chunkSource.generator.getSpawnHeight(level)
 

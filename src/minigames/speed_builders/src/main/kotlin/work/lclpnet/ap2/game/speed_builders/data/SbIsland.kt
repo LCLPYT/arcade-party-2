@@ -98,7 +98,7 @@ class SbIsland(
 
             entity.isNoGravity = true
             entity.isSilent = true
-            entity.isInvulnerable = true
+            entity.isPermanentlyInvulnerable = true
 
             scoreboardManager.joinTeam(entity, team)
         }

@@ -10,6 +10,7 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.DyeColor
 import net.minecraft.world.level.block.entity.BlockEntityTypes
 import net.minecraft.world.level.block.entity.SignText
+import net.minecraft.world.level.block.entity.SignTextSlot
 import org.json.JSONArray
 import org.slf4j.Logger
 import work.lclpnet.ap2.game.MiniGameHandle
@@ -54,8 +55,8 @@ class FineTuningSetup(
             val testSignPos = room.pos.offset(testSignRelPos)
             val sign = world.getBlockEntity(testSignPos, BlockEntityTypes.SIGN).orElse(null) ?: continue
 
-            val lines = arrayOf(Component.empty(), testMsg.translateFor(player), Component.literal("▶"), Component.empty())
-            sign.setText(SignText(lines, lines, DyeColor.BLUE, false), true)
+            val lines = listOf(Component.empty(), testMsg.translateFor(player), Component.literal("▶"), Component.empty())
+            sign.setText(SignText(lines, lines, DyeColor.BLUE, false), SignTextSlot.FRONT)
 
             room.testSignPos = testSignPos
         }

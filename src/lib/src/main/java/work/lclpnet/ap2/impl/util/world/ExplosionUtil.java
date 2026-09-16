@@ -39,7 +39,7 @@ public class ExplosionUtil {
 
             Optional<Vec3> knockback = Optional.ofNullable(explosion.getHitPlayers().get(other));
 
-            other.connection.send(new ClientboundExplodePacket(pos, explosion.radius(), 0, knockback, particleEffect, SoundEvents.GENERIC_EXPLODE, blockParticles));
+            other.connection.send(new ClientboundExplodePacket(pos, explosion.radius(), 0, knockback, particleEffect, SoundEvents.GENERIC_EXPLODE, blockParticles, true));
         }
     }
 }

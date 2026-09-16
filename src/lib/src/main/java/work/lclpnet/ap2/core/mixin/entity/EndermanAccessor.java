@@ -1,12 +1,12 @@
 package work.lclpnet.ap2.core.mixin.entity;
 
 import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.world.entity.monster.EnderMan;
+import net.minecraft.world.entity.monster.Enderman;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(EnderMan.class)
-public interface EnderManAccessor {
+@Mixin(Enderman.class)
+public interface EndermanAccessor {
 
     @Accessor("DATA_CREEPY")
     static EntityDataAccessor<Boolean> DATA_CREEPY() {
