@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/LCLPYT/arcade-party-2/compare/v0.9.0...v0.10.0) (2026-09-21)
+
+
+### Features
+
+* upgrade to 26.3 ([4550268](https://github.com/LCLPYT/arcade-party-2/commit/4550268184bc90e5d7d76294ebc17cb709f3c2ce))
+
 ## [0.9.0](https://github.com/LCLPYT/arcade-party-2/compare/v0.8.0...v0.9.0) (2026-09-15)
 
 
