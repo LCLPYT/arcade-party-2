@@ -47,4 +47,4 @@ fi
 
 : "${MAX_MEMORY:=2G}"
 
-java "-Xmx$MAX_MEMORY" -jar fabric-server-launcher.jar --nogui
+exec java "-Xmx$MAX_MEMORY" -jar fabric-server-launcher.jar --nogui
