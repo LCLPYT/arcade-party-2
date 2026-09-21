@@ -67,7 +67,6 @@ COPY --from=builder /project/build/libs/*.jar server/mods/
 USER minecraft
 
 WORKDIR "/data"
-VOLUME ["/data"]
 
 EXPOSE 25565/tcp
 EXPOSE 24454/udp

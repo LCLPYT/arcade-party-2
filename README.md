@@ -55,7 +55,7 @@ Otherwise, the container will create files owned by a different user on the host
 
 Using Docker Rootless, you need to run as root in the container using `-u "0:0"` or `user: 0:0` in `docker-compose.yml`.
 This is because your host user is mapped to root inside the container.
-Otherwise files created by the container will be owned by one of your subuids, which may or may not be a problem, depending in your setup.
+Otherwise, files created by the container will be owned by one of your subuids, which may or may not be a problem, depending in your setup.
 
 Using Podman, you can make use of the `--userns=keep-id` option.
 For that, specify `-u "$(id -u):$(id -g)" --userns=keep-id` for `podman run ...` or specify these in `docker-compose.yml`.

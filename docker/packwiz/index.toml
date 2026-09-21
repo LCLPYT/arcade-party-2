@@ -1,78 +1,82 @@
 hash-format = "sha256"
 
 [[files]]
+file = "config/antixray.toml"
+hash = "7e035904278c1a9ea2f372ebab9ea45e5c6c882fbb65265a0877a620a57e8d81"
+
+[[files]]
 file = "mods/anti-xray.pw.toml"
-hash = "1d07aae485a2a92527e66367b656e743ec6e84471296f2f93bee163de3eb5460"
+hash = "9ac9e07e382f0a12c9a88f6c7b51444aba293011cfae81b71636183eca090368"
 metafile = true
 
 [[files]]
 file = "mods/c2me-fabric.pw.toml"
-hash = "b6b5cb7c9403a6c4a925e683fb2468b3f50756cecd5fc7f82491c080ed8bab08"
+hash = "8ba9eca8ecfc65ba84a33c320f993eab6a3514d5366385d4222499e5101311d9"
 metafile = true
 
 [[files]]
 file = "mods/combat-control.pw.toml"
-hash = "49bb085ef86249fa61ce6b88384de7fa4f67e6352a302810b395fc0b4f06175d"
+hash = "053b7c6cf13d59640f52ff517e861d82b6cf85caf4e743b37f8e3e75e7fe9cf2"
 metafile = true
 
 [[files]]
 file = "mods/fabric-api.pw.toml"
-hash = "91cbd0f5accaeb5ba27077286c6f4d149d1ac348626623b47ca5392e39625972"
+hash = "6b342a83e9736f0832e750c8d631273cf600305d73b32c8bd6a977811f6972ee"
 metafile = true
 
 [[files]]
 file = "mods/fabric-language-kotlin.pw.toml"
-hash = "9d37d326d9557fdd25c97d72ac1bbd1e74c524aa5dca437a91d0de645dff6545"
+hash = "7a7f5673b6e33eebaed00c0c453fc41d11c7474eb320c3ce8736d415fcfe2682"
 metafile = true
 
 [[files]]
 file = "mods/fantasy.pw.toml"
-hash = "7d84a10ef158a733cce314deee8012ad1e4f80b47ad104f2e8a8bdf73534e7d1"
+hash = "bcb39b59b11ef13dd6719bbad3c78adb8c59f5f1952c41f9021dd724ffe92a74"
 metafile = true
 
 [[files]]
 file = "mods/gaco.pw.toml"
-hash = "08aa3b0e73cfb60ab90f0e8d92d5065923653551079e4f540a13eb33fbbdde45"
+hash = "139d75070c0487b92be635949fed3c43e082bbf3ca88092012fe646e3bb2b73b"
 metafile = true
 
 [[files]]
 file = "mods/kibu-physics.pw.toml"
-hash = "62824f001d2e363421a3bfd80c93494a379d97617be80224c1162e21728b42fa"
+hash = "1cf35d2dc60f64b013d99bb2632fd9053f4ca7beca127a840c776e094a78aea0"
 metafile = true
 
 [[files]]
 file = "mods/kibu-world-api.pw.toml"
-hash = "494b19ae2f6cdfeba7b306c4928e073fe9d406625a9226a2f63fc8ba0d3ea42f"
+hash = "791282f917540941cb620124fbb006ca7ddf8471e4bac49c283645ab1899e8aa"
 metafile = true
 
 [[files]]
 file = "mods/kibu.pw.toml"
-hash = "7bb05015af6434902165407fa527f8af7332fb48517d47b1aa39ca78d812c431"
+hash = "d55d258b7bcd5d0d8658911a5b1a9b7bfaf3cd705c14dd1fd3a9e170150e42ef"
 metafile = true
 
 [[files]]
 file = "mods/lithium.pw.toml"
-hash = "40f3c3ed0be22a65ad52e0f89c905e59b57d4ec0941c3d6a2c702af4713213ad"
+hash = "d68f9ad500e062c1e3b59f25bf72416e579d18d836b104f2712464298932eca7"
 metafile = true
 
 [[files]]
 file = "mods/map-canvas-api.pw.toml"
-hash = "3131d452911d1cd63fafa7070a0159919427756bccf7c56f5c091c1b54b7ea07"
+hash = "4f3274e1a237a2a22503bbc7614a1124a29fa718182bff45e21b94b8b4d7c5c2"
 metafile = true
 
 [[files]]
 file = "mods/mcserver-api-fabric.pw.toml"
-hash = "cc64e77c03b0a7ac9b069e78d3903b50760e58ad8722b27cc22af3bb09e4008f"
+hash = "98345eb00aa046a7e7a8b3d84505a0a88b89849b86a514e368ab5c040405f630"
 metafile = true
 
 [[files]]
 file = "mods/mg-api.pw.toml"
-hash = "3fd8f9d52ef859bdc9967b278035fb2381e62978fb0f0800a0536f93be83d0e3"
+hash = "ab387e10a82d8a28336abb76fb3fdd827f8970cb812cab3f2942b223fb4646aa"
 metafile = true
 
 [[files]]
 file = "mods/mg-lobby.pw.toml"
-hash = "6632fe3d5e32f66e7577625076f5d94700e77866fa28dadecb07b70444a3e190"
+hash = "4df3cf53662f25d36186b880a89e9d4e83593275fb53526d41b51e2ca4a361f5"
 metafile = true
 
 [[files]]
@@ -82,25 +86,25 @@ metafile = true
 
 [[files]]
 file = "mods/notica.pw.toml"
-hash = "40afb5bd6bc1c5e5b1cb5bb4afb2480a77fca39b8ea07491b8afe3e9ce3b52f8"
+hash = "45c31a6ee684816a92560a9c7ce47f49b5a5d6e246644a55501126d8ad99ee16"
 metafile = true
 
 [[files]]
 file = "mods/pal.pw.toml"
-hash = "af409af4f628d04f3c653d3563e4d01ef3a4f72f582938017e78f4fc9278debf"
+hash = "8cd01ddc08acb858c1b0d7b0fa8566b6ebbc36ab0065d9c10c849b31075a4fe7"
 metafile = true
 
 [[files]]
 file = "mods/ruler.pw.toml"
-hash = "82e8177c197be69230b1c26944e59cd30838e2e97a2b30a0df3f0124d8781bea"
+hash = "0fb04e19b40c7f6aa6bc0b12143f023c29263df901a8cf753ae1abfa252600c2"
 metafile = true
 
 [[files]]
 file = "mods/scalablelux.pw.toml"
-hash = "8635a6f88d0f0e9487299a0da5507bb9f1685969a8b02772efdba6df3d9c0afa"
+hash = "8ab8d9da45456dfc8146a7d4b4b4243c69ba5b4375d086f361bf23df6e14988a"
 metafile = true
 
 [[files]]
 file = "mods/simple-ac.pw.toml"
-hash = "9797cfc6ade9ccc79ebc5a376abc8b6cf49c7b586bbd3b1eb26f39af225790ad"
+hash = "b0a9d174dfcc39c4b12ed70c4baa5585f50410b3488df1b0afb669676b2edc53"
 metafile = true

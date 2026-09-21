@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-MC_VERSION="26.2"
-FABRIC_VERSION="0.19.3"
+MC_VERSION="26.3"
+FABRIC_VERSION="0.19.5"
 SERVER_DIR="."
 MODPACK_FILE="/preset/mods.mrpack"
 ARTIFACT_NAME="arcade-party-2"
