@@ -21,6 +21,8 @@ jobs:
     steps:
       - uses: googleapis/release-please-action@v5
         id: release
+        with:
+          target-branch: "26.3"
 
   build-and-upload:
     needs: release-please
