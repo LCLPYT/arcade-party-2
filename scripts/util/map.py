@@ -158,7 +158,7 @@ def add_maps_source_to_json(run_dir: Path):
             cfg = json.load(f)
     else:
         cfg = {
-            "maps_source": ["https://assets.lclpnet.work/release/maps/"]
+            "maps_source": ["https://assets.lclpnet.work/v1/assets/release/maps/"]
         }
 
     maps_source = cfg.get("maps_source", [])

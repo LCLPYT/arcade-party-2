@@ -8,8 +8,8 @@ import java.net.URI
 import java.nio.file.Path
 
 class Ap2Config : JsonConfig {
-    var mapsSource = listOf<URI>(URI.create("https://assets.lclpnet.work/release/maps/"))
-    var songsSource = listOf<URI>(URI.create("https://assets.lclpnet.work/release/songs/"))
+    var mapsSource = listOf<URI>(URI.create("https://assets.lclpnet.work/v1/assets/release/maps/"))
+    var songsSource = listOf<URI>(URI.create("https://assets.lclpnet.work/v1/assets/release/songs/"))
 
     constructor()
 
