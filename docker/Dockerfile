@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM alpine:3.21 AS mrpack-downloader
+FROM alpine:3.24.4 AS mrpack-downloader
 
 RUN apk add --no-cache curl
 
@@ -8,7 +8,7 @@ COPY docker/download_mrpack_install.sh ./
 RUN ./download_mrpack_install.sh
 
 # only build for amd64 since artifacts (jar + mods.mrpack) are platform independent
-FROM --platform=linux/amd64 eclipse-temurin:25-jdk-alpine-3.23 AS builder
+FROM --platform=linux/amd64 eclipse-temurin:25.0.5.1_2-jre-alpine-3.24 AS builder
 
 ARG packwiz_commit=dfd8b68a4796c763e25bad50265ea1f1233e24f1
 
@@ -42,7 +42,8 @@ RUN --mount=type=cache,target=/root/.gradle \
     && rm build/libs/*-sources.jar
 
 # separate stage for runtime image
-FROM eclipse-temurin:25-jre-noble
+# glibc-based distro is required for kibu-physics (libbullet links against glibc)
+FROM eclipse-temurin:25.0.5.1_2-jre-resolute
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     rsync \
